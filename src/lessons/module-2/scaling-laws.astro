@@ -1,0 +1,251 @@
+---
+// Module 2, Lesson 2.4: Scaling Laws and Emergent Abilities
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Quiz from '../../components/Quiz.astro';
+import Diagram from '../../components/Diagram.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Understand Chinchilla scaling laws and compute-optimal training</li>
+  <li>Analyze power law relationships between loss and compute/data/parameters</li>
+  <li>Evaluate the debate around emergent abilities in large models</li>
+  <li>Explain Mixture of Experts (MoE) and how it enables efficient scaling</li>
+</ul>
+
+<h2>Scaling Laws: The Predictable Side of AI Progress</h2>
+
+<p>A remarkable discovery: model performance follows predictable power laws as you scale compute, data, and parameters. This enables forecasting capabilities before training, crucial for multi-million-dollar training runs.</p>
+
+<h3>The Original Scaling Laws (Kaplan et al., 2020)</h3>
+
+<p>OpenAI found that test loss L scales as a power law with:</p>
+
+<div class="equation-sequence">
+  <MathBlock formula={"L(N) \\propto N^{-\\alpha_N}"} display={true} />
+  <MathBlock formula={"L(D) \\propto D^{-\\alpha_D}"} display={true} />
+  <MathBlock formula={"L(C) \\propto C^{-\\alpha_C}"} display={true} />
+</div>
+
+<p>where N = parameters, D = dataset size (tokens), C = compute (PetaFLOP-days).</p>
+
+<p>In plain English: loss decreases as a power law when you increase any of these three factors. On a log-log plot, these relationships appear as straight lines, making performance surprisingly predictable across orders of magnitude.</p>
+
+<p><strong>Key finding</strong>: When not bottlenecked by the others, scaling any single factor (N, D, or C) improves loss predictably. But there's an optimal ratio.</p>
+
+<h3>Chinchilla Scaling Laws (Hoffmann et al., 2022)</h3>
+
+<p>DeepMind revisited scaling laws and found prior work had trained <em>undertrained</em> models. The key insight: for compute-optimal training, parameters N and training tokens D should scale equally.</p>
+
+<p><strong>Chinchilla's rule</strong>: For every doubling of model size, double the training data.</p>
+
+<p>For a compute budget C (in FLOPs):</p>
+
+<MathBlock formula={"N_{\\text{opt}} \\propto C^{0.5}, \\quad D_{\\text{opt}} \\propto C^{0.5}"} display={true} />
+
+<p>In plain English: the optimal number of parameters and the optimal number of training tokens both grow as the square root of your compute budget. If you 4x your compute, you should 2x both model size and data.</p>
+
+<p><strong>Impact</strong>: GPT-3 (175B params, 300B tokens) was overparameterized and undertrained. Chinchilla (70B params, 1.4T tokens) outperformed it despite being smaller, because it was compute-optimal.</p>
+
+<p>Modern LLMs (LLaMA 3, Mistral, GPT-4) follow Chinchilla guidance: more data, not just more parameters.</p>
+
+<h3>Practical Implications</h3>
+<ul>
+  <li><strong>Data is the bottleneck</strong>: High-quality training data is scarce. We're approaching exhaustion of internet text.</li>
+  <li><strong>Smaller models, longer training</strong>: Inference costs favor smaller models trained longer (cheaper to serve).</li>
+  <li><strong>Predictable improvement</strong>: Companies can forecast ROI on compute investment with reasonable accuracy.</li>
+</ul>
+
+<h2>Power Law Exponents: What Do They Mean?</h2>
+
+<p>Typical exponents α ≈ 0.05-0.10. This means:</p>
+
+<MathBlock formula={"L \\propto N^{-0.076} \\Rightarrow \\text{10× parameters} \\Rightarrow \\text{~40\\% loss reduction}"} display={true} />
+
+<p>Diminishing returns set in, but predictably. This is why frontier labs invest billions: improvements are guaranteed, even if incremental.</p>
+
+<h2>Emergent Abilities: Magic or Measurement?</h2>
+
+<p><strong>Emergent abilities</strong> are capabilities that appear suddenly as models scale, absent in smaller models but present in larger ones. Examples: few-shot prompting, chain-of-thought reasoning, arithmetic.</p>
+
+<h3>The Original Claim (Wei et al., 2022)</h3>
+
+<p>GPT-3 exhibited few-shot learning: given a few examples in the prompt, it could generalize to new instances. This behavior was not seen in smaller models, suggesting qualitative phase transitions with scale.</p>
+
+<h3>The Debate: Are They Real?</h3>
+
+<p>Schaeffer et al. (2023) argued emergent abilities might be <em>measurement artifacts</em>:</p>
+<ul>
+  <li>If you measure with nonlinear metrics (accuracy) instead of continuous metrics (log-probability), smooth improvements appear sudden.</li>
+  <li>Changing the metric from accuracy → token edit distance reveals gradual scaling, not sudden emergence.</li>
+</ul>
+
+<p><strong>Counterargument</strong>: Some abilities (e.g., in-context learning, instruction following) do require minimum model capacity. Below ~1B parameters, models simply can't learn these skills regardless of data.</p>
+
+<h3>Consensus View (2025-2026)</h3>
+<ul>
+  <li>Scaling improves capabilities <em>predictably</em> on smooth metrics (loss, perplexity)</li>
+  <li>On task-specific metrics (pass@1 on HumanEval, SWE-bench), improvements may appear sharp due to metric choice</li>
+  <li>Some capabilities require minimum scale (architectural inductive biases + sufficient capacity)</li>
+  <li>"Emergent" often means "we didn't measure finely enough at smaller scales"</li>
+  <li>Modern focus has shifted to data quality and synthetic data generation as high-quality web text becomes scarce</li>
+</ul>
+
+<h2>Mixture of Experts (MoE): Scaling Without Proportional Compute</h2>
+
+<p>Standard scaling hits a wall: a 1T parameter dense model costs 1T FLOPs per token. MoE offers a solution.</p>
+
+<h3>How MoE Works</h3>
+
+<p>Replace dense feed-forward networks with <em>sparse</em> expert networks:</p>
+
+<MathBlock formula={"\\text{FFN}_{\\text{MoE}}(x) = \\sum_{i=1}^N w_i(x) \\cdot \\text{Expert}_i(x)"} display={true} />
+
+<p>In plain English: instead of one large FFN, route each token through a weighted combination of N smaller expert networks. Each expert is a standard FFN, and the weights determine which experts handle which inputs.</p>
+
+<p>A gating network computes weights w<sub>i</sub>(x), often selecting only top-K experts (e.g., K=2). This means:</p>
+<ul>
+  <li><strong>Total capacity</strong>: N experts → N× parameters</li>
+  <li><strong>Activated capacity</strong>: Only K experts → K/N of total FLOPs</li>
+</ul>
+
+<h3>Example: Mixtral 8x7B</h3>
+
+<p>Mixtral has 8 experts per layer, activating top-2. Total params: ~47B, but active params per token: ~13B (similar cost to a 13B dense model).</p>
+
+<p><strong>Result</strong>: Performance matching much larger dense models at a fraction of inference cost.</p>
+
+<h3>Challenges</h3>
+<ul>
+  <li><strong>Load balancing</strong>: Gating might favor a few experts, underutilizing others. Requires auxiliary losses to balance expert usage.</li>
+  <li><strong>Communication overhead</strong>: Experts are distributed across devices; routing tokens between devices adds latency.</li>
+  <li><strong>Training instability</strong>: MoE models are harder to train, requiring careful tuning.</li>
+</ul>
+
+<h3>Key MoE Models</h3>
+<ul>
+  <li><strong>Switch Transformer</strong> (Google, 2021): 1.6T params, activates 1 expert per token</li>
+  <li><strong>GLaM</strong> (Google, 2021): 1.2T params, outperforms GPT-3 with 1/3 the compute</li>
+  <li><strong>Mixtral 8x7B</strong> (Mistral, 2023): Open-weight model, SOTA performance at 13B active params</li>
+</ul>
+
+<Quiz
+  quizId="scaling-laws-chinchilla"
+  question="According to the Chinchilla scaling laws, if you double your compute budget, how should you optimally split the increase between model parameters and training data?"
+  options={[
+    { id: "a", text: "Put all the extra compute into a larger model", correct: false, explanation: "Chinchilla showed that just scaling model size is suboptimal. GPT-3 followed this approach and was undertrained relative to its size." },
+    { id: "b", text: "Scale both model size and training data equally", correct: true, explanation: "Correct! Hoffmann et al. (2022) showed that compute-optimal training requires scaling both model parameters and training tokens at roughly equal rates." },
+    { id: "c", text: "Put all the extra compute into more training data", correct: false, explanation: "While more data helps, only scaling data without increasing model capacity is also suboptimal." },
+    { id: "d", text: "The split doesn't matter as long as total compute increases", correct: false, explanation: "The split matters significantly! The Chinchilla paper showed that many existing models were significantly undertrained." }
+  ]}
+/>
+
+<Diagram diagramId="scaling-laws-viz" title="Scaling Law: Loss vs Compute (Log-Log Scale)">
+  <div class="w-full">
+    <svg viewBox="0 0 500 300" class="w-full h-auto">
+      <!-- Axes -->
+      <line x1="60" y1="250" x2="460" y2="250" stroke="#334155" stroke-width="2"/>
+      <line x1="60" y1="250" x2="60" y2="30" stroke="#334155" stroke-width="2"/>
+      <!-- Axis labels -->
+      <text x="260" y="290" text-anchor="middle" class="text-sm fill-slate-700" font-size="14">Log(Compute) →</text>
+      <text x="20" y="140" text-anchor="middle" class="text-sm fill-slate-700" font-size="14" transform="rotate(-90, 20, 140)">Log(Loss) →</text>
+      <!-- Power law curve -->
+      <path d="M 80 60 Q 150 100 200 150 Q 280 210 440 235" fill="none" stroke="#6366f1" stroke-width="3" data-animate/>
+      <!-- Data points -->
+      <circle cx="100" cy="80" r="5" fill="#6366f1" opacity="0.7" data-animate/>
+      <circle cx="150" cy="115" r="5" fill="#6366f1" opacity="0.7" data-animate/>
+      <circle cx="200" cy="150" r="5" fill="#6366f1" opacity="0.7" data-animate/>
+      <circle cx="280" cy="195" r="5" fill="#6366f1" opacity="0.7" data-animate/>
+      <circle cx="360" cy="220" r="5" fill="#6366f1" opacity="0.7" data-animate/>
+      <circle cx="440" cy="235" r="5" fill="#6366f1" opacity="0.7" data-animate/>
+      <!-- Annotations -->
+      <text x="100" y="70" text-anchor="middle" font-size="11" fill="#475569">Small</text>
+      <text x="280" y="185" text-anchor="middle" font-size="11" fill="#475569">GPT-3</text>
+      <text x="440" y="225" text-anchor="end" font-size="11" fill="#475569">Chinchilla</text>
+      <!-- Legend -->
+      <text x="260" y="20" text-anchor="middle" font-size="13" fill="#334155" font-weight="bold">Loss decreases as a power law with compute</text>
+    </svg>
+  </div>
+</Diagram>
+
+<RevealSection revealId="gpt3-optimal" title="Was GPT-3 Trained Optimally?">
+  <div data-reveal-step>
+    <p class="font-semibold text-slate-800">Step 1: GPT-3's actual allocation</p>
+    <p class="text-slate-600">GPT-3 has 175B parameters and was trained on ~300B tokens. That's a ratio of roughly 1.7 tokens per parameter.</p>
+  </div>
+  <div data-reveal-step class="hidden">
+    <p class="font-semibold text-slate-800">Step 2: Chinchilla's recommendation</p>
+    <p class="text-slate-600">The Chinchilla paper suggests the optimal ratio is approximately 20 tokens per parameter. For 175B parameters, that would mean ~3.5T tokens of training data.</p>
+  </div>
+  <div data-reveal-step class="hidden">
+    <p class="font-semibold text-slate-800">Step 3: The verdict</p>
+    <p class="text-slate-600">GPT-3 was significantly undertrained: it saw roughly 10x fewer tokens than optimal. The Chinchilla model (70B params, 1.4T tokens) matched GPT-3's performance with less than half the parameters by training on more data.</p>
+  </div>
+  <div data-reveal-step class="hidden">
+    <p class="font-semibold text-slate-800">Step 4: Impact on the field</p>
+    <p class="text-slate-600">This insight reshaped LLM training: LLaMA (65B, 1.4T tokens) and subsequent models adopted Chinchilla-optimal ratios, achieving better performance per parameter.</p>
+  </div>
+</RevealSection>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Scaling laws</strong> show loss scales predictably with compute, data, and parameters via power laws</li>
+    <li><strong>Chinchilla's insight</strong>: compute-optimal training requires scaling parameters and data equally (N ∝ D ∝ C<sup>0.5</sup>)</li>
+    <li><strong>Emergent abilities</strong> debate: smooth improvements on continuous metrics vs sharp transitions on discrete metrics; minimum scale required for some capabilities</li>
+    <li><strong>MoE (Mixture of Experts)</strong> enables scaling to massive parameter counts while keeping per-token compute low</li>
+    <li><strong>The future</strong>: data quality and availability become primary bottlenecks as we approach compute-optimal frontier</li>
+  </ul>
+</KeyTakeaway>
+
+<h2>References</h2>
+
+<PaperReference
+  title="Scaling Laws for Neural Language Models"
+  authors="Kaplan et al."
+  year="2020"
+  url="https://arxiv.org/abs/2001.08361"
+  type="paper"
+/>
+
+<PaperReference
+  title="Training Compute-Optimal Large Language Models (Chinchilla)"
+  authors="Hoffmann et al."
+  year="2022"
+  url="https://arxiv.org/abs/2203.15556"
+  type="paper"
+/>
+
+<PaperReference
+  title="Emergent Abilities of Large Language Models"
+  authors="Wei et al."
+  year="2022"
+  url="https://arxiv.org/abs/2206.07682"
+  type="paper"
+/>
+
+<PaperReference
+  title="Are Emergent Abilities of Large Language Models a Mirage?"
+  authors="Schaeffer et al."
+  year="2023"
+  url="https://arxiv.org/abs/2304.15004"
+  type="paper"
+/>
+
+<PaperReference
+  title="Switch Transformers: Scaling to Trillion Parameter Models"
+  authors="Fedus et al."
+  year="2021"
+  url="https://arxiv.org/abs/2101.03961"
+  type="paper"
+/>
+
+<PaperReference
+  title="Mixtral of Experts"
+  authors="Jiang et al."
+  year="2024"
+  url="https://arxiv.org/abs/2401.04088"
+  type="paper"
+/>

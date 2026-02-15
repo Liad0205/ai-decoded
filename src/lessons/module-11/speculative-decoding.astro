@@ -1,0 +1,467 @@
+---
+// Module 11, Lesson 11.3: Speculative Decoding and Distillation
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand the autoregressive bottleneck and why LLM generation is inherently slow</li>
+    <li>Explain the speculative decoding algorithm and its mathematical correctness guarantee</li>
+    <li>Analyze how to choose effective draft models for speculative decoding</li>
+    <li>Describe knowledge distillation techniques for model compression</li>
+    <li>Evaluate model optimization pipelines including ONNX runtime and graph optimization</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Autoregressive Bottleneck</h2>
+
+  <p>
+    As we explored in the previous lesson, the decode phase of LLM inference generates tokens <strong>one at a time</strong>. Each token requires a full forward pass through the model, loading all model weights from GPU memory. For a 70B model in FP16, that is 140 GB of memory reads per token.
+  </p>
+
+  <p>
+    The wall-clock time to generate a sequence of <MathBlock formula="N" /> tokens is:
+  </p>
+
+  <MathBlock formula={"T_{\\text{total}} = T_{\\text{prefill}} + N \\times T_{\\text{decode\\_step}}"} display={true} />
+
+  <p>
+    where <MathBlock formula={"T_{\\text{decode\\_step}}"} /> is roughly constant (determined by the time to load model weights from memory). For a 70B model on a single A100, <MathBlock formula={"T_{\\text{decode\\_step}} \\approx 50\\text{-}70\\text{ms}"} />, meaning generation is capped at ~15-20 tokens per second regardless of the GPU's computational power.
+  </p>
+
+  <p>
+    Crucially, the GPU's floating-point units are <strong>vastly underutilized</strong> during decode &mdash; typically below 5% utilization. The GPU spends most of its time waiting for data to arrive from memory. Speculative decoding exploits this idle compute by running a smaller, faster model in parallel.
+  </p>
+</section>
+
+<section>
+  <h2>Speculative Decoding: The Core Idea</h2>
+
+  <p>
+    <strong>Speculative decoding</strong> (Leviathan et al., 2022; Chen et al., 2023) is an exact acceleration technique for autoregressive generation. "Exact" means it produces <strong>the same output distribution</strong> as running the target model alone, assuming both models use the same temperature and sampling method &mdash; no quality degradation whatsoever.
+  </p>
+
+  <p>
+    The core idea is simple:
+  </p>
+  <ol>
+    <li>A small, fast <strong>draft model</strong> generates <MathBlock formula="K" /> candidate tokens speculatively</li>
+    <li>The large <strong>target model</strong> verifies all <MathBlock formula="K" /> tokens <em>in parallel</em> in a single forward pass</li>
+    <li>Accepted tokens are kept; the first rejected token is resampled from a corrected distribution</li>
+  </ol>
+
+  <p>
+    The key insight is that verification is cheap: the target model can score all <MathBlock formula="K" /> draft tokens in a single forward pass (like a prefill operation), whereas generating them one-by-one would require <MathBlock formula="K" /> separate forward passes. If the draft model is good (high <strong>acceptance rate</strong>, meaning the fraction of draft tokens the target model agrees with), you get <MathBlock formula="K" /> tokens for the cost of one target model forward pass plus <MathBlock formula="K" /> much cheaper draft forward passes.
+  </p>
+</section>
+
+<RevealSection revealId="speculative-decoding-walkthrough" title="Step-by-Step: How Speculative Decoding Works">
+  <div data-reveal-step>
+    <h4 class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2">Step 1: Draft Model Generates K Candidate Tokens</h4>
+    <p class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3">
+      The draft model (e.g., a 1B parameter model) autoregressively generates K tokens (typically K = 4-8). This is fast because the draft model is much smaller. For each position i, the draft model produces a probability distribution <MathBlock formula={"q_i(x)"} /> over the vocabulary.
+    </p>
+    <div class="bg-indigo-50 p-3 rounded-lg text-sm font-mono">
+      Draft generates: ["The", "cat", "sat", "on", "the"] with probabilities q_1, q_2, q_3, q_4, q_5
+    </div>
+  </div>
+
+  <div data-reveal-step class="hidden">
+    <h4 class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2">Step 2: Target Model Verifies All K Tokens in Parallel</h4>
+    <p class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3">
+      The target model (e.g., 70B) processes all K draft tokens in a <strong>single forward pass</strong>, computing its own probability distribution <MathBlock formula={"p_i(x)"} /> at each position. This is a prefill-like operation (matrix-matrix multiply, compute-bound) and costs about the same as generating just one token autoregressively.
+    </p>
+    <div class="bg-purple-50 p-3 rounded-lg text-sm font-mono">
+      Target computes: p_1("The"), p_2("cat"), p_3("sat"), p_4("on"), p_5("the") in ONE pass
+    </div>
+  </div>
+
+  <div data-reveal-step class="hidden">
+    <h4 class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2">Step 3: Accept or Reject Each Token (Left to Right)</h4>
+    <p class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3">
+      For each position i, accept the draft token <MathBlock formula={"x_i"} /> with probability <MathBlock formula={"\\min\\left(1, \\frac{p_i(x_i)}{q_i(x_i)}\\right)"} />. If the target model assigns higher probability to the token than the draft model, the token is always accepted. If the target assigns lower probability, the token is accepted with probability proportional to the ratio.
+    </p>
+    <div class="bg-green-50 p-3 rounded-lg text-sm">
+      <p class="font-medium text-green-800">Token "The": p=0.8, q=0.7 &rarr; min(1, 0.8/0.7) = 1.0 &rarr; ACCEPTED</p>
+      <p class="font-medium text-green-800">Token "cat": p=0.6, q=0.5 &rarr; min(1, 0.6/0.5) = 1.0 &rarr; ACCEPTED</p>
+      <p class="font-medium text-green-800">Token "sat": p=0.3, q=0.4 &rarr; min(1, 0.3/0.4) = 0.75 &rarr; (coin flip)</p>
+    </div>
+  </div>
+
+  <div data-reveal-step class="hidden">
+    <h4 class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2">Step 4: Resample at the First Rejection</h4>
+    <p class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3">
+      When a token is rejected at position i, sample a replacement token from the <strong>residual distribution</strong>:
+    </p>
+    <MathBlock formula={"x_i \\sim \\text{norm}\\left(\\max(0, p_i(x) - q_i(x))\\right)"} display={true} />
+    <p class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3">
+      This corrected sampling ensures the final output follows <em>exactly</em> the target model's distribution. All tokens after position i are discarded (they were generated based on the now-rejected token). The process then restarts from position i+1.
+    </p>
+    <div class="bg-amber-50 p-3 rounded-lg text-sm">
+      <p class="font-medium text-amber-800">If "sat" rejected: sample replacement from norm(max(0, p_3 - q_3))</p>
+      <p class="font-medium text-amber-800">Discard "on" and "the" (they were conditioned on "sat")</p>
+      <p class="font-medium text-amber-800">Net gain: 2 tokens ("The", "cat") + 1 resampled token = 3 tokens from 1 target forward pass</p>
+    </div>
+  </div>
+
+  <div data-reveal-step class="hidden">
+    <h4 class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2">Step 5: Repeat</h4>
+    <p class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3">
+      The draft model continues generating from the last accepted token, and the process repeats. On average, if the draft model's acceptance rate is <MathBlock formula={"\\alpha"} />, you get approximately <MathBlock formula={"\\frac{1}{1 - \\alpha}"} /> tokens per target model forward pass. With a well-matched draft model (<MathBlock formula={"\\alpha \\approx 0.7\\text{-}0.8"} />), this yields a <strong>2-3x speedup</strong>.
+    </p>
+    <div class="bg-slate-50 p-3 rounded-lg text-sm">
+      <p class="font-medium text-slate-700">Expected tokens per target forward pass = 1/(1 - alpha)</p>
+      <p class="font-medium text-slate-700">alpha = 0.8 &rarr; ~5 tokens per pass &rarr; ~5x fewer target forward passes needed</p>
+      <p class="font-medium text-slate-700">But draft model also takes time, so net speedup is typically 2-3x</p>
+    </div>
+  </div>
+</RevealSection>
+
+<section>
+  <h2>The Mathematical Guarantee</h2>
+
+  <p>
+    The remarkable property of speculative decoding is that it produces <strong>exactly the same distribution</strong> as the target model alone. This is not an approximation &mdash; it is a provable guarantee.
+  </p>
+
+  <h3>Proof Sketch</h3>
+  <p>
+    For each token position, the probability that speculative decoding produces token <MathBlock formula="x" /> is:
+  </p>
+
+  <MathBlock formula={"P(\\text{output} = x) = q(x) \\cdot \\min\\left(1, \\frac{p(x)}{q(x)}\\right) + \\left(1 - \\sum_y q(y) \\min\\left(1, \\frac{p(y)}{q(y)}\\right)\\right) \\cdot \\frac{\\max(0, p(x) - q(x))}{\\sum_z \\max(0, p(z) - q(z))}"} display={true} />
+
+  <p>
+    In plain English: we accept the draft token if the target model would have been at least as likely to generate it as the draft model was. When the draft model is "too confident" (assigns higher probability than the target), we accept with probability equal to the target/draft ratio, preserving the exact output distribution of the target model.
+  </p>
+
+  <p>
+    The first term is the probability that the draft token <MathBlock formula="x" /> is accepted. The second term is the probability that a rejection occurs and <MathBlock formula="x" /> is resampled from the residual distribution. With careful algebra, this simplifies to:
+  </p>
+
+  <MathBlock formula={"P(\\text{output} = x) = p(x)"} display={true} />
+
+  <p>
+    This means: regardless of the draft model's quality, the output distribution is always exactly <MathBlock formula={"p(x)"} /> (the target model's distribution). A bad draft model does not hurt quality &mdash; it only reduces speedup (more rejections mean fewer tokens per verification pass).
+  </p>
+</section>
+
+<section>
+  <h2>Choosing Draft Models</h2>
+
+  <p>
+    The effectiveness of speculative decoding depends critically on the draft model. The ideal draft model is both <strong>fast</strong> (small enough to generate tokens quickly) and <strong>accurate</strong> (its distribution closely matches the target model, yielding a high acceptance rate).
+  </p>
+
+  <h3>Draft Model Strategies</h3>
+  <ul>
+    <li>
+      <strong>Same-family smaller model</strong>: Use a smaller model from the same family (e.g., Llama-3-8B as draft for Llama-3-70B). These often have the highest acceptance rates because they share training data and tokenizer.
+    </li>
+    <li>
+      <strong>Distilled model</strong>: Train a small model specifically to mimic the target model's output distribution. This produces the best acceptance rates but requires a dedicated distillation step.
+    </li>
+    <li>
+      <strong>Self-speculative decoding</strong>: Use a subset of the target model's own layers (e.g., skipping every other layer) as the draft model. This avoids needing a separate model entirely and shares the weight memory.
+    </li>
+    <li>
+      <strong>Medusa heads</strong>: Add multiple small prediction heads to the target model that predict future tokens directly. Each head predicts the token N positions ahead. This eliminates the draft model entirely but requires fine-tuning the additional heads.
+    </li>
+    <li>
+      <strong>EAGLE</strong>: A more sophisticated approach that trains a small autoregressive head on top of the target model's hidden states to predict future tokens, achieving higher acceptance rates than Medusa.
+    </li>
+  </ul>
+
+  <h3>Key Tradeoffs</h3>
+  <ul>
+    <li><strong>Draft model size</strong>: Larger draft models have higher acceptance rates but take more time per draft token. The optimal draft model size is typically 5-15x smaller than the target.</li>
+    <li><strong>Draft length K</strong>: More draft tokens per round increase the potential gain but also increase the average number of wasted tokens on rejection. Optimal K depends on the acceptance rate; typically K = 4-8.</li>
+    <li><strong>Task dependence</strong>: Acceptance rates vary by task. Highly predictable text (boilerplate code, simple Q&A) has high acceptance; creative or mathematical reasoning has lower acceptance.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Knowledge Distillation: Compressing Models</h2>
+
+  <p>
+    <strong>Knowledge distillation</strong> (Hinton et al., 2015) is the process of training a smaller "student" model to mimic the behavior of a larger "teacher" model. Unlike quantization (which compresses the representation), distillation creates a genuinely smaller architecture that has learned from the teacher's knowledge.
+  </p>
+
+  <h3>Why Distillation Works</h3>
+  <p>
+    A trained teacher model's output distribution contains far more information than the hard labels in the training data. When the teacher assigns probabilities like [cat: 0.6, dog: 0.3, bear: 0.08, ...], the relative probabilities between wrong classes (dog vs. bear) encode learned knowledge about class similarity. These signals are called <strong>"dark knowledge"</strong> &mdash; the fine-grained probability differences between incorrect classes that encode learned similarity structure. Dark knowledge is absent from hard labels (which would just say "cat").
+  </p>
+
+  <h3>The Distillation Loss</h3>
+  <p>
+    The student is trained on a combination of the standard training loss and a distillation loss that matches the student's output distribution to the teacher's soft distribution:
+  </p>
+
+  <MathBlock formula={"\\mathcal{L} = \\alpha \\cdot \\mathcal{L}_{\\text{task}} + (1 - \\alpha) \\cdot T^2 \\cdot \\text{KL}\\left(\\sigma\\left(\\frac{z_T}{T}\\right) \\| \\sigma\\left(\\frac{z_S}{T}\\right)\\right)"} display={true} />
+
+  <p>
+    In plain English: the student learns from two signals -- the ground-truth labels (task loss) and the teacher's soft probability distribution (KL divergence). The temperature T softens both distributions so that the relative probabilities between wrong classes become visible, exposing the "dark knowledge" the teacher has learned.
+  </p>
+
+  <p>
+    where <MathBlock formula={"z_T"} /> and <MathBlock formula={"z_S"} /> are the teacher and student logits, <MathBlock formula="T" /> is the temperature (typically 2-20) that softens the distributions to make the dark knowledge more visible, <MathBlock formula={"\\alpha"} /> balances the two losses, and <MathBlock formula={"\\text{KL}"} /> is the Kullback-Leibler divergence. The <MathBlock formula={"T^2"} /> factor is necessary because the KL divergence of softened distributions scales as <MathBlock formula={"1/T^2"} />, so this correction maintains the gradient magnitude at a level comparable to the task loss regardless of the chosen temperature.
+  </p>
+</section>
+
+<section>
+  <h2>Distillation Techniques for LLMs</h2>
+
+  <p>
+    Distilling large language models presents unique challenges due to their size and the diversity of their capabilities.
+  </p>
+
+  <h3>Logit Matching (Output Distillation)</h3>
+  <p>
+    The most straightforward approach: train the student to match the teacher's next-token probability distribution at every position. This is a direct application of the Hinton et al. framework to autoregressive models:
+  </p>
+
+  <MathBlock formula={"\\mathcal{L}_{\\text{logit}} = \\sum_{t=1}^{T} \\text{KL}(p_{\\text{teacher}}(\\cdot | x_{<t}) \\| p_{\\text{student}}(\\cdot | x_{<t}))"} display={true} />
+
+  <p>
+    In plain English: at every token position, minimize the KL divergence between the teacher's and student's next-token probability distributions. This forces the student to match the teacher's full predictive behavior, not just its top-1 prediction.
+  </p>
+
+  <p>
+    Logit matching requires running the teacher model on the training data to generate probability distributions, which can be expensive for very large teachers.
+  </p>
+
+  <h3>Feature Matching (Intermediate Distillation)</h3>
+  <p>
+    Beyond matching the final output, the student can also learn to match the teacher's <strong>intermediate representations</strong>. This is done by adding loss terms that minimize the distance between the student's and teacher's hidden states at selected layers:
+  </p>
+
+  <MathBlock formula={"\\mathcal{L}_{\\text{feature}} = \\sum_{l \\in \\text{layers}} \\| W_l \\cdot h_S^{(l)} - h_T^{(f(l))} \\|_2^2"} display={true} />
+
+  <p>
+    In plain English: at selected intermediate layers, minimize the distance between the student's hidden states (projected to match dimensions) and the corresponding teacher hidden states. This provides a richer training signal than output-only distillation because the student learns to match the teacher's internal representations, not just its final predictions.
+  </p>
+
+  <p>
+    where <MathBlock formula={"W_l"} /> is a learned projection matrix (since student and teacher layers may have different dimensions) and <MathBlock formula={"f(l)"} /> maps student layers to corresponding teacher layers. Feature matching provides stronger training signal than output-only distillation.
+  </p>
+
+  <h3>Attention Transfer</h3>
+  <p>
+    An additional signal comes from matching <strong>attention patterns</strong> between teacher and student. The intuition is that attention matrices encode which tokens are important to attend to for each query, and this relational knowledge transfers well between models of different sizes.
+  </p>
+
+  <h3>Data-Free and Synthetic Distillation</h3>
+  <p>
+    A practical approach for LLMs: instead of requiring the original training data, generate training data from the teacher model itself. The student is trained on the teacher's <strong>generated text</strong>, learning from both the content and the implicit knowledge in the teacher's generation patterns. This is the approach used by many open-source models that are distilled from larger proprietary models.
+  </p>
+</section>
+
+<section>
+  <h2>ONNX Runtime and Model Optimization Pipelines</h2>
+
+  <p>
+    Beyond quantization and distillation, a complete optimization pipeline includes <strong>graph-level optimizations</strong> that restructure the model's computation graph for faster execution.
+  </p>
+
+  <h3>ONNX (Open Neural Network Exchange)</h3>
+  <p>
+    ONNX is an open format for representing machine learning models. Converting a model to ONNX format enables:
+  </p>
+  <ul>
+    <li><strong>Framework independence</strong>: Models trained in PyTorch can be served by ONNX Runtime, TensorRT, or other runtimes without PyTorch as a dependency</li>
+    <li><strong>Graph optimizations</strong>: The ONNX runtime applies operator fusion, constant folding, and memory planning at the graph level</li>
+    <li><strong>Cross-platform deployment</strong>: The same ONNX model can run on CPUs, GPUs, NPUs, and custom accelerators with appropriate execution providers</li>
+  </ul>
+
+  <h3>Key Graph Optimizations</h3>
+  <ul>
+    <li><strong>Operator fusion</strong>: Combines multiple sequential operations into a single fused kernel. For example, fusing LayerNorm + Linear + GELU into a single GPU kernel eliminates intermediate memory reads/writes.</li>
+    <li><strong>Constant folding</strong>: Pre-computes operations on constant values at compilation time rather than runtime.</li>
+    <li><strong>Memory planning</strong>: Analyzes the computation graph to reuse memory buffers between operations that don't overlap in time, reducing peak memory usage.</li>
+    <li><strong>FlashAttention integration</strong>: Replaces the naive attention pattern (Q*K^T, softmax, multiply by V) with fused kernels that never materialize the full attention matrix, reducing memory from O(N^2) to O(N).</li>
+  </ul>
+
+  <h3>TensorRT Compilation</h3>
+  <p>
+    NVIDIA's TensorRT compiler goes further than ONNX runtime by generating <strong>hardware-specific</strong> optimized kernels. It analyzes the model graph and generates custom CUDA kernels optimized for the specific GPU architecture (A100, H100, etc.):
+  </p>
+  <ul>
+    <li>Layer and tensor fusion with hardware-specific tuning</li>
+    <li>Kernel auto-tuning (tests multiple kernel implementations and picks the fastest)</li>
+    <li>Precision calibration for INT8/FP8 quantization with TensorRT-native calibration</li>
+    <li>Dynamic shape support for variable batch size and sequence length</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Full Optimization Pipeline</h2>
+
+  <p>
+    In practice, deploying an LLM efficiently involves combining multiple optimization techniques in a pipeline:
+  </p>
+
+  <ol>
+    <li>
+      <strong>Architecture selection</strong>: Choose a model with inference-friendly features (GQA for smaller KV-cache, SwiGLU activations for efficient computation).
+    </li>
+    <li>
+      <strong>Distillation</strong> (optional): If you need a smaller model than what is available, distill from a larger teacher.
+    </li>
+    <li>
+      <strong>Quantization</strong>: Apply GPTQ or AWQ for 4-bit weight quantization, with optional KV-cache quantization to FP8.
+    </li>
+    <li>
+      <strong>Graph optimization</strong>: Convert to ONNX or TensorRT format for operator fusion and kernel optimization.
+    </li>
+    <li>
+      <strong>Serving framework</strong>: Deploy with vLLM or TensorRT-LLM for continuous batching, PagedAttention, and efficient scheduling.
+    </li>
+    <li>
+      <strong>Speculative decoding</strong> (optional): Add a draft model if latency is the primary concern and GPU compute is available.
+    </li>
+  </ol>
+
+  <p>
+    Each layer of optimization multiplies with the others. A fully optimized deployment can be <strong>10-50x more efficient</strong> than a naive PyTorch implementation, in terms of both latency and cost.
+  </p>
+</section>
+
+<Quiz
+  question="Speculative decoding guarantees that the output distribution matches the target model exactly, regardless of the draft model's quality. What happens when the draft model is very poor (low acceptance rate)?"
+  quizId="speculative-decoding-quality"
+  options={[
+    {
+      id: "a",
+      text: "Output quality degrades because rejected tokens introduce errors into the generated text",
+      correct: false,
+      explanation: "This is incorrect. Speculative decoding's mathematical guarantee ensures that the output distribution is exactly the target model's distribution, regardless of the draft model. Rejected tokens are resampled correctly; they never appear in the output."
+    },
+    {
+      id: "b",
+      text: "The output remains correct but the speedup decreases: in the worst case, it's as slow as running the target model alone plus the overhead of the draft model",
+      correct: true,
+      explanation: "Correct! With a poor draft model, most tokens are rejected, meaning you do nearly one target forward pass per generated token (same as normal decoding) plus the wasted time running the draft model. The output distribution remains exactly correct. The minimum speedup is slightly less than 1x (due to draft model overhead), meaning a very poor draft model can actually slow things down slightly."
+    },
+    {
+      id: "c",
+      text: "The system automatically switches to normal decoding when the acceptance rate drops below a threshold",
+      correct: false,
+      explanation: "While some implementations do have adaptive mechanisms, this is not inherent to speculative decoding. The core algorithm always runs the draft-then-verify loop. The key insight is that even with low acceptance, correctness is maintained; only speed is affected."
+    },
+    {
+      id: "d",
+      text: "The temperature parameter automatically increases to compensate for the draft model's errors",
+      correct: false,
+      explanation: "Speculative decoding does not modify any sampling parameters. The temperature used is the same as what would be used for normal target model decoding. The accept/reject mechanism handles all correction mathematically."
+    }
+  ]}
+/>
+
+<Quiz
+  question="What is the primary advantage of knowledge distillation over quantization for model compression?"
+  quizId="distillation-vs-quantization"
+  options={[
+    {
+      id: "a",
+      text: "Distillation is always faster to apply than quantization",
+      correct: false,
+      explanation: "Distillation requires training (hours to days for LLMs), while quantization methods like GPTQ take minutes to hours. Quantization is typically much faster to apply."
+    },
+    {
+      id: "b",
+      text: "Distillation creates a genuinely smaller architecture (fewer layers/parameters), which can use less compute per token, not just less memory",
+      correct: true,
+      explanation: "Correct! Quantization keeps the same architecture and reduces memory, but the number of operations per token stays the same (INT4 multiply is roughly the same cost as FP16 multiply in terms of compute operations). Distillation creates a smaller architecture (e.g., 7B instead of 70B) that requires fundamentally fewer computations per token, providing both memory and compute savings."
+    },
+    {
+      id: "c",
+      text: "Distilled models always produce higher quality output than quantized models",
+      correct: false,
+      explanation: "This is not universally true. A well-quantized 70B model often outperforms a 7B model distilled from it, because the 70B model has more capacity even at reduced precision. The advantage of distillation is compute reduction, not necessarily quality."
+    },
+    {
+      id: "d",
+      text: "Distillation works on any model without access to training data",
+      correct: false,
+      explanation: "Distillation requires either the original training data or synthetic data generated by the teacher model. Quantization methods like GPTQ need only a small calibration set (hundreds of samples), making them more data-efficient."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Speculative decoding</strong> uses a small draft model to generate candidate tokens that the target model verifies in parallel, achieving 2-3x speedup with a <em>mathematical guarantee</em> of identical output distribution</li>
+    <li><strong>The acceptance-rejection mechanism</strong> ensures correctness: accepted tokens match the target's distribution, and rejected tokens are resampled from a corrected residual distribution</li>
+    <li><strong>Draft model selection</strong> is critical: same-family smaller models, distilled models, or self-speculative approaches (Medusa, EAGLE) each offer different tradeoffs between implementation complexity and acceptance rate</li>
+    <li><strong>Knowledge distillation</strong> trains a smaller student model to mimic a larger teacher using soft probability distributions, capturing "dark knowledge" that hard labels miss</li>
+    <li><strong>LLM distillation techniques</strong> include logit matching, feature matching, attention transfer, and synthetic data generation from the teacher model</li>
+    <li><strong>The full optimization pipeline</strong> combines architecture selection, distillation, quantization, graph optimization, efficient serving, and speculative decoding for 10-50x improvement over naive deployment</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="Fast Inference from Transformers via Speculative Decoding"
+    authors="Leviathan, Kalman, Matias"
+    year="2022"
+    url="https://arxiv.org/abs/2211.17192"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Accelerating Large Language Model Decoding with Speculative Sampling"
+    authors="Chen, Borgeaud, Irving, Lespiau, Sifre, Jumper"
+    year="2023"
+    url="https://arxiv.org/abs/2302.01318"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Medusa: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads"
+    authors="Cai, Li, Geng, Peng, Lee, Chen, Dao"
+    year="2024"
+    url="https://arxiv.org/abs/2401.10774"
+    type="paper"
+  />
+
+  <PaperReference
+    title="EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty"
+    authors="Li, Cai, Wang, Xiao, Dao, Kim"
+    year="2024"
+    url="https://arxiv.org/abs/2401.15077"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Distilling the Knowledge in a Neural Network"
+    authors="Hinton, Vinyals, Dean"
+    year="2015"
+    url="https://arxiv.org/abs/1503.02531"
+    type="paper"
+  />
+
+  <PaperReference
+    title="DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter"
+    authors="Sanh, Debut, Chaumond, Wolf"
+    year="2019"
+    url="https://arxiv.org/abs/1910.01108"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Draft & Verify: Lossless Large Language Model Acceleration via Self-Speculative Decoding"
+    authors="Zhang, Sheng, Zhou, Chen, Wang, Wang, Song, Zhang"
+    year="2023"
+    url="https://arxiv.org/abs/2309.08168"
+    type="paper"
+  />
+</section>

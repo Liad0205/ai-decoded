@@ -1,0 +1,329 @@
+---
+// Module 4, Lesson 4.1: The Cost of Full Fine-Tuning
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+import Diagram from '../../components/Diagram.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Quantify the memory requirements of full fine-tuning (model weights, optimizer states, gradients, activations)</li>
+    <li>Understand why AdamW requires 4x the memory of model weights alone</li>
+    <li>Survey the PEFT taxonomy and understand when each approach applies</li>
+    <li>Calculate whether a given GPU can fine-tune a given model</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Why Fine-Tune at All?</h2>
+
+  <p>
+    Foundation models like GPT-4, LLaMA, and Mistral are pretrained on massive corpora to learn general language capabilities. But for specific tasks -- medical diagnosis, legal reasoning, code generation in a proprietary language -- they often fall short. <strong>Fine-tuning</strong> adapts a pretrained model to a target domain or task by continuing training on task-specific data.
+  </p>
+
+  <p>
+    The simplest approach is <strong>full fine-tuning</strong>: update every parameter in the model. This yields the most expressive adaptation, but the cost is staggering.
+  </p>
+</section>
+
+<section>
+  <h2>Memory Anatomy of Full Fine-Tuning</h2>
+
+  <p>
+    To fine-tune a model with <MathBlock formula="N" /> parameters using AdamW (the standard optimizer for transformers), you need to store four categories of data in GPU memory:
+  </p>
+
+  <h3>1. Model Weights</h3>
+  <p>
+    In mixed-precision training (the standard approach), weights are stored in both FP32 (for the optimizer) and FP16/BF16 (for the forward/backward pass):
+  </p>
+  <MathBlock formula={"\\text{Weights} = N \\times 4\\text{ bytes (FP32)} + N \\times 2\\text{ bytes (FP16)} = 6N\\text{ bytes}"} display={true} />
+  <p>
+    You need two copies of every weight: the FP32 "master" copy that the optimizer updates with full precision, and the FP16 copy used in the actual forward and backward passes for speed. That is 6 bytes per parameter.
+  </p>
+
+  <h3>2. Optimizer States (AdamW)</h3>
+  <p>
+    AdamW maintains two additional tensors per parameter -- the first moment (momentum) <MathBlock formula="m_t" /> and second moment (variance) <MathBlock formula="v_t" /> -- both in FP32:
+  </p>
+  <MathBlock formula={"\\text{Optimizer states} = N \\times 4\\text{ bytes} + N \\times 4\\text{ bytes} = 8N\\text{ bytes}"} display={true} />
+  <p>
+    Adam's two moment estimates each require a full FP32 copy of every parameter. This is the single largest memory consumer -- more than the weights themselves.
+  </p>
+
+  <h3>3. Gradients</h3>
+  <p>
+    During backpropagation, a gradient is computed for every trainable parameter. In mixed precision, gradients are typically stored in FP16:
+  </p>
+  <MathBlock formula={"\\text{Gradients} = N \\times 2\\text{ bytes (FP16)} = 2N\\text{ bytes}"} display={true} />
+  <p>
+    One gradient value per trainable parameter, stored in FP16 to match the forward pass precision.
+  </p>
+
+  <h3>4. Activations</h3>
+  <p>
+    Intermediate values from the forward pass must be saved for backpropagation. Activation memory depends on sequence length, batch size, and model architecture:
+  </p>
+  <MathBlock formula={"\\text{Activations} \\approx s \\times b \\times h \\times L \\times 2\\text{ bytes}"} display={true} />
+  <p>
+    Activation memory stores every intermediate result from the forward pass that backpropagation needs. It scales with all four axes of your workload: sequence length <MathBlock formula="s" />, batch size <MathBlock formula="b" />, hidden dimension <MathBlock formula="h" />, and number of layers <MathBlock formula="L" />. Techniques like <strong>gradient checkpointing</strong> trade compute for memory by recomputing activations during the backward pass instead of storing them.
+  </p>
+
+  <RevealSection revealId="memory-calculation" title="Worked Example: LLaMA-2 7B Memory Calculation">
+    <div data-reveal-step>
+      <h4>Step 1: Count Parameters</h4>
+      <p>LLaMA-2 7B has <MathBlock formula={"N = 6.74 \\times 10^9"} /> parameters.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 2: Model Weights (Mixed Precision)</h4>
+      <MathBlock formula={"\\text{Weights} = 6.74 \\times 10^9 \\times 6 = 40.4\\text{ GB}"} display={true} />
+      <p>This is 6 bytes per parameter: 4 bytes FP32 (master copy) + 2 bytes FP16 (compute copy).</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 3: Optimizer States</h4>
+      <MathBlock formula={"\\text{Adam states} = 6.74 \\times 10^9 \\times 8 = 53.9\\text{ GB}"} display={true} />
+      <p>Two FP32 tensors (momentum + variance) per parameter. This is the largest memory consumer.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 4: Gradients</h4>
+      <MathBlock formula={"\\text{Gradients} = 6.74 \\times 10^9 \\times 2 = 13.5\\text{ GB}"} display={true} />
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 5: Total (Excluding Activations)</h4>
+      <MathBlock formula={"\\text{Total} = 40.4 + 53.9 + 13.5 = 107.8\\text{ GB}"} display={true} />
+      <p class="mt-2 text-rose-700 dark:text-[hsl(var(--foreground))] font-medium">
+        That is over 100 GB just for model state -- more than any single consumer GPU (A100 has 80 GB). And we have not even counted activations yet.
+      </p>
+      <p class="mt-1 text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
+        With activations (sequence length 2048, batch size 1), add another ~20-40 GB depending on checkpointing strategy. Full fine-tuning of a 7B model requires at minimum 2x A100 80GB GPUs with model parallelism.
+      </p>
+    </div>
+  </RevealSection>
+
+  <p>
+    To summarize with concrete numbers for a 7B model with AdamW: model params in mixed precision (14 GB FP16 + 27 GB FP32 master = ~40 GB) + gradients (14 GB) + optimizer states (28 GB for Adam's two moment estimates in FP32) = ~108 GB minimum, before accounting for activations. The optimizer states alone require twice as much memory as the weights.
+  </p>
+
+  <h3>The Memory Rule of Thumb</h3>
+  <p>
+    A useful approximation for full fine-tuning with AdamW in mixed precision:
+  </p>
+  <MathBlock formula={"\\text{GPU Memory} \\approx 16N \\text{ to } 20N \\text{ bytes}"} display={true} />
+  <p>
+    In other words, multiply the parameter count by 16-20 bytes to estimate total GPU memory. The lower end (16 bytes) covers weights + optimizer + gradients; the upper end (20 bytes) includes activation memory. For a model with <MathBlock formula="N" /> parameters in billions, you need roughly <strong>16-20 GB per billion parameters</strong>.
+  </p>
+</section>
+
+<section>
+  <h2>The Scaling Wall</h2>
+
+  <Diagram diagramId="memory-scaling" title="Memory Requirements vs. Model Size" autoplay={true} animationDuration={3000}>
+    <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+      <div class="space-y-4">
+        <div class="flex items-center gap-4" data-animate style="animation-delay: 0.2s">
+          <div class="w-24 text-right text-sm font-medium">1.3B</div>
+          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-indigo-500 rounded-full flex items-center justify-end pr-2" style="width: 8%">
+              <span class="text-xs text-white font-medium">~24 GB</span>
+            </div>
+          </div>
+          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">1x A100 40GB</div>
+        </div>
+        <div class="flex items-center gap-4" data-animate style="animation-delay: 0.8s">
+          <div class="w-24 text-right text-sm font-medium">7B</div>
+          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-indigo-600 rounded-full flex items-center justify-end pr-2" style="width: 38%">
+              <span class="text-xs text-white font-medium">~120 GB</span>
+            </div>
+          </div>
+          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">2x A100 80GB</div>
+        </div>
+        <div class="flex items-center gap-4" data-animate style="animation-delay: 1.4s">
+          <div class="w-24 text-right text-sm font-medium">13B</div>
+          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-purple-600 rounded-full flex items-center justify-end pr-2" style="width: 66%">
+              <span class="text-xs text-white font-medium">~220 GB</span>
+            </div>
+          </div>
+          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">4x A100 80GB</div>
+        </div>
+        <div class="flex items-center gap-4" data-animate style="animation-delay: 2.0s">
+          <div class="w-24 text-right text-sm font-medium">70B</div>
+          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-rose-600 rounded-full flex items-center justify-end pr-2" style="width: 100%">
+              <span class="text-xs text-white font-medium">~1.2 TB</span>
+            </div>
+          </div>
+          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">16x A100 80GB</div>
+        </div>
+      </div>
+      <div class="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center" data-animate style="animation-delay: 2.6s">
+        Memory estimates for full fine-tuning with AdamW in mixed precision (excluding activations)
+      </div>
+    </div>
+  </Diagram>
+
+  <p>
+    The numbers are sobering. Full fine-tuning does not scale democratically. A 70B model requires a cluster of GPUs costing hundreds of thousands of dollars. This creates a fundamental problem: <strong>the organizations that most need to customize models (domain experts in medicine, law, science) often have the least GPU budget</strong>.
+  </p>
+</section>
+
+<section>
+  <h2>Beyond Cost: Other Problems with Full Fine-Tuning</h2>
+
+  <h3>Catastrophic Forgetting</h3>
+  <p>
+    When all parameters are updated, the model can "forget" its pretrained knowledge. Fine-tuning on medical text may degrade the model's general language ability. This is called <strong>catastrophic forgetting</strong> and is especially severe with small fine-tuning datasets.
+  </p>
+
+  <h3>Storage and Serving</h3>
+  <p>
+    Each fine-tuned model is a full copy of all parameters. Serving 10 different task-specific versions of a 7B model means storing and loading 10 separate 14 GB checkpoint files. In production, this is expensive and slow to switch between.
+  </p>
+
+  <h3>Overfitting</h3>
+  <p>
+    Full fine-tuning has enormous capacity -- billions of parameters adapting to potentially small datasets. Without careful regularization, the model memorizes the training data instead of learning generalizable task patterns.
+  </p>
+</section>
+
+<section>
+  <h2>The PEFT Taxonomy</h2>
+
+  <p>
+    <strong>Parameter-Efficient Fine-Tuning (PEFT)</strong> addresses these challenges by training only a small fraction of parameters while keeping most of the pretrained model frozen. The key insight: <em>task-specific adaptation may live in a much smaller subspace than the full parameter space</em>.
+  </p>
+
+  <h3>1. Additive Methods</h3>
+  <p>
+    Introduce new trainable parameters into the architecture while keeping original weights frozen.
+  </p>
+  <ul>
+    <li><strong>Adapters</strong>: Insert small bottleneck layers (down-projection, nonlinearity, up-projection) between transformer blocks. Adds ~3-8% parameters.</li>
+    <li><strong>Soft Prompts (Prompt Tuning)</strong>: Prepend learned continuous vectors to the input embeddings. Only the prompt vectors are trained -- the model itself is untouched.</li>
+    <li><strong>Prefix Tuning</strong>: Similar to prompt tuning, but prepends learned vectors to the key and value matrices at every layer, not just the input.</li>
+  </ul>
+
+  <h3>2. Selective Methods</h3>
+  <p>
+    Choose a subset of existing parameters to fine-tune and freeze the rest.
+  </p>
+  <ul>
+    <li><strong>BitFit</strong>: Train only bias terms (~0.1% of parameters). Surprisingly effective for many NLP tasks.</li>
+    <li><strong>Layer-selective</strong>: Fine-tune only the last few layers or attention heads.</li>
+  </ul>
+
+  <h3>3. Reparameterization Methods</h3>
+  <p>
+    Modify the weight update itself using a low-dimensional parameterization.
+  </p>
+  <ul>
+    <li><strong>LoRA</strong>: Decompose weight updates into low-rank matrices. The most widely adopted PEFT method (covered in depth in Lesson 4.2).</li>
+    <li><strong>DoRA</strong>: Decomposes weights into magnitude and direction components, applying LoRA to the direction only.</li>
+  </ul>
+
+  <Quiz
+    question="Why does AdamW require so much more memory than the model weights alone?"
+    quizId="adamw-memory"
+    options={[
+      {
+        id: "a",
+        text: "AdamW stores a full copy of the model for rollback",
+        correct: false,
+        explanation: "AdamW doesn't maintain a rollback copy. The extra memory comes from optimizer state tensors."
+      },
+      {
+        id: "b",
+        text: "It maintains two FP32 tensors per parameter (first and second moments), doubling the weight storage",
+        correct: true,
+        explanation: "Correct! AdamW stores both the first moment (momentum) and second moment (variance estimate) in FP32 for each parameter. That's 8 extra bytes per parameter on top of the weights and gradients."
+      },
+      {
+        id: "c",
+        text: "It uses FP64 precision instead of FP32 for numerical stability",
+        correct: false,
+        explanation: "AdamW uses FP32 for optimizer states, not FP64. The memory cost comes from the number of state tensors, not their precision."
+      },
+      {
+        id: "d",
+        text: "It stores the entire training dataset in GPU memory for gradient computation",
+        correct: false,
+        explanation: "The training data is loaded in batches from CPU/disk. AdamW's memory overhead is entirely from per-parameter state tensors."
+      }
+    ]}
+  />
+</section>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Full fine-tuning memory</strong> scales at roughly 16-20 bytes per parameter: weights (6B) + optimizer states (8B) + gradients (2B) + activations</li>
+    <li><strong>AdamW optimizer states</strong> are the largest memory consumer, requiring 8 bytes per parameter for momentum and variance</li>
+    <li>Full fine-tuning also suffers from <strong>catastrophic forgetting</strong>, storage overhead (one full copy per task), and overfitting risk</li>
+    <li><strong>PEFT methods</strong> address these by training only 0.1-10% of parameters: additive (adapters, prompts), selective (bias-only), or reparameterization (LoRA)</li>
+    <li>The core PEFT insight: <strong>task adaptation lives in a low-dimensional subspace</strong> of the full parameter space</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="Scaling Data-Constrained Language Models"
+    authors="Muennighoff, Rush, Barak, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2305.16264"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Parameter-Efficient Transfer Learning for NLP (Adapters)"
+    authors="Houlsby, Giurgiu, Jastrzebski, et al."
+    year="2019"
+    url="https://arxiv.org/abs/1902.00751"
+    type="paper"
+  />
+
+  <PaperReference
+    title="The Power of Scale for Parameter-Efficient Prompt Tuning"
+    authors="Lester, Al-Rfou, Constant"
+    year="2021"
+    url="https://arxiv.org/abs/2104.08691"
+    type="paper"
+  />
+
+  <PaperReference
+    title="BitFit: Simple Parameter-efficient Fine-tuning for Transformer-based Masked Language-models"
+    authors="Zaken, Ravfogel, Goldberg"
+    year="2021"
+    url="https://arxiv.org/abs/2106.10199"
+    type="paper"
+  />
+
+  <PaperReference
+    title="ZeRO: Memory Optimizations Toward Training Trillion Parameter Models"
+    authors="Rajbhandari, Rasley, Ruwase, He"
+    year="2019"
+    url="https://arxiv.org/abs/1910.02054"
+    type="paper"
+  />
+</section>

@@ -1,0 +1,41 @@
+---
+// Professional Button Component (ShadCN-style)
+interface Props {
+  variant?: 'default' | 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  href?: string;
+}
+
+const {
+  variant = 'default',
+  size = 'md',
+  className = '',
+  href
+} = Astro.props;
+
+const baseClasses = 'inline-flex items-center justify-center rounded-lg font-medium transition-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] disabled:pointer-events-none disabled:opacity-50';
+
+const variantClasses = {
+  default: 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] hover:bg-[hsl(var(--secondary))]/80',
+  primary: 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90 shadow-md',
+  secondary: 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] hover:bg-[hsl(var(--secondary))]/80',
+  outline: 'border-2 border-[hsl(var(--border))] bg-transparent hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
+  ghost: 'hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]'
+};
+
+const sizeClasses = {
+  sm: 'h-9 px-3 text-sm',
+  md: 'h-11 px-6 text-base',
+  lg: 'h-12 px-8 text-lg'
+};
+
+const Element = href ? 'a' : 'button';
+---
+
+<Element
+  href={href}
+  class={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+>
+  <slot />
+</Element>

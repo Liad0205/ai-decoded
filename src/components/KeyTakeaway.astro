@@ -1,0 +1,20 @@
+---
+// Styled callout box for key points
+interface Props {
+  title?: string;
+}
+
+const { title = 'Key Takeaways' } = Astro.props;
+---
+
+<div class="my-8 border-l-4 border-[hsl(var(--success))] bg-[hsl(var(--success)/0.08)] rounded-r-lg p-6">
+  <h3 class="text-xl font-semibold text-[hsl(var(--foreground))] mb-3 flex items-center gap-2">
+    <svg class="w-6 h-6 text-[hsl(var(--success))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    {title}
+  </h3>
+  <div class="text-[hsl(var(--foreground)/0.85)] space-y-2">
+    <slot />
+  </div>
+</div>

@@ -1,0 +1,372 @@
+---
+// Module 8, Lesson 8.1: Agent Architecture Fundamentals
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
+  <ul>
+    <li>Define what makes an LLM agent distinct from a simple LLM application</li>
+    <li>Describe the perception-reasoning-action loop that governs agent behavior</li>
+    <li>Compare memory architectures: working memory, short-term, and long-term storage</li>
+    <li>Explain planning strategies: task decomposition, reflection, and replanning</li>
+    <li>Identify the key failure modes in agent systems and their mitigations</li>
+  </ul>
+</section>
+
+<section>
+  <h2>What Makes an Agent?</h2>
+
+  <p>
+    An <strong>LLM agent</strong> is a system that uses a language model as its core reasoning engine to autonomously pursue goals by observing its environment, making decisions, and taking actions. The key distinction from a simple LLM application:
+  </p>
+
+  <ul>
+    <li><strong>Simple LLM application</strong>: User sends prompt, model responds, interaction ends. The model is reactive -- it does exactly what is asked in a single turn.</li>
+    <li><strong>LLM agent</strong>: The model operates in a loop, choosing which actions to take, observing results, and deciding next steps autonomously. It can pursue multi-step goals that require multiple tool calls, error recovery, and adaptive planning.</li>
+  </ul>
+
+  <p>
+    The spectrum from "simple app" to "autonomous agent" is continuous, not binary. A chatbot with web search sits somewhere in the middle. A coding agent that can read files, write code, run tests, and iterate on failures sits near the autonomous end.
+  </p>
+
+  <h3>The Three Pillars of Agency</h3>
+  <ol>
+    <li><strong>Autonomy</strong>: The agent decides what to do next, rather than following a rigid script. The LLM acts as the controller, not just a text generator.</li>
+    <li><strong>Tool access</strong>: The agent can take actions that affect the world -- searching the web, executing code, calling APIs, modifying files.</li>
+    <li><strong>Feedback loops</strong>: The agent observes the results of its actions and adapts its approach. It can recover from errors, try alternative strategies, and refine its plan.</li>
+  </ol>
+</section>
+
+<Diagram diagramId="agent-loop" title="The Perception-Reasoning-Action Loop" autoplay={true} animationDuration={6000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-6 rounded">
+    <div class="flex items-center justify-center">
+      <div class="relative w-80 h-80">
+        <!-- Central LLM -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-indigo-100 border-2 border-indigo-500 rounded-xl flex items-center justify-center" data-animate style="animation-delay: 0.3s">
+          <div class="text-center">
+            <div class="text-sm font-bold text-indigo-700">LLM</div>
+            <div class="text-xs text-indigo-500">Controller</div>
+          </div>
+        </div>
+
+        <!-- Perceive -->
+        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-blue-100 border border-blue-300 rounded-lg" data-animate style="animation-delay: 1s">
+          <div class="text-sm font-semibold text-blue-700">Perceive</div>
+          <div class="text-xs text-blue-500">Observe environment</div>
+        </div>
+
+        <!-- Reason -->
+        <div class="absolute top-1/2 right-0 transform -translate-y-1/2 px-4 py-2 bg-purple-100 border border-purple-300 rounded-lg" data-animate style="animation-delay: 2s">
+          <div class="text-sm font-semibold text-purple-700">Reason</div>
+          <div class="text-xs text-purple-500">Plan next step</div>
+        </div>
+
+        <!-- Act -->
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-emerald-100 border border-emerald-300 rounded-lg" data-animate style="animation-delay: 3s">
+          <div class="text-sm font-semibold text-emerald-700">Act</div>
+          <div class="text-xs text-emerald-500">Execute tool call</div>
+        </div>
+
+        <!-- Environment -->
+        <div class="absolute top-1/2 left-0 transform -translate-y-1/2 px-4 py-2 bg-amber-100 border border-amber-300 rounded-lg" data-animate style="animation-delay: 4s">
+          <div class="text-sm font-semibold text-amber-700">Observe</div>
+          <div class="text-xs text-amber-500">Get results</div>
+        </div>
+
+        <!-- Arrows -->
+        <svg class="absolute inset-0 w-full h-full" data-animate style="animation-delay: 5s">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+            </marker>
+          </defs>
+          <!-- Perceive to Reason -->
+          <path d="M 200 40 Q 260 40 260 120" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+          <!-- Reason to Act -->
+          <path d="M 260 200 Q 260 260 200 270" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+          <!-- Act to Observe -->
+          <path d="M 120 270 Q 60 260 60 200" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+          <!-- Observe to Perceive -->
+          <path d="M 60 120 Q 60 40 120 40" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+        </svg>
+      </div>
+    </div>
+    <div class="text-sm text-slate-600 text-center mt-4" data-animate style="animation-delay: 5.5s">
+      The agent loops continuously: perceiving the environment, reasoning about the next step, acting via tools, and observing results
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>Memory Systems</h2>
+
+  <p>
+    A vanilla LLM has no persistent memory -- each conversation starts from a blank slate (beyond what is encoded in the model's weights). Agent memory systems address this limitation through explicit storage and retrieval mechanisms.
+  </p>
+
+  <h3>Working Memory (Context Window)</h3>
+  <p>
+    The model's context window serves as <strong>working memory</strong>: the active scratch space for the current task. Everything the agent is currently "thinking about" must fit in the context window.
+  </p>
+  <ul>
+    <li><strong>Capacity</strong>: 4K to 200K+ tokens depending on the model</li>
+    <li><strong>Characteristics</strong>: Fast access, limited capacity, volatile (lost when context is cleared)</li>
+    <li><strong>Management challenge</strong>: As conversations grow long, earlier context may be truncated or receive less attention ("lost in the middle" problem)</li>
+  </ul>
+
+  <h3>Short-Term Memory (Conversation History)</h3>
+  <p>
+    Maintaining conversation history across turns within a session. Implementation approaches:
+  </p>
+  <ul>
+    <li><strong>Full history</strong>: Append every message to the context. Simple but hits context limits quickly.</li>
+    <li><strong>Sliding window</strong>: Keep only the last N messages. Loses early context but maintains recency.</li>
+    <li><strong>Summarization</strong>: Periodically summarize older messages into a compact summary. Preserves gist but loses details.</li>
+    <li><strong>Selective retention</strong>: Use the LLM to decide which messages are important to retain and which can be dropped.</li>
+  </ul>
+
+  <h3>Long-Term Memory (Persistent Storage)</h3>
+  <p>
+    Information that persists across sessions and can be retrieved when relevant:
+  </p>
+  <ul>
+    <li><strong>Vector store memory</strong>: Store key observations, decisions, and learnings as embeddings. Retrieve relevant memories via semantic search when encountering similar situations.</li>
+    <li><strong>Structured knowledge</strong>: Store facts, user preferences, and learned patterns in structured formats (JSON, databases). More reliable retrieval than vector search for specific facts.</li>
+    <li><strong>Episodic memory</strong>: Store complete "episodes" (past interactions, tasks completed, errors encountered). Enables the agent to learn from past experience.</li>
+  </ul>
+
+  <h3>Memory Architecture in Practice</h3>
+  <p>
+    Most production agents combine multiple memory types:
+  </p>
+  <pre><code>Agent Memory Architecture:
++---------------------------+
+|  Working Memory           |  Context window: current task,
+|  (Context Window)         |  recent messages, active plan
++---------------------------+
+|  Short-Term Memory        |  Conversation buffer with
+|  (Session State)          |  summarization and pruning
++---------------------------+
+|  Long-Term Memory         |  Vector DB for past experiences,
+|  (Persistent Store)       |  structured DB for user prefs
++---------------------------+</code></pre>
+</section>
+
+<Quiz
+  question="An agent is working on a complex coding task that has been running for 30 turns. The context window is nearly full. The agent needs to reference a decision it made in turn 3. What memory strategy best handles this?"
+  quizId="memory-strategy"
+  options={[
+    {
+      id: "a",
+      text: "Use a larger context window model -- more tokens solves the problem",
+      correct: false,
+      explanation: "Larger context windows help but don't fundamentally solve the problem. Even with 200K tokens, the 'lost in the middle' effect means information from turn 3 may not be effectively attended to. And context window costs scale linearly with size."
+    },
+    {
+      id: "b",
+      text: "Summarize older turns and store key decisions in structured short-term memory, retrievable by topic",
+      correct: true,
+      explanation: "Correct! Summarizing older turns frees context space while preserving key decisions in a retrievable format. Storing decisions with topic tags enables efficient retrieval when needed, without relying on the attention mechanism to find information buried deep in context."
+    },
+    {
+      id: "c",
+      text: "Simply restart the conversation from scratch with a fresh context",
+      correct: false,
+      explanation: "This loses all context about the current task, including 30 turns of progress. The agent would need to redo all its work."
+    },
+    {
+      id: "d",
+      text: "Store all turns in a vector database and retrieve all of them for every new turn",
+      correct: false,
+      explanation: "Retrieving all 30 turns for every new turn defeats the purpose of memory management -- you'd still be putting everything in context. Selective retrieval (only relevant turns) is the key insight."
+    }
+  ]}
+/>
+
+<section>
+  <h2>Planning and Reasoning</h2>
+
+  <p>
+    Planning is what transforms an LLM from a tool that responds to individual queries into an agent that can pursue complex, multi-step goals.
+  </p>
+
+  <h3>Task Decomposition</h3>
+  <p>
+    The most fundamental planning strategy: break a complex goal into simpler sub-tasks that can be executed sequentially or in parallel.
+  </p>
+
+  <pre><code>Goal: "Create a competitive analysis report for our product"
+
+Decomposition:
+1. Identify top 5 competitors in our market segment
+2. For each competitor:
+   a. Research their product features
+   b. Find their pricing model
+   c. Analyze their recent announcements
+3. Compare features across competitors (create matrix)
+4. Identify our competitive advantages and gaps
+5. Draft executive summary with recommendations</code></pre>
+
+  <p>
+    The agent can execute sub-tasks sequentially (each informing the next) or in parallel (step 2a-c for different competitors). This mirrors how humans approach complex problems.
+  </p>
+
+  <h3>Planning Strategies</h3>
+
+  <h4>Plan-and-Execute</h4>
+  <p>
+    Create a complete plan upfront, then execute steps one by one. Simple and predictable, but brittle -- if early steps fail or reveal new information, the entire plan may need revision.
+  </p>
+
+  <h4>Iterative Planning (Replan)</h4>
+  <p>
+    Plan only the next few steps, execute them, observe results, then plan the next steps. More adaptive but potentially less efficient -- the agent may not see the full picture.
+  </p>
+
+  <h4>Hierarchical Planning</h4>
+  <p>
+    Plan at multiple levels of abstraction. High-level plan outlines major phases; each phase is decomposed into concrete steps when it becomes the active phase. Balances global coherence with local adaptability.
+  </p>
+
+  <h3>Reflection and Self-Correction</h3>
+  <p>
+    Effective agents reflect on their actions and adjust. Reflection can be triggered:
+  </p>
+  <ul>
+    <li><strong>After errors</strong>: "That tool call failed. Why? What should I try differently?"</li>
+    <li><strong>After milestones</strong>: "I've completed steps 1-3. Am I still on track? Does the plan need updating?"</li>
+    <li><strong>Periodically</strong>: "Has my approach been effective so far? Should I change strategy?"</li>
+  </ul>
+
+  <p>
+    The Reflexion framework (Shinn et al., 2023) formalizes this: the agent maintains a memory of past attempts, reflects on failures, and generates verbal reinforcement signals ("I failed because I didn't check the return type. Next time I should verify types first.") that guide future attempts.
+  </p>
+</section>
+
+<RevealSection revealId="planning-example" title="Agent Planning: Debugging a Production Issue">
+  <div data-reveal-step>
+    <h4>Step 1: Receive the Goal</h4>
+    <p><strong>User</strong>: "Our API is returning 500 errors intermittently. Investigate and fix the issue."</p>
+    <p>The agent decomposes this into a plan: examine logs, identify the failing endpoint, reproduce the error, find root cause, implement fix, verify.</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 2: Perceive (Read Logs)</h4>
+    <p>The agent calls a tool to read recent error logs. It observes: "500 errors on POST /api/orders, NullPointerException at OrderService.java:142"</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 3: Reason (Analyze)</h4>
+    <p>The agent reasons: "The error is a NullPointerException at line 142 of OrderService. I need to read that file and understand what can be null. The intermittent nature suggests a race condition or optional field that is sometimes missing."</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 4: Act (Read Code)</h4>
+    <p>The agent reads OrderService.java and finds that line 142 accesses <code>order.getCustomer().getAddress()</code> without null checks. Some orders have no customer address.</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 5: Reflect and Replan</h4>
+    <p>The agent reflects: "I found the root cause. Before fixing, I should check if there are similar patterns elsewhere in the codebase. Then I'll implement the fix with a null check and a test case."</p>
+    <p>It continues the loop: search for similar patterns, implement fix, write test, run tests, verify the fix resolves the issue.</p>
+  </div>
+</RevealSection>
+
+<section>
+  <h2>Agent Architectures</h2>
+
+  <p>
+    Different architectures trade off between simplicity, autonomy, and reliability.
+  </p>
+
+  <h3>Simple Loop (ReAct-Style)</h3>
+  <p>
+    A single LLM in a thought-action-observation loop. The model decides when to act, when to think, and when to produce a final answer. Most agents start here.
+  </p>
+  <ul>
+    <li><strong>Pros</strong>: Simple to implement, easy to debug, single point of reasoning</li>
+    <li><strong>Cons</strong>: Can get stuck in loops, limited by single model's capabilities, no specialization</li>
+  </ul>
+
+  <h3>Planner + Executor</h3>
+  <p>
+    Separate the planning and execution roles. One LLM call creates the plan; separate calls (or a simpler model) execute each step. The planner can be given the full context while executors focus narrowly.
+  </p>
+  <ul>
+    <li><strong>Pros</strong>: Better separation of concerns, executor can be a cheaper model</li>
+    <li><strong>Cons</strong>: Planning model may not account for execution realities, coordination overhead</li>
+  </ul>
+
+  <h3>Router Architecture</h3>
+  <p>
+    A lightweight model classifies the task and routes to specialized sub-agents. For example, a customer service agent might route to: billing specialist, technical support specialist, or returns specialist.
+  </p>
+  <ul>
+    <li><strong>Pros</strong>: Specialized prompts for each domain, fast routing decisions</li>
+    <li><strong>Cons</strong>: Misclassification sends tasks to wrong specialist, cross-domain tasks are hard to handle</li>
+  </ul>
+</section>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>An LLM agent</strong> uses a language model as a controller in a perception-reasoning-action loop, autonomously pursuing multi-step goals through tool use and feedback.</li>
+    <li><strong>Memory systems</strong> extend the LLM beyond its context window: working memory (context window), short-term memory (conversation history with summarization), and long-term memory (persistent vector/structured storage).</li>
+    <li><strong>Planning strategies</strong> range from plan-and-execute (full plan upfront) to iterative replanning (plan a few steps, execute, replan). Hierarchical planning balances global coherence with local adaptability.</li>
+    <li><strong>Reflection</strong> enables self-correction: agents that reason about their failures and explicitly generate improvement strategies perform significantly better on complex tasks.</li>
+    <li><strong>Architecture choices</strong> (simple loop, planner+executor, router) trade off between simplicity, specialization, and coordination complexity.</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="ReAct: Synergizing Reasoning and Acting in Language Models"
+    authors="Yao, Zhao, Yu, et al."
+    year="2022"
+    url="https://arxiv.org/abs/2210.03629"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Reflexion: Language Agents with Verbal Reinforcement Learning"
+    authors="Shinn, Cassano, Gopinath, Narasimhan, Yao"
+    year="2023"
+    url="https://arxiv.org/abs/2303.11366"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Generative Agents: Interactive Simulacra of Human Behavior"
+    authors="Park, O'Brien, Cai, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2304.03442"
+    type="paper"
+  />
+
+  <PaperReference
+    title="A Survey on Large Language Model based Autonomous Agents"
+    authors="Wang, Ma, Feng, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2308.11432"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Building effective agents"
+    authors="Anthropic"
+    year="2024"
+    url="https://www.anthropic.com/research/building-effective-agents"
+    type="blog"
+  />
+</section>

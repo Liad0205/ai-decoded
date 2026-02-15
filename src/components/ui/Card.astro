@@ -1,0 +1,19 @@
+---
+// Professional Card Component (ShadCN-style)
+interface Props {
+  className?: string;
+  variant?: 'default' | 'elevated' | 'outline';
+}
+
+const { className = '', variant = 'default' } = Astro.props;
+
+const variantClasses = {
+  default: 'bg-[hsl(var(--card))] border border-[hsl(var(--border))]',
+  elevated: 'bg-[hsl(var(--card))] shadow-lg border border-[hsl(var(--border))/50]',
+  outline: 'border-2 border-[hsl(var(--border))] bg-transparent'
+};
+---
+
+<div class={`rounded-xl overflow-hidden transition-smooth ${variantClasses[variant]} ${className}`}>
+  <slot />
+</div>

@@ -1,0 +1,515 @@
+---
+// Module 11, Lesson 11.2: Model Serving and Batching
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand why LLM serving is fundamentally different from traditional model serving</li>
+    <li>Compare major serving frameworks: vLLM, TensorRT-LLM, TGI, and Triton Inference Server</li>
+    <li>Explain continuous batching and why it dramatically improves throughput over static batching</li>
+    <li>Describe how PagedAttention solves the KV-cache memory fragmentation problem</li>
+    <li>Analyze the tradeoffs between latency and throughput optimization in production systems</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Unique Challenge of LLM Serving</h2>
+
+  <p>
+    Serving large language models is fundamentally different from serving traditional ML models (image classifiers, recommendation models, etc.). The core challenge stems from the <strong>autoregressive generation</strong> process: LLMs generate tokens one at a time, where each new token depends on all previously generated tokens.
+  </p>
+
+  <p>
+    This creates several unique problems:
+  </p>
+
+  <h3>The Memory-Bound Bottleneck</h3>
+  <p>
+    During generation, each token requires loading the model's entire weight matrix from GPU memory. For a 70B parameter model in FP16, that is 140 GB of data read for <em>every single token</em>. Modern GPUs have ~2-3 TB/s of memory bandwidth, meaning the absolute theoretical maximum is about 15-20 tokens per second per GPU &mdash; regardless of the GPU's compute capability. LLM generation is overwhelmingly <strong>memory-bandwidth bound</strong>, not compute-bound.
+  </p>
+
+  <MathBlock formula={"\\text{Tokens/sec} \\leq \\frac{\\text{Memory Bandwidth (bytes/sec)}}{\\text{Model Size (bytes)}}"} display={true} />
+
+  <p>
+    In plain English: the maximum token generation rate is limited by how fast you can read the model weights from memory. Each token requires one full read of all weights, so you divide the memory bandwidth by the model size to get the throughput ceiling.
+  </p>
+
+  <p>
+    For example, a 70B parameter model in FP16 occupies ~140 GB. On an A100 with ~2 TB/s bandwidth, the theoretical single-request maximum is roughly 2,000 / 140 ≈ 14 tokens per second &mdash; each token requires reading the entire 140 GB of weights from memory.
+  </p>
+
+  <h3>Variable Output Length</h3>
+  <p>
+    Unlike traditional models where every request produces a fixed-size output in one pass, LLM requests have wildly variable output lengths. A simple question might need 20 tokens; a code generation request might need 2,000. This makes batching strategies designed for fixed-length processing inefficient.
+  </p>
+
+  <h3>The KV-Cache Memory Problem</h3>
+  <p>
+    To avoid recomputing attention over all previous tokens at each step, LLM inference uses a <strong>KV-cache</strong> that stores the key and value vectors from all previous positions. This cache grows linearly with sequence length and must be maintained separately for each request. For a 70B model generating a 4,096-token sequence, a single request's KV-cache can consume <strong>8-16 GB</strong> of memory.
+  </p>
+
+  <p>
+    The KV-cache size per request depends on the model architecture: <MathBlock formula={"n_{\\text{layers}}"} /> is the number of transformer layers, <MathBlock formula={"n_{\\text{heads}}"} /> the number of KV heads, <MathBlock formula={"d_{\\text{head}}"} /> the dimension per head, and <MathBlock formula={"\\text{seq\\_len}"} /> the current sequence length. The factor of 2 accounts for storing both keys and values:
+  </p>
+
+  <MathBlock formula={"\\text{KV-cache size} = 2 \\times n_{\\text{layers}} \\times n_{\\text{heads}} \\times d_{\\text{head}} \\times \\text{seq\\_len} \\times \\text{precision\\_bytes}"} display={true} />
+
+  <p>
+    In plain English: for each transformer layer, you store a key vector and a value vector at every sequence position for every KV head. The total memory is proportional to context length, model depth, and the number of KV heads.
+  </p>
+
+  <p>
+    For Llama-2-70B: <MathBlock formula={"2 \\times 80 \\times 64 \\times 128 \\times 4096 \\times 2 = 10.7 \\text{ GB}"} /> per request in FP16. Serving 100 concurrent requests would require over 1 TB of KV-cache alone.
+  </p>
+</section>
+
+<section>
+  <h2>Two Phases of LLM Inference</h2>
+
+  <p>
+    LLM inference has two distinct computational phases with very different characteristics. Understanding these is essential for optimizing serving performance.
+  </p>
+
+  <h3>Prefill (Prompt Processing) Phase</h3>
+  <p>
+    In the prefill phase, the model processes the entire input prompt in parallel. All input tokens are known upfront, so the computation can be heavily parallelized using matrix-matrix multiplications. This phase is <strong>compute-bound</strong> &mdash; meaning the GPU's compute units are fully utilized and memory bandwidth is not the bottleneck.
+  </p>
+  <ul>
+    <li>Processes all prompt tokens simultaneously</li>
+    <li>Uses efficient matrix-matrix (GEMM) operations</li>
+    <li>Populates the KV-cache for all input positions</li>
+    <li>Latency is the "time to first token" (TTFT)</li>
+  </ul>
+
+  <h3>Decode (Generation) Phase</h3>
+  <p>
+    In the decode phase, the model generates output tokens one at a time. Each step produces exactly one token and appends its key-value vectors to the KV-cache. This phase is <strong>memory-bandwidth bound</strong> &mdash; each step loads the full model weights but only processes a single token (matrix-vector multiplication).
+  </p>
+  <ul>
+    <li>Generates one token per step</li>
+    <li>Uses memory-inefficient matrix-vector (GEMV) operations</li>
+    <li>GPU compute utilization is typically below 5%</li>
+    <li>Latency per token is relatively constant, contributing to "time per output token" (TPOT)</li>
+  </ul>
+
+  <p>
+    The key optimization insight: since the decode phase vastly underutilizes GPU compute, you can <strong>batch multiple requests together</strong>. Processing 32 requests simultaneously costs almost the same as processing one (the model weights are loaded once and multiplied against a batch of token vectors instead of a single vector).
+  </p>
+</section>
+
+<section>
+  <h2>Static Batching vs. Continuous Batching</h2>
+
+  <h3>Static Batching (Naive Approach)</h3>
+  <p>
+    In static batching, the server collects a fixed batch of requests, processes them all to completion, then starts the next batch. The critical problem: <strong>all requests in a batch must wait for the longest request to finish</strong>.
+  </p>
+  <p>
+    If a batch contains requests generating 10, 50, 200, and 1,000 tokens, the first three requests sit idle (occupying GPU memory) while the 1,000-token request finishes. This wastes both memory and compute, and dramatically increases latency for shorter requests.
+  </p>
+
+  <h3>Continuous Batching (Iteration-Level Scheduling)</h3>
+  <p>
+    <strong>Continuous batching</strong> (also called "in-flight batching") operates at the granularity of individual decode steps rather than entire requests. At each decode step, the scheduler can:
+  </p>
+  <ul>
+    <li><strong>Evict</strong> completed requests from the batch</li>
+    <li><strong>Insert</strong> new requests into the batch</li>
+    <li>Dynamically adjust batch size based on available memory</li>
+  </ul>
+
+  <p>
+    This means that as soon as a request finishes generating (hits the end-of-sequence token), its GPU memory is immediately freed and a new waiting request can begin. The GPU stays maximally utilized at all times.
+  </p>
+</section>
+
+<Diagram diagramId="continuous-batching" title="Static Batching vs. Continuous Batching" autoplay={true} animationDuration={6000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <svg viewBox="0 0 600 400" class="w-full h-80">
+      <!-- Title: Static Batching -->
+      <text x="150" y="25" text-anchor="middle" class="text-sm font-bold fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 0.2s">Static Batching</text>
+
+      <!-- Static batch box -->
+      <rect x="20" y="35" width="260" height="160" rx="4" fill="none" stroke="#e2e8f0" stroke-width="1" data-animate style="animation-delay: 0.3s" />
+
+      <!-- Request bars - static (all start and end at the same time block) -->
+      <rect x="30" y="45" width="60" height="25" rx="3" fill="#6366f1" data-animate style="animation-delay: 0.5s" />
+      <text x="35" y="62" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 0.5s">Req 1</text>
+      <rect x="90" y="45" width="180" height="25" rx="0" fill="#e2e8f0" data-animate style="animation-delay: 0.5s" />
+      <text x="150" y="62" class="text-[10px] fill-slate-400" data-animate style="animation-delay: 0.5s">idle (waiting)</text>
+
+      <rect x="30" y="75" width="140" height="25" rx="3" fill="#8b5cf6" data-animate style="animation-delay: 0.8s" />
+      <text x="35" y="92" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 0.8s">Req 2</text>
+      <rect x="170" y="75" width="100" height="25" rx="0" fill="#e2e8f0" data-animate style="animation-delay: 0.8s" />
+      <text x="195" y="92" class="text-[10px] fill-slate-400" data-animate style="animation-delay: 0.8s">idle</text>
+
+      <rect x="30" y="105" width="240" height="25" rx="3" fill="#a78bfa" data-animate style="animation-delay: 1.1s" />
+      <text x="35" y="122" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 1.1s">Req 3 (longest)</text>
+
+      <rect x="30" y="135" width="100" height="25" rx="3" fill="#c4b5fd" data-animate style="animation-delay: 1.4s" />
+      <text x="35" y="152" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 1.4s">Req 4</text>
+      <rect x="130" y="135" width="140" height="25" rx="0" fill="#e2e8f0" data-animate style="animation-delay: 1.4s" />
+      <text x="170" y="152" class="text-[10px] fill-slate-400" data-animate style="animation-delay: 1.4s">idle</text>
+
+      <!-- Waiting queue -->
+      <rect x="30" y="170" width="60" height="20" rx="3" fill="#fbbf24" opacity="0.5" data-animate style="animation-delay: 1.6s" />
+      <text x="35" y="184" class="text-[9px] fill-amber-800" data-animate style="animation-delay: 1.6s">Req 5 (waiting)</text>
+
+      <!-- Title: Continuous Batching -->
+      <text x="450" y="25" text-anchor="middle" class="text-sm font-bold fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 2.5s">Continuous Batching</text>
+
+      <!-- Continuous batch box -->
+      <rect x="320" y="35" width="260" height="160" rx="4" fill="none" stroke="#e2e8f0" stroke-width="1" data-animate style="animation-delay: 2.6s" />
+
+      <!-- Request bars - continuous (new requests fill gaps) -->
+      <rect x="330" y="45" width="60" height="25" rx="3" fill="#6366f1" data-animate style="animation-delay: 2.8s" />
+      <text x="335" y="62" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 2.8s">Req 1</text>
+      <rect x="395" y="45" width="80" height="25" rx="3" fill="#fbbf24" data-animate style="animation-delay: 3.6s" />
+      <text x="400" y="62" class="text-[10px] fill-amber-900 font-medium" data-animate style="animation-delay: 3.6s">Req 5</text>
+      <rect x="480" y="45" width="90" height="25" rx="3" fill="#34d399" data-animate style="animation-delay: 4.2s" />
+      <text x="485" y="62" class="text-[10px] fill-green-900 font-medium" data-animate style="animation-delay: 4.2s">Req 6</text>
+
+      <rect x="330" y="75" width="140" height="25" rx="3" fill="#8b5cf6" data-animate style="animation-delay: 3.0s" />
+      <text x="335" y="92" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 3.0s">Req 2</text>
+      <rect x="475" y="75" width="95" height="25" rx="3" fill="#f472b6" data-animate style="animation-delay: 4.4s" />
+      <text x="480" y="92" class="text-[10px] fill-pink-900 font-medium" data-animate style="animation-delay: 4.4s">Req 7</text>
+
+      <rect x="330" y="105" width="240" height="25" rx="3" fill="#a78bfa" data-animate style="animation-delay: 3.2s" />
+      <text x="335" y="122" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 3.2s">Req 3</text>
+
+      <rect x="330" y="135" width="100" height="25" rx="3" fill="#c4b5fd" data-animate style="animation-delay: 3.4s" />
+      <text x="335" y="152" class="text-[10px] fill-white font-medium" data-animate style="animation-delay: 3.4s">Req 4</text>
+      <rect x="435" y="135" width="135" height="25" rx="3" fill="#fb923c" data-animate style="animation-delay: 4.0s" />
+      <text x="440" y="152" class="text-[10px] fill-orange-900 font-medium" data-animate style="animation-delay: 4.0s">Req 8</text>
+
+      <!-- Arrows showing improvement -->
+      <text x="450" y="215" text-anchor="middle" class="text-xs fill-green-600 font-semibold" data-animate style="animation-delay: 5s">No wasted GPU slots!</text>
+
+      <!-- Bottom comparison -->
+      <text x="150" y="240" text-anchor="middle" class="text-xs fill-red-500 font-medium" data-animate style="animation-delay: 5.5s">~40% GPU utilization</text>
+      <text x="450" y="240" text-anchor="middle" class="text-xs fill-green-600 font-medium" data-animate style="animation-delay: 5.5s">~90%+ GPU utilization</text>
+    </svg>
+    <p class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center mt-2">Continuous batching fills idle slots immediately with new requests, dramatically improving throughput.</p>
+  </div>
+</Diagram>
+
+<section>
+  <h2>PagedAttention: Virtual Memory for KV-Cache</h2>
+
+  <p>
+    <strong>PagedAttention</strong> (Kwon et al., 2023), introduced in vLLM, is the single most important innovation in LLM serving since continuous batching. It solves the <strong>KV-cache memory fragmentation</strong> problem that limits concurrent request capacity.
+  </p>
+
+  <h3>The Fragmentation Problem</h3>
+  <p>
+    Without PagedAttention, the KV-cache for each request must be allocated as a <strong>contiguous block</strong> of GPU memory. Since the final output length is unknown in advance, systems must either:
+  </p>
+  <ul>
+    <li><strong>Over-allocate</strong>: Reserve memory for the maximum possible sequence length. This wastes 60-80% of KV-cache memory on average, severely limiting the number of concurrent requests.</li>
+    <li><strong>Under-allocate and copy</strong>: Start with a small allocation and copy to a larger block when needed. This causes expensive memory copies and GPU stalls.</li>
+  </ul>
+
+  <p>
+    In practice, internal fragmentation alone wastes <strong>60-80%</strong> of GPU memory dedicated to KV-cache, directly limiting throughput.
+  </p>
+
+  <h3>The Virtual Memory Solution</h3>
+  <p>
+    PagedAttention borrows the idea of <strong>virtual memory paging</strong> from operating systems. Instead of storing each request's KV-cache contiguously, it divides the cache into fixed-size <strong>blocks</strong> (typically storing 16 tokens each) that can be stored anywhere in GPU memory.
+  </p>
+  <ul>
+    <li>A <strong>block table</strong> (analogous to a page table) maps each request's logical KV-cache positions to physical memory blocks</li>
+    <li>New blocks are allocated on demand as the sequence grows, one block at a time</li>
+    <li>Memory fragmentation drops to near zero because each block is a fixed size</li>
+    <li>Completed or preempted requests release their blocks immediately for reuse</li>
+  </ul>
+
+  <h3>Additional Benefits</h3>
+  <p>
+    PagedAttention enables several powerful optimizations beyond fragmentation reduction:
+  </p>
+  <ul>
+    <li><strong>Prefix caching</strong>: Multiple requests sharing the same system prompt can share KV-cache blocks using copy-on-write semantics, dramatically reducing memory for common prefixes</li>
+    <li><strong>Beam search efficiency</strong>: Different beams in beam search share most of their KV-cache blocks, with copy-on-write for the diverging portions</li>
+    <li><strong>Memory sharing for parallel sampling</strong>: When generating multiple completions for the same prompt, the prompt's KV-cache blocks are shared across all completions</li>
+  </ul>
+
+  <p>
+    The result: PagedAttention increases the number of concurrent requests a system can serve by <strong>2-4x</strong> compared to static KV-cache allocation, with the majority of this gain coming from the elimination of internal memory fragmentation. This directly translates to higher throughput.
+  </p>
+</section>
+
+<section>
+  <h2>Serving Frameworks Comparison</h2>
+
+  <p>
+    Several mature serving frameworks have emerged, each with different design priorities and strengths.
+  </p>
+
+  <h3>vLLM</h3>
+  <p>
+    vLLM is the most widely adopted open-source LLM serving engine. Its key innovations include PagedAttention and an efficient continuous batching scheduler. It supports a wide range of models and quantization formats.
+  </p>
+  <ul>
+    <li><strong>Strengths</strong>: Highest throughput for most workloads, excellent memory efficiency, OpenAI-compatible API, active community</li>
+    <li><strong>Quantization support</strong>: AWQ, GPTQ, FP8, INT8 (SmoothQuant)</li>
+    <li><strong>Best for</strong>: General-purpose LLM serving, high-throughput batch processing, multi-model serving</li>
+  </ul>
+
+  <h3>TensorRT-LLM</h3>
+  <p>
+    NVIDIA's optimized inference engine compiles models into optimized TensorRT engines with custom CUDA kernels. It achieves the highest single-request performance on NVIDIA hardware.
+  </p>
+  <ul>
+    <li><strong>Strengths</strong>: Fastest per-token latency on NVIDIA GPUs, FP8 support on H100, in-flight batching, paged KV-cache</li>
+    <li><strong>Weaknesses</strong>: NVIDIA-only, complex compilation step, slower iteration than vLLM, less flexible model support</li>
+    <li><strong>Best for</strong>: Latency-critical applications on NVIDIA hardware where maximum performance is needed</li>
+  </ul>
+
+  <h3>Text Generation Inference (TGI)</h3>
+  <p>
+    Hugging Face's Rust-based serving solution. It was one of the early frameworks to implement continuous batching and has excellent integration with the Hugging Face ecosystem.
+  </p>
+  <ul>
+    <li><strong>Strengths</strong>: Tight Hugging Face integration, easy model loading, production-ready with built-in metrics, supports flash attention</li>
+    <li><strong>Best for</strong>: Teams already using the Hugging Face ecosystem who want a quick path to production</li>
+  </ul>
+
+  <h3>Triton Inference Server</h3>
+  <p>
+    NVIDIA's general-purpose model serving platform. Unlike the others, Triton is not LLM-specific &mdash; it can serve any model type. For LLMs, it integrates with TensorRT-LLM as a backend.
+  </p>
+  <ul>
+    <li><strong>Strengths</strong>: Multi-model serving, model ensembles, dynamic batching, multi-framework support (PyTorch, TensorFlow, ONNX, TensorRT)</li>
+    <li><strong>Best for</strong>: Organizations serving multiple model types and needing a unified serving infrastructure</li>
+  </ul>
+</section>
+
+<section>
+  <h2>KV-Cache Management Strategies</h2>
+
+  <p>
+    As models serve longer contexts and more concurrent requests, KV-cache management becomes the primary bottleneck. Several strategies help manage this critical resource.
+  </p>
+
+  <h3>KV-Cache Quantization</h3>
+  <p>
+    The KV-cache itself can be quantized (e.g., from FP16 to FP8 or INT8), halving its memory footprint. This is separate from weight quantization and has a different quality/memory tradeoff. Research shows that KV-cache quantization to FP8 is nearly lossless for most tasks, while INT4 KV-cache requires more careful handling.
+  </p>
+
+  <h3>Sliding Window Attention</h3>
+  <p>
+    Models like Mistral use a fixed-size sliding window for attention, limiting the KV-cache to the last N tokens (e.g., 4,096). This caps memory usage regardless of total sequence length, though it means the model cannot attend to tokens beyond the window.
+  </p>
+
+  <h3>Token Eviction</h3>
+  <p>
+    More sophisticated approaches selectively evict less-important tokens from the KV-cache based on attention patterns. <strong>H2O</strong> (Heavy Hitter Oracle) keeps only the tokens that receive the highest cumulative attention scores, maintaining quality while dramatically reducing cache size.
+  </p>
+
+  <h3>Multi-Query and Grouped-Query Attention</h3>
+  <p>
+    Architectural choices during training affect KV-cache size at inference:
+  </p>
+  <ul>
+    <li><strong>Multi-Head Attention (MHA)</strong>: Each attention head has its own KV projections. KV-cache scales with number of heads.</li>
+    <li><strong>Multi-Query Attention (MQA)</strong>: All heads share a single KV projection, reducing KV-cache by the head count factor (e.g., 32x for 32 heads).</li>
+    <li><strong>Grouped-Query Attention (GQA)</strong>: Groups of heads share KV projections. A compromise: Llama-2-70B uses GQA with 8 KV groups for 64 query heads, reducing KV-cache by 8x.</li>
+  </ul>
+</section>
+
+<Quiz
+  question="A production chatbot serves 1,000 concurrent users with variable-length conversations. The primary bottleneck is GPU memory for the KV-cache. Which optimization would have the MOST impact?"
+  quizId="serving-optimization"
+  options={[
+    {
+      id: "a",
+      text: "Switch from FP16 to FP32 weights for better quality, then reduce batch size",
+      correct: false,
+      explanation: "Increasing weight precision would double memory usage and reduce the number of concurrent requests you can serve. This moves in the wrong direction."
+    },
+    {
+      id: "b",
+      text: "Use PagedAttention with prefix caching, since many conversations likely share the same system prompt",
+      correct: true,
+      explanation: "Correct! PagedAttention eliminates KV-cache fragmentation (recovering 60-80% of wasted memory), and prefix caching allows all 1,000 conversations sharing the same system prompt to share those KV-cache blocks. For a chatbot with a common system prompt, this can reduce total KV-cache memory by 30-50% on top of the fragmentation savings."
+    },
+    {
+      id: "c",
+      text: "Increase the number of GPUs to have more total memory",
+      correct: false,
+      explanation: "Adding GPUs increases capacity but doesn't address the root inefficiency. With PagedAttention, you might serve the same 1,000 users on fewer GPUs by eliminating memory waste, which is far more cost-effective."
+    },
+    {
+      id: "d",
+      text: "Reduce the model's context window to limit KV-cache size per request",
+      correct: false,
+      explanation: "Reducing the context window limits conversation length, degrading the user experience. Memory management optimizations like PagedAttention and prefix caching address the memory problem without sacrificing functionality."
+    }
+  ]}
+/>
+
+<section>
+  <h2>Latency vs. Throughput Optimization</h2>
+
+  <p>
+    Production serving requires different optimization strategies depending on whether you prioritize <strong>latency</strong> (how fast a single request completes) or <strong>throughput</strong> (how many requests per second the system handles).
+  </p>
+
+  <h3>Latency Optimization</h3>
+  <p>
+    For interactive applications (chatbots, code assistants, real-time translation), users perceive two latency metrics:
+  </p>
+  <ul>
+    <li><strong>Time to First Token (TTFT)</strong>: How long until the first token of the response appears. Dominated by the prefill phase. Target: &lt;500ms for good UX.</li>
+    <li><strong>Time Per Output Token (TPOT)</strong>: The inter-token latency during generation. Determines the "streaming speed." Target: &lt;50ms (20+ tokens/sec) for a reading-speed experience.</li>
+  </ul>
+  <p>
+    Latency optimization strategies: smaller batch sizes, tensor parallelism across GPUs (splitting the model), speculative decoding (covered in the next lesson), and FP8/INT8 quantization to reduce memory bandwidth requirements.
+  </p>
+
+  <h3>Throughput Optimization</h3>
+  <p>
+    For batch processing (document summarization, data extraction, evaluation), the goal is maximizing total tokens generated per second across all requests:
+  </p>
+
+  <MathBlock formula={"\\text{Throughput} = \\frac{\\text{Total tokens generated}}{\\text{Wall-clock time}} = \\text{Batch size} \\times \\frac{1}{\\text{TPOT}}"} display={true} />
+
+  <p>
+    In plain English: total throughput equals the number of concurrent requests multiplied by the per-request generation speed. Since each decode step loads model weights once for the entire batch, increasing batch size improves throughput nearly linearly (up to the memory limit) because the dominant cost -- reading weights -- is amortized across all requests.
+  </p>
+
+  <p>
+    Throughput optimization strategies: maximize batch size (limited by memory), use continuous batching, aggressive quantization (INT4) to serve more concurrent requests, and pipeline parallelism for multi-GPU setups.
+  </p>
+
+  <h3>The Latency-Throughput Tradeoff</h3>
+  <p>
+    Increasing batch size improves throughput (more tokens per GPU-second) but degrades latency (each individual request takes longer because it shares the GPU). The optimal operating point depends on your SLA requirements:
+  </p>
+  <ul>
+    <li><strong>Low latency SLA</strong> (e.g., gaming NPC dialogue): Small batch sizes (1-8), tensor parallelism, fast quantization</li>
+    <li><strong>Balanced</strong> (e.g., chatbot): Moderate batch sizes (16-64), continuous batching, TTFT monitoring</li>
+    <li><strong>High throughput</strong> (e.g., offline evaluation): Maximum batch size, pipeline parallelism, aggressive quantization</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Cost Analysis: Tokens Per Second Per Dollar</h2>
+
+  <p>
+    The ultimate metric for production LLM serving is <strong>cost efficiency</strong>: how many tokens can you serve per dollar of infrastructure cost?
+  </p>
+
+  <h3>Key Cost Factors</h3>
+  <ul>
+    <li><strong>GPU hourly cost</strong>: A100 80GB (~$2-4/hr on cloud), H100 80GB (~$4-8/hr), consumer 4090 (~$0.30/hr self-hosted)</li>
+    <li><strong>Tokens per GPU-second</strong>: Depends on model size, quantization, batch size, and serving framework</li>
+    <li><strong>Utilization rate</strong>: Continuous batching vs. static batching dramatically affects this</li>
+  </ul>
+
+  <h3>Optimization Levers</h3>
+  <ul>
+    <li><strong>Quantization</strong>: INT4 quantization lets you serve on a single GPU what previously required 4 GPUs. This is the highest-impact cost optimization.</li>
+    <li><strong>Continuous batching</strong>: Increases effective utilization from ~40% to ~90%+, roughly doubling cost efficiency.</li>
+    <li><strong>PagedAttention</strong>: Increases concurrent request capacity by 2-4x, improving throughput per GPU.</li>
+    <li><strong>Speculative decoding</strong>: Can improve latency by 2-3x for the same hardware, improving the user experience without additional cost.</li>
+  </ul>
+
+  <p>
+    As a rough guide: a well-optimized serving stack (vLLM + AWQ INT4 + continuous batching + PagedAttention) can serve a 70B model at ~1,000 output tokens per second per A100 GPU. At $3/hr for an A100, that is approximately <strong>$0.008 per 1,000 output tokens</strong> &mdash; competitive with commercial API pricing.
+  </p>
+</section>
+
+<Quiz
+  question="During the decode (generation) phase of LLM inference, what is the primary computational bottleneck?"
+  quizId="decode-bottleneck"
+  options={[
+    {
+      id: "a",
+      text: "Floating-point multiplication capacity (compute-bound)",
+      correct: false,
+      explanation: "The decode phase processes only one token per request per step, resulting in matrix-vector operations that use less than 5% of the GPU's compute capacity. The GPU has plenty of compute headroom."
+    },
+    {
+      id: "b",
+      text: "Memory bandwidth: loading the model weights from GPU memory for each token",
+      correct: true,
+      explanation: "Correct! Each decode step requires reading the full model weights (e.g., 140 GB for a 70B FP16 model) to produce a single token per request. With ~2-3 TB/s memory bandwidth on modern GPUs, this limits generation to ~15-20 tokens/sec for a single request regardless of compute capacity. This is why batching helps: the weights are loaded once but applied to multiple requests."
+    },
+    {
+      id: "c",
+      text: "Network latency between CPU and GPU",
+      correct: false,
+      explanation: "Once the model and KV-cache are on the GPU, inference runs entirely on the GPU without CPU-GPU communication per token. Network latency is not the bottleneck."
+    },
+    {
+      id: "d",
+      text: "The softmax computation in the attention layers",
+      correct: false,
+      explanation: "Softmax is computationally cheap relative to the matrix multiplications. The bottleneck is the sheer volume of data (model weights) that must be read from GPU memory for each token."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>LLM serving is memory-bandwidth bound</strong>: During generation, each token requires loading the full model weights, making memory bandwidth (not compute) the bottleneck</li>
+    <li><strong>Two distinct phases</strong>: The prefill phase is compute-bound (parallel processing of input), while the decode phase is memory-bound (sequential token generation)</li>
+    <li><strong>Continuous batching</strong> replaces static batching by scheduling at the iteration level, filling empty batch slots immediately and achieving ~90%+ GPU utilization vs. ~40%</li>
+    <li><strong>PagedAttention</strong> applies virtual memory concepts to the KV-cache, eliminating 60-80% memory fragmentation and enabling prefix caching for shared prompts</li>
+    <li><strong>vLLM</strong> is the most popular open-source serving framework, combining PagedAttention and continuous batching; TensorRT-LLM offers the best per-token latency on NVIDIA hardware</li>
+    <li><strong>Cost optimization</strong> stacks multiplicatively: quantization (4x memory reduction) + continuous batching (2x throughput) + PagedAttention (2-4x concurrent requests) = 16-32x improvement over a naive baseline</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="Efficient Memory Management for Large Language Model Serving with PagedAttention"
+    authors="Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang, Stoica"
+    year="2023"
+    url="https://arxiv.org/abs/2309.06180"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Orca: A Distributed Serving System for Transformer-Based Generative Models (Continuous Batching)"
+    authors="Yu, Jeong, Kim, Kim, Chun"
+    year="2022"
+    url="https://www.usenix.org/conference/osdi22/presentation/yu"
+    type="paper"
+  />
+
+  <PaperReference
+    title="FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness"
+    authors="Dao, Fu, Ermon, Rudra, Re"
+    year="2022"
+    url="https://arxiv.org/abs/2205.14135"
+    type="paper"
+  />
+
+  <PaperReference
+    title="H2O: Heavy-Hitter Oracle for Efficient Generative Inference of Large Language Models"
+    authors="Zhang, Sheng, Alizadeh, Li, Chen, Cai, Song, Chen, Xiao, Gonzalez, Jin, Zhang"
+    year="2023"
+    url="https://arxiv.org/abs/2306.14048"
+    type="paper"
+  />
+
+  <PaperReference
+    title="GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints"
+    authors="Ainslie, Lee-Thorp, de Jong, Zemlyanskiy, Lebron, Sanghai"
+    year="2023"
+    url="https://arxiv.org/abs/2305.13245"
+    type="paper"
+  />
+</section>

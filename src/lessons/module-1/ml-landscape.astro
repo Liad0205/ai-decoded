@@ -1,0 +1,282 @@
+---
+// Module 1, Lesson 1.1: The ML Landscape Through Early 2026
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
+  <ul>
+    <li>Distinguish between the major ML paradigms: supervised, unsupervised, self-supervised, and reinforcement learning</li>
+    <li>Understand the historical progression from feature engineering to representation learning to foundation models</li>
+    <li>Identify key benchmarks used to measure progress in modern AI/ML</li>
+    <li>Contextualize recent breakthroughs within the broader evolution of the field</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Taxonomy of Machine Learning</h2>
+
+  <p>
+    Machine learning encompasses several distinct paradigms, each defined by the nature of the training signal and the learning objective. Understanding these categories is essential for selecting appropriate techniques and interpreting research literature.
+  </p>
+
+  <h3>Supervised Learning</h3>
+  <p>
+    In <strong>supervised learning</strong>, models learn from labeled examples: pairs of inputs <em>x</em> and corresponding targets <em>y</em>. The objective is to learn a function <em>f(x) ≈ y</em> that generalizes to unseen data. This paradigm dominates applications where labeled data is available: image classification, speech recognition, medical diagnosis, and spam detection.
+  </p>
+  <p>
+    The fundamental challenge is <em>generalization</em>: achieving low error on test data drawn from the same distribution as the training data. Classical supervised learning struggles when training data is scarce or expensive to label, a limitation that has driven much recent innovation.
+  </p>
+
+  <h3>Unsupervised Learning</h3>
+  <p>
+    <strong>Unsupervised learning</strong> operates on unlabeled data, seeking to discover hidden structure. Common objectives include clustering (grouping similar examples), dimensionality reduction (finding compact representations), and density estimation (modeling the data distribution).
+  </p>
+  <p>
+    Traditional unsupervised methods like k-means, PCA, and autoencoders have been augmented by modern techniques like variational autoencoders (VAEs) and generative adversarial networks (GANs), which learn rich probabilistic models of complex data.
+  </p>
+
+  <h3>Self-Supervised Learning</h3>
+  <p>
+    <strong>Self-supervised learning</strong> has emerged as perhaps the most important paradigm in modern AI. Rather than requiring human-annotated labels, self-supervised methods create supervision signals from the data itself through pretext tasks.
+  </p>
+  <p>
+    The canonical example is <em>language modeling</em>: predicting the next word in a sequence. This simple objective, applied to massive text corpora, produces models like GPT that capture sophisticated linguistic and world knowledge. Similarly, in vision, masked image modeling (as in MAE) and contrastive learning (SimCLR, CLIP) enable learning from unlabeled images.
+  </p>
+  <p>
+    Self-supervised learning's power stems from its scalability: training signals are abundant and free, limited only by available compute and data. This has enabled the foundation model era.
+  </p>
+
+  <h3>Reinforcement Learning</h3>
+  <p>
+    In <strong>reinforcement learning (RL)</strong>, an agent learns to make sequential decisions by interacting with an environment. The agent receives rewards (or penalties) based on its actions and learns a policy that maximizes cumulative reward.
+  </p>
+  <p>
+    RL has achieved remarkable successes in games (AlphaGo, Dota 2, StarCraft) and robotics. In the LLM context, preference-based alignment techniques like Direct Preference Optimization (DPO), which is increasingly used alongside RLHF/PPO approaches, fine-tune language models to produce outputs aligned with human preferences, a critical step in making models like ChatGPT useful and safe.
+  </p>
+</section>
+
+<section>
+  <h2>The Paradigm Shift: From Feature Engineering to Foundation Models</h2>
+
+  <p>
+    The history of machine learning can be understood as a progression toward increasingly automated representation learning.
+  </p>
+
+  <h3>Era 1: Feature Engineering (pre-2012)</h3>
+  <p>
+    Traditional ML relied heavily on <em>feature engineering</em>: domain experts manually designed features to feed into relatively simple models (SVMs, decision trees, logistic regression). For image recognition, this meant hand-crafted features like SIFT descriptors or HOG features. For speech, mel-frequency cepstral coefficients (MFCCs). For text, bag-of-words or TF-IDF vectors.
+  </p>
+  <p>
+    This approach was labor-intensive, domain-specific, and fundamentally limited by human ingenuity in capturing relevant patterns.
+  </p>
+
+  <h3>Era 2: Representation Learning (2012-2017)</h3>
+  <p>
+    The <strong>deep learning revolution</strong> began with AlexNet (2012), which demonstrated that convolutional neural networks could learn superior image features directly from pixels. The key insight: with enough data and compute, neural networks could automatically discover hierarchical representations, eliminating manual feature engineering.
+  </p>
+  <p>
+    This era saw rapid progress: ResNet (2015) introduced residual connections enabling networks with 100+ layers. Word2Vec and GloVe learned dense word embeddings. RNNs and LSTMs processed sequential data. Each architecture was task-specific, but the common thread was learned representations.
+  </p>
+
+  <h3>Era 3: Foundation Models (2017-present)</h3>
+  <p>
+    The Transformer architecture (2017) catalyzed another paradigm shift. The emergence of <strong>foundation models</strong>, large-scale models pretrained on broad data and adaptable to diverse tasks, has fundamentally changed how we approach AI.
+  </p>
+  <p>
+    Rather than training task-specific models from scratch, the modern workflow is:
+  </p>
+  <ol>
+    <li><strong>Pretrain</strong> a large model on massive unlabeled data using self-supervised learning</li>
+    <li><strong>Fine-tune</strong> or <strong>prompt</strong> the model for specific downstream tasks</li>
+  </ol>
+  <p>
+    This approach has proven remarkably effective across modalities: language (GPT-4, Claude 3.5 Sonnet, Gemini 1.5 Pro, Llama 3), vision (CLIP, ViT), multimodal (GPT-4V, Gemini Vision), audio (Whisper), and more. Foundation models exhibit emergent capabilities: abilities not explicitly trained for, arising from scale.
+  </p>
+  <p>
+    The economic and research implications are profound: compute and data have become the primary bottlenecks, not algorithm design. The field has consolidated around a few key architectures (Transformers) and a few well-resourced organizations capable of training frontier models.
+  </p>
+</section>
+
+<section>
+  <h2>Key Benchmarks: Measuring Progress</h2>
+
+  <p>
+    The field measures progress through standardized benchmarks. Understanding these helps contextualize model capabilities and limitations.
+  </p>
+
+  <h3>Language Understanding & Reasoning</h3>
+  <ul>
+    <li><strong>MMLU (Massive Multitask Language Understanding)</strong>: 57 subjects spanning STEM, humanities, social sciences. Tests breadth of knowledge and reasoning.</li>
+    <li><strong>GSM8K</strong>: Grade-school math word problems. Tests arithmetic reasoning and multi-step problem solving.</li>
+    <li><strong>HumanEval</strong>: Coding challenges. Measures programming ability and algorithmic reasoning.</li>
+    <li><strong>HellaSwag, ARC, WinoGrande</strong>: Commonsense reasoning and world knowledge.</li>
+    <li><strong>TruthfulQA</strong>: Tests whether models avoid generating false information, a critical safety concern.</li>
+  </ul>
+
+  <h3>The Benchmark Saturation Problem</h3>
+  <p>
+    As models improve, benchmarks saturate. Frontier models now exceed 90% on MMLU and achieve near-perfect scores on many traditional benchmarks. Modern evaluation focuses on more challenging tasks like SWE-bench (software engineering), where top models resolve roughly 40-50% of real GitHub issues (scores vary across evaluation setups and continue to improve). This raises concerns:
+  </p>
+  <ul>
+    <li><strong>Data contamination</strong>: Benchmark data may have leaked into training sets</li>
+    <li><strong>Benchmark gaming</strong>: Models may exploit shortcuts or spurious correlations</li>
+    <li><strong>Limited real-world relevance</strong>: High benchmark scores don't guarantee reliable deployment performance</li>
+  </ul>
+  <p>
+    The field is evolving toward more robust evaluation: longer-horizon reasoning tasks, human preference evaluations (Chatbot Arena, LMSYS leaderboard), real-world task completion (SWE-bench, agent benchmarks), and task-specific evals for production use cases.
+  </p>
+</section>
+
+<Diagram diagramId="ml-timeline" title="Major Milestones in Modern AI/ML" autoplay={true} animationDuration={5000}>
+  <div class="relative w-full h-96 bg-slate-50 dark:bg-[hsl(var(--muted))] rounded-lg p-6">
+    <div class="absolute left-0 right-0 top-1/2 h-1 bg-indigo-200" data-animate></div>
+
+    <!-- Timeline points -->
+    <div class="relative h-full flex justify-between items-center">
+      <div class="flex flex-col items-center" data-animate style="animation-delay: 0.5s">
+        <div class="w-4 h-4 bg-indigo-500 rounded-full mb-2"></div>
+        <div class="text-center">
+          <div class="font-bold text-sm">2012</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] mt-1">AlexNet</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Deep Learning Era</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center" data-animate style="animation-delay: 1s">
+        <div class="w-4 h-4 bg-indigo-500 rounded-full mb-2"></div>
+        <div class="text-center">
+          <div class="font-bold text-sm">2017</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1">Transformer</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Architecture Revolution</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center" data-animate style="animation-delay: 1.5s">
+        <div class="w-4 h-4 bg-indigo-500 rounded-full mb-2"></div>
+        <div class="text-center">
+          <div class="font-bold text-sm">2020</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1">GPT-3</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Few-Shot Learning</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center" data-animate style="animation-delay: 2s">
+        <div class="w-4 h-4 bg-indigo-500 rounded-full mb-2"></div>
+        <div class="text-center">
+          <div class="font-bold text-sm">2022</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1">ChatGPT</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">RLHF Alignment</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center" data-animate style="animation-delay: 2.5s">
+        <div class="w-4 h-4 bg-indigo-500 rounded-full mb-2"></div>
+        <div class="text-center">
+          <div class="font-bold text-sm">2024</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1">GPT-4, Claude</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Multimodal Models</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center" data-animate style="animation-delay: 3s">
+        <div class="w-4 h-4 bg-indigo-500 rounded-full mb-2"></div>
+        <div class="text-center">
+          <div class="font-bold text-sm">2025-26</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1">Frontier LLMs</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Agents & Reasoning</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<Quiz
+  quizId="ml-paradigm"
+  question="Which ML paradigm is used to train large language models like GPT-4?"
+  options={[
+    { id: "a", text: "Supervised learning with human-labeled examples", correct: false, explanation: "While supervised fine-tuning is used later, the initial pretraining uses self-supervised learning on unlabeled text." },
+    { id: "b", text: "Self-supervised learning via next-token prediction", correct: true, explanation: "Correct! LLMs are pretrained using self-supervised learning, specifically next-token prediction on massive text corpora. Labels are derived from the data itself." },
+    { id: "c", text: "Reinforcement learning with environment rewards", correct: false, explanation: "RL (via RLHF/DPO) is used for alignment after pretraining, but the core training paradigm is self-supervised." },
+    { id: "d", text: "Unsupervised clustering of text documents", correct: false, explanation: "While unsupervised, LLM training uses a specific self-supervised objective (next-token prediction), not clustering." }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Four ML paradigms</strong> dominate: supervised (labeled data), unsupervised (structure discovery), self-supervised (automatic labels from data), and reinforcement learning (sequential decisions)</li>
+    <li><strong>Self-supervised learning</strong> has become the foundation of modern AI, enabling scalable pretraining on vast unlabeled datasets</li>
+    <li><strong>The field has progressed</strong> from manual feature engineering → learned representations → foundation models that adapt to many tasks</li>
+    <li><strong>Foundation models</strong> represent a paradigm shift: pretrain once on broad data, then fine-tune or prompt for specific applications</li>
+    <li><strong>Benchmarks drive progress</strong> but face saturation and contamination challenges; evaluation is evolving toward human preference and real-world deployment metrics</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="ImageNet Classification with Deep Convolutional Neural Networks"
+    authors="Krizhevsky, Sutskever, Hinton"
+    year="2012"
+    url="https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Attention Is All You Need"
+    authors="Vaswani et al."
+    year="2017"
+    url="https://arxiv.org/abs/1706.03762"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Language Models are Few-Shot Learners (GPT-3)"
+    authors="Brown et al."
+    year="2020"
+    url="https://arxiv.org/abs/2005.14165"
+    type="paper"
+  />
+
+  <PaperReference
+    title="On the Opportunities and Risks of Foundation Models"
+    authors="Bommasani et al."
+    year="2021"
+    url="https://arxiv.org/abs/2108.07258"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Measuring Massive Multitask Language Understanding (MMLU)"
+    authors="Hendrycks et al."
+    year="2021"
+    url="https://arxiv.org/abs/2009.03300"
+    type="paper"
+  />
+</section>
+
+<style>
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  [data-animate] {
+    opacity: 0;
+  }
+
+  [data-animate].animating {
+    animation: slideDown 0.8s ease-out forwards;
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+// Server-side Lucide icon component (better performance than client-side React)
+import * as icons from 'lucide-static';
+
+interface Props {
+  name: string;
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
+}
+
+const { name, size = 24, className = '', strokeWidth = 2 } = Astro.props;
+
+// Get the icon SVG string
+const iconData = icons[name as keyof typeof icons];
+
+if (!iconData) {
+  console.warn(`Icon "${name}" not found in lucide-static`);
+}
+
+// The icon comes as an SVG string
+const svgContent = iconData || '';
+---
+
+{svgContent && (
+  <span
+    class={`inline-block ${className}`}
+    style={`width: ${size}px; height: ${size}px;`}
+    set:html={svgContent
+      .replace('stroke-width="2"', `stroke-width="${strokeWidth}"`)
+      .replace(/width="\d+"/, `width="${size}"`)
+      .replace(/height="\d+"/, `height="${size}"`)
+    }
+  />
+)}

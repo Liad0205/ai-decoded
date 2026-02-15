@@ -1,0 +1,528 @@
+---
+// Module 8, Lesson 8.2: Tool Use and Function Calling
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
+  <ul>
+    <li>Explain how function calling works at the API and model level</li>
+    <li>Design effective tool interfaces that minimize model errors</li>
+    <li>Understand tool orchestration patterns: sequential, parallel, and nested</li>
+    <li>Describe the Model Context Protocol (MCP) and its role in standardizing tool use</li>
+    <li>Apply best practices for tool security, error handling, and testing</li>
+  </ul>
+</section>
+
+<section>
+  <h2>How Function Calling Works</h2>
+
+  <p>
+    <strong>Function calling</strong> (also called "tool use") enables LLMs to interact with external systems by generating structured function invocations. Rather than producing free-text that you parse, the model outputs structured data (function name + arguments) that your code can directly execute.
+  </p>
+
+  <h3>The Function Calling Lifecycle</h3>
+  <ol>
+    <li><strong>Define tools</strong>: You provide the model with a set of tool definitions -- name, description, and parameter schema (typically JSON Schema)</li>
+    <li><strong>Model decides</strong>: Based on the user's message and available tools, the model decides whether to call a tool (and which one) or respond directly</li>
+    <li><strong>Generate call</strong>: If calling a tool, the model outputs a structured object with the function name and extracted arguments</li>
+    <li><strong>Execute</strong>: Your application code executes the function with the provided arguments</li>
+    <li><strong>Return result</strong>: The function's result is sent back to the model as a tool result message</li>
+    <li><strong>Continue</strong>: The model incorporates the result and either calls another tool or generates a final response</li>
+  </ol>
+
+  <h3>API-Level Example</h3>
+  <pre><code>// Tool definition (provided in the API request)
+&#123;
+  "tools": [&#123;
+    "name": "get_weather",
+    "description": "Get current weather for a city.
+      Returns temperature, conditions, and humidity.",
+    "input_schema": &#123;
+      "type": "object",
+      "properties": &#123;
+        "city": &#123;
+          "type": "string",
+          "description": "City name, e.g., 'San Francisco, CA'"
+        &#125;,
+        "units": &#123;
+          "type": "string",
+          "enum": ["celsius", "fahrenheit"],
+          "description": "Temperature units"
+        &#125;
+      &#125;,
+      "required": ["city"]
+    &#125;
+  &#125;]
+&#125;
+
+// User message: "What's the weather like in Tokyo?"
+
+// Model response (tool use):
+&#123;
+  "type": "tool_use",
+  "name": "get_weather",
+  "input": &#123;
+    "city": "Tokyo",
+    "units": "celsius"
+  &#125;
+&#125;
+
+// Your code executes get_weather("Tokyo", "celsius")
+// Returns: &#123; "temp": 22, "conditions": "Partly cloudy", "humidity": 65 &#125;
+
+// Send result back to model, which generates:
+// "It's currently 22C and partly cloudy in Tokyo with 65% humidity."</code></pre>
+</section>
+
+<Diagram diagramId="function-calling" title="Function Calling Lifecycle" autoplay={true} animationDuration={6000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="flex flex-col gap-3">
+      <!-- Step 1 -->
+      <div class="flex items-start gap-3" data-animate style="animation-delay: 0.3s">
+        <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">1</div>
+        <div class="flex-1">
+          <div class="flex gap-3 items-center">
+            <div class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1">
+              <strong>Your App</strong>: Send message + tool definitions to API
+            </div>
+            <div class="text-indigo-400">--></div>
+            <div class="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-sm">
+              <strong>LLM</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flex items-start gap-3" data-animate style="animation-delay: 1.5s">
+        <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">2</div>
+        <div class="flex-1">
+          <div class="flex gap-3 items-center">
+            <div class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1">
+              <strong>Your App</strong>: Receive tool_use response
+            </div>
+            <div class="text-indigo-400"><--</div>
+            <div class="px-3 py-2 bg-purple-50 border border-purple-200 rounded text-sm">
+              <strong>LLM</strong>: tool_use(get_weather, ...)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flex items-start gap-3" data-animate style="animation-delay: 3s">
+        <div class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">3</div>
+        <div class="flex-1">
+          <div class="flex gap-3 items-center">
+            <div class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1">
+              <strong>Your App</strong>: Execute function, get result
+            </div>
+            <div class="text-emerald-400">--></div>
+            <div class="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-sm">
+              <strong>External API</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="flex items-start gap-3" data-animate style="animation-delay: 4.5s">
+        <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">4</div>
+        <div class="flex-1">
+          <div class="flex gap-3 items-center">
+            <div class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1">
+              <strong>Your App</strong>: Send tool result back
+            </div>
+            <div class="text-indigo-400">--></div>
+            <div class="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-sm">
+              <strong>LLM</strong>: Generate final response
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>Designing Effective Tools</h2>
+
+  <p>
+    Tool design is as important as prompt design. A well-designed tool interface reduces model errors, improves reliability, and makes debugging easier.
+  </p>
+
+  <h3>Principles of Good Tool Design</h3>
+
+  <h4>1. Clear, Descriptive Names</h4>
+  <p>
+    Tool names should describe the action, not the implementation. The model uses the name to decide when to invoke the tool:
+  </p>
+  <ul>
+    <li><strong>Good</strong>: <code>search_products</code>, <code>get_order_status</code>, <code>send_email</code></li>
+    <li><strong>Bad</strong>: <code>query_db</code>, <code>api_call_v2</code>, <code>process</code></li>
+  </ul>
+
+  <h4>2. Comprehensive Descriptions</h4>
+  <p>
+    The description is the model's documentation. Include what the tool does, when to use it, and what it returns:
+  </p>
+  <pre><code>&#123;
+  "name": "search_knowledge_base",
+  "description": "Search the company knowledge base for relevant articles.
+    Use this when the user asks a question about product features,
+    troubleshooting, or company policies. Returns up to 5 matching
+    articles with titles, snippets, and relevance scores.
+    Does NOT search order history or account information --
+    use get_order_history for those."
+&#125;</code></pre>
+
+  <h4>3. Constrained Parameters</h4>
+  <p>
+    Use enums, ranges, and required fields to constrain the model's outputs:
+  </p>
+  <pre><code>&#123;
+  "properties": &#123;
+    "priority": &#123;
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Ticket priority level"
+    &#125;,
+    "limit": &#123;
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 10,
+      "description": "Maximum number of results to return"
+    &#125;
+  &#125;
+&#125;</code></pre>
+
+  <h4>4. Granular, Single-Purpose Tools</h4>
+  <p>
+    Prefer many small tools over few large ones. The model makes better decisions when each tool does one thing:
+  </p>
+  <ul>
+    <li><strong>Good</strong>: <code>create_ticket</code>, <code>update_ticket_status</code>, <code>assign_ticket</code>, <code>add_ticket_comment</code></li>
+    <li><strong>Bad</strong>: <code>manage_ticket(action: "create"|"update"|"assign"|"comment", ...)</code></li>
+  </ul>
+  <p>
+    However, there is a practical limit: too many tools (50+) can degrade the model's tool selection accuracy. Group related operations when the tool count becomes unwieldy.
+  </p>
+
+  <h4>5. Informative Return Values</h4>
+  <p>
+    Return structured data that helps the model continue reasoning:
+  </p>
+  <ul>
+    <li>Include success/failure status and error messages</li>
+    <li>Return relevant context, not just raw IDs</li>
+    <li>Include next-step hints when appropriate (e.g., "Order created. Call confirm_order to finalize.")</li>
+  </ul>
+</section>
+
+<Quiz
+  question="You're designing a tool for an LLM agent that needs to interact with a database. Which tool design approach is most effective?"
+  quizId="tool-design"
+  options={[
+    {
+      id: "a",
+      text: "One tool called 'execute_sql' that takes a raw SQL query string",
+      correct: false,
+      explanation: "Exposing raw SQL is both a security risk (SQL injection) and unreliable (the model may generate invalid SQL). Use purpose-built tools with constrained parameters instead."
+    },
+    {
+      id: "b",
+      text: "Purpose-built tools like 'search_customers', 'get_order_details', and 'update_order_status' with typed parameters and enums",
+      correct: true,
+      explanation: "Correct! Purpose-built tools with constrained parameters are safer (no SQL injection risk), more reliable (the model fills in typed fields rather than generating free-form SQL), and more debuggable (you can log structured calls). The descriptions tell the model when to use each tool."
+    },
+    {
+      id: "c",
+      text: "A single 'database' tool with a 'query_type' parameter that accepts 'select', 'insert', 'update', 'delete'",
+      correct: false,
+      explanation: "This is better than raw SQL but still too generic. The model has to figure out table names, column names, and query structure. Purpose-built tools with specific parameters eliminate this ambiguity."
+    },
+    {
+      id: "d",
+      text: "No tools -- include all database information in the system prompt so the model can answer from context",
+      correct: false,
+      explanation: "This only works for static, small datasets. Real applications need to query live data, and putting entire databases in the prompt is impractical. Tools provide dynamic data access."
+    }
+  ]}
+/>
+
+<section>
+  <h2>Tool Orchestration Patterns</h2>
+
+  <h3>Sequential Tool Calls</h3>
+  <p>
+    The simplest pattern: the model calls one tool, gets the result, reasons about it, then calls the next tool. Each call depends on the result of the previous one:
+  </p>
+  <pre><code>User: "Book a flight from NYC to London on March 15 under $500"
+
+Step 1: search_flights(from: "NYC", to: "London", date: "2024-03-15")
+  --> Returns 5 flights, 3 under $500
+
+Step 2: get_flight_details(flight_id: "BA117")
+  --> Returns seat map, baggage policy
+
+Step 3: book_flight(flight_id: "BA117", passenger: current_user)
+  --> Returns confirmation number</code></pre>
+
+  <h3>Parallel Tool Calls</h3>
+  <p>
+    Modern APIs support calling multiple tools simultaneously when the calls are independent:
+  </p>
+  <pre><code>User: "Compare weather in Tokyo, London, and New York"
+
+// Model generates 3 parallel tool calls:
+[
+  get_weather(city: "Tokyo"),
+  get_weather(city: "London"),
+  get_weather(city: "New York")
+]
+// All execute simultaneously, results returned together</code></pre>
+  <p>
+    Parallel calls reduce latency when the model needs multiple independent pieces of information.
+  </p>
+
+  <h3>Nested/Agentic Tool Calls</h3>
+  <p>
+    A tool can itself be an agent that uses other tools. For example, a <code>research_topic</code> tool might internally use search, read, and summarize tools:
+  </p>
+  <pre><code>User: "Research the competitive landscape for our product"
+
+Main Agent calls: research_topic("competitive analysis for XYZ product")
+  |
+  +-- Sub-agent calls: web_search("XYZ product competitors 2024")
+  +-- Sub-agent calls: web_search("XYZ product market share")
+  +-- Sub-agent calls: read_page(url1), read_page(url2)
+  +-- Sub-agent synthesizes results into a report
+  |
+Main Agent receives: structured competitive analysis report</code></pre>
+</section>
+
+<section>
+  <h2>The Model Context Protocol (MCP)</h2>
+
+  <p>
+    The <strong>Model Context Protocol (MCP)</strong>, introduced by Anthropic, is an open standard for connecting LLMs to external tools and data sources. It addresses the fragmentation problem: without a standard, every tool integration requires custom code for each model provider.
+  </p>
+
+  <h3>The Problem MCP Solves</h3>
+  <p>
+    Before MCP, integrating tools with LLMs meant:
+  </p>
+  <ul>
+    <li>Writing custom adapter code for each tool-model combination</li>
+    <li>No standard way to discover available tools at runtime</li>
+    <li>No standard protocol for streaming, cancellation, or progress updates</li>
+    <li>N tools x M model providers = N*M integrations to maintain</li>
+  </ul>
+
+  <h3>MCP Architecture</h3>
+  <p>
+    MCP follows a client-server architecture:
+  </p>
+  <ul>
+    <li><strong>MCP Server</strong>: Exposes tools (and optionally resources and prompts) through a standardized JSON-RPC interface. A server might wrap a database, an API, a file system, or any external capability.</li>
+    <li><strong>MCP Client</strong>: Built into the LLM application (host). Discovers available servers, enumerates their tools, and routes tool calls to the appropriate server.</li>
+    <li><strong>Transport</strong>: Communication happens over stdio (standard input/output, for local tools) or HTTP with Server-Sent Events (SSE, a protocol for streaming updates from server to client, used for remote tools).</li>
+  </ul>
+
+  <h3>What MCP Provides</h3>
+  <ul>
+    <li><strong>Tools</strong>: Functions the model can call, with JSON Schema parameter definitions</li>
+    <li><strong>Resources</strong>: Data the model can read (files, database records, API responses) -- similar to a read-only file system</li>
+    <li><strong>Prompts</strong>: Reusable prompt templates that can be dynamically inserted</li>
+    <li><strong>Sampling</strong>: Enables MCP servers to request LLM completions through the client, creating bidirectional interaction</li>
+  </ul>
+
+  <h3>Practical Impact</h3>
+  <p>
+    MCP enables a growing ecosystem of pre-built tool servers. Instead of writing custom integration code, developers can connect to existing MCP servers for common services: file systems, databases, GitHub, Slack, and more. This dramatically reduces the integration burden for building agent applications.
+  </p>
+</section>
+
+<Diagram diagramId="mcp-architecture" title="Model Context Protocol Architecture" autoplay={true} animationDuration={5000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="flex items-center justify-center gap-4">
+      <!-- Host Application -->
+      <div class="flex flex-col items-center gap-2" data-animate style="animation-delay: 0.3s">
+        <div class="px-4 py-3 bg-indigo-100 border-2 border-indigo-400 rounded-lg text-center">
+          <div class="text-sm font-bold text-indigo-700">Host Application</div>
+          <div class="text-xs text-indigo-500 mt-1">LLM + MCP Client</div>
+        </div>
+      </div>
+
+      <!-- Arrows -->
+      <div class="flex flex-col gap-2" data-animate style="animation-delay: 1.5s">
+        <div class="text-xs text-slate-400 text-center">JSON-RPC</div>
+        <div class="flex items-center gap-1">
+          <div class="w-12 h-0.5 bg-indigo-300"></div>
+          <div class="text-indigo-400">--></div>
+        </div>
+        <div class="flex items-center gap-1">
+          <div class="text-indigo-400"><--</div>
+          <div class="w-12 h-0.5 bg-indigo-300"></div>
+        </div>
+      </div>
+
+      <!-- MCP Servers -->
+      <div class="flex flex-col gap-2" data-animate style="animation-delay: 3s">
+        <div class="px-3 py-2 bg-emerald-50 border border-emerald-300 rounded text-xs text-center">
+          <strong>MCP Server</strong>: File System
+        </div>
+        <div class="px-3 py-2 bg-blue-50 border border-blue-300 rounded text-xs text-center">
+          <strong>MCP Server</strong>: Database
+        </div>
+        <div class="px-3 py-2 bg-purple-50 border border-purple-300 rounded text-xs text-center">
+          <strong>MCP Server</strong>: GitHub API
+        </div>
+        <div class="px-3 py-2 bg-amber-50 border border-amber-300 rounded text-xs text-center">
+          <strong>MCP Server</strong>: Web Search
+        </div>
+      </div>
+    </div>
+    <div class="text-sm text-slate-600 text-center mt-4" data-animate style="animation-delay: 4s">
+      Each server exposes tools, resources, and prompts via a standardized protocol
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>Tool Security and Error Handling</h2>
+
+  <h3>Security Principles</h3>
+
+  <h4>Least Privilege</h4>
+  <p>
+    Give the agent access to only the tools it needs for its task. A customer service agent does not need file system access. A code editor agent does not need email sending capability.
+  </p>
+
+  <h4>Input Validation</h4>
+  <p>
+    Always validate tool inputs before execution. The model can generate unexpected values:
+  </p>
+  <pre><code>// BAD: Trust model output directly
+function deleteUser(args) &#123;
+  db.delete("users", args.user_id);
+&#125;
+
+// GOOD: Validate and authorize
+function deleteUser(args) &#123;
+  // Validate user_id format
+  if (!isValidUUID(args.user_id)) &#123;
+    return &#123; error: "Invalid user ID format" &#125;;
+  &#125;
+  // Check authorization
+  if (!currentUser.canDelete(args.user_id)) &#123;
+    return &#123; error: "Unauthorized: cannot delete this user" &#125;;
+  &#125;
+  // Execute with audit log
+  auditLog.record("delete_user", args.user_id, currentUser.id);
+  db.delete("users", args.user_id);
+  return &#123; success: true &#125;;
+&#125;</code></pre>
+
+  <h4>Confirmation for Destructive Actions</h4>
+  <p>
+    Actions that modify state (write, delete, send) should require human confirmation in high-stakes contexts. Read-only operations (search, query) can be auto-approved.
+  </p>
+
+  <h3>Error Handling</h3>
+  <p>
+    Tools will fail. Networks time out, APIs return errors, inputs are invalid. How you surface errors to the model determines whether the agent can recover:
+  </p>
+  <ul>
+    <li><strong>Return structured errors</strong>: <code>&#123;"error": "Rate limited. Retry after 30 seconds."&#125;</code> gives the model information to act on.</li>
+    <li><strong>Don't swallow errors silently</strong>: If you return empty results or generic "failure" messages, the model cannot diagnose or recover from the problem.</li>
+    <li><strong>Suggest recovery actions</strong>: <code>&#123;"error": "User not found", "suggestion": "Try searching by email with search_users tool"&#125;</code></li>
+    <li><strong>Set retry limits</strong>: Prevent the agent from retrying the same failing tool call indefinitely. After N retries, surface the error to the user.</li>
+  </ul>
+</section>
+
+<RevealSection revealId="tool-debugging" title="Debugging Tool Interactions: Common Issues">
+  <div data-reveal-step>
+    <h4>Issue 1: Model Ignores Available Tools</h4>
+    <p>The model answers from training data instead of calling a tool. <strong>Fix</strong>: Make the tool description explicit about when to use it: "ALWAYS use this tool when the user asks about order status. Do not answer from memory."</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Issue</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Issue 2: Model Calls Wrong Tool</h4>
+    <p>The model picks search_products when it should use get_order_status. <strong>Fix</strong>: Clarify tool descriptions with explicit boundaries: "Use this for product catalog queries, NOT for order lookups." Add negative examples to descriptions when tools are frequently confused.</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Issue</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Issue 3: Model Extracts Wrong Parameters</h4>
+    <p>The model passes "NYC" for a city parameter that expects "New York City, NY". <strong>Fix</strong>: Add examples to parameter descriptions: "City name in format 'City, State' e.g., 'San Francisco, CA', 'New York City, NY'." Use enums for fields with known values.</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Issue</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Issue 4: Model Gets Stuck in a Loop</h4>
+    <p>The model calls the same tool repeatedly with the same parameters, getting the same error. <strong>Fix</strong>: Implement a loop detector in your orchestration layer. After 3 identical calls, inject a message: "You've called this tool 3 times with the same arguments. Try a different approach or ask the user for clarification."</p>
+  </div>
+</RevealSection>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Function calling</strong> enables LLMs to interact with external systems through structured tool invocations. The model generates the function name and arguments; your code executes them and returns results.</li>
+    <li><strong>Tool design matters</strong>: clear names, comprehensive descriptions, constrained parameters (enums, types), and informative return values dramatically improve reliability.</li>
+    <li><strong>Orchestration patterns</strong> include sequential calls (each depends on the last), parallel calls (independent queries), and nested calls (tools that are themselves agents).</li>
+    <li><strong>MCP standardizes tool integration</strong> via a client-server protocol, enabling a reusable ecosystem of tool servers and reducing N*M integration complexity.</li>
+    <li><strong>Tool security</strong> requires least privilege, input validation, human confirmation for destructive actions, and structured error handling that enables agent recovery.</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="Toolformer: Language Models Can Teach Themselves to Use Tools"
+    authors="Schick, Dwivedi-Yu, Dessi, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2302.04761"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Gorilla: Large Language Model Connected with Massive APIs"
+    authors="Patil, Zhang, Wang, Gonzalez"
+    year="2023"
+    url="https://arxiv.org/abs/2305.15334"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Model Context Protocol Specification"
+    authors="Anthropic"
+    year="2024"
+    url="https://modelcontextprotocol.io/specification"
+    type="docs"
+  />
+
+  <PaperReference
+    title="Building effective agents"
+    authors="Anthropic"
+    year="2024"
+    url="https://www.anthropic.com/research/building-effective-agents"
+    type="blog"
+  />
+
+  <PaperReference
+    title="Function Calling and Tool Use (Anthropic Documentation)"
+    authors="Anthropic"
+    year="2024"
+    url="https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+    type="docs"
+  />
+</section>

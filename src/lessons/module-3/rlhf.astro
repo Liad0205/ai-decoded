@@ -1,0 +1,390 @@
+---
+// Module 3, Lesson 3.3: RLHF and Alignment - Teaching Models Human Values
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Understand why SFT alone is insufficient and how RLHF addresses its limitations</li>
+  <li>Explain the full RLHF pipeline: reward modeling, PPO optimization, and KL constraints</li>
+  <li>Derive and compare Direct Preference Optimization (DPO) as a simpler alternative to PPO</li>
+  <li>Identify failure modes: reward hacking, mode collapse, and alignment tax</li>
+</ul>
+
+<h2>Why RLHF? The Limits of Supervised Learning</h2>
+
+<p>
+  SFT teaches a model to imitate human demonstrations, but imitation has fundamental limitations:
+</p>
+<ul>
+  <li><strong>Demonstration ≠ preference</strong>: It's easier for humans to compare two responses than to write a perfect one. A labeler might write a mediocre response but easily identify which of two responses is better.</li>
+  <li><strong>Ceiling effect</strong>: SFT can only be as good as the demonstrations. The model can't surpass the quality of its training data. RLHF can, by optimizing against a learned preference signal.</li>
+  <li><strong>Subtle quality dimensions</strong>: Helpfulness, harmlessness, and honesty are hard to demonstrate exhaustively but easier to evaluate comparatively.</li>
+</ul>
+
+<p>
+  RLHF (Reinforcement Learning from Human Feedback) addresses these limitations by training the model to optimize for human preferences rather than imitating demonstrations.
+</p>
+
+<h2>The RLHF Pipeline</h2>
+
+<Diagram diagramId="rlhf-pipeline" title="Three Stages of RLHF" autoplay={true} animationDuration={5000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+    <div class="grid grid-cols-3 gap-4">
+      <!-- Stage 1 -->
+      <div class="text-center p-3 rounded-lg border-2 border-blue-200 bg-blue-50" data-animate style="animation-delay: 0.3s">
+        <div class="font-bold text-blue-800 text-sm mb-2">Stage 1: SFT</div>
+        <div class="text-xs text-blue-700">
+          <div>Base model</div>
+          <div class="my-1">&#8595;</div>
+          <div>Fine-tune on demonstrations</div>
+          <div class="my-1">&#8595;</div>
+          <div class="font-semibold">SFT model &#960;<sub>SFT</sub></div>
+        </div>
+      </div>
+
+      <!-- Stage 2 -->
+      <div class="text-center p-3 rounded-lg border-2 border-amber-200 bg-amber-50" data-animate style="animation-delay: 1.5s">
+        <div class="font-bold text-amber-800 text-sm mb-2">Stage 2: Reward Model</div>
+        <div class="text-xs text-amber-700">
+          <div>Collect comparison data</div>
+          <div class="my-1">&#8595;</div>
+          <div>Train reward model R(x, y)</div>
+          <div class="my-1">&#8595;</div>
+          <div class="font-semibold">Reward model R<sub>&#966;</sub></div>
+        </div>
+      </div>
+
+      <!-- Stage 3 -->
+      <div class="text-center p-3 rounded-lg border-2 border-emerald-200 bg-emerald-50" data-animate style="animation-delay: 3.0s">
+        <div class="font-bold text-emerald-800 text-sm mb-2">Stage 3: RL (PPO)</div>
+        <div class="text-xs text-emerald-700">
+          <div>Optimize policy &#960;<sub>&#952;</sub></div>
+          <div class="my-1">&#8595;</div>
+          <div>Maximize R while staying near &#960;<sub>SFT</sub></div>
+          <div class="my-1">&#8595;</div>
+          <div class="font-semibold">Aligned model &#960;<sub>RLHF</sub></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<h3>Stage 1: Supervised Fine-Tuning</h3>
+
+<p>
+  Start with a pretrained model and fine-tune on demonstration data (covered in Lesson 3.2). This produces the SFT model <MathBlock formula={"\\pi_{\\text{SFT}}"} />, which serves as the starting point and reference policy for RLHF.
+</p>
+
+<h3>Stage 2: Reward Modeling</h3>
+
+<p>
+  The reward model learns to predict which responses humans prefer. The process:
+</p>
+<ol>
+  <li>Sample prompts from a distribution of user inputs.</li>
+  <li>Generate 2+ responses per prompt from the SFT model.</li>
+  <li>Human annotators rank the responses (e.g., response A > response B).</li>
+  <li>Train a reward model on these preferences.</li>
+</ol>
+
+<h4>The Bradley-Terry Model</h4>
+
+<p>
+  Given a prompt x and two responses <MathBlock formula="y_w" /> (preferred) and <MathBlock formula="y_l" /> (dispreferred), the reward model <MathBlock formula={"R_\\phi"} /> is trained to assign higher reward to the preferred response. The core idea is that the probability of preferring one response over another depends only on the <em>difference</em> in their reward scores, passed through a sigmoid to produce a probability. Mathematically:
+</p>
+
+<div class="equation-with-label">
+  <p class="equation-label">Bradley-Terry preference model:</p>
+  <MathBlock formula={"P(y_w \\succ y_l \\mid x) = \\sigma(R_\\phi(x, y_w) - R_\\phi(x, y_l))"} display={true} />
+</div>
+
+<p>
+  where <MathBlock formula={"\\sigma"} /> is the sigmoid function. In plain English: the larger the reward gap between two responses, the more confidently the model predicts the higher-scored one is preferred.
+</p>
+
+<p>
+  <strong>Concrete example</strong>: If the reward model scores response A at 2.0 and response B at 1.0, the probability of preferring A is <MathBlock formula={"\\sigma(2.0 - 1.0) = \\sigma(1.0) \\approx 0.73"} />, or 73%. If the gap widens to 3.0, the preference probability rises to <MathBlock formula={"\\sigma(3.0) \\approx 0.95"} />, or 95%. This sigmoid mapping ensures small reward differences produce uncertain predictions while large differences produce confident ones.
+</p>
+
+<p>
+  The training objective maximizes the log-likelihood of observed preferences:
+</p>
+
+<div class="equation-with-label">
+  <p class="equation-label">Reward model loss function:</p>
+  <MathBlock formula={"\\mathcal{L}_{\\text{RM}}(\\phi) = -\\mathbb{E}_{(x, y_w, y_l)}\\left[\\log \\sigma(R_\\phi(x, y_w) - R_\\phi(x, y_l))\\right]"} display={true} />
+</div>
+
+<p>
+  In words: this loss pushes the reward model to widen the gap between preferred and dispreferred response scores, penalizing cases where the model assigns a higher (or equal) reward to the dispreferred response.
+</p>
+
+<p>
+  <strong>Architecture</strong>: The reward model is typically initialized from the SFT model, with the language model head replaced by a scalar output head. This gives it strong language understanding from the start.
+</p>
+
+<h4>Reward Model Quality</h4>
+<ul>
+  <li><strong>Inter-annotator agreement</strong>: Humans agree on preferences only ~70-80% of the time. This sets an upper bound on reward model accuracy.</li>
+  <li><strong>Scaling</strong>: InstructGPT collected ~33K comparisons. More data improves reward model accuracy, but with diminishing returns.</li>
+  <li><strong>Calibration</strong>: The absolute value of rewards is arbitrary; only relative differences matter. Reward models are often normalized to have zero mean and unit variance.</li>
+</ul>
+
+<h3>Stage 3: RL Optimization with PPO</h3>
+
+<p>
+  With a trained reward model, we optimize the language model policy <MathBlock formula={"\\pi_\\theta"} /> to maximize expected reward while staying close to the SFT policy. The objective:
+</p>
+
+<MathBlock formula={"\\max_{\\pi_\\theta} \\mathbb{E}_{x \\sim \\mathcal{D},\\, y \\sim \\pi_\\theta(\\cdot|x)} \\left[R_\\phi(x, y)\\right] - \\beta \\cdot D_{\\text{KL}}\\left[\\pi_\\theta(\\cdot|x) \\| \\pi_{\\text{SFT}}(\\cdot|x)\\right]"} display={true} />
+
+<p>
+  The KL divergence penalty <MathBlock formula={"\\beta \\cdot D_{\\text{KL}}"} /> is critical: it prevents the model from drifting too far from the SFT policy. Without it, the model would exploit the reward model rather than genuinely improving.
+</p>
+
+<h4>Why PPO?</h4>
+
+<p>
+  Standard policy gradient methods can make catastrophically large updates when a single batch happens to produce unusually large gradients. <strong>Proximal Policy Optimization (PPO)</strong> prevents this by clipping the probability ratio between the new and old policy: if the new policy strays too far from the old one on any given action, the gradient is zeroed out, acting like a guardrail on update size. Mathematically:
+</p>
+
+<MathBlock formula={"\\mathcal{L}_{\\text{PPO}} = \\min\\left(r_t(\\theta) \\hat{A}_t,\\ \\text{clip}(r_t(\\theta), 1-\\epsilon, 1+\\epsilon) \\hat{A}_t\\right)"} display={true} />
+
+<p>
+  where <MathBlock formula={"r_t(\\theta) = \\pi_\\theta(a_t|s_t) / \\pi_{\\text{old}}(a_t|s_t)"} /> is the probability ratio between the updated policy and the previous policy for action <MathBlock formula={"a_t"} /> in state <MathBlock formula={"s_t"} />, <MathBlock formula={"\\hat{A}_t"} /> is the advantage estimate (how much better this action was than expected), and <MathBlock formula={"\\epsilon"} /> is the clipping threshold (typically 0.1-0.2). The min operator ensures that overly optimistic ratio changes are capped, preventing destructively large policy updates.
+</p>
+
+<p>
+  In the LLM context:
+</p>
+<ul>
+  <li><strong>State</strong>: The prompt + tokens generated so far.</li>
+  <li><strong>Action</strong>: The next token to generate.</li>
+  <li><strong>Reward</strong>: The reward model score for the complete response (sparse reward at the end of generation), plus a per-token KL penalty.</li>
+  <li><strong>Value function</strong>: A separate critic network estimates the expected future reward from each state (used to compute advantages).</li>
+</ul>
+
+<h4>RLHF Training Loop</h4>
+<ol>
+  <li>Sample a batch of prompts from the dataset.</li>
+  <li>Generate responses using the current policy <MathBlock formula={"\\pi_\\theta"} />.</li>
+  <li>Score responses with the reward model <MathBlock formula={"R_\\phi"} />.</li>
+  <li>Compute per-token KL penalties against <MathBlock formula={"\\pi_{\\text{SFT}}"} />.</li>
+  <li>Compute advantages using the value function.</li>
+  <li>Update policy and value networks with PPO.</li>
+  <li>Repeat.</li>
+</ol>
+
+<h2>Direct Preference Optimization (DPO)</h2>
+
+<p>
+  RLHF with PPO is effective but complex: it requires training a separate reward model, running RL optimization with a critic network, carefully tuning PPO hyperparameters, and managing four models in memory simultaneously (policy, reference, reward, critic).
+</p>
+
+<p>
+  <strong>DPO</strong> eliminates the reward model and RL entirely by showing that the optimal policy can be derived in closed form from the preference data.
+</p>
+
+<h3>The DPO Insight</h3>
+
+<p>
+  Starting from the RLHF objective, Rafailov et al. showed that the optimal policy under the KL-constrained reward maximization has a closed-form relationship to the reward function:
+</p>
+
+<div class="equation-with-label">
+  <p class="equation-label">Optimal policy-reward relationship:</p>
+  <MathBlock formula={"R(x, y) = \\beta \\log \\frac{\\pi^*(y|x)}{\\pi_{\\text{ref}}(y|x)} + \\beta \\log Z(x)"} display={true} />
+</div>
+
+<p>
+  Substituting this into the Bradley-Terry preference model and canceling the partition function <MathBlock formula="Z(x)" />, we get the DPO loss. The key intuition: DPO is a classification loss in disguise. It increases the log-probability of preferred responses and decreases the log-probability of dispreferred ones, with the reference model acting as a regularizer to prevent the policy from straying too far. Mathematically:
+</p>
+
+<div class="equation-with-label">
+  <p class="equation-label">DPO loss function:</p>
+  <MathBlock formula={"\\mathcal{L}_{\\text{DPO}}(\\theta) = -\\mathbb{E}_{(x, y_w, y_l)}\\left[\\log \\sigma\\left(\\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{\\text{ref}}(y_w|x)} - \\beta \\log \\frac{\\pi_\\theta(y_l|x)}{\\pi_{\\text{ref}}(y_l|x)}\\right)\\right]"} display={true} />
+</div>
+
+<p>
+  where <MathBlock formula={"\\pi_\\theta"} /> is the policy being trained, <MathBlock formula={"\\pi_{\\text{ref}}"} /> is the frozen reference policy (typically the SFT model), <MathBlock formula={"y_w"} /> and <MathBlock formula={"y_l"} /> are the preferred and dispreferred responses, and <MathBlock formula={"\\beta"} /> controls regularization strength. Each log-ratio term <MathBlock formula={"\\log \\frac{\\pi_\\theta(y|x)}{\\pi_{\\text{ref}}(y|x)}"} /> measures how much the policy has shifted relative to the reference for a given response -- think of it as an "implicit reward."
+</p>
+
+<p>
+  In plain English: the loss drives the policy to assign higher probability to preferred responses (relative to the reference) and lower probability to dispreferred ones. The sigmoid and log structure mean the gradient is strongest when the model's implicit ranking disagrees with the human preference data.
+</p>
+
+<h3>DPO vs. PPO: Trade-offs</h3>
+
+<ul>
+  <li><strong>Simplicity</strong>: DPO is a single supervised fine-tuning step (no reward model, no critic, no RL loop). Far easier to implement and debug.</li>
+  <li><strong>Memory</strong>: DPO requires only two models (policy + reference). PPO requires four (policy + reference + reward + critic).</li>
+  <li><strong>Stability</strong>: DPO avoids the instabilities of RL training (reward hacking, mode collapse during optimization).</li>
+  <li><strong>Expressiveness</strong>: PPO can explore beyond the training data distribution by generating novel responses. DPO is limited to reweighting responses in the preference dataset.</li>
+  <li><strong>Online vs. offline</strong>: PPO generates new responses during training (on-policy). DPO trains on a fixed preference dataset (off-policy), which can be suboptimal if the preference data doesn't cover the current policy's output distribution.</li>
+</ul>
+
+<h3>DPO in Practice (2025-2026)</h3>
+<p>
+  By 2025-2026, <strong>DPO has become a widely adopted alternative to RLHF/PPO</strong> for alignment in production systems. The reasons:
+</p>
+<ul>
+  <li><strong>Empirical effectiveness</strong>: DPO achieves comparable or better results than PPO on most alignment benchmarks with dramatically simpler implementation</li>
+  <li><strong>Cost efficiency</strong>: Requiring only two models instead of four reduces training infrastructure costs significantly</li>
+  <li><strong>Reliability</strong>: The supervised learning formulation is more stable and predictable than RL optimization</li>
+  <li><strong>Iteration speed</strong>: Teams can iterate faster on alignment with DPO's simpler debugging and experimentation workflow</li>
+</ul>
+
+<h3>Beyond DPO: Newer Variants (2025-2026)</h3>
+<p>
+  The field continues to evolve beyond vanilla DPO:
+</p>
+<ul>
+  <li><strong>IPO (Identity Preference Optimization)</strong>: Addresses DPO's sensitivity to the reference policy by using an identity mapping, improving robustness</li>
+  <li><strong>RLTHF (RL from Targeted Human Feedback)</strong>: Focuses preference collection on specific failure modes, improving sample efficiency</li>
+  <li><strong>Verifier-driven RL</strong>: Uses learned verifiers (for code, math) as reward signals, enabling self-improvement loops</li>
+  <li><strong>GRPO (Group Relative Policy Optimization)</strong>: Eliminates the critic/value model by using group-based advantage estimation from multiple sampled outputs. More memory-efficient than PPO. Used in DeepSeek-R1 for reasoning (Shao et al. 2024)</li>
+  <li><strong>Agentic self-refinement</strong>: Models critique and revise their own outputs using constitutional principles</li>
+</ul>
+
+<PaperReference
+  title="DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models"
+  authors="Shao et al."
+  year="2024"
+  url="https://arxiv.org/abs/2402.03300"
+/>
+
+<Quiz
+  question="What is the key insight that makes DPO possible?"
+  quizId="dpo-insight"
+  options={[
+    {
+      id: "a",
+      text: "The reward function is unnecessary because the model already knows what's good",
+      correct: false,
+      explanation: "DPO doesn't assume the model knows what's good. It still learns from human preference data; it just does so without an explicit reward model."
+    },
+    {
+      id: "b",
+      text: "The optimal reward function under KL-constrained optimization can be expressed analytically in terms of the optimal policy and reference policy",
+      correct: true,
+      explanation: "Correct! The crucial insight is that the reward function R(x,y) = beta * log(pi*(y|x) / pi_ref(y|x)) + const. This allows substituting the policy directly into the preference model, eliminating the need for an explicit reward model and RL optimization."
+    },
+    {
+      id: "c",
+      text: "Reinforcement learning is always equivalent to supervised learning",
+      correct: false,
+      explanation: "This is not true in general. DPO exploits a specific mathematical property of the KL-constrained reward maximization objective. Other RL problems cannot be reduced to supervised learning."
+    },
+    {
+      id: "d",
+      text: "Human preferences can be learned from a single forward pass",
+      correct: false,
+      explanation: "DPO still requires iterative training (multiple gradient steps). The insight is about eliminating the RL loop, not reducing training to a single step."
+    }
+  ]}
+/>
+
+<h2>Failure Modes and Challenges</h2>
+
+<h3>Reward Hacking</h3>
+
+<p>
+  The model finds ways to exploit the reward model rather than genuinely improving. The reward model is an imperfect proxy for human preferences, and the policy optimizer will find its blind spots.
+</p>
+<ul>
+  <li><strong>Length gaming</strong>: Longer responses often receive higher reward scores. The model learns to be verbose rather than concise. Mitigated by length-normalized rewards or explicit length penalties.</li>
+  <li><strong>Sycophancy</strong>: The model learns to agree with the user's stated views or provide overly confident answers, because annotators preferred confident-sounding responses.</li>
+  <li><strong>Formatting tricks</strong>: The model may use bullet points, bold text, or other formatting that correlates with higher reward scores without improving substance.</li>
+</ul>
+
+<p>
+  <strong>Goodhart's Law applies</strong>: "When a measure becomes a target, it ceases to be a good measure." The reward model measures a proxy of quality; optimizing hard against it degrades true quality.
+</p>
+
+<h3>Mode Collapse</h3>
+
+<p>
+  Over-optimization of the reward can cause the model to collapse to a narrow set of high-reward but repetitive responses. Diversity decreases as the model converges on "safe" outputs that reliably score well.
+</p>
+
+<p>
+  The KL penalty mitigates this by keeping the policy close to the diverse SFT distribution, but too-low <MathBlock formula={"\\beta"} /> allows collapse while too-high <MathBlock formula={"\\beta"} /> prevents meaningful improvement.
+</p>
+
+<h3>Alignment Tax</h3>
+
+<p>
+  RLHF can reduce raw capability on some benchmarks. The "alignment tax" reflects the trade-off between helpfulness and safety: a model that refuses harmful requests may also refuse ambiguous-but-benign requests. Research aims to minimize this tax through better reward modeling and training.
+</p>
+
+<h3>Iterative RLHF and Constitutional AI</h3>
+
+<p>
+  Modern alignment approaches iterate: train a model, collect new preference data from it, retrain. Anthropic's <strong>Constitutional AI (CAI)</strong> replaces some human feedback with AI feedback, allowing the model to critique its own outputs according to a set of principles (a "constitution") and generate preference pairs for DPO/RLHF training.
+</p>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Preference optimization goes beyond imitation</strong>: It optimizes for human preferences rather than mimicking demonstrations, enabling models to surpass demo quality</li>
+    <li><strong>Historical RLHF stages</strong>: SFT (demonstrations) → Reward Model (comparisons) → PPO (optimization with KL constraint)</li>
+    <li><strong>DPO has become widely adopted</strong> (2025-2026), deriving a closed-form loss from preference data and eliminating the reward model and RL loop entirely. Its simplicity, stability, and effectiveness make it a popular alternative to RLHF/PPO</li>
+    <li><strong>Modern variants</strong>: IPO, RLTHF, and verifier-driven approaches continue to improve on vanilla DPO for specific use cases</li>
+    <li><strong>Reward hacking</strong> (Goodhart's Law) remains a challenge: models exploit imperfect reward proxies through length gaming, sycophancy, and formatting tricks</li>
+    <li><strong>The KL penalty</strong> is critical for preventing mode collapse and maintaining the diversity of the pretrained model</li>
+  </ul>
+</KeyTakeaway>
+
+<h2>References</h2>
+
+<PaperReference
+  title="Training language models to follow instructions with human feedback (InstructGPT)"
+  authors="Ouyang et al."
+  year="2022"
+  url="https://arxiv.org/abs/2203.02155"
+  type="paper"
+/>
+
+<PaperReference
+  title="Direct Preference Optimization: Your Language Model is Secretly a Reward Model"
+  authors="Rafailov et al."
+  year="2023"
+  url="https://arxiv.org/abs/2305.18290"
+  type="paper"
+/>
+
+<PaperReference
+  title="Proximal Policy Optimization Algorithms"
+  authors="Schulman et al."
+  year="2017"
+  url="https://arxiv.org/abs/1707.06347"
+  type="paper"
+/>
+
+<PaperReference
+  title="Constitutional AI: Harmlessness from AI Feedback"
+  authors="Bai et al."
+  year="2022"
+  url="https://arxiv.org/abs/2212.08073"
+  type="paper"
+/>
+
+<PaperReference
+  title="Learning to summarize from human feedback"
+  authors="Stiennon et al."
+  year="2020"
+  url="https://arxiv.org/abs/2009.01325"
+  type="paper"
+/>
+
+<PaperReference
+  title="Scaling Laws for Reward Model Overoptimization"
+  authors="Gao et al."
+  year="2023"
+  url="https://arxiv.org/abs/2210.10760"
+  type="paper"
+/>

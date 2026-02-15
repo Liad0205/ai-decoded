@@ -1,0 +1,414 @@
+---
+// Module 5, Lesson 5.2: Vector Databases and Approximate Nearest Neighbor Search
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Understand why exact nearest neighbor search is infeasible at scale and how ANN algorithms trade accuracy for speed</li>
+  <li>Explain the IVF (Inverted File Index) and HNSW (Hierarchical Navigable Small World) algorithms in detail</li>
+  <li>Compare vector database solutions: Pinecone, Qdrant, Weaviate, Milvus, pgvector</li>
+  <li>Design hybrid search systems combining dense vectors with sparse (keyword) retrieval</li>
+  <li>Make informed decisions about distance metrics, indexing strategies, and quantization</li>
+</ul>
+
+<h2>The Nearest Neighbor Problem at Scale</h2>
+
+<p>
+  Given a query vector <MathBlock formula={"q \\in \\mathbb{R}^d"} /> and a database of N vectors <MathBlock formula={"\\{v_1, v_2, \\ldots, v_N\\}"} />, find the k vectors most similar to q:
+</p>
+
+<MathBlock formula={"\\text{kNN}(q) = \\underset{S \\subset \\{1,...,N\\}, |S|=k}{\\arg\\min} \\sum_{i \\in S} \\text{dist}(q, v_i)"} display={true} />
+
+<p>In plain English: find the subset of k vectors whose total distance to the query is minimized.</p>
+
+<p>
+  <strong>Exact search</strong> requires computing distances to all N vectors: O(Nd) per query. With N = 100M vectors and d = 768 using float32 arithmetic, this means ~76 billion floating-point operations per query. At 1ms per query target, this is infeasible.
+</p>
+
+<h3>Distance Metrics</h3>
+
+<p>
+  The choice of distance metric determines how similarity is measured:
+</p>
+
+<ul>
+  <li><strong>Cosine similarity</strong>: <MathBlock formula={"\\text{cos}(u,v) = \\frac{u \\cdot v}{\\|u\\|\\|v\\|}"} /> --- measures the angle between vectors, ignoring magnitude. Useful when only direction (topic/meaning) matters, not scale. Most common for text embeddings.</li>
+  <li><strong>Euclidean (L2) distance</strong>: <MathBlock formula={"\\|u - v\\|_2 = \\sqrt{\\sum_i (u_i - v_i)^2}"} /> --- measures absolute distance in space, penalizing differences in both direction and magnitude. Equivalent to cosine for normalized vectors.</li>
+  <li><strong>Inner product (dot product)</strong>: <MathBlock formula={"u \\cdot v = \\sum_i u_i v_i"} /> --- combines directional alignment with magnitude, so larger vectors contribute more. Used when vector magnitudes carry meaning (e.g., popularity-weighted embeddings).</li>
+</ul>
+
+<p>
+  <strong>Key insight</strong>: For normalized vectors (<MathBlock formula={"\\|v\\| = 1"} />), cosine similarity, L2 distance, and inner product are monotonically related, so they produce identical rankings:
+</p>
+
+<div class="equation-with-label">
+  <div class="text-sm font-medium text-slate-700 mb-2">Distance Metric Equivalence</div>
+  <MathBlock formula={"\\|u - v\\|_2^2 = 2 - 2(u \\cdot v) \\quad \\text{when } \\|u\\| = \\|v\\| = 1"} display={true} />
+</div>
+
+<p>In other words, when vectors are normalized to unit length, squared L2 distance is just a linear rescaling of the dot product, so all three metrics produce identical nearest-neighbor rankings.</p>
+
+<h2>Approximate Nearest Neighbor (ANN) Algorithms</h2>
+
+<p>
+  ANN algorithms sacrifice some recall (they may miss some true nearest neighbors) for dramatic speedups. The key metric is <strong>recall@k</strong>: the fraction of true k-nearest neighbors returned by the approximate algorithm.
+</p>
+
+<h3>IVF (Inverted File Index)</h3>
+
+<p>
+  IVF partitions the vector space into clusters, then only searches relevant clusters at query time.
+</p>
+
+<p><strong>Index construction:</strong></p>
+<ol>
+  <li>Run k-means on all N vectors to find C centroids <MathBlock formula={"\\{c_1, c_2, \\ldots, c_C\\}"} /></li>
+  <li>Assign each vector to its nearest centroid</li>
+  <li>Build an inverted list for each cluster: centroid -> list of vectors assigned to it</li>
+</ol>
+
+<p><strong>Query processing:</strong></p>
+<ol>
+  <li>Find the <MathBlock formula={"n_{\\text{probe}}"} /> nearest centroids to the query</li>
+  <li>Search only vectors in those <MathBlock formula={"n_{\\text{probe}}"} /> clusters</li>
+  <li>Return top-k from the searched vectors</li>
+</ol>
+
+<p>
+  With C = 1000 clusters and <MathBlock formula={"n_{\\text{probe}} = 10"} />, you search only 1% of the database. The tradeoff is controlled by <MathBlock formula={"n_{\\text{probe}}"} />: higher values improve recall but increase latency.
+</p>
+
+<MathBlock formula={"\\text{Search cost} \\approx O\\left(\\frac{N \\cdot n_{\\text{probe}}}{C} \\cdot d\\right) \\quad \\text{vs.} \\quad O(Nd) \\text{ for brute force}"} display={true} />
+
+<p>In plain English: IVF search cost scales linearly with the fraction of clusters probed, so searching 1% of clusters costs roughly 1% of brute-force.</p>
+
+<h3>HNSW (Hierarchical Navigable Small World)</h3>
+
+<p>
+  <strong>HNSW</strong> is the most widely used ANN algorithm in production. It builds a multi-layer graph where each node connects to its approximate nearest neighbors.
+</p>
+
+<p><strong>Key insight:</strong> Inspired by skip lists. Higher layers have sparse, long-range connections for coarse navigation; lower layers have dense, short-range connections for fine-grained search.</p>
+
+<p><strong>Index construction:</strong></p>
+<ol>
+  <li>Each new vector is inserted starting from the top layer</li>
+  <li>At each layer, greedily navigate to the nearest neighbor of the new vector</li>
+  <li>The vector's maximum layer is assigned by a randomized formula (see below)</li>
+  <li>At each layer the vector is present in, connect it to its M nearest already-inserted neighbors</li>
+</ol>
+
+<p>HNSW decides which layers a node appears in using a randomized formula. Higher layers are sparser, forming an "express lane" for coarse search, while lower layers are dense for fine-grained navigation---directly analogous to skip lists. The formula controls this sparsity by making it exponentially unlikely for a node to reach higher layers. Mathematically:</p>
+
+<MathBlock formula={"\\ell = \\lfloor -\\ln(\\text{uniform}(0,1)) \\cdot m_L \\rfloor"} display={true} />
+
+<p>where <MathBlock formula={"m_L = 1/\\ln(M)"} />.</p>
+<ul>
+  <li><MathBlock formula={"\\ell"} /> is the maximum layer assigned to the node</li>
+  <li><MathBlock formula={"\\text{uniform}(0,1)"} /> is a random draw from the uniform distribution on [0, 1]</li>
+  <li>M is the number of bidirectional connections per node (a tuning parameter)</li>
+  <li><MathBlock formula={"m_L"} /> is a normalization factor derived from M that controls how quickly layer membership decays</li>
+</ul>
+
+<p>In plain English: draw a random number, take its negative log (which follows an exponential distribution), scale it, and floor the result. Most draws produce 0, so most nodes live only on the bottom layer. The probability of reaching layer L decreases exponentially, giving HNSW its hierarchical structure.</p>
+
+<p><strong>Query processing:</strong></p>
+<ol>
+  <li>Start at the entry point (a fixed node in the top layer)</li>
+  <li>At each layer, greedily traverse the graph toward the query vector</li>
+  <li>When no closer neighbor is found, descend to the next layer</li>
+  <li>At the bottom layer, perform a more thorough beam search with width <code>ef</code></li>
+</ol>
+
+<Diagram diagramId="hnsw-layers" title="HNSW Multi-Layer Graph Structure" autoplay={true} animationDuration={5000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+    <div class="flex flex-col gap-4">
+      <!-- Layer 2 (top) -->
+      <div data-animate style="animation-delay: 0.3s">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Layer 2 (sparse, long-range)</div>
+        <div class="relative h-12 bg-indigo-50 rounded border border-indigo-200 dark:border-[hsl(var(--border))] flex items-center justify-around px-8">
+          <div class="w-4 h-4 bg-indigo-500 rounded-full"></div>
+          <div class="border-t-2 border-dashed border-indigo-300 flex-1 mx-2"></div>
+          <div class="w-4 h-4 bg-indigo-500 rounded-full"></div>
+        </div>
+      </div>
+
+      <!-- Layer 1 (middle) -->
+      <div data-animate style="animation-delay: 1.5s">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Layer 1 (medium connections)</div>
+        <div class="relative h-12 bg-purple-50 rounded border border-purple-200 dark:border-[hsl(var(--border))] flex items-center justify-around px-4">
+          <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+          <div class="border-t border-purple-300 flex-1 mx-1"></div>
+          <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+          <div class="border-t border-purple-300 flex-1 mx-1"></div>
+          <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+          <div class="border-t border-purple-300 flex-1 mx-1"></div>
+          <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+        </div>
+      </div>
+
+      <!-- Layer 0 (bottom) -->
+      <div data-animate style="animation-delay: 3s">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Layer 0 (dense, short-range)</div>
+        <div class="relative h-12 bg-emerald-50 rounded border border-emerald-200 dark:border-[hsl(var(--border))] flex items-center justify-around px-2">
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center" data-animate style="animation-delay: 4s">
+      Search starts at top layer (coarse) and descends to bottom layer (fine-grained)
+    </div>
+  </div>
+</Diagram>
+
+<p><strong>HNSW complexity:</strong></p>
+<ul>
+  <li><strong>Query time</strong>: O(log N) average case --- logarithmic scaling with database size</li>
+  <li><strong>Index build time</strong>: O(N log N)</li>
+  <li><strong>Memory</strong>: O(N * M * d) --- stores all vectors plus M edges per node per layer</li>
+</ul>
+
+<p><strong>Key parameters:</strong></p>
+<ul>
+  <li><strong>M</strong> (connections per node): Higher M = better recall, more memory. Typical: 16-64.</li>
+  <li><strong>ef_construction</strong>: Beam width during index building. Higher = better graph quality, slower build.</li>
+  <li><strong>ef_search</strong>: Beam width during queries. Higher = better recall, slower queries. Tunable at query time.</li>
+</ul>
+
+<h3>Product Quantization (PQ)</h3>
+
+<p>
+  When memory is the bottleneck, <strong>Product Quantization</strong> compresses vectors by splitting them into subvectors and quantizing each independently:
+</p>
+
+<ol>
+  <li>Split each d-dimensional vector into m subvectors of dimension d/m</li>
+  <li>For each subspace, learn a codebook of 256 centroids via k-means</li>
+  <li>Represent each subvector by its nearest centroid index (1 byte)</li>
+</ol>
+
+<p>
+  A 768-dim float32 vector (3072 bytes) compressed to m = 96 subvectors requires only 96 bytes --- a <strong>32x compression</strong>.
+</p>
+
+<MathBlock formula={"\\text{dist}_{\\text{PQ}}(q, v) \\approx \\sum_{i=1}^{m} \\|q_i - c_{k_i}^{(i)}\\|^2"} display={true} />
+
+<p>In plain English: approximate the full distance by summing the distances between each subvector of the query and the corresponding codebook centroid assigned to the stored vector.</p>
+
+<p>
+  where <MathBlock formula={"c_{k_i}^{(i)}"} /> is the centroid assigned to the i-th subvector of v. Distances are computed via precomputed lookup tables for speed.
+</p>
+
+<p>
+  IVF + PQ (IVFPQ) combines both: cluster-based pruning with compressed vectors. This is the backbone of FAISS at billion-scale.
+</p>
+
+<h2>Vector Database Landscape</h2>
+
+<p>
+  Vector databases add persistence, filtering, replication, and API layers on top of ANN algorithms:
+</p>
+
+<h3>Purpose-Built Vector Databases</h3>
+
+<ul>
+  <li>
+    <strong>Pinecone</strong>: Fully managed cloud service. Serverless and pod-based options. Strengths: zero ops, automatic scaling, metadata filtering. Limitations: closed-source, vendor lock-in, limited control over indexing parameters.
+  </li>
+  <li>
+    <strong>Qdrant</strong>: Open-source (Rust). Strengths: advanced filtering with payload indexes, support for multiple vectors per point, quantization options (scalar, product, binary). Strong single-node performance.
+  </li>
+  <li>
+    <strong>Weaviate</strong>: Open-source (Go). Strengths: built-in vectorization modules, GraphQL API, hybrid search native. Good developer experience.
+  </li>
+  <li>
+    <strong>Milvus/Zilliz</strong>: Open-source (Go/C++). Strengths: best-in-class billion-scale performance, GPU acceleration, multiple index types. Complexity: heavier operational footprint.
+  </li>
+  <li>
+    <strong>ChromaDB</strong>: Open-source (Python). Strengths: simplest API, embedded mode, great for prototyping. Limitations: not designed for large-scale production.
+  </li>
+</ul>
+
+<h3>Vector Extensions for Existing Databases</h3>
+
+<ul>
+  <li>
+    <strong>pgvector</strong> (PostgreSQL): Adds vector columns and ANN indexes to Postgres. Strengths: familiar SQL interface, ACID transactions, combine vector search with relational queries. Limitations: slower than purpose-built solutions at very large scale.
+  </li>
+  <li>
+    <strong>Elasticsearch</strong>: Dense vector field type with HNSW index. Good for organizations already using the Elastic stack.
+  </li>
+</ul>
+
+<h3>Selection Criteria</h3>
+
+<p>When choosing a vector database, consider:</p>
+<ul>
+  <li><strong>Scale</strong>: Millions of vectors? pgvector is fine. Billions? Consider Milvus or Pinecone.</li>
+  <li><strong>Filtering</strong>: Do you need complex metadata filters? Qdrant and Pinecone handle this well.</li>
+  <li><strong>Operations</strong>: Want zero ops? Pinecone. Comfortable with infrastructure? Open-source options.</li>
+  <li><strong>Integration</strong>: Already using Postgres? pgvector avoids a new system. Need full-text search too? Elasticsearch or Weaviate.</li>
+  <li><strong>Latency requirements</strong>: Purpose-built systems like Milvus or Qdrant with HNSW in memory typically achieve 1-10ms p95 latency at scale; pgvector achieves 10-50ms p95 latency depending on dataset size and index configuration. For sub-millisecond needs, purpose-built is the only option.</li>
+</ul>
+
+<h2>Hybrid Search: Combining Dense and Sparse Retrieval</h2>
+
+<p>
+  Dense (embedding-based) and sparse (keyword-based) retrieval have complementary strengths:
+</p>
+
+<ul>
+  <li><strong>Dense retrieval</strong>: Excels at semantic similarity, paraphrase matching, cross-lingual search. Struggles with exact keyword matching, rare terms, and out-of-domain queries.</li>
+  <li><strong>Sparse retrieval (BM25)</strong>: Excels at exact term matching, rare entity names, domain-specific jargon. Misses semantic paraphrases entirely.</li>
+</ul>
+
+<h3>BM25: The Sparse Retrieval Baseline</h3>
+
+<div class="equation-with-label">
+  <div class="text-sm font-medium text-slate-700 mb-2">BM25 Score</div>
+  <MathBlock formula={"\\text{BM25}(q, d) = \\sum_{t \\in q} \\text{IDF}(t) \\cdot \\frac{f(t, d) \\cdot (k_1 + 1)}{f(t, d) + k_1 \\cdot (1 - b + b \\cdot \\frac{|d|}{\\text{avgdl}})}"} display={true} />
+</div>
+
+<p>In plain English: for each query term, BM25 scores how important that term is globally (IDF) scaled by how frequently it appears in the document, with diminishing returns for repeated occurrences and a length normalization penalty so longer documents do not get an unfair advantage.</p>
+
+<p>
+  where f(t,d) is term frequency, IDF is inverse document frequency, |d| is document length, and k<sub>1</sub>, b are tuning parameters. Despite its simplicity, BM25 remains a strong baseline, especially for keyword-heavy queries.
+</p>
+
+<h3>Fusion Strategies</h3>
+
+<p><strong>Score-level fusion</strong> combines normalized scores from both systems:</p>
+
+<div class="equation-with-label">
+  <div class="text-sm font-medium text-slate-700 mb-2">Hybrid Score Fusion</div>
+  <MathBlock formula={"\\text{score}_{\\text{hybrid}}(q, d) = \\alpha \\cdot \\text{score}_{\\text{dense}}(q, d) + (1 - \\alpha) \\cdot \\text{score}_{\\text{sparse}}(q, d)"} display={true} />
+</div>
+
+<p>In plain English: the hybrid score is a weighted average of the dense (semantic) score and the sparse (keyword) score, blended by the parameter alpha.</p>
+
+<p>
+  where <MathBlock formula={"\\alpha \\in [0, 1]"} /> controls the blend. Typical values: <MathBlock formula={"\\alpha = 0.5\\text{--}0.7"} /> (slightly favoring dense).
+</p>
+
+<p><strong>Reciprocal Rank Fusion (RRF)</strong> combines rank positions instead of scores, avoiding score normalization issues:</p>
+
+<div class="equation-with-label">
+  <div class="text-sm font-medium text-slate-700 mb-2">Reciprocal Rank Fusion</div>
+  <MathBlock formula={"\\text{RRF}(d) = \\sum_{r \\in \\mathcal{R}} \\frac{1}{k + r(d)}"} display={true} />
+</div>
+
+<p>In plain English: for each document, sum up a score contribution from each ranker based on the document's rank position. Documents ranked highly by multiple rankers accumulate a high combined score.</p>
+
+<p>
+  where r(d) is the rank of document d in ranker r, and k is a constant (typically 60). RRF is robust and widely used because it requires no score calibration.
+</p>
+
+<h3>Learned Sparse Representations (SPLADE)</h3>
+
+<p>
+  <strong>SPLADE</strong> bridges dense and sparse by learning sparse representations through a transformer. The model outputs a sparse vector over the entire vocabulary, where weights represent term importance. This captures semantic meaning in a sparse format amenable to inverted index search.
+</p>
+
+<Quiz
+  question="You have 500M vectors of dimension 768. Latency budget is 10ms. Which indexing strategy is most appropriate?"
+  quizId="indexing-strategy"
+  options={[
+    {
+      id: "a",
+      text: "Brute-force exact search with GPU acceleration",
+      correct: false,
+      explanation: "Even with GPU acceleration, brute-force on 500M 768-dim vectors would far exceed 10ms. The O(Nd) cost is too high."
+    },
+    {
+      id: "b",
+      text: "HNSW with high M and ef_search parameters",
+      correct: false,
+      explanation: "HNSW alone at 500M scale would require ~1.5TB of RAM (vectors + graph). This is impractical for most deployments."
+    },
+    {
+      id: "c",
+      text: "IVF with Product Quantization (IVFPQ) for compressed storage, with HNSW on cluster centroids",
+      correct: true,
+      explanation: "Correct! IVFPQ compresses vectors (~32x), making 500M vectors fit in ~15GB. Using HNSW to index the cluster centroids enables fast cluster selection. This is exactly what FAISS IVF-HNSW-PQ implements for billion-scale search."
+    },
+    {
+      id: "d",
+      text: "Simple IVF with nprobe=100",
+      correct: false,
+      explanation: "IVF without quantization still needs all 500M full vectors in memory (~1.4TB for float32). Adding PQ compression is necessary at this scale."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Exact nearest neighbor search</strong> is O(Nd) per query---infeasible at scale. ANN algorithms trade a small amount of recall for orders-of-magnitude speedups.</li>
+    <li><strong>IVF</strong> partitions the space into clusters and searches only nearby clusters; <strong>HNSW</strong> builds a multi-layer navigable graph with O(log N) query time---the dominant algorithm in production.</li>
+    <li><strong>Product Quantization</strong> compresses vectors up to 32x, enabling billion-scale search in reasonable memory. Combine with IVF for IVFPQ.</li>
+    <li><strong>Vector databases</strong> (Pinecone, Qdrant, Milvus) add persistence, filtering, and scaling on top of ANN algorithms. pgvector works well for smaller scale within existing Postgres infrastructure.</li>
+    <li><strong>Hybrid search</strong> combining dense embeddings with sparse BM25 retrieval outperforms either alone; use Reciprocal Rank Fusion (RRF) for robust score combination.</li>
+  </ul>
+</KeyTakeaway>
+
+<h2>References</h2>
+
+<PaperReference
+  title="Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs"
+  authors="Malkov, Yashunin"
+  year="2018"
+  url="https://arxiv.org/abs/1603.09320"
+  type="paper"
+/>
+
+<PaperReference
+  title="Product Quantization for Nearest Neighbor Search"
+  authors="Jegou, Douze, Schmid"
+  year="2011"
+  url="https://ieeexplore.ieee.org/document/5432202"
+  type="paper"
+/>
+
+<PaperReference
+  title="Billion-Scale Similarity Search with GPUs (FAISS)"
+  authors="Johnson, Douze, Jegou"
+  year="2019"
+  url="https://arxiv.org/abs/1702.08734"
+  type="paper"
+/>
+
+<PaperReference
+  title="SPLADE: Sparse Lexical and Expansion Model for First Stage Ranking"
+  authors="Formal, Piwowarski, Clinchant"
+  year="2021"
+  url="https://arxiv.org/abs/2107.05720"
+  type="paper"
+/>
+
+<PaperReference
+  title="Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods"
+  authors="Cormack, Clarke, Buettcher"
+  year="2009"
+  url="https://dl.acm.org/doi/10.1145/1571941.1572114"
+  type="paper"
+/>
+
+<PaperReference
+  title="pgvector: Open-source vector similarity search for Postgres"
+  authors="Andrew Kane"
+  year="2023"
+  url="https://github.com/pgvector/pgvector"
+  type="docs"
+/>

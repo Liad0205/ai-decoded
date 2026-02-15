@@ -1,0 +1,51 @@
+---
+// Visual progress bar component
+interface Props {
+  moduleId: string;
+  percentage?: number;
+  showLabel?: boolean;
+}
+
+const { moduleId, percentage = 0, showLabel = true } = Astro.props;
+---
+
+<div class="progress-tracker" data-module-id={moduleId}>
+  {showLabel && (
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm font-medium text-[hsl(var(--muted-foreground))]">Progress</span>
+      <span class="text-sm font-semibold text-[hsl(var(--primary))]" data-progress-label>
+        {percentage}%
+      </span>
+    </div>
+  )}
+
+  <div class="w-full h-2 bg-[hsl(var(--muted))] rounded-full overflow-hidden">
+    <div
+      class="h-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary)/0.7)] rounded-full transition-all duration-500 ease-out"
+      style={`width: ${percentage}%`}
+      data-progress-bar
+    >
+    </div>
+  </div>
+</div>
+
+<script>
+  // Update progress bar when progress changes
+  if (typeof window !== 'undefined') {
+    window.addEventListener('progressUpdated', () => {
+      // Trigger re-render by updating the progress bars
+      const progressBars = document.querySelectorAll('[data-progress-bar]');
+      progressBars.forEach(bar => {
+        const tracker = bar.closest('.progress-tracker');
+        if (tracker) {
+          const moduleId = tracker.getAttribute('data-module-id');
+          if (moduleId) {
+            // Progress will be updated by the page's own logic
+            const event = new CustomEvent('updateProgress', { detail: { moduleId } });
+            window.dispatchEvent(event);
+          }
+        }
+      });
+    });
+  }
+</script>

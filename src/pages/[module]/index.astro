@@ -1,0 +1,211 @@
+---
+// Module landing page with lesson list
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Sidebar from '../../components/Sidebar.astro';
+import ProgressTracker from '../../components/ProgressTracker.astro';
+import LucideIcon from '../../components/LucideIcon.astro';
+import { modules, getModule } from '../../content/modules';
+import { Icon } from '../../components/Icon';
+
+export async function getStaticPaths() {
+  return modules.map(module => ({
+    params: { module: module.slug },
+    props: { module }
+  }));
+}
+
+const { module } = Astro.props;
+
+if (!module) {
+  return Astro.redirect(`${import.meta.env.BASE_URL}404`);
+}
+---
+
+<BaseLayout title={`Module ${module.number}: ${module.title}`} description={module.description}>
+  <div class="flex min-h-screen">
+    <!-- Mobile backdrop -->
+    <div
+      class="fixed inset-0 z-30 bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300"
+      data-sidebar-backdrop
+    ></div>
+
+    <Sidebar currentModuleSlug={module.slug} />
+
+    <!-- Mobile sidebar open button -->
+    <button
+      type="button"
+      class="sidebar-open-btn fixed left-4 top-4 z-20 p-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))] transition-colors lg:hidden"
+      data-sidebar-open
+      aria-label="Open sidebar"
+    >
+      <LucideIcon name="Menu" size={20} />
+    </button>
+
+    <!-- Fixed floating restore button (desktop collapsed only) -->
+    <button
+      type="button"
+      class="sidebar-floating-btn fixed left-4 top-1/2 -translate-y-1/2 z-30 hidden p-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))] shadow-md transition-colors"
+      data-sidebar-open
+      aria-label="Open sidebar"
+    >
+      <LucideIcon name="PanelLeftOpen" size={20} />
+    </button>
+
+    <main class="flex-1 p-12 max-w-4xl mx-auto">
+      {/* Breadcrumbs */}
+      <nav class="text-sm text-[hsl(var(--muted-foreground))] mb-6">
+        <ol class="flex items-center gap-2">
+          <li><a href={import.meta.env.BASE_URL} class="hover:text-[hsl(var(--primary))]">Home</a></li>
+          <li>/</li>
+          <li class="text-[hsl(var(--foreground))] font-medium">{module.title}</li>
+        </ol>
+      </nav>
+
+      {/* Module Header */}
+      <div class="mb-8">
+        <div class="w-16 h-16 mb-4 bg-[hsl(var(--primary)/0.12)] rounded-2xl flex items-center justify-center">
+          <Icon name={module.icon} className="w-8 h-8 text-[hsl(var(--primary))]" client:load />
+        </div>
+        <div class="text-sm font-medium text-[hsl(var(--primary))] mb-2">
+          Module {module.number}
+        </div>
+        <h1 class="text-5xl font-bold text-[hsl(var(--foreground))] mb-4">{module.title}</h1>
+        <p class="text-xl text-[hsl(var(--muted-foreground))]">{module.description}</p>
+      </div>
+
+      {/* Progress */}
+      <div class="mb-8">
+        <ProgressTracker moduleId={module.id} percentage={0} showLabel={true} />
+      </div>
+
+      {/* Lessons List */}
+      <div class="space-y-4">
+        <h2 class="text-2xl font-bold text-[hsl(var(--foreground))] mb-4">Lessons</h2>
+
+        {module.lessons.map((lesson, index) => (
+          <a
+            href={`${import.meta.env.BASE_URL}${module.slug}/${lesson.slug}`}
+            class="block p-6 bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg hover:shadow-md hover:border-[hsl(var(--primary)/0.4)] transition-smooth"
+            data-lesson-card
+            data-module-id={module.id}
+            data-lesson-id={lesson.id}
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="flex-shrink-0 w-8 h-8 bg-[hsl(var(--primary)/0.12)] text-[hsl(var(--primary))] rounded-full flex items-center justify-center font-semibold text-sm">
+                    {index + 1}
+                  </span>
+                  <h3 class="text-xl font-semibold text-[hsl(var(--foreground))]">
+                    {lesson.title}
+                  </h3>
+                  <span class="lesson-check-badge hidden text-[hsl(var(--success))]" data-lesson-check>
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                  </span>
+                </div>
+                <p class="text-[hsl(var(--muted-foreground))]">{lesson.description}</p>
+              </div>
+              <svg class="w-5 h-5 text-[hsl(var(--muted-foreground))] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      {/* Navigation to next/prev module */}
+      <nav class="mt-12 pt-8 border-t border-[hsl(var(--border))] flex justify-between gap-4">
+        {module.number > 1 && (
+          <a
+            href={`${import.meta.env.BASE_URL}${modules[module.number - 2].slug}`}
+            class="flex-1 p-4 border border-[hsl(var(--border))] rounded-lg hover:border-[hsl(var(--primary)/0.4)] hover:shadow-md transition-smooth group"
+          >
+            <div class="text-sm text-[hsl(var(--muted-foreground))] mb-1">&larr; Previous Module</div>
+            <div class="font-semibold text-[hsl(var(--foreground))] group-hover:text-[hsl(var(--primary))]">
+              {modules[module.number - 2].title}
+            </div>
+          </a>
+        )}
+
+        {module.number < modules.length && (
+          <a
+            href={`${import.meta.env.BASE_URL}${modules[module.number].slug}`}
+            class="flex-1 p-4 border border-[hsl(var(--border))] rounded-lg hover:border-[hsl(var(--primary)/0.4)] hover:shadow-md transition-smooth group text-right"
+          >
+            <div class="text-sm text-[hsl(var(--muted-foreground))] mb-1">Next Module &rarr;</div>
+            <div class="font-semibold text-[hsl(var(--foreground))] group-hover:text-[hsl(var(--primary))]">
+              {modules[module.number].title}
+            </div>
+          </a>
+        )}
+      </nav>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Show floating button on desktop when sidebar collapsed */
+  @media (min-width: 1024px) {
+    .sidebar-open-btn {
+      display: none;
+    }
+    .sidebar-open-btn[data-show-desktop] {
+      display: flex;
+    }
+    .sidebar-floating-btn[data-show-desktop] {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  import { getProgress, getModuleProgress } from '../../scripts/progress';
+  import { modules } from '../../content/modules';
+
+  if (typeof document !== 'undefined') {
+    function updateLessonCards() {
+      const progress = getProgress();
+      const lessonCards = document.querySelectorAll('[data-lesson-card]');
+
+      lessonCards.forEach(card => {
+        const moduleId = card.getAttribute('data-module-id');
+        const lessonId = card.getAttribute('data-lesson-id');
+        const check = card.querySelector('[data-lesson-check]');
+
+        if (check && moduleId && lessonId) {
+          const completed = progress.some(
+            p => p.moduleId === moduleId && p.lessonId === lessonId && p.completed
+          );
+
+          if (completed) {
+            check.classList.remove('hidden');
+          } else {
+            check.classList.add('hidden');
+          }
+        }
+      });
+
+      // Update module progress bar
+      const progressBar = document.querySelector('[data-progress-bar]') as HTMLElement;
+      const progressLabel = document.querySelector('[data-progress-label]');
+      const moduleNav = document.querySelector('[data-module-id]');
+
+      if (progressBar && progressLabel && moduleNav) {
+        const moduleId = moduleNav.getAttribute('data-module-id');
+        if (moduleId) {
+          const module = modules.find(m => m.id === moduleId);
+          if (module) {
+            const percentage = getModuleProgress(moduleId, module.lessons.length);
+            progressBar.style.width = `${percentage}%`;
+            progressLabel.textContent = `${percentage}%`;
+          }
+        }
+      }
+    }
+
+    updateLessonCards();
+    window.addEventListener('progressUpdated', updateLessonCards);
+  }
+</script>

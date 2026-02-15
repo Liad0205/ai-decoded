@@ -1,0 +1,136 @@
+---
+// Dynamic lesson pages
+import LessonLayout from '../../layouts/LessonLayout.astro';
+import { modules } from '../../content/modules';
+
+// Import all lessons
+import Lesson1_1 from '../../lessons/module-1/ml-landscape.astro';
+import Lesson1_2 from '../../lessons/module-1/neural-networks.astro';
+import Lesson1_3 from '../../lessons/module-1/representation-learning.astro';
+import Lesson2_1 from '../../lessons/module-2/attention-mechanism.astro';
+import Lesson2_2 from '../../lessons/module-2/transformer-block.astro';
+import Lesson2_3 from '../../lessons/module-2/transformer-variants.astro';
+import Lesson2_4 from '../../lessons/module-2/scaling-laws.astro';
+import Lesson3_1 from '../../lessons/module-3/pretraining.astro';
+import Lesson3_2 from '../../lessons/module-3/supervised-fine-tuning.astro';
+import Lesson3_3 from '../../lessons/module-3/rlhf.astro';
+import Lesson3_4 from '../../lessons/module-3/evaluation.astro';
+import Lesson4_1 from '../../lessons/module-4/full-fine-tuning-challenges.astro';
+import Lesson4_2 from '../../lessons/module-4/lora.astro';
+import Lesson4_3 from '../../lessons/module-4/qlora.astro';
+import Lesson4_4 from '../../lessons/module-4/practical-fine-tuning.astro';
+import Lesson5_1 from '../../lessons/module-5/embedding-models.astro';
+import Lesson5_2 from '../../lessons/module-5/vector-databases.astro';
+import Lesson6_1 from '../../lessons/module-6/rag-architecture.astro';
+import Lesson6_2 from '../../lessons/module-6/chunking-retrieval.astro';
+import Lesson6_3 from '../../lessons/module-6/advanced-rag.astro';
+import Lesson7_1 from '../../lessons/module-7/prompting-foundations.astro';
+import Lesson7_2 from '../../lessons/module-7/advanced-prompting.astro';
+import Lesson7_3 from '../../lessons/module-7/production-prompting.astro';
+import Lesson8_1 from '../../lessons/module-8/agent-architecture.astro';
+import Lesson8_2 from '../../lessons/module-8/tool-use.astro';
+import Lesson8_3 from '../../lessons/module-8/agent-frameworks.astro';
+import Lesson9_1 from '../../lessons/module-9/diffusion-theory.astro';
+import Lesson9_2 from '../../lessons/module-9/stable-diffusion.astro';
+import Lesson9_3 from '../../lessons/module-9/modern-image-generation.astro';
+import Lesson10_1 from '../../lessons/module-10/adversarial-attacks.astro';
+import Lesson10_2 from '../../lessons/module-10/prompt-injection.astro';
+import Lesson10_3 from '../../lessons/module-10/defensive-techniques.astro';
+import Lesson11_1 from '../../lessons/module-11/quantization.astro';
+import Lesson11_2 from '../../lessons/module-11/model-serving.astro';
+import Lesson11_3 from '../../lessons/module-11/speculative-decoding.astro';
+import Lesson12_1 from '../../lessons/module-12/cnn-vit.astro';
+import Lesson12_2 from '../../lessons/module-12/clip.astro';
+import Lesson12_3 from '../../lessons/module-12/multimodal-models.astro';
+import Lesson13_1 from '../../lessons/module-13/ml-lifecycle.astro';
+import Lesson13_2 from '../../lessons/module-13/ml-cicd.astro';
+
+// Map of lesson content components
+const lessonComponents: Record<string, any> = {
+  'foundations-ml-landscape': Lesson1_1,
+  'foundations-neural-networks': Lesson1_2,
+  'foundations-representation-learning': Lesson1_3,
+  'transformers-attention-mechanism': Lesson2_1,
+  'transformers-transformer-block': Lesson2_2,
+  'transformers-transformer-variants': Lesson2_3,
+  'transformers-scaling-laws': Lesson2_4,
+  'training-llms-pretraining': Lesson3_1,
+  'training-llms-supervised-fine-tuning': Lesson3_2,
+  'training-llms-rlhf': Lesson3_3,
+  'training-llms-evaluation': Lesson3_4,
+  'peft-full-fine-tuning-challenges': Lesson4_1,
+  'peft-lora': Lesson4_2,
+  'peft-qlora': Lesson4_3,
+  'peft-practical-fine-tuning': Lesson4_4,
+  'embeddings-embedding-models': Lesson5_1,
+  'embeddings-vector-databases': Lesson5_2,
+  'rag-rag-architecture': Lesson6_1,
+  'rag-chunking-retrieval': Lesson6_2,
+  'rag-advanced-rag': Lesson6_3,
+  'prompting-prompting-foundations': Lesson7_1,
+  'prompting-advanced-prompting': Lesson7_2,
+  'prompting-production-prompting': Lesson7_3,
+  'agents-agent-architecture': Lesson8_1,
+  'agents-tool-use': Lesson8_2,
+  'agents-agent-frameworks': Lesson8_3,
+  'diffusion-diffusion-theory': Lesson9_1,
+  'diffusion-stable-diffusion': Lesson9_2,
+  'diffusion-modern-image-generation': Lesson9_3,
+  'security-adversarial-attacks': Lesson10_1,
+  'security-prompt-injection': Lesson10_2,
+  'security-defensive-techniques': Lesson10_3,
+  'inference-quantization': Lesson11_1,
+  'inference-model-serving': Lesson11_2,
+  'inference-speculative-decoding': Lesson11_3,
+  'vision-cnn-vit': Lesson12_1,
+  'vision-clip': Lesson12_2,
+  'vision-multimodal-models': Lesson12_3,
+  'mlops-ml-lifecycle': Lesson13_1,
+  'mlops-ml-cicd': Lesson13_2,
+};
+
+export async function getStaticPaths() {
+  const paths: any[] = [];
+
+  modules.forEach(module => {
+    module.lessons.forEach(lesson => {
+      paths.push({
+        params: {
+          module: module.slug,
+          lesson: lesson.slug
+        },
+        props: {
+          module,
+          lesson
+        }
+      });
+    });
+  });
+
+  return paths;
+}
+
+const { module, lesson } = Astro.props;
+
+if (!module || !lesson) {
+  return Astro.redirect('/404');
+}
+
+// Get the lesson component
+const lessonKey = `${module.slug}-${lesson.slug}`;
+const LessonContent = lessonComponents[lessonKey];
+---
+
+<LessonLayout module={module} lesson={lesson}>
+  {LessonContent ? (
+    <LessonContent />
+  ) : (
+    <div class="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
+      <h2 class="text-xl font-semibold text-amber-900 mb-2">🚧 Lesson Under Construction</h2>
+      <p class="text-amber-800">
+        This lesson is part of <strong>Module {module.number}: {module.title}</strong>.
+        Content is being written and will be available soon.
+      </p>
+    </div>
+  )}
+</LessonLayout>

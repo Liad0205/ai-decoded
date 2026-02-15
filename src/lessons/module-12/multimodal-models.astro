@@ -1,0 +1,527 @@
+---
+// Module 12, Lesson 12.3: Multimodal Models
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand the evolution from separate vision/language models to unified multimodal systems</li>
+    <li>Compare the three dominant architecture patterns: cross-attention, visual token projection, and early fusion</li>
+    <li>Explain LLaVA's visual instruction tuning pipeline in detail</li>
+    <li>Survey the capabilities of frontier multimodal models (GPT-4V/4o, Gemini, Claude Vision)</li>
+    <li>Understand multimodal embeddings and video understanding approaches</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Convergence: From Separate Models to Unified Multimodal Systems</h2>
+
+  <p>
+    For most of deep learning's history, vision and language were separate disciplines. Computer vision researchers built CNNs and ViTs; NLP researchers built transformers and LLMs. The two communities had different datasets, benchmarks, and architectural paradigms.
+  </p>
+
+  <p>
+    The emergence of CLIP (2021) demonstrated that vision and language could share a representation space. But CLIP is a <em>retrieval</em> model. It can measure similarity between images and text, but it cannot <em>generate</em> text about images or engage in visual reasoning and dialogue. The next frontier was building models that could truly <strong>understand images and reason about them in natural language</strong>.
+  </p>
+
+  <p>
+    The core challenge: how do you feed visual information into a large language model? The LLM operates on a sequence of text tokens. An image is a grid of pixels. Three architectural patterns have emerged to bridge this gap, each with different tradeoffs.
+  </p>
+</section>
+
+<section>
+  <h2>Architecture Pattern 1: Cross-Attention (Flamingo)</h2>
+
+  <p>
+    DeepMind's <strong>Flamingo</strong> (2022) pioneered the cross-attention approach. Instead of converting images into the same token space as text, Flamingo adds <strong>cross-attention layers</strong> that allow the LLM to attend to visual features at specific layers.
+  </p>
+
+  <h3>How Cross-Attention Works</h3>
+
+  <p>
+    The architecture inserts gated cross-attention layers between the frozen LLM's existing self-attention layers. In these cross-attention layers:
+  </p>
+  <ul>
+    <li>The <strong>queries</strong> come from the language model's hidden states (text tokens)</li>
+    <li>The <strong>keys and values</strong> come from the vision encoder's output (image features)</li>
+    <li>A learned gating parameter (a <strong>gated cross-attention</strong> mechanism, where a learned scalar gate modulates the information flow from visual features into the language model) controls how much visual information flows into each layer, initialized to zero so the model starts as a pure LLM</li>
+  </ul>
+
+  <p>
+    Flamingo uses a <strong>Perceiver Resampler</strong> to compress variable-length visual features into a fixed number of visual tokens (e.g., 64), reducing computational cost. The frozen vision encoder (a pretrained NFNet) processes each image independently, and the resampler creates a compact representation.
+  </p>
+
+  <h3>Strengths and Limitations</h3>
+  <ul>
+    <li><strong>Strength</strong>: The LLM backbone remains frozen, preserving all its language capabilities. Only the cross-attention layers and perceiver are trained.</li>
+    <li><strong>Strength</strong>: Naturally handles interleaved image-text sequences (multiple images in a conversation)</li>
+    <li><strong>Limitation</strong>: Adding cross-attention layers increases architectural complexity</li>
+    <li><strong>Limitation</strong>: The frozen LLM cannot deeply adapt to visual reasoning. Visual information is "consulted" rather than deeply integrated.</li>
+  </ul>
+
+  <PaperReference
+    title="Flamingo: a Visual Language Model for Few-Shot Learning"
+    authors="Alayrac et al. (DeepMind)"
+    year="2022"
+    url="https://arxiv.org/abs/2204.14198"
+    type="paper"
+  />
+</section>
+
+<section>
+  <h2>Architecture Pattern 2: Visual Token Projection (LLaVA)</h2>
+
+  <p>
+    The <strong>LLaVA</strong> (Large Language-and-Vision Assistant) approach is conceptually simpler: project visual features directly into the LLM's input embedding space, so images become "visual tokens" that are processed alongside text tokens.
+  </p>
+
+  <h3>The LLaVA Architecture</h3>
+
+  <p>
+    LLaVA has three components:
+  </p>
+  <ol>
+    <li><strong>Vision encoder</strong>: A pretrained CLIP ViT-L/14 that encodes images into a grid of visual feature vectors</li>
+    <li><strong>Projection layer</strong>: A simple linear projection (or MLP in LLaVA-1.5) that maps visual features from the vision encoder's dimension to the LLM's embedding dimension</li>
+    <li><strong>LLM backbone</strong>: A pretrained language model (e.g., Vicuna/LLaMA) that processes the concatenated sequence of visual tokens and text tokens</li>
+  </ol>
+
+  <p>
+    The forward pass is straightforward: encode the image with CLIP, project the resulting feature grid (e.g., 576 tokens for a 24x24 grid) into the LLM's embedding space, prepend these visual tokens to the text tokens, and run the LLM as usual. The LLM's self-attention attends over both visual and text tokens jointly.
+  </p>
+
+  <PaperReference
+    title="Visual Instruction Tuning (LLaVA)"
+    authors="Liu et al."
+    year="2023"
+    url="https://arxiv.org/abs/2304.08485"
+    type="paper"
+  />
+</section>
+
+<RevealSection revealId="llava-training" title="LLaVA Training Pipeline: Step by Step">
+  <div data-reveal-step>
+    <h4 class="dark:text-[hsl(var(--foreground))]">Stage 1: Feature Alignment Pretraining</h4>
+    <p>
+      The goal of Stage 1 is to align the vision encoder's output space with the LLM's input space. Think of it as teaching the projection layer to "translate" visual features into a language the LLM can understand.
+    </p>
+    <ul>
+      <li><strong>Data</strong>: 558K image-caption pairs from CC3M (filtered subset)</li>
+      <li><strong>What's frozen</strong>: Both the vision encoder (CLIP ViT-L/14) and the LLM (Vicuna-13B) are completely frozen</li>
+      <li><strong>What's trained</strong>: Only the projection layer (a linear layer or 2-layer MLP). This has very few parameters.</li>
+      <li><strong>Objective</strong>: Standard next-token prediction on captions, conditioned on the projected image features</li>
+      <li><strong>Training cost</strong>: Roughly 4 hours on 8 A100 GPUs, extremely efficient because only the small projection layer is updated</li>
+    </ul>
+    <p class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
+      After Stage 1, the LLM can describe images at a basic level, but it cannot follow complex visual instructions or engage in multi-turn visual dialogue.
+    </p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      Next: Stage 2 - Visual Instruction Tuning
+    </button>
+  </div>
+
+  <div data-reveal-step>
+    <h4 class="dark:text-[hsl(var(--foreground))]">Stage 2: Visual Instruction Tuning</h4>
+    <p>
+      Stage 2 transforms the model from a basic image captioner into a versatile visual assistant that can follow diverse instructions.
+    </p>
+    <ul>
+      <li><strong>Data</strong>: 158K visual instruction-following examples generated using GPT-4. These include:
+        <ul>
+          <li><strong>Conversational</strong>: Multi-turn dialogues about images ("What's happening in this image?" followed by "Can you describe the background?")</li>
+          <li><strong>Detailed descriptions</strong>: Comprehensive image descriptions</li>
+          <li><strong>Complex reasoning</strong>: Questions requiring visual reasoning ("What would happen if...")</li>
+        </ul>
+      </li>
+      <li><strong>What's frozen</strong>: Only the vision encoder remains frozen</li>
+      <li><strong>What's trained</strong>: Both the projection layer AND the full LLM are fine-tuned (unfrozen)</li>
+      <li><strong>Objective</strong>: Standard next-token prediction on the assistant's responses in the instruction-following format</li>
+    </ul>
+    <p class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
+      Unfreezing the LLM is critical: it allows the language model to deeply adapt to visual reasoning, learning to ground its language generation in visual evidence rather than just hallucinating plausible descriptions.
+    </p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+      Next: LLaVA-1.5 Improvements
+    </button>
+  </div>
+
+  <div data-reveal-step>
+    <h4 class="dark:text-[hsl(var(--foreground))]">LLaVA-1.5: Key Improvements</h4>
+    <p>
+      LLaVA-1.5 made several important refinements that significantly improved performance:
+    </p>
+    <ul>
+      <li><strong>MLP projection</strong>: Replaced the linear projection with a 2-layer MLP with GELU activation, improving the feature mapping capacity</li>
+      <li><strong>Higher resolution</strong>: Increased input resolution from 224x224 to 336x336 (using CLIP ViT-L/14@336px), producing 576 visual tokens. More spatial detail for the LLM to work with.</li>
+      <li><strong>More training data</strong>: Expanded to 665K instruction-following examples, including academic VQA datasets</li>
+      <li><strong>Stronger LLM</strong>: Used Vicuna-1.5-13B (based on LLaMA-2) for better base language capabilities</li>
+    </ul>
+    <p class="mt-2 text-emerald-700 font-medium">
+      Despite its simplicity, LLaVA-1.5 matched or exceeded more complex systems like Flamingo and InstructBLIP on standard VQA benchmarks. The lesson: a strong vision encoder (CLIP) + a strong LLM + a simple projection + high-quality instruction data = a highly capable multimodal model.
+    </p>
+  </div>
+</RevealSection>
+
+<section>
+  <h2>Architecture Pattern 3: Early Fusion (Gemini, GPT-4o)</h2>
+
+  <p>
+    The most recent and powerful approach is <strong>early fusion</strong>: training a single transformer from scratch (or near-scratch) on interleaved multimodal data, so the model natively understands both vision and language without bolted-on adapters.
+  </p>
+
+  <h3>Gemini's Approach</h3>
+
+  <p>
+    Google's Gemini family of models are natively multimodal. They process text, images, audio, and video as interleaved token sequences within a single transformer. Key architectural choices:
+  </p>
+  <ul>
+    <li><strong>Native multimodality</strong>: Images are tokenized (using learned visual tokenizers) and interleaved directly with text tokens in the input sequence</li>
+    <li><strong>Joint pretraining</strong>: The model is pretrained on multimodal data from the start, rather than adapting a text-only model</li>
+    <li><strong>Multi-resolution</strong>: Handles images at multiple resolutions and aspect ratios</li>
+    <li><strong>Long context</strong>: Gemini 1.5 Pro supports up to 1M tokens, enabling processing of entire videos (hours of footage as frame sequences)</li>
+  </ul>
+
+  <h3>GPT-4V and GPT-4o</h3>
+
+  <p>
+    OpenAI's GPT-4V (Vision) added visual understanding to GPT-4, and GPT-4o extended this to a fully multimodal model processing text, images, and audio natively. While the exact architecture is not published, external analysis and behavior suggest early fusion:
+  </p>
+  <ul>
+    <li>Images are likely tokenized via a vision encoder and integrated early in the processing pipeline</li>
+    <li>The model demonstrates deep visual reasoning, spatial understanding, and the ability to read text in images (OCR)</li>
+    <li>GPT-4o can generate text, images, and audio outputs, suggesting a unified architecture rather than bolted-on modules</li>
+  </ul>
+
+  <h3>Claude Vision</h3>
+
+  <p>
+    Anthropic's Claude models (from Claude 3 onward) include strong vision capabilities. Claude demonstrates particular strength in:
+  </p>
+  <ul>
+    <li><strong>Document understanding</strong>: Reading and reasoning about documents, tables, charts, and diagrams</li>
+    <li><strong>Spatial reasoning</strong>: Understanding layouts, relationships between objects, and visual hierarchies</li>
+    <li><strong>Multi-image reasoning</strong>: Comparing and contrasting multiple images within a conversation</li>
+    <li><strong>Careful visual grounding</strong>: Describing only what it can observe, with appropriate uncertainty about ambiguous content</li>
+  </ul>
+
+  <h3>Early Fusion Advantages</h3>
+  <p>
+    Why is early fusion the direction frontier models are heading?
+  </p>
+  <ul>
+    <li><strong>Deeper integration</strong>: When vision and language are processed together from the start, the model develops richer cross-modal representations than late-stage adapters can achieve</li>
+    <li><strong>No information bottleneck</strong>: Late fusion approaches compress visual information through a projection or perceiver before the LLM sees it. Early fusion lets the full transformer depth process raw visual features.</li>
+    <li><strong>Emergent capabilities</strong>: Native multimodal training appears to unlock capabilities (spatial reasoning, visual counting, chart understanding) that are harder to achieve through adaptation</li>
+    <li><strong>Unified generation</strong>: The same architecture can potentially generate both text and images, enabling rich multimodal outputs</li>
+  </ul>
+</section>
+
+<Diagram diagramId="multimodal-architectures" title="Three Multimodal Architecture Patterns">
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="flex flex-col gap-6">
+      <!-- Pattern 1: Cross-Attention -->
+      <div class="flex items-start gap-4" data-animate style="animation-delay: 0.2s">
+        <div class="w-36 shrink-0">
+          <div class="font-semibold text-sm text-rose-800">Cross-Attention</div>
+          <div class="text-xs text-rose-600">(Flamingo)</div>
+        </div>
+        <div class="flex-1 bg-rose-50 border border-rose-200 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="bg-sky-200 rounded px-2 py-1">Vision Enc.</div>
+            <div class="text-slate-400">features</div>
+            <div class="bg-rose-200 rounded px-2 py-1">Perceiver</div>
+            <div class="text-slate-400">K,V</div>
+            <div class="bg-amber-200 rounded px-2 py-1 border-2 border-amber-400">LLM + Cross-Attn</div>
+          </div>
+          <div class="text-xs text-rose-700 mt-2">Visual features used as K,V in added cross-attention layers</div>
+        </div>
+      </div>
+
+      <!-- Pattern 2: Visual Token Projection -->
+      <div class="flex items-start gap-4" data-animate style="animation-delay: 0.7s">
+        <div class="w-36 shrink-0">
+          <div class="font-semibold text-sm text-indigo-800">Token Projection</div>
+          <div class="text-xs text-indigo-600">(LLaVA)</div>
+        </div>
+        <div class="flex-1 bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="bg-sky-200 rounded px-2 py-1">Vision Enc.</div>
+            <div class="text-slate-400">project</div>
+            <div class="bg-indigo-200 rounded px-2 py-1">MLP</div>
+            <div class="text-slate-400">concat</div>
+            <div class="bg-amber-200 rounded px-2 py-1">LLM</div>
+          </div>
+          <div class="text-xs text-indigo-700 mt-2">Visual tokens projected and concatenated with text tokens</div>
+        </div>
+      </div>
+
+      <!-- Pattern 3: Early Fusion -->
+      <div class="flex items-start gap-4" data-animate style="animation-delay: 1.2s">
+        <div class="w-36 shrink-0">
+          <div class="font-semibold text-sm text-emerald-800">Early Fusion</div>
+          <div class="text-xs text-emerald-600">(Gemini, GPT-4o)</div>
+        </div>
+        <div class="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="bg-sky-200 rounded px-1 py-1">img</div>
+            <div class="bg-emerald-200 rounded px-1 py-1">txt</div>
+            <div class="bg-sky-200 rounded px-1 py-1">img</div>
+            <div class="bg-emerald-200 rounded px-1 py-1">txt</div>
+            <div class="text-slate-400">all tokens</div>
+            <div class="bg-amber-200 rounded px-2 py-1 border-2 border-emerald-400">Unified Transformer</div>
+          </div>
+          <div class="text-xs text-emerald-700 mt-2">All modalities tokenized and processed jointly from the start</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 text-center text-sm text-slate-600" data-animate style="animation-delay: 1.8s">
+      The trend is toward deeper integration: from cross-attention adapters to native multimodal processing.
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>Multimodal Embeddings: Joint Representation Spaces</h2>
+
+  <p>
+    While generative multimodal models focus on producing text about images, <strong>multimodal embeddings</strong> focus on creating unified vector representations that enable cross-modal retrieval and understanding.
+  </p>
+
+  <h3>Beyond CLIP: Richer Embedding Spaces</h3>
+
+  <p>
+    CLIP provides a shared image-text embedding space, but newer models extend this to more modalities and richer representations:
+  </p>
+  <ul>
+    <li><strong>ImageBind (Meta, 2023)</strong>: Binds six modalities (images, text, audio, depth, thermal, IMU data) into a single embedding space. Uses images as the "anchor" modality. Each modality is aligned to images, and transitively aligned to all other modalities.</li>
+    <li><strong>ONE-PEACE (2023)</strong>: A unified model for vision, language, and audio that achieves strong performance across all three modalities</li>
+    <li><strong>Nomic Embed Vision (2024)</strong>: Aligns a vision encoder to the Nomic text embedding space, enabling unified text-image search</li>
+  </ul>
+
+  <h3>Applications of Multimodal Embeddings</h3>
+  <ul>
+    <li><strong>Cross-modal retrieval</strong>: Search for images using text queries (or vice versa)</li>
+    <li><strong>Multimodal RAG</strong>: Retrieve relevant images, tables, and figures alongside text passages for LLM context</li>
+    <li><strong>Content moderation</strong>: Detect policy-violating content across text and images using a unified similarity metric</li>
+    <li><strong>Recommendation systems</strong>: Recommend products by combining visual appearance with text descriptions</li>
+  </ul>
+
+  <PaperReference
+    title="ImageBind: One Embedding Space To Bind Them All"
+    authors="Girdhar et al."
+    year="2023"
+    url="https://arxiv.org/abs/2305.05665"
+    type="paper"
+  />
+</section>
+
+<section>
+  <h2>Video Understanding: Extending to the Temporal Dimension</h2>
+
+  <p>
+    Video understanding is the next frontier for multimodal AI. Videos combine spatial (image-like) and temporal (sequence-like) information, creating unique challenges.
+  </p>
+
+  <h3>Frame Sampling Strategies</h3>
+
+  <p>
+    A 1-minute video at 30fps contains 1,800 frames. Processing all frames is computationally prohibitive. Several strategies reduce this:
+  </p>
+  <ul>
+    <li><strong>Uniform sampling</strong>: Select N frames evenly spaced across the video (e.g., 8-32 frames). Simple but may miss brief important events.</li>
+    <li><strong>Keyframe extraction</strong>: Use visual similarity to identify frames where the scene changes significantly</li>
+    <li><strong>Adaptive sampling</strong>: Sample more frames from high-motion or high-information segments</li>
+    <li><strong>Token compression</strong>: Encode all frames but compress their representations (e.g., using pooling or learned aggregation)</li>
+  </ul>
+
+  <h3>Temporal Modeling Approaches</h3>
+
+  <p>
+    Once frames are sampled, how do we model temporal relationships?
+  </p>
+  <ul>
+    <li><strong>Frame-level encoding + temporal aggregation</strong>: Encode each frame independently with a vision encoder, then aggregate temporal information. This is the simplest approach and scales well.</li>
+    <li><strong>Spatiotemporal attention</strong>: Extend self-attention to jointly attend over spatial (within-frame) and temporal (across-frame) dimensions. Models like TimeSformer and ViViT explore factorized and joint attention variants.</li>
+    <li><strong>LLM-based temporal reasoning</strong>: Feed frame-level visual tokens sequentially into an LLM and rely on its sequence modeling ability for temporal understanding. This is how Gemini and GPT-4o handle video.</li>
+  </ul>
+
+  <h3>The Long-Context Approach</h3>
+
+  <p>
+    Gemini 1.5 Pro demonstrated a powerful approach: with a 1M token context window, it can ingest an entire movie as a sequence of frame tokens. Frames are encoded into patch tokens using a vision transformer, similar to image encoding. At 258 tokens per frame and ~1fps sampling, a 2-hour movie becomes ~1.9M visual tokens. This brute-force approach, enabled by efficient attention mechanisms, sidesteps the need for explicit temporal modeling. The transformer's self-attention naturally captures temporal relationships.
+  </p>
+
+  <p>
+    This approach is currently limited by compute cost (processing millions of tokens) and the quadratic attention cost. As efficient attention mechanisms improve and hardware advances, processing raw video at high temporal resolution will become increasingly feasible.
+  </p>
+</section>
+
+<section>
+  <h2>The Visual Instruction Tuning Data Pipeline</h2>
+
+  <p>
+    A critical but often overlooked aspect of multimodal models is the <strong>data</strong> used for instruction tuning. LLaVA's data generation pipeline is illustrative:
+  </p>
+
+  <h3>Generating Visual Instruction Data with GPT-4</h3>
+
+  <ol>
+    <li><strong>Image captions and bounding boxes</strong>: Start with images that have existing captions and object detection annotations (from COCO dataset)</li>
+    <li><strong>Convert to text context</strong>: Present the captions and bounding box coordinates as structured text to GPT-4</li>
+    <li><strong>Generate diverse instructions</strong>: Prompt GPT-4 to generate question-answer pairs of three types:
+      <ul>
+        <li>Conversational: Natural multi-turn dialogues about the image</li>
+        <li>Detailed description: Comprehensive descriptions of image content</li>
+        <li>Complex reasoning: Questions requiring inference beyond what's directly visible</li>
+      </ul>
+    </li>
+    <li><strong>Quality filtering</strong>: Filter out low-quality or inconsistent examples</li>
+  </ol>
+
+  <p>
+    This "language-only bootstrapping" technique is powerful: GPT-4 never sees the actual images, but generates high-quality instruction data from the textual descriptions. Later work (LLaVA-1.5, LLaVA-NeXT) supplemented this with data from academic VQA benchmarks, OCR datasets, and chart understanding datasets.
+  </p>
+
+  <h3>The Data Quality Lesson</h3>
+
+  <p>
+    A recurring finding across multimodal model development: <strong>data quality matters more than data quantity</strong>. LLaVA-1.5 achieved competitive performance with just 665K instruction examples, orders of magnitude fewer than the billions of image-text pairs used for pretraining. High-quality, diverse instruction data with well-crafted responses is worth far more than massive but noisy datasets.
+  </p>
+</section>
+
+<Quiz
+  question="In the LLaVA architecture, why is the LLM frozen during Stage 1 (feature alignment) but unfrozen during Stage 2 (visual instruction tuning)?"
+  quizId="llava-training-stages"
+  options={[
+    {
+      id: "a",
+      text: "Freezing the LLM in Stage 1 prevents catastrophic forgetting, and unfreezing in Stage 2 allows the model to learn new visual vocabulary",
+      correct: false,
+      explanation: "While preventing catastrophic forgetting is relevant, the primary reason is about training stability and the role of each stage. The LLM doesn't need new vocabulary. It needs to learn to ground its existing language abilities in visual evidence."
+    },
+    {
+      id: "b",
+      text: "Stage 1 only trains the projection layer to translate visual features into the LLM's embedding space (a simpler alignment task), while Stage 2 unfreezes the LLM so it can deeply adapt to visual reasoning and instruction following",
+      correct: true,
+      explanation: "Correct! Stage 1 is a 'translation' task: learning to project CLIP visual features into a space the frozen LLM can interpret. This only requires training the small projection layer. Stage 2 then unfreezes the LLM so it can learn to reason about visual content, integrate visual evidence into its responses, and follow multimodal instructions. This two-stage approach is more stable than training everything from the start."
+    },
+    {
+      id: "c",
+      text: "Stage 1 requires less compute, so freezing the LLM saves GPU memory",
+      correct: false,
+      explanation: "While this is a practical benefit, it's not the primary reason. The two-stage design is motivated by training stability and the different nature of each learning objective, not just compute constraints."
+    },
+    {
+      id: "d",
+      text: "The LLM must be frozen first to establish a learning rate schedule, then unfrozen for full optimization",
+      correct: false,
+      explanation: "This isn't about learning rate scheduling. The two stages serve different learning objectives: alignment (Stage 1) vs. instruction following (Stage 2). Each requires different components to be trainable."
+    }
+  ]}
+/>
+
+<section>
+  <h2>Frontier Capabilities and Open Challenges</h2>
+
+  <p>
+    Modern multimodal models demonstrate remarkable capabilities, but significant challenges remain.
+  </p>
+
+  <h3>Current Capabilities</h3>
+  <ul>
+    <li><strong>Visual question answering</strong>: Answering complex questions about images, including spatial, temporal, and causal reasoning</li>
+    <li><strong>Document understanding</strong>: Reading and analyzing documents, receipts, charts, and infographics</li>
+    <li><strong>Code from screenshots</strong>: Converting UI screenshots or wireframes into functional code</li>
+    <li><strong>Scientific figure analysis</strong>: Interpreting graphs, plots, and diagrams from papers</li>
+    <li><strong>Multi-image reasoning</strong>: Comparing images, finding differences, and tracking changes over time</li>
+    <li><strong>Grounded generation</strong>: Producing text that is verifiably grounded in the visual content</li>
+  </ul>
+
+  <h3>Open Challenges</h3>
+  <ul>
+    <li><strong>Visual hallucination</strong>: Models sometimes describe objects or attributes that are not present in the image. This is the multimodal equivalent of text hallucination and is arguably more dangerous. Users may trust visual descriptions more than text generation.</li>
+    <li><strong>Fine-grained spatial reasoning</strong>: Understanding precise spatial relationships ("the book is to the left of the lamp") and counting ("there are exactly 7 apples") remains challenging.</li>
+    <li><strong>Temporal reasoning in video</strong>: Understanding causality, ordering of events, and temporal dynamics is significantly harder than static image understanding.</li>
+    <li><strong>Evaluation</strong>: Benchmarking multimodal models is hard. Existing benchmarks (VQA, GQA, MMMU) test narrow aspects, and human evaluation is expensive and inconsistent.</li>
+    <li><strong>Efficiency</strong>: Processing images consumes many more tokens than text. A single high-resolution image may use 1000+ tokens, making multimodal inference significantly more expensive.</li>
+  </ul>
+</section>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Three architecture patterns</strong> for vision-language models: cross-attention (Flamingo), visual token projection (LLaVA), and early fusion (Gemini, GPT-4o). The trend is toward deeper integration.</li>
+    <li><strong>LLaVA's two-stage training</strong>: Stage 1 aligns visual features with the LLM's embedding space (frozen LLM), Stage 2 unfreezes the LLM for visual instruction tuning. This achieves strong results with remarkable simplicity.</li>
+    <li><strong>Early fusion models</strong> (Gemini, GPT-4o) train on interleaved multimodal data from the start, achieving the deepest cross-modal integration but requiring massive compute</li>
+    <li><strong>Data quality over quantity</strong>: LLaVA demonstrates that 665K high-quality instruction examples can rival models trained on billions of examples, through careful data generation with GPT-4</li>
+    <li><strong>Multimodal embeddings</strong> extend CLIP to more modalities (ImageBind) and enable cross-modal retrieval, multimodal RAG, and content understanding</li>
+    <li><strong>Video understanding</strong> adds temporal modeling to vision. Long-context LLMs (Gemini 1.5 Pro with 1M tokens) can ingest hours of video by treating frames as token sequences.</li>
+    <li><strong>Key challenges</strong>: Visual hallucination, fine-grained spatial reasoning, temporal understanding, evaluation, and computational efficiency remain active areas of research</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="Flamingo: a Visual Language Model for Few-Shot Learning"
+    authors="Alayrac et al."
+    year="2022"
+    url="https://arxiv.org/abs/2204.14198"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Visual Instruction Tuning (LLaVA)"
+    authors="Liu et al."
+    year="2023"
+    url="https://arxiv.org/abs/2304.08485"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Improved Baselines with Visual Instruction Tuning (LLaVA-1.5)"
+    authors="Liu et al."
+    year="2023"
+    url="https://arxiv.org/abs/2310.03744"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Gemini: A Family of Highly Capable Multimodal Models"
+    authors="Gemini Team, Google"
+    year="2023"
+    url="https://arxiv.org/abs/2312.11805"
+    type="paper"
+  />
+
+  <PaperReference
+    title="GPT-4 Technical Report"
+    authors="OpenAI"
+    year="2023"
+    url="https://arxiv.org/abs/2303.08774"
+    type="paper"
+  />
+
+  <PaperReference
+    title="ImageBind: One Embedding Space To Bind Them All"
+    authors="Girdhar et al."
+    year="2023"
+    url="https://arxiv.org/abs/2305.05665"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Is This a Video? A Large Vision-Language Model for Temporal Reasoning (ViViT)"
+    authors="Arnab et al."
+    year="2021"
+    url="https://arxiv.org/abs/2103.15691"
+    type="paper"
+  />
+</section>

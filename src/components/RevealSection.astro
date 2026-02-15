@@ -1,0 +1,59 @@
+---
+// Progressive reveal component for step-by-step walkthroughs
+interface Props {
+  revealId: string;
+  title: string;
+}
+
+const { revealId, title } = Astro.props;
+---
+
+<div class="my-8 p-6 bg-[hsl(var(--muted))] rounded-lg border border-[hsl(var(--border))]" data-reveal={revealId}>
+  <h3 class="text-xl font-semibold text-[hsl(var(--foreground))] mb-4 flex items-center gap-2">
+    <svg class="w-6 h-6 text-[hsl(var(--primary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+    </svg>
+    {title}
+  </h3>
+
+  <div class="space-y-4">
+    <slot />
+  </div>
+
+  <button
+    type="button"
+    class="mt-4 px-4 py-2 text-sm bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-lg hover:opacity-90 transition-smooth"
+    data-reveal-all
+  >
+    Reveal All Steps
+  </button>
+</div>
+
+<style>
+  [data-reveal-step] {
+    transition: all 300ms ease-out;
+  }
+
+  [data-reveal-step].hidden {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+  }
+
+  [data-reveal-step].revealed {
+    opacity: 1;
+    max-height: 2000px;
+    animation: slideDown 300ms ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

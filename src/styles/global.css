@@ -1,0 +1,388 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Enable class-based dark mode (Tailwind v4) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design System - Custom Properties */
+@layer base {
+  :root {
+    /* Brand Colors */
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+
+    /* UI Colors */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+
+    /* Borders & Inputs */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 239 84% 67%;
+
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --error: 0 84% 60%;
+    --error-foreground: 0 0% 100%;
+
+    /* Muted */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    /* Accent */
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Radii */
+    --radius-sm: 0.375rem;
+    --radius: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    /* Brand Colors */
+    --primary: 239 84% 72%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 240 5% 90%;
+
+    /* UI Colors */
+    --background: 240 10% 6%;
+    --foreground: 210 20% 93%;
+    --card: 240 6% 10%;
+    --card-foreground: 210 20% 93%;
+    --popover: 240 6% 10%;
+    --popover-foreground: 210 20% 93%;
+
+    /* Borders & Inputs */
+    --border: 240 4% 20%;
+    --input: 240 4% 20%;
+    --ring: 239 84% 72%;
+
+    /* Status Colors */
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+    --error: 0 84% 65%;
+    --error-foreground: 0 0% 100%;
+
+    /* Muted */
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 60%;
+
+    /* Accent */
+    --accent: 239 84% 72%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Shadows (subtle in dark mode) */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+  }
+
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  html {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  body {
+    @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased;
+  }
+}
+
+/* Enhanced Typography System */
+@layer base {
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+    font-family: inherit;
+  }
+
+  /* Lesson Content Typography */
+  .lesson-content {
+    @apply max-w-none;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+
+  .lesson-content h1 {
+    @apply text-4xl font-bold mb-8 mt-12 text-[hsl(var(--foreground))] tracking-tight;
+  }
+
+  .lesson-content h2 {
+    @apply text-3xl font-semibold mb-8 mt-16 text-[hsl(var(--foreground))] tracking-tight;
+    padding-top: 2rem;
+    border-top: 2px solid hsl(var(--border));
+  }
+
+  .lesson-content h2:first-child {
+    @apply mt-0 pt-0 border-t-0;
+  }
+
+  .lesson-content h3 {
+    @apply text-2xl font-semibold mb-4 mt-8 text-[hsl(var(--foreground))];
+  }
+
+  .lesson-content h4 {
+    @apply text-xl font-semibold mb-3 mt-6 text-[hsl(var(--foreground))];
+  }
+
+  .lesson-content p {
+    @apply mb-6 text-[hsl(var(--foreground))];
+    max-width: 75ch;
+  }
+
+  /* Section spacing */
+  .lesson-content section {
+    @apply mb-16;
+  }
+
+  .lesson-content ul,
+  .lesson-content ol {
+    @apply mb-8 ml-6 space-y-4;
+  }
+
+  /* Special styling for Learning Objectives */
+  .lesson-content h2:has(+ ul) + ul,
+  .lesson-content h2:has(+ ol) + ol {
+    @apply bg-[hsl(var(--muted))] p-6 rounded-xl border border-[hsl(var(--border))];
+  }
+
+  .lesson-content li {
+    @apply text-[hsl(var(--foreground))] leading-relaxed;
+  }
+
+  .lesson-content ul li {
+    @apply list-disc marker:text-[hsl(var(--primary))];
+  }
+
+  .lesson-content ol li {
+    @apply list-decimal marker:text-[hsl(var(--primary))] marker:font-semibold;
+  }
+
+  .lesson-content strong {
+    @apply font-semibold text-[hsl(var(--foreground))];
+  }
+
+  .lesson-content em {
+    @apply italic;
+  }
+
+  .lesson-content code {
+    @apply font-mono bg-[hsl(var(--muted))] text-[hsl(var(--accent))] px-2 py-0.5 rounded-md text-[0.9em] font-medium;
+  }
+
+  .lesson-content pre {
+    @apply bg-slate-950 text-slate-50 p-6 rounded-xl overflow-x-auto mb-6 text-sm border border-slate-800;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .lesson-content pre code {
+    @apply bg-transparent p-0 text-slate-50;
+  }
+
+  .lesson-content blockquote {
+    @apply border-l-4 border-[hsl(var(--primary))] bg-[hsl(var(--muted))] pl-6 pr-4 py-4 italic my-6 rounded-r-lg;
+  }
+
+  .lesson-content a {
+    @apply text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] underline decoration-2 underline-offset-2 transition-colors;
+  }
+
+  /* Math Blocks */
+  .math-display {
+    @apply my-6 overflow-x-auto text-center;
+  }
+
+  .math-inline {
+    @apply mx-0.5;
+  }
+
+  /* Equation sequences - clean, minimal presentation */
+  .equation-sequence {
+    @apply my-8 space-y-4;
+  }
+
+  .equation-sequence .math-display {
+    @apply my-0;
+  }
+
+  /* Optional: Equation with label/description */
+  .equation-with-label {
+    @apply flex flex-col gap-2 my-6;
+  }
+
+  .equation-with-label .equation-label {
+    @apply text-sm text-[hsl(var(--muted-foreground))] font-medium;
+  }
+
+  /* Tables */
+  .lesson-content table {
+    @apply w-full border-collapse my-6 text-sm;
+  }
+
+  .lesson-content th {
+    @apply bg-[hsl(var(--muted))] font-semibold p-3 text-left border border-[hsl(var(--border))];
+  }
+
+  .lesson-content td {
+    @apply p-3 border border-[hsl(var(--border))];
+  }
+}
+
+/* Component Utilities */
+@layer utilities {
+  .transition-smooth {
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-fast {
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-gradient {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass {
+    background: rgba(15, 15, 25, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Animations */
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.4s ease-out;
+  }
+}
+
+/* Scrollbar Styling */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* KaTeX Dark Mode */
+.dark .katex {
+  color: hsl(var(--foreground));
+}
+
+/* SVG Dark Mode - auto-invert dark strokes/fills in diagrams */
+.dark .diagram-content text[fill="#334155"],
+.dark .diagram-content text[fill="#475569"],
+.dark .diagram-content text[fill="#64748b"] {
+  fill: #94a3b8;
+}
+
+.dark .diagram-content text[fill="#312e81"],
+.dark .diagram-content text[fill="#1e40af"],
+.dark .diagram-content text[fill="#166534"],
+.dark .diagram-content text[fill="#92400e"],
+.dark .diagram-content text[fill="#9d174d"] {
+  fill: #c4b5fd;
+}
+
+.dark .diagram-content line[stroke="#334155"],
+.dark .diagram-content line[stroke="#94a3b8"] {
+  stroke: #64748b;
+}
+
+.dark .diagram-content path[fill="none"][stroke="#94a3b8"] {
+  stroke: #64748b;
+}
+
+.dark .diagram-content rect[fill="#e0e7ff"] { fill: #312e81; }
+.dark .diagram-content rect[fill="#dbeafe"] { fill: #1e3a5f; }
+.dark .diagram-content rect[fill="#fef3c7"] { fill: #78350f; }
+.dark .diagram-content rect[fill="#fce7f3"] { fill: #831843; }
+.dark .diagram-content rect[fill="#f0fdf4"] { fill: #14532d; }
+
+.dark .diagram-content marker path[fill="#94a3b8"] {
+  fill: #64748b;
+}

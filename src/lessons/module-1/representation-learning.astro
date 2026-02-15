@@ -1,0 +1,359 @@
+---
+// Module 1, Lesson 1.3: The Representation Learning Revolution
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand the progression from hand-crafted features to learned embeddings</li>
+    <li>Explain how Word2Vec and GloVe differ from contextual embeddings</li>
+    <li>Analyze why representation quality determines downstream task performance</li>
+    <li>Understand transfer learning from a loss landscape perspective</li>
+  </ul>
+</section>
+
+<section>
+  <h2>From Hand-Crafted Features to Learned Embeddings</h2>
+
+  <p>
+    The core problem in machine learning is <em>representation</em>: how do we convert raw data (pixels, words, audio waveforms) into a format that machines can reason about?
+  </p>
+
+  <h3>The Limitation of Manual Features</h3>
+  <p>
+    Traditional ML required domain experts to design features. For images, this meant SIFT (Scale-Invariant Feature Transform), HOG (Histogram of Oriented Gradients), or color histograms. For text, bag-of-words or TF-IDF vectors. For audio, MFCCs.
+  </p>
+
+  <p>
+    These features captured specific patterns experts deemed important, but had fundamental limitations:
+  </p>
+  <ul>
+    <li><strong>Labor-intensive</strong>: Designing good features required deep domain knowledge and experimentation</li>
+    <li><strong>Task-specific</strong>: Features optimized for one task often failed on related tasks</li>
+    <li><strong>Fixed complexity</strong>: No mechanism to learn more sophisticated features from more data</li>
+    <li><strong>Information loss</strong>: Dimensionality reduction often discarded useful signal</li>
+  </ul>
+
+  <h3>The Deep Learning Breakthrough: Learned Representations</h3>
+  <p>
+    Deep neural networks learn hierarchical representations automatically. Early layers detect simple patterns (edges, textures in vision; n-grams in text), while deeper layers compose these into higher-level concepts (object parts, semantic meaning).
+  </p>
+
+  <p>
+    <strong>Key insight</strong>: The internal activations of a neural network trained on task A often transfer to task B, sometimes outperforming task-specific handcrafted features. This suggests the network has learned generally useful representations.
+  </p>
+
+  <p>
+    This realization sparked the <strong>representation learning paradigm</strong>: the primary challenge is learning good representations; once you have them, simple models (linear classifiers, nearest neighbors) often suffice for downstream tasks.
+  </p>
+</section>
+
+<section>
+  <h2>Word Embeddings: Capturing Semantic Similarity</h2>
+
+  <p>
+    In NLP, words were historically represented as one-hot vectors: a vocabulary of 50,000 words yields 50,000-dimensional vectors, each with a single 1 and zeros elsewhere. This encoding has no notion of similarity; "king" and "queen" are as different as "king" and "banana."
+  </p>
+
+  <h3>Word2Vec: Distributional Semantics</h3>
+  <p>
+    <strong>Word2Vec</strong> (2013) learns dense, low-dimensional embeddings by predicting words from context. Two architectures:
+  </p>
+
+  <ul>
+    <li><strong>CBOW (Continuous Bag of Words)</strong>: Predict target word from surrounding context</li>
+    <li><strong>Skip-gram</strong>: Predict context words from target word</li>
+  </ul>
+
+  <p>
+    For skip-gram, given a word <MathBlock formula="w" /> and context word <MathBlock formula="c" />, we maximize:
+  </p>
+
+  <MathBlock formula={"\\mathcal{L} = \\sum_{(w,c) \\in D} \\log p(c \\mid w)"} display={true} />
+
+  <p>In plain English: maximize the total log-probability of observing each context word given its target word, across all (word, context) pairs in the corpus.</p>
+
+  <p>
+    where
+  </p>
+
+  <MathBlock formula={"p(c \\mid w) = \\frac{\\exp(\\mathbf{v}_w \\cdot \\mathbf{v}_c)}{\\sum_{c' \\in V} \\exp(\\mathbf{v}_w \\cdot \\mathbf{v}_{c'})}"} display={true} />
+
+  <p>
+    The denominator sums over the entire vocabulary V, which is computationally prohibitive. <strong>Negative sampling</strong> approximates this by sampling a few negative examples:
+  </p>
+
+  <MathBlock formula={"\\mathcal{L} = \\log \\sigma(\\mathbf{v}_w \\cdot \\mathbf{v}_c) + \\sum_{i=1}^k \\mathbb{E}_{c_i \\sim P_n} [\\log \\sigma(-\\mathbf{v}_w \\cdot \\mathbf{v}_{c_i})]"} display={true} />
+
+  <p>In plain English: maximize the dot product between the target word and its true context word (first term), while minimizing the dot product with k randomly sampled "noise" words (second term).</p>
+
+  <p>
+    This makes training tractable on large corpora.
+  </p>
+
+  <h3>GloVe: Global Vectors</h3>
+  <p>
+    <strong>GloVe</strong> (2014) takes a different approach: factorize the co-occurrence matrix. The objective:
+  </p>
+
+  <MathBlock formula={"\\mathcal{L} = \\sum_{i,j} f(X_{ij}) (\\mathbf{v}_i^T \\mathbf{v}_j + b_i + b_j - \\log X_{ij})^2"} display={true} />
+
+  <p>In plain English: learn word vectors whose dot products approximate the log of how frequently those words co-occur, weighted so that extremely common pairs do not dominate the objective.</p>
+
+  <p>
+    where <MathBlock formula="X_{ij}" /> is the co-occurrence count of words i and j, and <MathBlock formula="f" /> is a weighting function downweighting very common pairs.
+  </p>
+
+  <h3>Remarkable Properties</h3>
+  <p>
+    These embeddings capture semantic and syntactic relationships through vector arithmetic:
+  </p>
+
+  <MathBlock formula={"\\mathbf{v}_{\\text{king}} - \\mathbf{v}_{\\text{man}} + \\mathbf{v}_{\\text{woman}} \\approx \\mathbf{v}_{\\text{queen}}"} display={true} />
+  <MathBlock formula={"\\mathbf{v}_{\\text{Paris}} - \\mathbf{v}_{\\text{France}} + \\mathbf{v}_{\\text{Italy}} \\approx \\mathbf{v}_{\\text{Rome}}"} display={true} />
+
+  <p>In plain English: semantic relationships are encoded as vector offsets. Subtracting "man" and adding "woman" moves the embedding in the "gender" direction; subtracting "France" and adding "Italy" moves in the "country" direction.</p>
+
+  <p>
+    This linear structure emerges from the training objective without explicit supervision, a striking example of unsupervised representation learning.
+  </p>
+
+  <h3>Limitations of Static Embeddings</h3>
+  <p>
+    Word2Vec and GloVe assign each word a single fixed vector, ignoring context. The word "bank" has the same embedding in "river bank" and "bank account." This limits their expressiveness.
+  </p>
+</section>
+
+<section>
+  <h2>Contextual Embeddings: A New Paradigm</h2>
+
+  <p>
+    <strong>Contextual embeddings</strong> solve the polysemy problem (words having multiple meanings depending on context) by computing word representations dynamically based on context. The same word gets different embeddings in different sentences.
+  </p>
+
+  <h3>ELMo: Bidirectional LSTMs</h3>
+  <p>
+    ELMo (Embeddings from Language Models, 2018) uses bidirectional LSTMs trained on language modeling. For a sentence, ELMo computes representations at multiple layers and combines them.
+  </p>
+
+  <p>
+    Unlike Word2Vec, ELMo embeddings depend on the entire sentence, capturing nuanced meaning. Replacing static embeddings with ELMo immediately improved performance across NLP tasks, a clear signal that representation quality matters more than model architecture for many problems.
+  </p>
+
+  <h3>BERT and the Transformer Revolution</h3>
+  <p>
+    <strong>BERT</strong> (2018) uses transformers (not LSTMs) and bidirectional context via masked language modeling: randomly mask 15% of tokens and predict them from surrounding context.
+  </p>
+
+  <p>
+    BERT's contextualized embeddings are even richer than ELMo's, and the transformer architecture scales better. BERT representations became the new foundation for NLP, analogous to ImageNet-pretrained CNNs in vision.
+  </p>
+
+  <h3>GPT: Unidirectional but Scalable</h3>
+  <p>
+    GPT (Generative Pretrained Transformer) uses unidirectional (left-to-right) language modeling instead of masked prediction. While this limits bidirectional context, it enables autoregressive generation and scales to much larger models (GPT-3: 175B parameters).
+  </p>
+
+  <p>
+    GPT's representations prove highly effective when fine-tuned or few-shot prompted, demonstrating that scale can compensate for training objective differences.
+  </p>
+</section>
+
+<Diagram diagramId="embedding-space" title="2D Embedding Space Visualization" autoplay={false}>
+  <div class="relative w-full h-80 bg-white dark:bg-[hsl(var(--card))] rounded-lg">
+    <svg viewBox="0 0 400 320" class="w-full h-full">
+      <!-- Axes -->
+      <line x1="40" y1="280" x2="360" y2="280" stroke="#94a3b8" stroke-width="2" />
+      <line x1="40" y1="280" x2="40" y2="40" stroke="#94a3b8" stroke-width="2" />
+      <text x="380" y="285" class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]">Dimension 1</text>
+      <text x="10" y="30" class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]">Dim 2</text>
+
+      <!-- Cluster 1: Animals -->
+      <circle cx="100" cy="100" r="6" fill="#6366f1" data-animate style="animation-delay: 0.2s" />
+      <text x="100" y="90" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 0.2s">dog</text>
+
+      <circle cx="130" cy="110" r="6" fill="#6366f1" data-animate style="animation-delay: 0.4s" />
+      <text x="130" y="100" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 0.4s">cat</text>
+
+      <circle cx="115" cy="130" r="6" fill="#6366f1" data-animate style="animation-delay: 0.6s" />
+      <text x="115" y="145" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 0.6s">horse</text>
+
+      <!-- Cluster 2: Food -->
+      <circle cx="280" cy="200" r="6" fill="#10b981" data-animate style="animation-delay: 0.8s" />
+      <text x="280" y="190" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 0.8s">apple</text>
+
+      <circle cx="300" cy="210" r="6" fill="#10b981" data-animate style="animation-delay: 1s" />
+      <text x="300" y="225" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 1s">banana</text>
+
+      <circle cx="265" cy="220" r="6" fill="#10b981" data-animate style="animation-delay: 1.2s" />
+      <text x="265" y="235" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 1.2s">orange</text>
+
+      <!-- Cluster 3: Royalty -->
+      <circle cx="200" cy="80" r="6" fill="#8b5cf6" data-animate style="animation-delay: 1.4s" />
+      <text x="200" y="70" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 1.4s">king</text>
+
+      <circle cx="230" cy="85" r="6" fill="#8b5cf6" data-animate style="animation-delay: 1.6s" />
+      <text x="230" y="75" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 1.6s">queen</text>
+
+      <circle cx="215" cy="105" r="6" fill="#8b5cf6" data-animate style="animation-delay: 1.8s" />
+      <text x="215" y="120" text-anchor="middle" class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 1.8s">prince</text>
+
+      <!-- Legend -->
+      <g transform="translate(40, 240)">
+        <circle cx="0" cy="0" r="4" fill="#6366f1" />
+        <text x="10" y="4" class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]">Animals</text>
+        <circle cx="60" cy="0" r="4" fill="#10b981" />
+        <text x="70" y="4" class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]">Food</text>
+        <circle cx="120" cy="0" r="4" fill="#8b5cf6" />
+        <text x="130" y="4" class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]">Royalty</text>
+      </g>
+    </svg>
+  </div>
+  <p class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-2">
+    Embeddings cluster semantically related words. In reality, embeddings are 300-1024 dimensions, but the clustering principle holds.
+  </p>
+</Diagram>
+
+<section>
+  <h2>Why Representation Quality Determines Downstream Performance</h2>
+
+  <p>
+    A central insight: <strong>the representation bottleneck is often more severe than the model capacity bottleneck</strong>.
+  </p>
+
+  <h3>Linear Probing as a Diagnostic</h3>
+  <p>
+    <em>Linear probing</em> tests representation quality: freeze a pretrained model's representations and train only a linear classifier on top. If linear probing achieves high accuracy, the representations already separate classes well, a sign of good features.
+  </p>
+
+  <p>
+    Surprisingly, modern foundation models (CLIP for vision, GPT for language) often achieve near-SOTA performance with linear probing alone. This suggests:
+  </p>
+  <ul>
+    <li>Pretraining has solved much of the "hard part" (learning features)</li>
+    <li>Task-specific fine-tuning primarily adapts these features rather than learning new ones</li>
+  </ul>
+
+  <h3>The Information-Theoretic View</h3>
+  <p>
+    Representations compress data while preserving task-relevant information. Optimal representations discard noise and task-irrelevant variation (lighting, background) while retaining discriminative signal (object shape, semantic meaning).
+  </p>
+
+  <p>
+    This aligns with the <strong>Information Bottleneck</strong> principle: representations should maximize mutual information with the target while minimizing information about the input. Self-supervised pretraining implicitly optimizes this trade-off.
+  </p>
+</section>
+
+<section>
+  <h2>Transfer Learning: The Loss Landscape Perspective</h2>
+
+  <p>
+    <strong>Transfer learning</strong>, pretraining on a large dataset then fine-tuning on a target task, is the dominant paradigm in modern ML. But why does it work?
+  </p>
+
+  <h3>Initialization Matters</h3>
+  <p>
+    Neural network training is non-convex; the loss landscape has many local minima. Random initialization lands you at an arbitrary point. Pretrained initialization, however, starts you near a "good" region of the loss landscape.
+  </p>
+
+  <p>
+    <strong>Key insight</strong>: Pretrained weights are not just good feature extractors; they also provide a beneficial <em>inductive bias</em> (a built-in preference toward certain solutions) for optimization. Fine-tuning from pretrained weights converges faster and to better generalization than training from scratch, even when sufficient data exists.
+  </p>
+
+  <h3>Mode Connectivity and Basins</h3>
+  <p>
+    Recent research shows that pretrained models and fine-tuned variants often lie in the same "basin" of the loss landscape, a region of low loss connected by paths of similarly low loss.
+  </p>
+
+  <p>
+    This explains why fine-tuning is stable and effective: you're performing a local search within a basin discovered by pretraining, rather than a global search over the entire landscape.
+  </p>
+
+  <h3>The Data Efficiency of Transfer</h3>
+  <p>
+    Pretraining on a large, diverse dataset (ImageNet, Common Crawl) exposes the model to a wide range of patterns. Fine-tuning on a smaller, specialized dataset then requires far fewer examples to achieve good performance.
+  </p>
+
+  <p>
+    Quantitatively, transfer learning can reduce the sample complexity of a task by 10-100×. This has democratized ML: many problems that previously required massive labeled datasets can now be solved with thousands, or even hundreds, of examples via fine-tuning.
+  </p>
+</section>
+
+<Quiz
+  quizId="contextual-embeddings"
+  question="What fundamental limitation of Word2Vec/GloVe is addressed by contextual embeddings like BERT?"
+  options={[
+    { id: "a", text: "They produce embeddings that are too high-dimensional", correct: false, explanation: "Dimensionality isn't the core issue, Word2Vec typically uses 300 dimensions, similar to BERT's layers." },
+    { id: "b", text: "They cannot capture any semantic meaning from text", correct: false, explanation: "Word2Vec/GloVe do capture semantic meaning, they famously encode relationships like king - man + woman = queen." },
+    { id: "c", text: "Each word gets a single fixed vector regardless of context", correct: true, explanation: "Correct! Word2Vec/GloVe assign one static embedding per word. 'Bank' gets the same vector whether it means a river bank or financial bank. BERT produces different embeddings based on surrounding context." },
+    { id: "d", text: "They require too much training data to learn useful representations", correct: false, explanation: "Word2Vec/GloVe are actually quite data-efficient compared to large contextual models like BERT." }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Learned representations</strong> have replaced hand-crafted features, learning hierarchical patterns automatically from data</li>
+    <li><strong>Word embeddings</strong> (Word2Vec, GloVe) capture semantic similarity but assign each word a fixed vector, ignoring context</li>
+    <li><strong>Contextual embeddings</strong> (ELMo, BERT, GPT) compute word representations dynamically based on surrounding text, capturing polysemy and nuance</li>
+    <li><strong>Representation quality</strong> is often more important than model architecture; good representations enable simple classifiers to achieve strong performance</li>
+    <li><strong>Transfer learning works</strong> because pretrained weights initialize optimization in a favorable basin of the loss landscape, improving both convergence speed and final generalization</li>
+    <li><strong>The paradigm has shifted</strong>: instead of task-specific models, we pretrain general-purpose representations and adapt them, achieving dramatic data efficiency gains</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="Efficient Estimation of Word Representations in Vector Space (Word2Vec)"
+    authors="Mikolov et al."
+    year="2013"
+    url="https://arxiv.org/abs/1301.3781"
+    type="paper"
+  />
+
+  <PaperReference
+    title="GloVe: Global Vectors for Word Representation"
+    authors="Pennington, Socher, Manning"
+    year="2014"
+    url="https://aclanthology.org/D14-1162/"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Deep contextualized word representations (ELMo)"
+    authors="Peters et al."
+    year="2018"
+    url="https://arxiv.org/abs/1802.05365"
+    type="paper"
+  />
+
+  <PaperReference
+    title="BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+    authors="Devlin et al."
+    year="2018"
+    url="https://arxiv.org/abs/1810.04805"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Improving Language Understanding by Generative Pre-Training (GPT)"
+    authors="Radford et al."
+    year="2018"
+    url="https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Visualizing the Loss Landscape of Neural Nets"
+    authors="Li et al."
+    year="2018"
+    url="https://arxiv.org/abs/1712.09913"
+    type="paper"
+  />
+</section>

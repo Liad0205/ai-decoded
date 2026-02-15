@@ -1,0 +1,527 @@
+---
+// Module 8, Lesson 8.3: Agent Frameworks and Patterns
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
+  <ul>
+    <li>Compare major agent frameworks (LangChain, LangGraph, CrewAI, Autogen) and their design philosophies</li>
+    <li>Understand multi-agent architectures and when they outperform single-agent systems</li>
+    <li>Design human-in-the-loop patterns for agent systems</li>
+    <li>Identify common agent failure modes and implement mitigations</li>
+    <li>Apply evaluation strategies for agent systems</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Agent Framework Landscape</h2>
+
+  <p>
+    Building agent systems from scratch requires implementing tool orchestration, memory management, error handling, conversation management, and more. Frameworks abstract away this infrastructure, letting you focus on the agent's logic and capabilities.
+  </p>
+
+  <h3>LangChain</h3>
+  <p>
+    The most widely adopted LLM application framework. LangChain provides a composable abstraction layer for building LLM-powered applications:
+  </p>
+  <ul>
+    <li><strong>Core concept</strong>: Chains -- sequences of operations (LLM calls, tool calls, data retrieval) composed together</li>
+    <li><strong>Strengths</strong>: Massive ecosystem of integrations (100+ tool connectors), extensive documentation, large community</li>
+    <li><strong>Weaknesses</strong>: Heavy abstraction can obscure what is happening, rapid API changes have caused migration pain, some abstractions add complexity without proportional value</li>
+    <li><strong>Best for</strong>: Rapid prototyping, applications needing many integrations, teams wanting a batteries-included framework</li>
+  </ul>
+
+  <h3>LangGraph</h3>
+  <p>
+    Built on top of LangChain, LangGraph models agent workflows as <strong>stateful graphs</strong> -- directed graphs where a shared state object (containing messages, intermediate results, and decisions) is passed between nodes and updated at each step. Each node in the graph is a function (LLM call, tool call, decision logic), and edges define the control flow:
+  </p>
+  <ul>
+    <li><strong>Core concept</strong>: Directed graphs with state that flows between nodes. Supports cycles (loops), conditional branching, and parallel execution.</li>
+    <li><strong>Strengths</strong>: Explicit control flow makes complex agent logic visible and debuggable. Built-in persistence, streaming, and human-in-the-loop support.</li>
+    <li><strong>Weaknesses</strong>: Steeper learning curve than simple chain-based approaches. Graph definition can be verbose for simple agents.</li>
+    <li><strong>Best for</strong>: Complex agent workflows with conditional logic, multi-step processes requiring durability (can resume after failures), production deployments.</li>
+  </ul>
+
+  <pre><code>// LangGraph pseudocode (simplified for illustration)
+// Define graph state: what data flows between nodes
+const graphState = &#123; messages: [], plan: null, results: [] &#125;;
+
+const graph = new StateGraph(graphState)
+  .addNode("planner", plannerNode)     // Node: generates a plan
+  .addNode("executor", executorNode)   // Node: executes plan steps
+  .addNode("evaluator", evaluatorNode) // Node: checks output quality
+  .addEdge("planner", "executor")
+  .addConditionalEdge("evaluator", routingFunction, &#123;
+    "needs_revision": "planner",  // Loop back if quality is low
+    "complete": END               // Finish if quality is acceptable
+  &#125;)
+  .addEdge("executor", "evaluator");
+
+// The routing function inspects the current state and returns
+// a string key ("needs_revision" or "complete") that determines
+// which edge to follow.</code></pre>
+
+  <h3>CrewAI</h3>
+  <p>
+    Focuses on <strong>multi-agent collaboration</strong> with role-based agents. Define agents with specific roles, backstories, and goals, then assign them tasks:
+  </p>
+  <ul>
+    <li><strong>Core concept</strong>: Agents as team members with defined roles that collaborate on tasks. Emphasizes the "crew" metaphor.</li>
+    <li><strong>Strengths</strong>: Intuitive mental model for multi-agent systems, built-in delegation and collaboration patterns</li>
+    <li><strong>Weaknesses</strong>: Less flexible for non-team-based architectures, harder to control fine-grained agent behavior</li>
+    <li><strong>Best for</strong>: Multi-agent workflows where the team metaphor applies (content creation pipelines, research workflows)</li>
+  </ul>
+
+  <h3>Autogen</h3>
+  <p>
+    Microsoft's <strong>Autogen</strong> framework enables multi-agent conversations where agents exchange messages to collaboratively solve tasks. Agents can be backed by LLMs, tools, humans, or any combination:
+  </p>
+  <ul>
+    <li><strong>Core concept</strong>: Conversable agents that interact through message-passing. Agents can be configured with different LLM backends, system prompts, and tool access.</li>
+    <li><strong>Strengths</strong>: Natural conversation-based coordination between agents, flexible agent configuration, built-in support for human participation in agent conversations</li>
+    <li><strong>Weaknesses</strong>: Conversation-based coordination can be token-intensive, debugging multi-agent conversations requires careful trace logging</li>
+    <li><strong>Best for</strong>: Multi-agent workflows requiring flexible human-agent interaction, tasks where conversational coordination is natural (e.g., collaborative writing, iterative code review)</li>
+  </ul>
+
+  <h3>Direct API / Custom Implementation</h3>
+  <p>
+    For many production applications, calling the LLM API directly with custom orchestration code is the most practical approach:
+  </p>
+  <ul>
+    <li><strong>Strengths</strong>: Full control, no framework dependencies, minimal abstraction overhead, easy to debug</li>
+    <li><strong>Weaknesses</strong>: Must implement tool orchestration, memory, streaming, and error handling yourself</li>
+    <li><strong>Best for</strong>: Production systems where you need precise control, simple agent loops, teams comfortable with LLM APIs</li>
+  </ul>
+
+  <h3>Choosing a Framework</h3>
+  <p>
+    The right choice depends on your needs:
+  </p>
+  <ul>
+    <li><strong>Prototyping quickly</strong>: LangChain (batteries included) or direct API (maximum simplicity)</li>
+    <li><strong>Complex workflows</strong>: LangGraph (explicit graph-based control flow)</li>
+    <li><strong>Multi-agent teams</strong>: CrewAI (role-based collaboration) or LangGraph (graph-based coordination)</li>
+    <li><strong>Production deployment</strong>: Direct API or LangGraph (both provide the control needed for production reliability)</li>
+  </ul>
+
+  <p>
+    A practical starting point: begin with the simplest approach that could work (often direct API calls with a basic loop), and only adopt a framework when you encounter orchestration complexity that justifies the abstraction overhead. Many successful production agents use fewer than 200 lines of custom orchestration code.
+  </p>
+</section>
+
+<Quiz
+  question="You need to build a production agent that follows a strict approval workflow: draft -> review -> revise -> approve/reject, where the review step can loop back to revision multiple times. Which approach is most appropriate?"
+  quizId="framework-selection"
+  options={[
+    {
+      id: "a",
+      text: "A simple LangChain chain that runs the steps sequentially",
+      correct: false,
+      explanation: "Simple chains run linearly and don't naturally support loops or conditional branching. The review-revision loop would be difficult to implement cleanly."
+    },
+    {
+      id: "b",
+      text: "LangGraph with a stateful graph that has conditional edges for the review/revision cycle",
+      correct: true,
+      explanation: "Correct! LangGraph's graph-based architecture naturally models this workflow: nodes for draft, review, revise, and approve, with conditional edges that route from review back to revise or forward to approve. The state persists across iterations, and the workflow is explicitly visible in the graph definition."
+    },
+    {
+      id: "c",
+      text: "CrewAI with a 'Drafter' agent and a 'Reviewer' agent",
+      correct: false,
+      explanation: "While CrewAI can model this with two agents, the strict workflow with conditional looping is better represented as an explicit graph. CrewAI excels at collaborative tasks where agents need autonomy, not rigid workflows."
+    },
+    {
+      id: "d",
+      text: "A single LLM call with a very detailed prompt describing the entire workflow",
+      correct: false,
+      explanation: "A single LLM call cannot maintain state across multiple review iterations or involve human reviewers. This workflow requires an orchestration layer with persistence and control flow."
+    }
+  ]}
+/>
+
+<section>
+  <h2>Multi-Agent Systems</h2>
+
+  <p>
+    Instead of one agent doing everything, <strong>multi-agent systems</strong> divide work among specialized agents that communicate and coordinate. This mirrors how human teams work: specialists collaborate better than generalists for complex tasks.
+  </p>
+
+  <h3>Multi-Agent Architectures</h3>
+
+  <h4>Supervisor Pattern</h4>
+  <p>
+    A supervisor agent coordinates worker agents. The supervisor receives the task, decomposes it, delegates sub-tasks to specialized workers, collects results, and synthesizes the final output:
+  </p>
+  <pre><code>Supervisor Agent
+  |
+  +-- Research Agent (searches, summarizes sources)
+  |
+  +-- Analysis Agent (processes data, generates insights)
+  |
+  +-- Writing Agent (drafts reports from research + analysis)
+  |
+  +-- Review Agent (checks quality, suggests revisions)</code></pre>
+
+  <h4>Peer-to-Peer Pattern</h4>
+  <p>
+    Agents communicate directly without a central coordinator. Each agent has its own goals and negotiates with others. More autonomous but harder to control:
+  </p>
+  <ul>
+    <li>A buyer agent negotiates with a seller agent to reach a price</li>
+    <li>Debate: two agents argue different positions, and a judge agent decides the winner</li>
+    <li>Red team / blue team: one agent tries to find vulnerabilities while another tries to defend</li>
+  </ul>
+
+  <h4>Pipeline Pattern</h4>
+  <p>
+    Agents are arranged in a linear pipeline, each transforming the output of the previous agent:
+  </p>
+  <pre><code>Input --> [Researcher] --> [Analyzer] --> [Writer] --> [Editor] --> Output</code></pre>
+  <p>
+    Simple and predictable, but no feedback loops -- errors propagate forward and cannot be corrected by earlier agents.
+  </p>
+
+  <h3>When to Use Multi-Agent Systems</h3>
+  <ul>
+    <li><strong>Use multi-agent when</strong>: The task requires distinct expertise areas, you want separation of concerns (each agent has its own prompt/tools), or the task naturally decomposes into independent sub-tasks</li>
+    <li><strong>Stay single-agent when</strong>: The task is cohesive and requires unified context, adding coordination overhead is not justified, or simplicity and debuggability are priorities. In practice, most teams should exhaust single-agent optimizations (better prompts, better tools, structured planning) before introducing multi-agent complexity.</li>
+  </ul>
+
+  <h3>Multi-Agent Challenges</h3>
+  <ul>
+    <li><strong>Communication overhead</strong>: Agents passing messages consume tokens. N agents discussing M steps = N*M LLM calls.</li>
+    <li><strong>Context fragmentation</strong>: Each agent has its own context window. Sharing information between agents requires explicit message passing, and some context is inevitably lost.</li>
+    <li><strong>Coordination failures</strong>: Agents can deadlock (each waiting for the other), produce contradictory outputs, or fail to agree on a shared plan.</li>
+    <li><strong>Debugging complexity</strong>: Tracing an issue through multiple agent interactions is significantly harder than debugging a single agent loop.</li>
+  </ul>
+</section>
+
+<Diagram diagramId="multi-agent-patterns" title="Multi-Agent Architecture Patterns" autoplay={true} animationDuration={5000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="grid grid-cols-3 gap-6">
+      <!-- Supervisor -->
+      <div data-animate style="animation-delay: 0.5s">
+        <div class="font-semibold text-sm mb-3 text-center">Supervisor</div>
+        <div class="flex flex-col items-center gap-2">
+          <div class="px-3 py-2 bg-indigo-100 border border-indigo-300 rounded text-xs font-semibold text-center">Supervisor</div>
+          <div class="flex gap-1">
+            <div class="w-0.5 h-4 bg-indigo-200"></div>
+            <div class="w-0.5 h-4 bg-indigo-200"></div>
+            <div class="w-0.5 h-4 bg-indigo-200"></div>
+          </div>
+          <div class="flex gap-2">
+            <div class="px-2 py-1 bg-emerald-50 border border-emerald-200 rounded text-xs">W1</div>
+            <div class="px-2 py-1 bg-emerald-50 border border-emerald-200 rounded text-xs">W2</div>
+            <div class="px-2 py-1 bg-emerald-50 border border-emerald-200 rounded text-xs">W3</div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 text-center mt-2">Central coordination</div>
+      </div>
+
+      <!-- Peer-to-Peer -->
+      <div data-animate style="animation-delay: 2s">
+        <div class="font-semibold text-sm mb-3 text-center">Peer-to-Peer</div>
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex gap-4">
+            <div class="px-2 py-1 bg-purple-50 border border-purple-200 rounded text-xs">A1</div>
+            <div class="px-2 py-1 bg-purple-50 border border-purple-200 rounded text-xs">A2</div>
+          </div>
+          <div class="text-xs text-purple-400">&lt;--&gt;</div>
+          <div class="px-2 py-1 bg-purple-50 border border-purple-200 rounded text-xs">A3</div>
+        </div>
+        <div class="text-xs text-slate-500 text-center mt-2">Direct communication</div>
+      </div>
+
+      <!-- Pipeline -->
+      <div data-animate style="animation-delay: 3.5s">
+        <div class="font-semibold text-sm mb-3 text-center">Pipeline</div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs">Agent 1</div>
+          <div class="text-blue-300 text-xs">v</div>
+          <div class="px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs">Agent 2</div>
+          <div class="text-blue-300 text-xs">v</div>
+          <div class="px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs">Agent 3</div>
+        </div>
+        <div class="text-xs text-slate-500 text-center mt-2">Sequential handoff</div>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>Human-in-the-Loop Patterns</h2>
+
+  <p>
+    Fully autonomous agents are appropriate for low-stakes tasks, but most production systems need human oversight. <strong>Human-in-the-loop (HITL)</strong> patterns give humans control over critical decisions while letting the agent handle routine work.
+  </p>
+
+  <h3>Approval Gates</h3>
+  <p>
+    Pause the agent at predefined checkpoints and require human approval before continuing:
+  </p>
+  <ul>
+    <li><strong>Before destructive actions</strong>: "I'm about to delete 500 records. Proceed?" (yes/no)</li>
+    <li><strong>Before external communication</strong>: "I've drafted this email to the client. Send?" (approve/edit/reject)</li>
+    <li><strong>Before expensive operations</strong>: "This query will scan the full database (~$15 cost). Proceed?"</li>
+  </ul>
+
+  <h3>Confidence-Based Escalation</h3>
+  <p>
+    Let the agent handle cases it is confident about and escalate uncertain ones to a human. Note that LLM "confidence" is typically estimated by prompting the model to self-assess or by examining token probabilities, not by an intrinsic calibrated score:
+  </p>
+  <pre><code>if agent.confidence > 0.9:
+    auto_respond(agent.response)
+elif agent.confidence > 0.7:
+    suggest_to_human(agent.response)  // Human reviews suggestion
+else:
+    escalate_to_human(conversation)    // Human takes over</code></pre>
+
+  <h3>Review and Edit</h3>
+  <p>
+    The agent produces a draft, a human reviews and edits it, and the edited version becomes the final output. Common in content creation, code generation, and report writing.
+  </p>
+
+  <h3>Interactive Collaboration</h3>
+  <p>
+    The agent and human work together iteratively. The agent proposes, the human provides feedback, and the agent revises. This is the pattern used by most coding assistants and creative AI tools.
+  </p>
+</section>
+
+<section>
+  <h2>Agent Failure Modes</h2>
+
+  <p>
+    Understanding common failure modes is essential for building reliable agent systems. Most agent failures are not random -- they follow predictable patterns with known mitigations.
+  </p>
+
+  <h3>1. Infinite Loops</h3>
+  <p>
+    The agent gets stuck repeating the same actions or reasoning without making progress.
+  </p>
+  <ul>
+    <li><strong>Cause</strong>: Unclear success criteria, tool errors that don't provide enough information to change approach</li>
+    <li><strong>Mitigation</strong>: Set maximum iteration counts, implement loop detection (same tool call with same args), add explicit "have I made progress?" reflection steps</li>
+  </ul>
+
+  <h3>2. Goal Drift</h3>
+  <p>
+    Over a long interaction, the agent gradually shifts away from the original goal, pursuing tangentially related tasks or optimizing the wrong objective.
+  </p>
+  <ul>
+    <li><strong>Cause</strong>: Long context causes original instructions to lose salience, intermediate results distract from the main goal</li>
+    <li><strong>Mitigation</strong>: Periodically re-inject the original goal into context, use structured state that tracks the current objective</li>
+  </ul>
+
+  <h3>3. Hallucinated Tool Calls</h3>
+  <p>
+    The agent attempts to call tools that do not exist or passes parameters in incorrect formats.
+  </p>
+  <ul>
+    <li><strong>Cause</strong>: Tool descriptions are ambiguous, too many tools overwhelm the model's selection ability</li>
+    <li><strong>Mitigation</strong>: Validate tool calls against the schema before execution, provide clear error messages when validation fails, limit the number of available tools per context</li>
+  </ul>
+
+  <h3>4. Premature Termination</h3>
+  <p>
+    The agent declares the task complete when it is not, or gives up too easily after encountering an error.
+  </p>
+  <ul>
+    <li><strong>Cause</strong>: Sycophancy bias (trying to please by claiming success), insufficient error recovery prompting</li>
+    <li><strong>Mitigation</strong>: Add explicit completion criteria ("The task is complete ONLY when all tests pass"), validate outputs before accepting completion</li>
+  </ul>
+
+  <h3>5. Resource Exhaustion</h3>
+  <p>
+    The agent consumes excessive resources (API calls, tokens, compute time) pursuing a task.
+  </p>
+  <ul>
+    <li><strong>Cause</strong>: No budget limits, inefficient tool use patterns, unnecessary exploration</li>
+    <li><strong>Mitigation</strong>: Set token budgets, limit tool calls per task, track and alert on cost</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Agent Evaluation</h2>
+
+  <p>
+    Evaluating agents is fundamentally harder than evaluating single LLM calls. The agent's behavior emerges from many decisions over many steps, and the same goal can be achieved through different valid paths.
+  </p>
+
+  <h3>What to Evaluate</h3>
+
+  <h4>Task Completion</h4>
+  <p>
+    Did the agent achieve the stated goal? This is the primary metric but requires task-specific evaluation:
+  </p>
+  <ul>
+    <li><strong>Code agents</strong>: Do the tests pass? Does the code compile?</li>
+    <li><strong>Research agents</strong>: Are the findings accurate and comprehensive?</li>
+    <li><strong>Customer service agents</strong>: Was the customer's issue resolved?</li>
+  </ul>
+
+  <h4>Efficiency</h4>
+  <p>
+    How many steps/tokens/tool calls did the agent need? Fewer is better, all else being equal:
+  </p>
+  <ul>
+    <li>Number of LLM calls to completion</li>
+    <li>Total tokens consumed (cost)</li>
+    <li>Wall-clock time</li>
+    <li>Number of unnecessary or redundant tool calls</li>
+  </ul>
+
+  <h4>Robustness</h4>
+  <p>
+    How well does the agent handle edge cases, errors, and adversarial inputs?
+  </p>
+  <ul>
+    <li>Success rate across diverse test cases</li>
+    <li>Recovery from tool failures (simulate API timeouts, invalid responses)</li>
+    <li>Behavior with ambiguous or contradictory instructions</li>
+  </ul>
+
+  <h3>Evaluation Frameworks</h3>
+  <p>
+    Several benchmarks exist for agent evaluation:
+  </p>
+  <ul>
+    <li><strong>SWE-bench</strong>: Real GitHub issues that agents must resolve by modifying code. Tests end-to-end software engineering capability. Top agents currently resolve 30-50% of issues, illustrating how far agent systems still have to go on complex tasks.</li>
+    <li><strong>WebArena</strong>: Agents navigate real websites to complete tasks (shopping, content management). Tests UI interaction and multi-step planning.</li>
+    <li><strong>GAIA</strong>: General AI assistant tasks requiring tool use, reasoning, and multi-step problem solving. Tasks are graded by difficulty level, with even the best agents scoring below 75% on the hardest tier.</li>
+  </ul>
+
+  <h3>Building Your Own Eval</h3>
+  <p>
+    For production agents, build custom evals that reflect your specific use cases:
+  </p>
+  <ol>
+    <li><strong>Collect real tasks</strong>: Log actual user requests and their expected outcomes</li>
+    <li><strong>Define success criteria</strong>: What constitutes a correct, complete response for each task?</li>
+    <li><strong>Create test harness</strong>: Simulate tool responses for reproducible testing (mock external APIs)</li>
+    <li><strong>Measure holistically</strong>: Track completion rate, efficiency, cost, and failure modes</li>
+    <li><strong>Regression test</strong>: Re-run evals after every prompt or tool change to catch regressions</li>
+  </ol>
+</section>
+
+<Quiz
+  question="An agent system fails intermittently: sometimes it completes tasks successfully, other times it gets stuck repeating the same action. What combination of mitigations would be most effective?"
+  quizId="failure-mitigation"
+  options={[
+    {
+      id: "a",
+      text: "Use a more capable (larger) model",
+      correct: false,
+      explanation: "A larger model may help in some cases, but it doesn't address the structural issue of loop detection and recovery. The agent can still get stuck with a larger model."
+    },
+    {
+      id: "b",
+      text: "Add a maximum iteration limit, implement loop detection for repeated identical tool calls, and add periodic reflection steps",
+      correct: true,
+      explanation: "Correct! This addresses the failure at multiple levels: iteration limits prevent infinite resource consumption, loop detection catches the specific pattern of repeated actions, and reflection steps give the agent an opportunity to recognize it's stuck and change strategy."
+    },
+    {
+      id: "c",
+      text: "Remove all tools so the agent cannot get stuck on tool calls",
+      correct: false,
+      explanation: "Removing tools eliminates the agent's ability to accomplish anything. The solution is better tool orchestration, not fewer tools."
+    },
+    {
+      id: "d",
+      text: "Simply restart the agent when it appears stuck",
+      correct: false,
+      explanation: "Restarting loses all accumulated context and may result in the same failure. It's a workaround, not a solution. The agent needs mechanisms to detect and recover from being stuck."
+    }
+  ]}
+/>
+
+<RevealSection revealId="eval-design" title="Designing an Agent Eval Suite: Step by Step">
+  <div data-reveal-step>
+    <h4>Step 1: Define Agent Scope</h4>
+    <p>Document the agent's intended capabilities, available tools, and expected use cases. This defines the boundary of what you need to test.</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 2: Create Test Cases</h4>
+    <p>Write 20-50 test cases covering: happy path (simple tasks), complex tasks (multi-step, multi-tool), edge cases (ambiguous input, missing data), adversarial cases (prompt injection, misleading context).</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 3: Build Mock Environment</h4>
+    <p>Create deterministic mock implementations of all tools. This ensures tests are reproducible -- real APIs introduce flakiness. Record real API responses to seed realistic mock data.</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 4: Define Metrics</h4>
+    <p>For each test case, define: success criteria (did it complete correctly?), efficiency bounds (max acceptable tool calls and tokens), and quality criteria (for free-text outputs, use LLM-as-judge).</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 5: Automate and Integrate</h4>
+    <p>Run the eval suite automatically on every prompt change, tool modification, or model update. Track metrics over time to catch regressions. Set alerts for significant drops in success rate or spikes in cost.</p>
+  </div>
+</RevealSection>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Framework choice matters</strong>: LangChain for rapid prototyping with many integrations, LangGraph for complex stateful workflows, CrewAI for role-based multi-agent teams, and direct API calls for maximum control in production.</li>
+    <li><strong>Multi-agent systems</strong> enable specialization but add coordination complexity. Use them when tasks naturally decompose into distinct expertise areas; stay single-agent when cohesive context is critical.</li>
+    <li><strong>Human-in-the-loop</strong> is essential for production agents: approval gates for destructive actions, confidence-based escalation, and interactive collaboration patterns.</li>
+    <li><strong>Common failure modes</strong> are predictable: infinite loops (add iteration limits + loop detection), goal drift (re-inject goals), hallucinated tool calls (validate before execution), premature termination (explicit completion criteria).</li>
+    <li><strong>Agent evaluation</strong> requires measuring task completion, efficiency, and robustness. Build custom eval suites with mock tools for reproducibility, and run them as regression tests on every change.</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"
+    authors="Jimenez, Yang, Wettig, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2310.06770"
+    type="paper"
+  />
+
+  <PaperReference
+    title="WebArena: A Realistic Web Environment for Building Autonomous Agents"
+    authors="Zhou, Xu, Shu, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2307.13854"
+    type="paper"
+  />
+
+  <PaperReference
+    title="AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation"
+    authors="Wu, Bansal, Zhang, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2308.08155"
+    type="paper"
+  />
+
+  <PaperReference
+    title="GAIA: A Benchmark for General AI Assistants"
+    authors="Mialon, Fourrier, Dessain, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2311.12983"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Building effective agents"
+    authors="Anthropic"
+    year="2024"
+    url="https://www.anthropic.com/research/building-effective-agents"
+    type="blog"
+  />
+</section>

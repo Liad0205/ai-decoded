@@ -1,0 +1,50 @@
+---
+// Styled citation card with links
+interface Props {
+  title: string;
+  authors: string;
+  year: string;
+  url: string;
+  type?: 'paper' | 'blog' | 'docs';
+}
+
+const { title, authors, year, url, type = 'paper' } = Astro.props;
+
+const typeLabels = {
+  paper: 'Research Paper',
+  blog: 'Blog Post',
+  docs: 'Documentation'
+};
+
+const typeColors = {
+  paper: 'bg-[hsl(var(--primary)/0.12)] text-[hsl(var(--primary))]',
+  blog: 'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))]',
+  docs: 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]'
+};
+---
+
+<a
+  href={url}
+  target="_blank"
+  rel="noopener noreferrer"
+  class="block my-4 p-4 border border-[hsl(var(--border))] rounded-lg hover:border-[hsl(var(--primary)/0.4)] hover:shadow-md transition-smooth"
+>
+  <div class="flex items-start gap-3">
+    <svg class="w-5 h-5 text-[hsl(var(--muted-foreground))] mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+    </svg>
+    <div class="flex-1">
+      <div class="flex items-center gap-2 mb-1">
+        <span class={`text-xs px-2 py-0.5 rounded-full font-medium ${typeColors[type]}`}>
+          {typeLabels[type]}
+        </span>
+        <span class="text-sm text-[hsl(var(--muted-foreground))]">{year}</span>
+      </div>
+      <h4 class="font-semibold text-[hsl(var(--foreground))] mb-1">{title}</h4>
+      <p class="text-sm text-[hsl(var(--muted-foreground))]">{authors}</p>
+    </div>
+    <svg class="w-5 h-5 text-[hsl(var(--muted-foreground))] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+    </svg>
+  </div>
+</a>

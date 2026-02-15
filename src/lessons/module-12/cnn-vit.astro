@@ -1,0 +1,614 @@
+---
+// Module 12, Lesson 12.1: CNN Architectures and Vision Transformers
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand convolution, pooling, and hierarchical feature extraction in CNNs</li>
+    <li>Trace the evolution of CNN architectures from AlexNet to EfficientNet</li>
+    <li>Explain how Vision Transformers (ViT) adapt the transformer architecture for images</li>
+    <li>Compare CNN and ViT tradeoffs in terms of data efficiency, inductive biases, and compute</li>
+    <li>Survey modern object detection (YOLO, DETR) and segmentation (SAM) architectures</li>
+  </ul>
+</section>
+
+<section>
+  <h2>CNN Fundamentals Refresher</h2>
+
+  <p>
+    Convolutional Neural Networks (CNNs) have been the dominant architecture for computer vision since AlexNet's breakthrough in 2012. Before exploring modern architectures, let's revisit the core operations that make CNNs work.
+  </p>
+
+  <h3>The Convolution Operation</h3>
+
+  <p>
+    A convolution slides a small filter across the image, computing a dot product at each position. This is the key operation that gives CNNs their two superpowers: translation invariance (the same feature detector works everywhere in the image) and parameter sharing (one small filter instead of a full connection matrix). For an input feature map <MathBlock formula="X" /> and a kernel <MathBlock formula="W" /> of size <MathBlock formula={"k \\times k"} />, the output at position <MathBlock formula="(i, j)" /> is:
+  </p>
+
+  <MathBlock formula={"Y_{i,j} = \\sum_{m=0}^{k-1} \\sum_{n=0}^{k-1} W_{m,n} \\cdot X_{i+m, j+n} + b"} display={true} />
+
+  <p>In plain English: each output pixel is the weighted sum of a small local patch of input pixels, using the filter weights, plus a bias term. The same filter slides across every position in the image.</p>
+
+  <p>
+    Two properties make convolutions powerful for vision:
+  </p>
+  <ul>
+    <li><strong>Translation equivariance</strong>: The same filter is applied at every spatial position, so a feature detector learned in one location works everywhere. A cat detector trained on the left side of images automatically works on the right side.</li>
+    <li><strong>Locality</strong>: Each output depends only on a small spatial neighborhood, encoding the <em>inductive bias</em> that nearby pixels are more related to each other than distant ones. This dramatically reduces parameters compared to fully connected layers.</li>
+  </ul>
+
+  <h3>Pooling and Spatial Reduction</h3>
+
+  <p>
+    Pooling layers (typically max pooling with <MathBlock formula={"2 \\times 2"} /> filters and stride 2) reduce spatial dimensions by half while retaining the most salient features. This provides:
+  </p>
+  <ul>
+    <li><strong>Computational efficiency</strong>: Halving spatial dimensions reduces computation by 4x per subsequent layer</li>
+    <li><strong>Approximate translation invariance</strong>: Small shifts in input produce the same pooled output</li>
+    <li><strong>Increasing receptive field</strong>: Deeper layers "see" larger portions of the input image</li>
+  </ul>
+
+  <h3>Hierarchical Feature Learning</h3>
+
+  <p>
+    The most remarkable property of CNNs is <strong>hierarchical feature extraction</strong>. Early layers learn low-level features (edges, textures, colors), middle layers compose these into parts (eyes, wheels, windows), and deep layers recognize high-level concepts (faces, cars, buildings). This hierarchy emerges naturally from training, without explicit supervision on intermediate features.
+  </p>
+
+  <p>
+    The <strong>receptive field</strong> of a neuron is the region of the input image that influences its activation. In a stack of <MathBlock formula={"3 \\times 3"} /> convolutions, each layer increases the receptive field by 2 pixels in each direction. After L layers, the receptive field is <MathBlock formula={"(2L + 1) \\times (2L + 1)"} />. With pooling, this grows even faster, enabling deep layers to capture global context.
+  </p>
+</section>
+
+<section>
+  <h2>The CNN Architecture Evolution</h2>
+
+  <p>
+    The evolution of CNN architectures from 2012 to 2019 represents a systematic exploration of depth, width, and connectivity patterns. Each generation solved a specific bottleneck that limited the previous one.
+  </p>
+
+  <h3>AlexNet (2012): The Deep Learning Revolution</h3>
+
+  <p>
+    AlexNet won the ImageNet Large Scale Visual Recognition Challenge (ILSVRC) with a top-5 error rate of 15.3%, crushing the previous best of 26.2%. This single result catalyzed the modern deep learning era.
+  </p>
+  <ul>
+    <li><strong>Architecture</strong>: 8 layers (5 conv + 3 FC), 60M parameters</li>
+    <li><strong>Key innovations</strong>: ReLU activation (replacing tanh/sigmoid), dropout for regularization, data augmentation, GPU training</li>
+    <li><strong>Limitation</strong>: Large convolutional filters (11x11 in the first layer) with high parameter count; manually designed architecture</li>
+  </ul>
+
+  <PaperReference
+    title="ImageNet Classification with Deep Convolutional Neural Networks"
+    authors="Krizhevsky, Sutskever, Hinton"
+    year="2012"
+    url="https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html"
+    type="paper"
+  />
+
+  <h3>VGGNet (2014): The Power of Depth</h3>
+
+  <p>
+    VGG demonstrated that <strong>using small (3x3) filters consistently with greater depth</strong> outperforms larger filters. Two stacked 3x3 convolutions have the same receptive field as a single 5x5 filter but with fewer parameters and more nonlinearity.
+  </p>
+  <ul>
+    <li><strong>Architecture</strong>: 16-19 layers, all using 3x3 convolutions</li>
+    <li><strong>Key insight</strong>: A stack of two 3x3 filters has receptive field 5x5 with <MathBlock formula={"2 \\times 3^2 = 18"} /> weights vs. <MathBlock formula={"5^2 = 25"} /> for a single 5x5 filter</li>
+    <li><strong>Limitation</strong>: 138M parameters (mostly in FC layers); computationally expensive; could not scale much deeper due to vanishing gradients</li>
+  </ul>
+
+  <h3>ResNet (2015): Skip Connections and Extreme Depth</h3>
+
+  <p>
+    He et al. discovered that simply stacking more layers <em>degrades</em> performance beyond a certain depth, even on training data. This "degradation problem" is not overfitting; it's an optimization difficulty. Their solution: <strong>residual connections</strong> (skip connections).
+  </p>
+
+  <p>
+    Instead of learning a mapping <MathBlock formula={"H(x)"} /> directly, a residual block learns the residual <MathBlock formula={"F(x) = H(x) - x"} />, with the output being:
+  </p>
+
+  <MathBlock formula={"y = F(x) + x"} display={true} />
+
+  <p>In plain English: the output is the input plus a learned correction. If the optimal transformation is identity, the network just needs to learn F(x) = 0, which is much easier than learning H(x) = x from scratch.</p>
+
+  <p>
+    This is profound: if the optimal transformation is close to identity, the network only needs to learn a small perturbation. Gradients flow directly through the skip connection, preventing vanishing gradients. ResNet enabled training of networks with 50, 101, and even 152 layers, winning ILSVRC 2015 with 3.57% top-5 error, surpassing human-level performance (5.1%).
+  </p>
+
+  <PaperReference
+    title="Deep Residual Learning for Image Recognition"
+    authors="He, Zhang, Ren, Sun"
+    year="2015"
+    url="https://arxiv.org/abs/1512.03385"
+    type="paper"
+  />
+
+  <h3>Batch Normalization</h3>
+
+  <p>
+    Introduced by Ioffe and Szegedy (2015), batch normalization normalizes intermediate activations across the mini-batch:
+  </p>
+
+  <MathBlock formula={"\\hat{x}_i = \\frac{x_i - \\mu_B}{\\sqrt{\\sigma_B^2 + \\epsilon}}, \\quad y_i = \\gamma \\hat{x}_i + \\beta"} display={true} />
+
+  <p>In plain English: center and scale each activation to zero mean and unit variance using batch statistics, then let the network learn an optimal scale and shift via the parameters gamma and beta.</p>
+
+  <p>
+    where <MathBlock formula={"\\mu_B"} /> and <MathBlock formula={"\\sigma_B^2"} /> are the batch mean and variance, and <MathBlock formula={"\\gamma, \\beta"} /> are learned scale and shift parameters. Batch normalization smooths the loss landscape, enabling higher learning rates and faster convergence. It became a standard component in nearly all CNN architectures.
+  </p>
+
+  <h3>EfficientNet (2019): Compound Scaling</h3>
+
+  <p>
+    Tan and Le observed that CNN accuracy improves when scaling depth, width, or resolution individually, but scaling all three <em>together</em> in a principled ratio gives the best efficiency. Their <strong>compound scaling</strong> method scales all dimensions uniformly using a compound coefficient <MathBlock formula={"\\phi"} />:
+  </p>
+
+  <MathBlock formula={"\\text{depth} = \\alpha^\\phi, \\quad \\text{width} = \\beta^\\phi, \\quad \\text{resolution} = \\gamma^\\phi"} display={true} />
+
+  <p>In plain English: all three network dimensions (depth, width, resolution) are scaled by the same compound coefficient phi, with fixed ratios alpha, beta, and gamma determining how much each dimension grows relative to the others.</p>
+
+  <p>
+    subject to <MathBlock formula={"\\alpha \\cdot \\beta^2 \\cdot \\gamma^2 \\approx 2"} /> (roughly doubling FLOPS when <MathBlock formula={"\\phi"} /> increases by 1). The base network (EfficientNet-B0) is discovered via neural architecture search (NAS), then scaled to B1-B7. EfficientNet-B7 achieved 84.3% top-1 accuracy on ImageNet with 8.4x fewer parameters than the previous best.
+  </p>
+
+  <PaperReference
+    title="EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks"
+    authors="Tan, Le"
+    year="2019"
+    url="https://arxiv.org/abs/1905.11946"
+    type="paper"
+  />
+</section>
+
+<Diagram diagramId="cnn-evolution" title="CNN Architecture Evolution: Key Milestones">
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center gap-4" data-animate style="animation-delay: 0.2s">
+        <div class="w-28 text-right text-sm font-bold text-slate-600 dark:text-[hsl(var(--muted-foreground))]">2012</div>
+        <div class="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div class="font-semibold text-blue-900">AlexNet</div>
+          <div class="text-xs text-blue-700">8 layers | 60M params | 15.3% top-5 error</div>
+          <div class="text-xs text-blue-600 mt-1">ReLU, dropout, GPU training</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4" data-animate style="animation-delay: 0.6s">
+        <div class="w-28 text-right text-sm font-bold text-slate-600 dark:text-[hsl(var(--muted-foreground))]">2014</div>
+        <div class="flex-1 bg-green-50 border border-green-200 rounded-lg p-3">
+          <div class="font-semibold text-green-900">VGGNet</div>
+          <div class="text-xs text-green-700">19 layers | 138M params | 7.3% top-5 error</div>
+          <div class="text-xs text-green-600 mt-1">Uniform 3x3 convolutions, deeper is better</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4" data-animate style="animation-delay: 1.0s">
+        <div class="w-28 text-right text-sm font-bold text-slate-600 dark:text-[hsl(var(--muted-foreground))]">2015</div>
+        <div class="flex-1 bg-purple-50 border border-purple-200 rounded-lg p-3">
+          <div class="font-semibold text-purple-900">ResNet</div>
+          <div class="text-xs text-purple-700">152 layers | 60M params | 3.6% top-5 error</div>
+          <div class="text-xs text-purple-600 mt-1">Skip connections, batch norm, surpassed humans</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4" data-animate style="animation-delay: 1.4s">
+        <div class="w-28 text-right text-sm font-bold text-slate-600 dark:text-[hsl(var(--muted-foreground))]">2019</div>
+        <div class="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <div class="font-semibold text-amber-900">EfficientNet</div>
+          <div class="text-xs text-amber-700">B0-B7 family | 5.3-66M params | 84.3% top-1 acc</div>
+          <div class="text-xs text-amber-600 mt-1">Compound scaling, NAS-designed base architecture</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4" data-animate style="animation-delay: 1.8s">
+        <div class="w-28 text-right text-sm font-bold text-slate-600 dark:text-[hsl(var(--muted-foreground))]">2020</div>
+        <div class="flex-1 bg-rose-50 border border-rose-200 rounded-lg p-3">
+          <div class="font-semibold text-rose-900">Vision Transformer (ViT)</div>
+          <div class="text-xs text-rose-700">ViT-L/16 | 307M params | 88.6% top-1 acc (with JFT-300M)</div>
+          <div class="text-xs text-rose-600 mt-1">Pure transformer, no convolutions, image patches as tokens</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>Vision Transformer (ViT): Transformers for Images</h2>
+
+  <p>
+    In 2020, Dosovitskiy et al. posed a provocative question: <em>can we apply the transformer architecture directly to images, without any convolutions?</em> The answer was yes, and the result (the <strong>Vision Transformer (ViT)</strong>) launched a paradigm shift in computer vision.
+  </p>
+
+  <h3>The Core Idea: Images as Sequences of Patches</h3>
+
+  <p>
+    Transformers operate on sequences of tokens. For text, tokens are words or subwords. For images, ViT creates tokens by splitting the image into fixed-size <strong>patches</strong>. An image of size <MathBlock formula={"H \\times W"} /> with channels <MathBlock formula="C" /> is divided into a grid of patches, each of size <MathBlock formula={"P \\times P"} />:
+  </p>
+
+  <MathBlock formula={"N = \\frac{H \\times W}{P^2}"} display={true} />
+
+  <p>In plain English: the number of patches (tokens) is simply the image area divided by the patch area.</p>
+
+  <p>
+    For a standard 224x224 image with 16x16 patches, this gives <MathBlock formula={"N = 196"} /> patches, a manageable sequence length for a transformer. ViT converts an image into a sequence of tokens by splitting it into fixed-size patches and linearly projecting each one into the model's embedding space. Each patch is flattened into a vector of dimension <MathBlock formula={"P^2 \\cdot C = 16^2 \\cdot 3 = 768"} /> and linearly projected to the model's hidden dimension <MathBlock formula="D" />:
+  </p>
+
+  <MathBlock formula={"z_i^0 = x_i^{\\text{patch}} \\cdot E + e_i^{\\text{pos}}"} display={true} />
+
+  <p>In plain English: each patch's initial representation is its pixel values linearly projected into D dimensions, plus a position embedding that tells the model where in the image this patch came from.</p>
+
+  <p>
+    where <MathBlock formula={"E \\in \\mathbb{R}^{(P^2 \\cdot C) \\times D}"} /> is the <strong>patch embedding</strong> projection and <MathBlock formula={"e_i^{\\text{pos}}"} /> is a learnable <strong>position embedding</strong> that encodes spatial location.
+  </p>
+
+  <h3>The [CLS] Token and Classification</h3>
+
+  <p>
+    Following BERT, ViT prepends a special learnable <strong>[CLS] token</strong> to the sequence. After processing through L transformer layers, the final representation of the [CLS] token serves as the global image representation for classification:
+  </p>
+
+  <MathBlock formula={"y = \\text{MLP}(\\text{LayerNorm}(z_{\\text{CLS}}^L))"} display={true} />
+
+  <p>In plain English: the final class prediction is produced by normalizing the [CLS] token's representation from the last transformer layer and feeding it through a classification MLP.</p>
+
+  <p>
+    The full ViT forward pass:
+  </p>
+  <ol>
+    <li><strong>Patchify</strong>: Split image into <MathBlock formula={"N"} /> non-overlapping patches</li>
+    <li><strong>Linear projection</strong>: Map each flattened patch to dimension D</li>
+    <li><strong>Add position embeddings</strong>: Inject spatial information via learnable 1D position embeddings</li>
+    <li><strong>Prepend [CLS] token</strong>: Add the classification token</li>
+    <li><strong>Transformer encoder</strong>: Process the full sequence through L layers of multi-head self-attention and MLP blocks</li>
+    <li><strong>Classification head</strong>: Apply MLP to the final [CLS] token representation</li>
+  </ol>
+
+  <PaperReference
+    title="An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+    authors="Dosovitskiy et al."
+    year="2020"
+    url="https://arxiv.org/abs/2010.11929"
+    type="paper"
+  />
+</section>
+
+<Diagram diagramId="vit-architecture" title="Vision Transformer (ViT) Architecture">
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="flex flex-col items-center gap-4">
+      <!-- Input image -->
+      <div class="flex items-center gap-3" data-animate style="animation-delay: 0.2s">
+        <div class="text-sm font-semibold text-slate-600 w-28 text-right">Input Image</div>
+        <div class="w-20 h-20 bg-gradient-to-br from-sky-300 to-indigo-400 rounded-lg grid grid-cols-4 grid-rows-4 gap-px p-1">
+          <div class="bg-sky-200 rounded-sm"></div><div class="bg-sky-300 rounded-sm"></div><div class="bg-indigo-200 rounded-sm"></div><div class="bg-indigo-300 rounded-sm"></div>
+          <div class="bg-sky-100 rounded-sm"></div><div class="bg-sky-200 rounded-sm"></div><div class="bg-indigo-100 rounded-sm"></div><div class="bg-indigo-200 rounded-sm"></div>
+          <div class="bg-blue-200 rounded-sm"></div><div class="bg-blue-300 rounded-sm"></div><div class="bg-purple-200 rounded-sm"></div><div class="bg-purple-300 rounded-sm"></div>
+          <div class="bg-blue-100 rounded-sm"></div><div class="bg-blue-200 rounded-sm"></div><div class="bg-purple-100 rounded-sm"></div><div class="bg-purple-200 rounded-sm"></div>
+        </div>
+        <div class="text-xs text-slate-500">224 x 224 x 3</div>
+      </div>
+
+      <div class="text-slate-400" data-animate style="animation-delay: 0.4s">Split into 16x16 patches</div>
+
+      <!-- Patch sequence -->
+      <div class="flex items-center gap-1" data-animate style="animation-delay: 0.7s">
+        <div class="w-8 h-10 bg-amber-400 rounded text-white text-xs flex items-center justify-center font-bold">CLS</div>
+        <div class="w-8 h-10 bg-sky-200 rounded text-xs flex items-center justify-center">P1</div>
+        <div class="w-8 h-10 bg-sky-300 rounded text-xs flex items-center justify-center">P2</div>
+        <div class="w-8 h-10 bg-indigo-200 rounded text-xs flex items-center justify-center">P3</div>
+        <div class="w-8 h-10 bg-slate-200 rounded text-xs flex items-center justify-center">...</div>
+        <div class="w-8 h-10 bg-purple-200 rounded text-xs flex items-center justify-center">P<sub>N</sub></div>
+        <div class="text-xs text-slate-500 ml-2">+ Position Embeddings</div>
+      </div>
+
+      <div class="text-slate-400" data-animate style="animation-delay: 0.9s">Linear Projection to D dimensions</div>
+
+      <!-- Transformer layers -->
+      <div class="flex flex-col gap-2 w-72" data-animate style="animation-delay: 1.2s">
+        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-2 text-center">
+          <div class="text-xs font-semibold text-indigo-800">Transformer Encoder Layer x L</div>
+          <div class="text-xs text-indigo-600 mt-1">Multi-Head Self-Attention + MLP</div>
+        </div>
+      </div>
+
+      <div class="text-slate-400" data-animate style="animation-delay: 1.5s">Extract [CLS] token representation</div>
+
+      <!-- Output -->
+      <div class="flex items-center gap-3" data-animate style="animation-delay: 1.8s">
+        <div class="w-10 h-10 bg-amber-400 rounded-lg text-white text-xs flex items-center justify-center font-bold">CLS</div>
+        <div class="text-slate-400">MLP Head</div>
+        <div class="bg-emerald-100 border border-emerald-300 rounded-lg px-4 py-2 text-sm font-semibold text-emerald-800">Class: "cat"</div>
+      </div>
+    </div>
+
+    <div class="mt-4 text-center text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 2.2s">
+      ViT treats each image patch as a "token" and processes the full patch sequence with a standard transformer encoder.
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>ViT vs. CNN: Tradeoffs and Insights</h2>
+
+  <p>
+    The ViT paper revealed a fascinating dataset-size dependency: ViT underperforms CNNs when trained on mid-sized datasets (ImageNet-1K, 1.3M images) but <em>significantly outperforms</em> them when pretrained on large datasets (ImageNet-21K with 14M, or JFT-300M with 300M images). Understanding why requires examining their different inductive biases.
+  </p>
+
+  <h3>Inductive Biases</h3>
+
+  <p>
+    <strong>CNNs</strong> have strong inductive biases baked into their architecture:
+  </p>
+  <ul>
+    <li><strong>Locality</strong>: Each neuron attends only to a small spatial neighborhood</li>
+    <li><strong>Translation equivariance</strong>: The same filters apply everywhere via weight sharing</li>
+    <li><strong>Hierarchical structure</strong>: Progressive spatial downsampling creates a feature pyramid</li>
+  </ul>
+
+  <p>
+    These biases act as a strong prior about visual data, reducing the amount of data needed to learn good representations. However, they also limit the model's flexibility.
+  </p>
+
+  <p>
+    <strong>ViT</strong> has minimal inductive biases:
+  </p>
+  <ul>
+    <li><strong>No locality</strong>: Self-attention is global from layer 1. Every patch can attend to every other patch.</li>
+    <li><strong>No translation equivariance</strong>: Position embeddings are learned, not built into the architecture</li>
+    <li><strong>No explicit hierarchy</strong>: All patches are treated at the same resolution throughout</li>
+  </ul>
+
+  <p>
+    With sufficient data, ViT's flexibility is an advantage: it can learn any attention pattern, including local patterns that resemble convolution <em>and</em> long-range patterns that CNNs cannot capture. Interestingly, Dosovitskiy et al. observed that lower ViT layers learn localized attention patterns (similar to convolutions), while higher layers attend globally. The model rediscovers the CNN inductive bias and then goes beyond it.
+  </p>
+
+  <h3>Data Efficiency vs. Scalability</h3>
+
+  <p>
+    The tradeoff is clear: CNNs are more data-efficient (better with less data), while ViTs scale better with more data and compute. This has led to the emergence of strategies to make ViTs more data-efficient:
+  </p>
+  <ul>
+    <li><strong>DeiT</strong> (Data-efficient Image Transformers): Training strategies like heavy augmentation, knowledge distillation from CNN teachers, and regularization enable ViT to match CNN performance on ImageNet-1K alone</li>
+    <li><strong>Self-supervised pretraining</strong>: MAE (Masked Autoencoder) and DINO pretrain ViTs without labels, learning excellent representations from the data structure alone</li>
+    <li><strong>Hybrid architectures</strong>: Using CNN stems for initial feature extraction, then transformer layers for global reasoning</li>
+  </ul>
+
+  <h3>Computational Considerations</h3>
+
+  <p>
+    Self-attention has quadratic cost in sequence length: <MathBlock formula={"O(N^2 \\cdot D)"} /> where <MathBlock formula={"N"} /> is the number of patches. For a 224x224 image with 16x16 patches, <MathBlock formula={"N = 196"} /> is manageable. But for higher-resolution images (e.g., 1024x1024), <MathBlock formula={"N = 4096"} />, and the quadratic cost becomes significant. Solutions include:
+  </p>
+  <ul>
+    <li><strong>Window attention</strong>: Swin Transformer computes attention within local windows, then shifts windows between layers for cross-window information flow</li>
+    <li><strong>Hierarchical ViTs</strong>: Progressively merge patches to reduce sequence length at deeper layers</li>
+    <li><strong>Efficient attention</strong>: Linear attention, FlashAttention, and other optimizations</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Hybrid Architectures: Best of Both Worlds</h2>
+
+  <p>
+    Several architectures combine CNN and transformer strengths:
+  </p>
+
+  <h3>Swin Transformer (2021)</h3>
+
+  <p>
+    The <strong>Swin Transformer</strong> (Shifted Window) reintroduces hierarchy into ViT. It computes self-attention within non-overlapping local windows, then shifts the window partition between layers to enable cross-window connections. This produces a hierarchical feature pyramid (like CNNs) while retaining the power of self-attention:
+  </p>
+  <ul>
+    <li>Linear complexity in image size (instead of quadratic for vanilla ViT)</li>
+    <li>Hierarchical feature maps at multiple resolutions (useful for detection and segmentation)</li>
+    <li>Became the dominant backbone for dense prediction tasks</li>
+  </ul>
+
+  <PaperReference
+    title="Swin Transformer: Hierarchical Vision Transformer using Shifted Windows"
+    authors="Liu et al."
+    year="2021"
+    url="https://arxiv.org/abs/2103.14030"
+    type="paper"
+  />
+
+  <h3>ConvNeXt (2022): Modernizing CNNs</h3>
+
+  <p>
+    In a thought-provoking study, Liu et al. took a standard ResNet and incrementally modernized it using design ideas from transformers: larger kernels (7x7), LayerNorm instead of BatchNorm, fewer activation functions, GELU activation, and inverted bottleneck blocks. The result (ConvNeXt) achieved ViT-level accuracy while remaining a pure CNN. This demonstrated that the gap between CNNs and ViTs was partly due to training and architecture details, not a fundamental advantage of self-attention.
+  </p>
+
+  <PaperReference
+    title="A ConvNet for the 2020s"
+    authors="Liu et al."
+    year="2022"
+    url="https://arxiv.org/abs/2201.03545"
+    type="paper"
+  />
+</section>
+
+<section>
+  <h2>Object Detection: From YOLO to DETR</h2>
+
+  <p>
+    Object detection requires not just classifying what's in an image but <em>where</em>, predicting bounding boxes around objects. Two paradigms dominate.
+  </p>
+
+  <h3>The YOLO Family: Speed Through Single-Stage Detection</h3>
+
+  <p>
+    <strong>YOLO</strong> (You Only Look Once) frames detection as a single regression problem. The image is divided into a grid, and each grid cell predicts bounding boxes and class probabilities simultaneously. Key versions:
+  </p>
+  <ul>
+    <li><strong>YOLOv1 (2015)</strong>: The original single-stage detector, fast but less accurate than two-stage methods</li>
+    <li><strong>YOLOv3 (2018)</strong>: Multi-scale predictions with Darknet-53 backbone</li>
+    <li><strong>YOLOv5-v8 (2020-2023)</strong>: Progressive refinements in architecture, training, and anchor design</li>
+    <li><strong>YOLO-World (2024)</strong>: Open-vocabulary detection using CLIP-like vision-language pretraining</li>
+  </ul>
+
+  <p>
+    YOLO remains the go-to choice for real-time detection (autonomous driving, video surveillance, robotics) due to its single-pass architecture.
+  </p>
+
+  <h3>DETR: Detection with Transformers</h3>
+
+  <p>
+    <strong>DETR</strong> (DEtection TRansformer, Carion et al. 2020) reimagines detection as a set prediction problem. It eliminates hand-crafted components like anchor boxes, non-maximum suppression, and proposal generation:
+  </p>
+  <ol>
+    <li>A CNN backbone extracts feature maps from the image</li>
+    <li>A transformer encoder processes the flattened features with global self-attention</li>
+    <li>A transformer decoder takes a fixed set of <strong>learned object queries</strong> (e.g., 100 queries) and uses cross-attention to attend to image features</li>
+    <li>Each query independently predicts a bounding box and class (or "no object")</li>
+    <li><strong>Hungarian matching</strong> provides bipartite matching between predictions and ground truth for training. The Hungarian algorithm finds the optimal one-to-one assignment between predicted and ground-truth objects by minimizing total matching cost.</li>
+  </ol>
+
+  <p>
+    DETR's elegance is its simplicity: no anchors, no NMS, no proposal networks. Later variants (Deformable DETR, DINO-DETR) improved convergence speed and accuracy to surpass traditional detectors.
+  </p>
+
+  <PaperReference
+    title="End-to-End Object Detection with Transformers (DETR)"
+    authors="Carion et al."
+    year="2020"
+    url="https://arxiv.org/abs/2005.12872"
+    type="paper"
+  />
+</section>
+
+<section>
+  <h2>Segmentation: The Segment Anything Model (SAM)</h2>
+
+  <p>
+    While object detection produces bounding boxes, <strong>segmentation</strong> produces pixel-level masks. The Segment Anything Model (SAM) from Meta AI represents a foundation model approach to segmentation.
+  </p>
+
+  <h3>SAM Architecture and Training</h3>
+
+  <p>
+    SAM was trained on SA-1B, a dataset of over 1 billion masks on 11 million images. Its architecture has three components:
+  </p>
+  <ul>
+    <li><strong>Image encoder</strong>: A ViT-H (huge) backbone that encodes the full image once into a dense feature map</li>
+    <li><strong>Prompt encoder</strong>: Encodes user-provided prompts (points, boxes, text, or masks) into prompt embeddings</li>
+    <li><strong>Mask decoder</strong>: A lightweight transformer decoder that combines image features with prompt embeddings to predict segmentation masks</li>
+  </ul>
+
+  <p>
+    SAM's key innovation is <strong>prompt-driven segmentation</strong>: the image encoder runs once, and the mask decoder can be re-run with different prompts to segment different objects, enabling interactive, real-time segmentation. SAM 2 (2024) extended this to video, tracking segments across frames using memory attention.
+  </p>
+
+  <PaperReference
+    title="Segment Anything"
+    authors="Kirillov et al."
+    year="2023"
+    url="https://arxiv.org/abs/2304.02643"
+    type="paper"
+  />
+</section>
+
+<Quiz
+  question="Why does the Vision Transformer (ViT) underperform CNNs when trained on small-to-medium datasets like ImageNet-1K?"
+  quizId="vit-vs-cnn"
+  options={[
+    {
+      id: "a",
+      text: "ViT has fewer parameters than CNNs, so it lacks capacity for complex features",
+      correct: false,
+      explanation: "Actually, ViT typically has more parameters than equivalent CNNs. ViT-B has 86M parameters vs. ResNet-50's 25M."
+    },
+    {
+      id: "b",
+      text: "ViT lacks the strong inductive biases (locality, translation equivariance) that CNNs have, so it needs more data to learn these spatial patterns from scratch",
+      correct: true,
+      explanation: "Correct! CNNs have locality and translation equivariance built into their architecture, acting as a strong prior about visual data. ViT must learn these patterns from data alone. With enough data, ViT's flexibility becomes an advantage. It can learn patterns that go beyond CNN inductive biases."
+    },
+    {
+      id: "c",
+      text: "Self-attention is mathematically incapable of learning local features like convolutions",
+      correct: false,
+      explanation: "Self-attention can approximate any function, including convolution. In fact, ViT lower layers learn localized attention patterns that resemble convolutions. It just needs sufficient data to discover this."
+    },
+    {
+      id: "d",
+      text: "ViT uses a fundamentally different loss function that requires more data to converge",
+      correct: false,
+      explanation: "ViT and CNNs use the same cross-entropy loss for classification. The difference is in architecture, not the training objective."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>CNNs</strong> exploit locality and translation equivariance as inductive biases, with key innovations including skip connections (ResNet), batch normalization, and compound scaling (EfficientNet)</li>
+    <li><strong>Vision Transformer (ViT)</strong> treats images as sequences of patches, applying a standard transformer encoder. With sufficient pretraining data, ViT surpasses CNNs by learning flexible attention patterns.</li>
+    <li><strong>The CNN-ViT tradeoff</strong> is data efficiency vs. scalability: CNNs generalize better with limited data, while ViTs scale better with more data and compute</li>
+    <li><strong>Hybrid architectures</strong> like Swin Transformer combine local attention windows with hierarchical structure, achieving strong results on both classification and dense prediction tasks</li>
+    <li><strong>ConvNeXt</strong> showed that modernizing CNN design with transformer-era techniques can close much of the accuracy gap, blurring the line between CNNs and ViTs</li>
+    <li><strong>DETR</strong> reformulates object detection as set prediction using transformers, eliminating hand-crafted components like anchors and NMS</li>
+    <li><strong>SAM</strong> represents the foundation model approach to segmentation, enabling promptable, zero-shot segmentation across arbitrary images</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="ImageNet Classification with Deep Convolutional Neural Networks (AlexNet)"
+    authors="Krizhevsky, Sutskever, Hinton"
+    year="2012"
+    url="https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Deep Residual Learning for Image Recognition (ResNet)"
+    authors="He, Zhang, Ren, Sun"
+    year="2015"
+    url="https://arxiv.org/abs/1512.03385"
+    type="paper"
+  />
+
+  <PaperReference
+    title="An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (ViT)"
+    authors="Dosovitskiy et al."
+    year="2020"
+    url="https://arxiv.org/abs/2010.11929"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Swin Transformer: Hierarchical Vision Transformer using Shifted Windows"
+    authors="Liu et al."
+    year="2021"
+    url="https://arxiv.org/abs/2103.14030"
+    type="paper"
+  />
+
+  <PaperReference
+    title="A ConvNet for the 2020s (ConvNeXt)"
+    authors="Liu et al."
+    year="2022"
+    url="https://arxiv.org/abs/2201.03545"
+    type="paper"
+  />
+
+  <PaperReference
+    title="End-to-End Object Detection with Transformers (DETR)"
+    authors="Carion et al."
+    year="2020"
+    url="https://arxiv.org/abs/2005.12872"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Segment Anything (SAM)"
+    authors="Kirillov et al."
+    year="2023"
+    url="https://arxiv.org/abs/2304.02643"
+    type="paper"
+  />
+</section>

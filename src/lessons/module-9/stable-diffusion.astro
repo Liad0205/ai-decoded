@@ -1,0 +1,446 @@
+---
+// Module 9, Lesson 9.2: Stable Diffusion: Latent Diffusion and Conditioning
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand why latent diffusion operates in compressed space and the role of the VAE</li>
+    <li>Explain the U-Net architecture with cross-attention for text conditioning</li>
+    <li>Derive how CLIP text embeddings guide image generation through cross-attention</li>
+    <li>Understand classifier-free guidance and the guidance scale's effect on quality vs. diversity</li>
+    <li>Trace the Stable Diffusion pipeline from text prompt to final image</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Problem: Diffusion in Pixel Space is Expensive</h2>
+
+  <p>
+    Standard diffusion models (DDPM) operate directly on pixel space. For a 512x512 RGB image, each denoising step processes a tensor of shape 512 x 512 x 3 = 786,432 dimensions. Running a large U-Net on this for 50-1000 steps is computationally prohibitive, requiring hundreds of GPU-hours per training run.
+  </p>
+
+  <p>
+    The key insight of <strong>Latent Diffusion Models (LDM)</strong>: most of the pixel-level detail is perceptually redundant. High-frequency texture varies across images, but the semantic structure -- whether there is a cat or a dog, the overall composition -- is what generation quality depends on. A compressed representation that preserves this semantic structure is sufficient. High-frequency details can be handled by a separate compression stage, while the diffusion model operates in a much smaller latent space that captures semantic content.
+  </p>
+</section>
+
+<section>
+  <h2>Stage 1: The Variational Autoencoder (VAE)</h2>
+
+  <p>
+    The first component of Stable Diffusion is a pretrained <strong>VAE</strong> that compresses images into a lower-dimensional latent representation and reconstructs them back.
+  </p>
+
+  <h3>Encoder: Image to Latent</h3>
+  <p>
+    The encoder <MathBlock formula={"\\mathcal{E}"} /> maps a pixel-space image <MathBlock formula={"x \\in \\mathbb{R}^{H \\times W \\times 3}"} /> to a latent representation <MathBlock formula={"z \\in \\mathbb{R}^{h \\times w \\times c}"} />:
+  </p>
+
+  <MathBlock formula={"z = \\mathcal{E}(x), \\quad \\text{where } h = H/f, \\; w = W/f"} display={true} />
+
+  <p>
+    Stable Diffusion uses a downsampling factor of <MathBlock formula="f = 8" />, so a 512x512 image compresses to a 64x64x4 latent. This is a <strong>48x reduction</strong> in dimensionality (from 786,432 to 16,384), making diffusion dramatically cheaper.
+  </p>
+
+  <h3>Decoder: Latent to Image</h3>
+  <p>
+    The decoder <MathBlock formula={"\\mathcal{D}"} /> reconstructs the image:
+  </p>
+
+  <MathBlock formula={"\\tilde{x} = \\mathcal{D}(z) \\approx x"} display={true} />
+
+  <p>
+    The decoder maps the compact latent back to full-resolution pixel space. If the VAE is well-trained, the reconstruction is nearly indistinguishable from the original image.
+  </p>
+
+  <h3>Training the VAE</h3>
+  <p>
+    The VAE is trained with a combination of losses:
+  </p>
+  <ul>
+    <li><strong>Reconstruction loss</strong>: L1 or L2 distance between input and reconstruction</li>
+    <li><strong>Perceptual loss</strong>: Feature-level similarity using a pretrained VGG network, ensuring perceptual quality beyond pixel-level matching</li>
+    <li><strong>KL regularization</strong>: Keeps the latent distribution close to a standard Gaussian, ensuring the latent space is smooth and the prior matches the Gaussian assumption that the diffusion process relies on</li>
+    <li><strong>Adversarial loss</strong>: A patch-based discriminator encourages sharp, realistic details. This is critical for avoiding blurry reconstructions</li>
+  </ul>
+
+  <p>
+    These losses are weighted to balance pixel fidelity, feature-level quality, latent smoothness, and realism.
+  </p>
+
+  <p>
+    The VAE is trained once and frozen. All subsequent diffusion training and sampling operates entirely in latent space.
+  </p>
+</section>
+
+<Diagram diagramId="ldm-pipeline" title="Latent Diffusion Model Pipeline" autoplay={true} animationDuration={6000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="flex flex-col gap-6">
+      <!-- Training path -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex flex-col items-center w-24" data-animate style="animation-delay: 0.3s">
+          <div class="w-16 h-16 bg-gradient-to-br from-rose-400 to-pink-500 rounded-lg mb-1 flex items-center justify-center text-white text-xs font-bold">Image</div>
+          <div class="text-xs text-slate-500">512x512x3</div>
+        </div>
+
+        <div class="flex flex-col items-center" data-animate style="animation-delay: 0.8s">
+          <div class="px-3 py-2 bg-amber-100 rounded text-xs font-semibold text-amber-800">Encoder E</div>
+          <div class="text-slate-400">→</div>
+        </div>
+
+        <div class="flex flex-col items-center w-24" data-animate style="animation-delay: 1.3s">
+          <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded mb-1 flex items-center justify-center text-white text-xs font-bold">z</div>
+          <div class="text-xs text-slate-500">64x64x4</div>
+          <div class="text-xs text-emerald-600 font-medium">48x smaller</div>
+        </div>
+
+        <div class="flex flex-col items-center" data-animate style="animation-delay: 1.8s">
+          <div class="px-3 py-2 bg-indigo-100 rounded text-xs font-semibold text-indigo-800">Diffusion U-Net</div>
+          <div class="text-xs text-slate-500 mt-1">+ Text conditioning</div>
+        </div>
+
+        <div class="flex flex-col items-center w-24" data-animate style="animation-delay: 2.3s">
+          <div class="w-12 h-12 bg-gradient-to-br from-indigo-300 to-purple-400 rounded mb-1 flex items-center justify-center text-white text-xs font-bold">z₀</div>
+          <div class="text-xs text-slate-500">Denoised latent</div>
+        </div>
+
+        <div class="flex flex-col items-center" data-animate style="animation-delay: 2.8s">
+          <div class="px-3 py-2 bg-amber-100 rounded text-xs font-semibold text-amber-800">Decoder D</div>
+          <div class="text-slate-400">→</div>
+        </div>
+
+        <div class="flex flex-col items-center w-24" data-animate style="animation-delay: 3.3s">
+          <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg mb-1 flex items-center justify-center text-white text-xs font-bold">Output</div>
+          <div class="text-xs text-slate-500">512x512x3</div>
+        </div>
+      </div>
+
+      <!-- Text conditioning path -->
+      <div class="flex items-center justify-center gap-4" data-animate style="animation-delay: 4s">
+        <div class="px-3 py-2 bg-slate-100 rounded text-xs">"A cat on a mountain"</div>
+        <div class="text-slate-400">→</div>
+        <div class="px-3 py-2 bg-sky-100 rounded text-xs font-semibold text-sky-800">CLIP Text Encoder</div>
+        <div class="text-slate-400">→</div>
+        <div class="px-3 py-2 bg-sky-50 rounded text-xs">Text embeddings → cross-attention</div>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<section>
+  <h2>Stage 2: The U-Net Denoising Network</h2>
+
+  <p>
+    The core of Stable Diffusion is a <strong>U-Net</strong> that predicts noise in latent space. The U-Net architecture is ideal for denoising because it combines multi-scale feature extraction with precise spatial detail preservation through skip connections.
+  </p>
+
+  <h3>Architecture Overview</h3>
+  <p>
+    The U-Net follows an encoder-decoder structure with skip connections:
+  </p>
+  <ul>
+    <li><strong>Encoder path</strong>: Progressively downsamples spatial resolution while increasing channels (64x64 → 32x32 → 16x16 → 8x8)</li>
+    <li><strong>Bottleneck</strong>: Processes at lowest resolution (8x8) with self-attention, capturing global context</li>
+    <li><strong>Decoder path</strong>: Progressively upsamples back to original resolution, with skip connections from the encoder providing fine-grained detail. Skip connections preserve fine-grained spatial information that low-resolution bottleneck features alone cannot recover -- critical for generating sharp, detailed images</li>
+  </ul>
+
+  <p>
+    Each block in the U-Net contains:
+  </p>
+  <ol>
+    <li><strong>ResNet blocks</strong>: Convolutional layers with residual connections and group normalization</li>
+    <li><strong>Self-attention layers</strong>: At selected resolutions (typically 32x32, 16x16, 8x8) to model spatial relationships</li>
+    <li><strong>Cross-attention layers</strong>: Inject text conditioning from CLIP embeddings</li>
+    <li><strong>Timestep embedding</strong>: Sinusoidal positional embedding of the current timestep t, projected and added to each block</li>
+  </ol>
+
+  <h3>Timestep Conditioning</h3>
+  <p>
+    The U-Net must know the current noise level to predict the appropriate amount of noise. The timestep t is embedded using sinusoidal positional encoding (similar to transformer position encoding), then projected through an MLP:
+  </p>
+
+  <MathBlock formula={"\\text{emb}(t) = \\text{MLP}(\\text{SinusoidalEmbed}(t))"} display={true} />
+
+  <p>
+    This embedding is added to intermediate activations throughout the network, modulating the denoising behavior based on the noise level.
+  </p>
+</section>
+
+<section>
+  <h2>Text Conditioning via CLIP and Cross-Attention</h2>
+
+  <p>
+    Text-to-image generation requires connecting language understanding to the visual denoising process. Stable Diffusion achieves this through <strong>CLIP text embeddings</strong> and <strong>cross-attention</strong>.
+  </p>
+
+  <h3>CLIP Text Encoder</h3>
+  <p>
+    <strong>CLIP</strong> (Contrastive Language-Image Pretraining) is trained on 400M+ image-text pairs to align visual and textual representations. Stable Diffusion uses CLIP's text encoder (a transformer) to convert text prompts into rich semantic embeddings.
+  </p>
+
+  <p>
+    Given a text prompt, the CLIP text encoder produces a sequence of token embeddings:
+  </p>
+
+  <MathBlock formula={"c = \\text{CLIPTextEncoder}(\\text{prompt}) \\in \\mathbb{R}^{L \\times d_{\\text{text}}}"} display={true} />
+
+  <p>
+    where L is the sequence length (up to 77 tokens) and <MathBlock formula={"d_{\\text{text}}"} /> is the embedding dimension. These embeddings capture rich semantic information about the desired image.
+  </p>
+
+  <h3>Cross-Attention: Fusing Text and Image Features</h3>
+  <p>
+    Cross-attention is how the image generation process "reads" the text prompt. The image features serve as queries, asking "what should I generate here?", while the text embeddings provide keys and values, answering with semantic information from the caption. This is the same query-key-value mechanism from transformers, but applied across two different modalities. Mathematically:
+  </p>
+
+  <MathBlock formula={"Q = W_Q \\cdot \\phi(z_t), \\quad K = W_K \\cdot c, \\quad V = W_V \\cdot c"} display={true} />
+
+  <p>
+    The queries Q come from the image features (what the model is currently generating), while keys K and values V come from the text embeddings (what the prompt says). The attention operation computes a weighted combination:
+  </p>
+
+  <MathBlock formula={"\\text{CrossAttn}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d}}\\right) V"} display={true} />
+
+  <p>
+    In words: each spatial location in the image computes similarity scores against all text tokens, then retrieves a weighted mix of text information. The result is that each pixel "reads" the most relevant words from the prompt.
+  </p>
+
+  <p>
+    Here <MathBlock formula={"\\phi(z_t)"} /> is the flattened spatial feature map from the U-Net, c is the CLIP text embedding sequence, and <MathBlock formula={"\\sqrt{d}"} /> is the standard scaling factor to prevent dot products from growing too large. This mechanism allows each spatial location to attend to relevant parts of the text description.
+  </p>
+
+  <p>
+    <strong>Why cross-attention works</strong>: Different spatial locations in the image can attend to different words in the prompt. For a prompt like "blue sky over mountains," pixels in the upper region attend strongly to "blue sky" while lower pixels attend to "mountains." This creates a flexible, compositional mapping from text to spatial structure.
+  </p>
+
+  <RevealSection revealId="attention-maps" title="How Attention Maps Guide Generation">
+    <div data-reveal-step>
+      <h4>Attention Map Interpretation</h4>
+      <p>For a prompt like "a red car on a mountain road," the cross-attention maps reveal which spatial regions attend to each word:</p>
+      <ul>
+        <li>"red" and "car": high attention in the center-bottom of the image</li>
+        <li>"mountain": high attention in the upper portions</li>
+        <li>"road": high attention along the lower portion</li>
+      </ul>
+      <p>These attention maps are not just diagnostic. They actively shape the spatial structure of the generated image during denoising.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+        Learn about Prompt-to-Prompt →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Prompt-to-Prompt Editing</h4>
+      <p>Because cross-attention maps determine spatial layout, we can manipulate them for precise image editing:</p>
+      <ul>
+        <li><strong>Word swap</strong>: Replace "cat" with "dog" in the attention maps while keeping layout fixed</li>
+        <li><strong>Attention re-weighting</strong>: Increase/decrease the influence of specific words</li>
+        <li><strong>Attention injection</strong>: Copy attention maps from one generation to another for consistent composition</li>
+      </ul>
+      <p class="mt-2 text-emerald-700 font-medium">This interpretability is a unique advantage of cross-attention conditioning over other approaches like concatenation or AdaIN.</p>
+    </div>
+  </RevealSection>
+</section>
+
+<section>
+  <h2>Classifier-Free Guidance</h2>
+
+  <p>
+    Perhaps the single most important technique for high-quality conditional generation, <strong>classifier-free guidance (CFG)</strong> dramatically improves the alignment between text prompts and generated images.
+  </p>
+
+  <h3>The Problem with Unconditional Sampling</h3>
+  <p>
+    A conditional diffusion model <MathBlock formula={"\\epsilon_\\theta(x_t, t, c)"} /> can generate images matching a text condition c. However, naive conditional generation often produces images that are plausible but weakly aligned with the prompt: the model hedges, producing "average" images that partially match many prompts.
+  </p>
+
+  <h3>Classifier Guidance (Background)</h3>
+  <p>
+    The original approach (Dhariwal and Nichol, 2021) used a separate classifier <MathBlock formula={"p(c \\mid x_t)"} /> to guide sampling:
+  </p>
+
+  <MathBlock formula={"\\tilde{\\epsilon} = \\epsilon_\\theta(x_t, t) - s \\cdot \\sqrt{1 - \\bar{\\alpha}_t} \\nabla_{x_t} \\log p(c \\mid x_t)"} display={true} />
+
+  <p>
+    In words: adjust the noise prediction by pushing it in the direction that a classifier says makes the image more likely to match condition c. The strength s controls how hard we push.
+  </p>
+
+  <p>
+    This requires training a separate noise-aware classifier, which is cumbersome and limiting.
+  </p>
+
+  <h3>Classifier-Free Guidance</h3>
+  <p>
+    <strong>Classifier-free guidance (CFG)</strong> eliminates the separate classifier by training a single model that can operate both conditionally and unconditionally. The core idea: blend conditional and unconditional noise predictions to amplify the influence of the text prompt on generation. During training, the text condition is randomly dropped (replaced with null/empty embedding) with some probability (typically 10%), teaching the model to work with or without text:
+  </p>
+
+  <MathBlock formula={"\\epsilon_\\theta(x_t, t, c) \\text{ and } \\epsilon_\\theta(x_t, t, \\varnothing) \\text{ from the same model}"} display={true} />
+
+  <p>
+    At inference, the guided prediction is a linear extrapolation away from the unconditional prediction toward the conditional one. Mathematically:
+  </p>
+
+  <MathBlock formula={"\\tilde{\\epsilon} = \\epsilon_\\theta(x_t, t, \\varnothing) + s \\cdot (\\epsilon_\\theta(x_t, t, c) - \\epsilon_\\theta(x_t, t, \\varnothing))"} display={true} />
+
+  <ul>
+    <li><MathBlock formula={"\\epsilon_\\theta(x_t, t, \\varnothing)"} /> is the unconditional noise prediction (what the model would generate without any text)</li>
+    <li><MathBlock formula={"\\epsilon_\\theta(x_t, t, c)"} /> is the conditional noise prediction (what the model generates given the text prompt c)</li>
+    <li><MathBlock formula="s" /> is the guidance scale, controlling how strongly the text condition is amplified</li>
+    <li><MathBlock formula={"\\tilde{\\epsilon}"} /> is the guided noise prediction used for the actual denoising step</li>
+  </ul>
+
+  <p>
+    In words: take the unconditional prediction, then add a scaled version of the difference between conditional and unconditional predictions. Higher guidance scale means stronger adherence to the prompt, at the cost of diversity. Rearranging into a weighted-average form:
+  </p>
+
+  <MathBlock formula={"\\tilde{\\epsilon} = (1 - s) \\cdot \\epsilon_\\theta(x_t, t, \\varnothing) + s \\cdot \\epsilon_\\theta(x_t, t, c)"} display={true} />
+
+  <p>
+    This equivalent form shows that when <MathBlock formula="s = 1" />, we recover standard conditional generation. When <MathBlock formula="s > 1" />, we are extrapolating <em>beyond</em> the conditional prediction -- overshooting in the direction of the text, which produces more vivid, prompt-faithful results.
+  </p>
+
+  <h3>Understanding the Guidance Scale</h3>
+  <ul>
+    <li><MathBlock formula="s = 1" />: Standard conditional generation (no guidance)</li>
+    <li><MathBlock formula={"s = 7\\text{-}8"} />: Typical sweet spot. Strong text adherence with good image quality</li>
+    <li><MathBlock formula="s > 15" />: Oversaturation and artifacts. The model "over-commits" to the condition, producing unrealistic images</li>
+    <li><MathBlock formula="s < 1" />: Weakens the condition, producing more diverse but less faithful output</li>
+  </ul>
+
+  <p>
+    <strong>Why it works</strong>: Mathematically, CFG amplifies the direction in noise-prediction space that distinguishes conditional from unconditional. This is equivalent to sampling from a sharpened conditional distribution <MathBlock formula={"p(x \\mid c)^s / Z"} />, trading diversity for fidelity to the condition.
+  </p>
+
+  <p>
+    <strong>The computational cost</strong>: Each sampling step requires two forward passes (conditional + unconditional), doubling compute. This is often mitigated by batching both predictions together into a single GPU call.
+  </p>
+</section>
+
+<section>
+  <h2>The Full Stable Diffusion Pipeline</h2>
+
+  <p>
+    Putting it all together, text-to-image generation with Stable Diffusion proceeds as:
+  </p>
+
+  <ol>
+    <li><strong>Text encoding</strong>: The CLIP text encoder converts the prompt to embeddings c</li>
+    <li><strong>Noise initialization</strong>: Sample random latent noise <MathBlock formula={"z_T \\sim \\mathcal{N}(0, I)"} /> at shape 64x64x4</li>
+    <li><strong>Iterative denoising</strong>: For each timestep t = T, T-1, ..., 1:
+      <ul>
+        <li>Run the U-Net twice: <MathBlock formula={"\\epsilon_\\theta(z_t, t, c)"} /> and <MathBlock formula={"\\epsilon_\\theta(z_t, t, \\varnothing)"} /></li>
+        <li>Apply classifier-free guidance: <MathBlock formula={"\\tilde{\\epsilon} = \\epsilon_\\varnothing + s \\cdot (\\epsilon_c - \\epsilon_\\varnothing)"} /></li>
+        <li>Apply the DDIM or DDPM update rule to get <MathBlock formula="z_{t-1}" /></li>
+      </ul>
+    </li>
+    <li><strong>Decoding</strong>: The VAE decoder converts the final latent <MathBlock formula="z_0" /> back to pixel space: <MathBlock formula={"x = \\mathcal{D}(z_0)"} /></li>
+  </ol>
+
+  <h3>Image-to-Image Generation (img2img)</h3>
+  <p>
+    Instead of starting from pure noise, encode a reference image to latent space, add noise to a specified strength, then denoise:
+  </p>
+
+  <MathBlock formula={"z_t = \\sqrt{\\bar{\\alpha}_t}\\, \\mathcal{E}(x_{\\text{ref}}) + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"} display={true} />
+
+  <p>
+    The denoising strength parameter controls how much of the reference structure is preserved. Low strength (starting at high t): mostly preserves the reference. High strength (starting from near-pure noise): generates freely.
+  </p>
+
+  <h3>Inpainting</h3>
+  <p>
+    For inpainting, the known regions are fixed at each denoising step while only the masked region is denoised. The model must generate content that is both semantically consistent with the prompt and spatially consistent with the surrounding context, a challenging constraint satisfaction problem elegantly handled by iterative denoising.
+  </p>
+</section>
+
+<Quiz
+  question="Why does classifier-free guidance require two forward passes per denoising step?"
+  quizId="cfg-two-passes"
+  options={[
+    {
+      id: "a",
+      text: "One pass for low-resolution features and one for high-resolution details",
+      correct: false,
+      explanation: "Both passes operate at the same resolution. They differ in conditioning, not resolution."
+    },
+    {
+      id: "b",
+      text: "One pass for the conditional prediction and one for the unconditional prediction, which are combined to amplify the conditioning signal",
+      correct: true,
+      explanation: "Correct! CFG computes both epsilon(z_t, t, c) and epsilon(z_t, t, empty), then extrapolates in the direction of the conditioning signal. This amplification dramatically improves text-image alignment but requires evaluating the model twice."
+    },
+    {
+      id: "c",
+      text: "The first pass identifies the noise and the second pass removes it",
+      correct: false,
+      explanation: "Each pass independently predicts the full noise. The difference between them indicates the direction of the conditioning signal."
+    },
+    {
+      id: "d",
+      text: "One pass for the U-Net encoder and one for the decoder",
+      correct: false,
+      explanation: "Each forward pass runs the full U-Net (both encoder and decoder paths). The two passes differ only in the text conditioning input."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Latent diffusion</strong> operates in a compressed VAE latent space (48x smaller than pixel space), making high-resolution generation computationally feasible</li>
+    <li><strong>The VAE</strong> is trained once with reconstruction + perceptual + adversarial losses, then frozen. All diffusion happens in latent space</li>
+    <li><strong>The U-Net</strong> combines multi-scale convolutions, self-attention for spatial relationships, and cross-attention for text conditioning</li>
+    <li><strong>Cross-attention</strong> injects CLIP text embeddings by using spatial features as queries and text tokens as keys/values, enabling word-level spatial control</li>
+    <li><strong>Classifier-free guidance</strong> dramatically improves prompt adherence by extrapolating between unconditional and conditional predictions, at the cost of 2x compute per step</li>
+    <li><strong>The guidance scale</strong> (typically 7-8) trades diversity for fidelity: too high causes artifacts, too low produces generic images</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="High-Resolution Image Synthesis with Latent Diffusion Models"
+    authors="Rombach, Blattmann, Lorenz, Esser, Ommer"
+    year="2022"
+    url="https://arxiv.org/abs/2112.10752"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Learning Transferable Visual Models From Natural Language Supervision (CLIP)"
+    authors="Radford et al."
+    year="2021"
+    url="https://arxiv.org/abs/2103.00020"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Classifier-Free Diffusion Guidance"
+    authors="Ho, Salimans"
+    year="2022"
+    url="https://arxiv.org/abs/2207.12598"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Diffusion Models Beat GANs on Image Synthesis"
+    authors="Dhariwal, Nichol"
+    year="2021"
+    url="https://arxiv.org/abs/2105.05233"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Prompt-to-Prompt Image Editing with Cross Attention Control"
+    authors="Hertz et al."
+    year="2022"
+    url="https://arxiv.org/abs/2208.01626"
+    type="paper"
+  />
+</section>

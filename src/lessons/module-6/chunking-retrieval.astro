@@ -1,0 +1,446 @@
+---
+// Module 6, Lesson 6.2: Chunking, Retrieval, and Reranking
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Compare chunking strategies and understand their impact on retrieval quality</li>
+  <li>Distinguish between dense retrieval, sparse retrieval, and hybrid approaches</li>
+  <li>Explain how cross-encoder reranking improves retrieval precision</li>
+  <li>Design a multi-stage retrieval pipeline with appropriate recall-precision tradeoffs</li>
+  <li>Apply practical techniques: parent-child chunking, contextual retrieval, and late interaction models</li>
+</ul>
+
+<h2>Chunking: The Most Underrated RAG Decision</h2>
+
+<p>
+  Chunking---how you split documents into pieces for embedding and retrieval---has an outsized impact on RAG quality. Poor chunking leads to retrieval failures regardless of how good your embedding model or LLM is.
+</p>
+
+<p>
+  The fundamental tension: <strong>smaller chunks</strong> enable precise retrieval (less noise) but may lose surrounding context. Smaller chunks can also suffer from embedding ambiguity if they lack self-contained meaning---a two-sentence chunk like "It increased significantly. The board approved the proposal." is nearly impossible to embed meaningfully without surrounding context. <strong>Larger chunks</strong> preserve context but dilute the embedding signal and consume more of the LLM's context window.
+</p>
+
+<h3>Fixed-Size Chunking</h3>
+
+<p>
+  The simplest approach: split text into fixed-length segments (e.g., 512 tokens) with optional overlap.
+</p>
+
+<ul>
+  <li><strong>Pros</strong>: Simple to implement, consistent chunk sizes, predictable token counts</li>
+  <li><strong>Cons</strong>: Splits mid-sentence and mid-paragraph, breaks logical units, produces chunks that lack self-contained meaning</li>
+  <li><strong>Overlap</strong>: Adding 10-20% overlap (e.g., 50 tokens for 512-token chunks) helps capture information near boundaries but doesn't solve the fundamental problem</li>
+</ul>
+
+<h3>Recursive Character/Token Splitting</h3>
+
+<p>
+  A better default: split on natural boundaries in order of preference:
+</p>
+
+<ol>
+  <li>Split on double newlines (paragraph boundaries)</li>
+  <li>If a chunk is still too large, split on single newlines</li>
+  <li>If still too large, split on sentence boundaries (periods)</li>
+  <li>Last resort: split on word boundaries</li>
+</ol>
+
+<p>
+  This approach respects document structure better than fixed-size splitting. It is the default in LangChain and LlamaIndex for good reason.
+</p>
+
+<h3>Semantic Chunking</h3>
+
+<p>
+  Use embedding similarity to detect topic boundaries:
+</p>
+
+<ol>
+  <li>Embed each sentence in the document</li>
+  <li>Compute cosine similarity between consecutive sentence embeddings</li>
+  <li>Identify breakpoints where similarity drops below a threshold (topic shifts)</li>
+  <li>Group sentences between breakpoints into chunks</li>
+</ol>
+
+<MathBlock formula={"\\text{breakpoint at position } i \\quad \\text{if} \\quad \\text{sim}(e_i, e_{i+1}) < \\mu - k\\sigma"} display={true} />
+
+<p>In plain English: insert a chunk boundary whenever the similarity between consecutive sentences drops significantly below the document's average, indicating a topic shift.</p>
+
+<p>
+  where <MathBlock formula={"\\mu"} /> and <MathBlock formula={"\\sigma"} /> are the mean and standard deviation of consecutive similarities, and k controls sensitivity (typically k = 1 or 2).
+</p>
+
+<p>
+  Typical target: 512-1024 tokens per chunk, though semantic chunking naturally produces variable sizes. <strong>Pros</strong>: Chunks are semantically coherent, adaptable to document structure. <strong>Cons</strong>: Computationally expensive (requires embedding every sentence), variable chunk sizes complicate batching.
+</p>
+
+<h3>Document-Structure-Aware Chunking</h3>
+
+<p>
+  Leverage the document's inherent structure:
+</p>
+
+<ul>
+  <li><strong>Markdown/HTML</strong>: Split on headers (h1, h2, h3), preserving the heading hierarchy as metadata</li>
+  <li><strong>Code</strong>: Split on function/class boundaries using AST parsing</li>
+  <li><strong>PDFs</strong>: Use layout analysis to identify sections, tables, figures</li>
+  <li><strong>Legal/Medical</strong>: Split on section numbers, clause boundaries, article delineations</li>
+</ul>
+
+<p>
+  Always preserve the structural context: include the section heading, parent heading, and document title as metadata or prepended text.
+</p>
+
+<h3>Parent-Child (Hierarchical) Chunking</h3>
+
+<p>
+  A powerful pattern that decouples the retrieval unit from the context unit:
+</p>
+
+<ol>
+  <li>Create <strong>child chunks</strong> (small, 128-256 tokens): used for embedding and retrieval</li>
+  <li>Maintain <strong>parent chunks</strong> (large, 1024-2048 tokens): the surrounding context</li>
+  <li>When a child chunk is retrieved, return the parent chunk to the LLM</li>
+</ol>
+
+<Diagram diagramId="parent-child-chunking" title="Parent-Child Chunking Strategy" autoplay={true} animationDuration={4000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+    <div class="flex flex-col gap-4">
+      <!-- Parent chunk -->
+      <div data-animate style="animation-delay: 0.3s">
+        <div class="text-xs font-semibold text-slate-500 mb-1">Parent Chunk (sent to LLM)</div>
+        <div class="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+          <div class="flex gap-2">
+            <div class="flex-1 p-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center">Child 1</div>
+            <div class="flex-1 p-2 bg-emerald-200 border-2 border-emerald-400 rounded text-xs text-center font-semibold">Child 2 (retrieved)</div>
+            <div class="flex-1 p-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center">Child 3</div>
+            <div class="flex-1 p-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center">Child 4</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explanation -->
+      <div class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 2s">
+        <p><strong>Retrieve</strong> on small child chunks (precise matching) -> <strong>Return</strong> the larger parent chunk (full context)</p>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<p>
+  <strong>Why this works</strong>: Small chunks produce more precise embeddings (less noise), while the parent provides the LLM with sufficient context to generate accurate answers. This is one of the highest-impact RAG improvements.
+</p>
+
+<h3>Contextual Retrieval (Anthropic's Approach)</h3>
+
+<p>
+  Anthropic's <strong>Contextual Retrieval</strong> prepends each chunk with LLM-generated context explaining the chunk's role within the broader document:
+</p>
+
+<p>
+  Before embedding, use an LLM to generate a brief contextual summary: "This chunk is from Section 3.2 of the Q4 2024 earnings report. It discusses revenue growth in the cloud computing division." This context is prepended to the chunk before embedding.
+</p>
+
+<p>
+  This addresses a critical problem: chunks often lack self-contained meaning. A sentence like "It increased by 15% year-over-year" is meaningless without knowing what "it" refers to. Contextual retrieval adds that missing context.
+</p>
+
+<h2>Dense vs. Sparse Retrieval</h2>
+
+<h3>Dense Retrieval</h3>
+
+<p>
+  Uses embedding models to map queries and documents to the same vector space:
+</p>
+
+<MathBlock formula={"\\text{score}(q, d) = \\text{sim}(E_q(q), E_d(d))"} display={true} />
+
+<p>In plain English: score a query-document pair by embedding each independently and computing their similarity (typically cosine) in the shared vector space.</p>
+
+<p>
+  where <MathBlock formula={"E_q"} /> and <MathBlock formula={"E_d"} /> may be the same model (symmetric) or different models (asymmetric). The similarity function is typically cosine similarity or inner product.
+</p>
+
+<p><strong>Strengths</strong>:</p>
+<ul>
+  <li>Semantic matching: "automobile" matches "car"</li>
+  <li>Cross-lingual retrieval with multilingual models</li>
+  <li>Works well for natural language queries</li>
+</ul>
+
+<p><strong>Weaknesses</strong>:</p>
+<ul>
+  <li>Struggles with exact term matching (product IDs, error codes, named entities)</li>
+  <li>Can be fooled by superficially similar but semantically different text</li>
+  <li>Requires domain-appropriate embedding models</li>
+</ul>
+
+<h3>Sparse Retrieval (BM25 and Beyond)</h3>
+
+<p>
+  Traditional keyword-based retrieval using term frequency statistics. BM25 remains the standard:
+</p>
+
+<MathBlock formula={"\\text{BM25}(q, d) = \\sum_{t \\in q} \\text{IDF}(t) \\cdot \\frac{f(t, d) \\cdot (k_1 + 1)}{f(t, d) + k_1 \\cdot \\left(1 - b + b \\cdot \\frac{|d|}{\\text{avgdl}}\\right)}"} display={true} />
+
+<p>In plain English: BM25 scores each document by summing, for each query term, a weight based on how rare the term is globally (IDF) and how frequently it appears in the document, with diminishing returns for repetition and a length normalization factor.</p>
+
+<p><strong>Strengths</strong>:</p>
+<ul>
+  <li>Excellent exact term matching---crucial for names, IDs, technical terms</li>
+  <li>No training required, works out of the box</li>
+  <li>Fast and memory-efficient with inverted indexes</li>
+  <li>Interpretable: you can see exactly which terms matched</li>
+</ul>
+
+<p><strong>Weaknesses</strong>:</p>
+<ul>
+  <li>No semantic understanding: "automobile" does not match "car"</li>
+  <li>Sensitive to vocabulary mismatch between query and document</li>
+  <li>Cannot leverage word order or context</li>
+</ul>
+
+<h3>Hybrid Retrieval: The Best of Both</h3>
+
+<p>
+  Combining dense and sparse retrieval consistently outperforms either alone. Two primary fusion methods:
+</p>
+
+<p><strong>Linear score fusion</strong>:</p>
+<MathBlock formula={"\\text{score}_{\\text{hybrid}}(q, d) = \\alpha \\cdot \\hat{s}_{\\text{dense}}(q, d) + (1-\\alpha) \\cdot \\hat{s}_{\\text{sparse}}(q, d)"} display={true} />
+
+<p>In plain English: blend the normalized dense and sparse scores using a tunable weight alpha. Higher alpha favors semantic matching; lower alpha favors keyword matching.</p>
+
+<p>
+  where <MathBlock formula={"\\hat{s}"} /> denotes normalized scores and <MathBlock formula={"\\alpha"} /> is tuned on a validation set (typically 0.5-0.7).
+</p>
+
+<p><strong>Reciprocal Rank Fusion (RRF)</strong>:</p>
+<MathBlock formula={"\\text{RRF}(d) = \\sum_{r \\in \\mathcal{R}} \\frac{1}{k + \\text{rank}_r(d)}"} display={true} />
+
+<p>In plain English: score each document by summing reciprocal rank contributions from each retriever. Documents ranked highly by multiple retrievers rise to the top without any need to normalize raw scores.</p>
+
+<p>
+  RRF is preferred when score distributions differ significantly between retrievers (which they typically do). It requires no score calibration and is robust to outliers.
+</p>
+
+<h2>Reranking: The Precision Stage</h2>
+
+<p>
+  Retrieval is a <em>recall-oriented</em> stage: cast a wide net. <strong>Reranking</strong> is a <em>precision-oriented</em> stage: from the retrieved candidates, select the most relevant.
+</p>
+
+<h3>Cross-Encoder Reranking</h3>
+
+<p>
+  A <strong>cross-encoder</strong> takes the query and a candidate document as a single input and outputs a relevance score:
+</p>
+
+<MathBlock formula={"\\text{relevance}(q, d) = \\sigma(W \\cdot \\text{BERT}([q; \\text{[SEP]}; d]) + b)"} display={true} />
+
+<p>In plain English: concatenate the query and document as a single input to BERT, allowing full cross-attention between their tokens, and produce a single relevance score via a sigmoid.</p>
+
+<p>
+  Unlike bi-encoders (which encode q and d independently), cross-encoders allow full cross-attention between query and document tokens. This enables fine-grained relevance assessment but is too slow for initial retrieval (O(N) per query).
+</p>
+
+<p><strong>The retrieve-then-rerank pattern</strong>:</p>
+<ol>
+  <li><strong>Retrieve</strong> top-100 candidates using fast bi-encoder or hybrid search (~5ms)</li>
+  <li><strong>Rerank</strong> the 100 candidates with a cross-encoder (~50-200ms)</li>
+  <li><strong>Select</strong> top-5 reranked results for the LLM prompt</li>
+</ol>
+
+<p>
+  Popular reranking models: Cohere Rerank, BGE-Reranker, cross-encoder/ms-marco-MiniLM-L-6-v2, Jina Reranker.
+</p>
+
+<h3>Late Interaction Models (ColBERT)</h3>
+
+<p>
+  <strong>ColBERT</strong> offers a middle ground between bi-encoders and cross-encoders:
+</p>
+
+<ol>
+  <li>Encode query and document independently (like a bi-encoder)</li>
+  <li>But retain <em>all</em> token embeddings, not just a single vector</li>
+  <li>Compute relevance via "MaxSim": for each query token, find its maximum similarity to any document token</li>
+</ol>
+
+<MathBlock formula={"\\text{ColBERT}(q, d) = \\sum_{i=1}^{|q|} \\max_{j=1}^{|d|} q_i^T d_j"} display={true} />
+
+<p>In plain English: for each query token, find the single most similar document token and take that similarity. Sum these best-match scores across all query tokens. This captures fine-grained, token-level relevance while still allowing precomputation of document embeddings.</p>
+
+<p>
+  <strong>Why ColBERT matters</strong>: Document token embeddings can be precomputed and indexed, making ColBERT orders of magnitude faster than cross-encoders while approaching their accuracy. The token-level interaction captures fine-grained relevance that single-vector bi-encoders miss.
+</p>
+
+<h2>Multi-Vector Retrieval</h2>
+
+<p>
+  Instead of a single embedding per chunk, store multiple embeddings to capture different aspects:
+</p>
+
+<ul>
+  <li><strong>Multi-vector per document</strong>: Embed the title, summary, and body separately. Retrieve if any vector matches well.</li>
+  <li><strong>Hypothetical Document Embeddings (HyDE)</strong>: Generate a hypothetical answer to the query, embed it, and use that for retrieval. The hypothesis is closer in embedding space to relevant documents than the question is.</li>
+  <li><strong>Proposition-based indexing</strong>: Decompose documents into atomic propositions (single facts) and embed each independently. Improves retrieval precision for fact-finding queries.</li>
+</ul>
+
+<h2>Practical Retrieval Pipeline Design</h2>
+
+<p>
+  A production retrieval pipeline typically has 3-4 stages:
+</p>
+
+<Diagram diagramId="retrieval-pipeline" title="Multi-Stage Retrieval Pipeline" autoplay={true} animationDuration={5000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-3" data-animate style="animation-delay: 0.3s">
+        <div class="w-24 text-xs text-right text-slate-500">Stage 1</div>
+        <div class="flex-1 p-3 bg-blue-50 rounded border border-blue-200">
+          <div class="font-semibold text-sm">Candidate Retrieval</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">BM25 + Dense retrieval -> ~100-200 candidates (~5ms)</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3" data-animate style="animation-delay: 1.5s">
+        <div class="w-24 text-xs text-right text-slate-500">Stage 2</div>
+        <div class="flex-1 p-3 bg-purple-50 rounded border border-purple-200">
+          <div class="font-semibold text-sm">Reranking</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">Cross-encoder or ColBERT reranks to top-20 (~100ms)</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3" data-animate style="animation-delay: 2.5s">
+        <div class="w-24 text-xs text-right text-slate-500">Stage 3</div>
+        <div class="flex-1 p-3 bg-amber-50 rounded border border-amber-200">
+          <div class="font-semibold text-sm">Context Selection</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">Relevance filtering + diversity sampling -> top-5 (~10ms)</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3" data-animate style="animation-delay: 3.5s">
+        <div class="w-24 text-xs text-right text-slate-500">Stage 4</div>
+        <div class="flex-1 p-3 bg-emerald-50 rounded border border-emerald-200">
+          <div class="font-semibold text-sm">Generation</div>
+          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">LLM generates answer from selected context (~500-2000ms)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<h3>Evaluation Metrics</h3>
+
+<p>
+  Measure retrieval quality independently of generation quality:
+</p>
+
+<ul>
+  <li><strong>Recall@k</strong>: Fraction of relevant documents in top-k results. Target: > 0.9 at k=20.</li>
+  <li><strong>MRR (Mean Reciprocal Rank)</strong>: Average of 1/rank of the first relevant result. Measures how quickly users find what they need.</li>
+  <li><strong>nDCG@k</strong>: Normalized Discounted Cumulative Gain. Accounts for graded relevance and position-dependent discount.</li>
+</ul>
+
+<MathBlock formula={"\\text{nDCG@k} = \\frac{\\text{DCG@k}}{\\text{IDCG@k}} = \\frac{\\sum_{i=1}^{k} \\frac{2^{\\text{rel}_i} - 1}{\\log_2(i+1)}}{\\text{IDCG@k}}"} display={true} />
+
+<p>In plain English: nDCG measures ranking quality by giving higher credit to relevant documents ranked near the top, normalized against the ideal (perfect) ranking so the score falls between 0 and 1.</p>
+
+<Quiz
+  question="You notice that your RAG system retrieves relevant documents but the LLM still gives wrong answers. The retrieved chunks contain the correct information but also include surrounding irrelevant text. What is the most impactful improvement?"
+  quizId="chunk-improvement"
+  options={[
+    {
+      id: "a",
+      text: "Switch to a more powerful LLM",
+      correct: false,
+      explanation: "A more powerful LLM might help, but the core problem is retrieval granularity, not model capability. The noise in chunks dilutes the useful signal."
+    },
+    {
+      id: "b",
+      text: "Implement parent-child chunking: retrieve on smaller child chunks but provide parent context",
+      correct: true,
+      explanation: "Correct! Parent-child chunking addresses this directly. Small child chunks produce precise embeddings that match the query well. The parent provides enough context for accurate generation without excessive noise. This is one of the highest-ROI RAG improvements."
+    },
+    {
+      id: "c",
+      text: "Increase the number of retrieved chunks from top-5 to top-20",
+      correct: false,
+      explanation: "Retrieving more chunks would actually make the problem worse by adding more irrelevant text. The issue is chunk quality, not quantity."
+    },
+    {
+      id: "d",
+      text: "Use a different embedding model",
+      correct: false,
+      explanation: "The embedding model is already finding relevant documents. The problem is that the chunks themselves contain too much irrelevant text alongside the relevant information."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Chunking strategy</strong> has outsized impact on RAG quality. Prefer recursive splitting or semantic chunking over fixed-size. Document-structure-aware chunking is best when document format is known.</li>
+    <li><strong>Parent-child chunking</strong> decouples retrieval precision (small child chunks) from generation context (large parent chunks)---one of the highest-impact RAG improvements</li>
+    <li><strong>Contextual retrieval</strong> prepends LLM-generated context to chunks before embedding, solving the problem of chunks that lack self-contained meaning</li>
+    <li><strong>Hybrid retrieval</strong> (dense + BM25) consistently outperforms either alone. Use Reciprocal Rank Fusion for robust score combination.</li>
+    <li><strong>Cross-encoder reranking</strong> dramatically improves precision by allowing full query-document interaction. The retrieve-then-rerank pattern is standard in production.</li>
+    <li><strong>ColBERT</strong> (late interaction) offers a middle ground: precomputable token embeddings with fine-grained matching, faster than cross-encoders with similar accuracy</li>
+  </ul>
+</KeyTakeaway>
+
+<h2>References</h2>
+
+<PaperReference
+  title="ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT"
+  authors="Khattab, Zaharia"
+  year="2020"
+  url="https://arxiv.org/abs/2004.12832"
+  type="paper"
+/>
+
+<PaperReference
+  title="Precise Zero-Shot Dense Retrieval without Relevance Labels (HyDE)"
+  authors="Gao et al."
+  year="2022"
+  url="https://arxiv.org/abs/2212.10496"
+  type="paper"
+/>
+
+<PaperReference
+  title="Dense Passage Retrieval for Open-Domain Question Answering (DPR)"
+  authors="Karpukhin et al."
+  year="2020"
+  url="https://arxiv.org/abs/2004.04906"
+  type="paper"
+/>
+
+<PaperReference
+  title="Introducing Contextual Retrieval"
+  authors="Anthropic"
+  year="2024"
+  url="https://www.anthropic.com/news/contextual-retrieval"
+  type="blog"
+/>
+
+<PaperReference
+  title="Text Splitting Strategies for Retrieval-Augmented Generation"
+  authors="LlamaIndex Documentation"
+  year="2024"
+  url="https://docs.llamaindex.ai/en/stable/optimizing/production_rag/"
+  type="docs"
+/>
+
+<PaperReference
+  title="Dense X Retrieval: What Retrieval Granularity Should We Use?"
+  authors="Chen et al."
+  year="2023"
+  url="https://arxiv.org/abs/2312.06648"
+  type="paper"
+/>

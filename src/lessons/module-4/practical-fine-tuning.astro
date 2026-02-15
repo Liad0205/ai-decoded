@@ -1,0 +1,473 @@
+---
+// Module 4, Lesson 4.4: Practical Fine-Tuning: From Dataset to Deployment
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+import Diagram from '../../components/Diagram.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Prepare and format datasets for instruction fine-tuning (chat templates, data quality, decontamination)</li>
+    <li>Select hyperparameters for LoRA/QLoRA fine-tuning with practical guidelines</li>
+    <li>Use modern fine-tuning tools: Hugging Face PEFT, TRL, and Unsloth</li>
+    <li>Evaluate fine-tuned models beyond loss: benchmarks, human evaluation, and task-specific metrics</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Dataset Preparation</h2>
+
+  <p>
+    The quality of your fine-tuning data matters far more than the quantity. A model fine-tuned on 1,000 high-quality examples consistently outperforms one trained on 100,000 noisy examples. The LIMA paper demonstrated that just 1,000 carefully curated instruction-response pairs can produce a strong instruction-following model.
+  </p>
+
+  <h3>Data Formats</h3>
+  <p>
+    Fine-tuning data typically follows one of these formats depending on the task:
+  </p>
+
+  <h4>Instruction Format (Single-Turn)</h4>
+  <pre class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto" set:html={`&#123;
+  "instruction": "Summarize the key findings of the paper.",
+  "input": "The study examined 500 patients...",
+  "output": "The paper found three main results: ..."
+&#125;`} />
+
+  <h4>Chat Format (Multi-Turn)</h4>
+  <pre class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto" set:html={`&#123;
+  "messages": [
+    &#123;"role": "system", "content": "You are a medical assistant."&#125;,
+    &#123;"role": "user", "content": "What are the symptoms of diabetes?"&#125;,
+    &#123;"role": "assistant", "content": "Common symptoms include..."&#125;,
+    &#123;"role": "user", "content": "How is it diagnosed?"&#125;,
+    &#123;"role": "assistant", "content": "Diagnosis typically involves..."&#125;
+  ]
+&#125;`} />
+
+  <h4>Chat Templates</h4>
+  <p>
+    Each model family uses its own special tokens to delimit roles. You must match the model's expected template exactly:
+  </p>
+  <pre class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto" set:html={`# LLaMA / Mistral chat template
+&lt;s&gt;[INST] &lt;&lt;SYS&gt;&gt;
+You are a helpful assistant.
+&lt;&lt;/SYS&gt;&gt;
+
+What is quantum computing? [/INST] Quantum computing uses
+quantum mechanical phenomena...&lt;/s&gt;
+
+# ChatML (used by many models)
+&lt;|im_start|&gt;system
+You are a helpful assistant.&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+What is quantum computing?&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`} />
+
+  <p>
+    Using the wrong template is one of the most common fine-tuning mistakes. Always check the model's tokenizer configuration or model card.
+  </p>
+
+  <h3>Data Quality Checklist</h3>
+  <ul>
+    <li><strong>Consistency</strong>: Outputs should follow a consistent style and format within your dataset</li>
+    <li><strong>Correctness</strong>: Every example should be factually accurate and well-formed</li>
+    <li><strong>Diversity</strong>: Cover the range of inputs the model will encounter in deployment</li>
+    <li><strong>Decontamination</strong>: Remove any overlap with evaluation benchmarks to avoid inflating scores</li>
+    <li><strong>Length balance</strong>: Avoid extreme length imbalances; very short responses teach the model to be terse</li>
+  </ul>
+
+  <h3>Loss Masking</h3>
+  <p>
+    During fine-tuning, you typically compute loss only on the <strong>assistant's response tokens</strong>, not on the instruction/input tokens. This is called <strong>loss masking</strong> or "train-on-completion-only":
+  </p>
+  <MathBlock formula={"\\mathcal{L} = -\\sum_{t \\in \\text{response}} \\log P(x_t | x_{<t})"} display={true} />
+  <p>
+    This is the standard autoregressive language modeling loss, but summed only over response token positions. For each response token <MathBlock formula="x_t" />, we maximize the log-probability of predicting it given all preceding tokens. Instruction tokens are excluded from the sum so the model focuses its learning capacity on generating good responses. Without masking, the model wastes capacity learning to predict the instruction (which it already knows how to process from pretraining).
+  </p>
+</section>
+
+<section>
+  <h2>Hyperparameter Selection</h2>
+
+  <p>
+    Fine-tuning hyperparameters require different defaults than pretraining. The model has already learned representations -- you are making targeted adjustments.
+  </p>
+
+  <RevealSection revealId="hyperparams" title="Practical Hyperparameter Guide">
+    <div data-reveal-step>
+      <h4>Learning Rate</h4>
+      <p>Fine-tuning learning rates are much lower than pretraining rates:</p>
+      <ul class="mt-2">
+        <li><strong>LoRA</strong>: <MathBlock formula={"1 \\times 10^{-4}"} /> to <MathBlock formula={"3 \\times 10^{-4}"} /> (typical starting point: <MathBlock formula={"2 \\times 10^{-4}"} />)</li>
+        <li><strong>Full fine-tuning</strong>: <MathBlock formula={"1 \\times 10^{-5}"} /> to <MathBlock formula={"5 \\times 10^{-5}"} /></li>
+      </ul>
+      <p class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]">LoRA can use higher learning rates because the low-rank constraint acts as an implicit regularizer.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>LoRA Rank and Alpha</h4>
+      <ul class="mt-2">
+        <li><strong>Rank (r)</strong>: Start with 8 or 16. Increase to 32-64 if the task is complex or performance plateaus.</li>
+        <li><strong>Alpha</strong>: Common choices are <MathBlock formula={"\\alpha = r"} /> (scaling = 1) or <MathBlock formula={"\\alpha = 2r"} /> (scaling = 2). Higher alpha means larger updates.</li>
+        <li><strong>Target modules</strong>: At minimum, apply to Q and V projections. For better results, apply to all linear layers (Q, K, V, O, up, down, gate).</li>
+      </ul>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Batch Size and Gradient Accumulation</h4>
+      <p>With limited GPU memory, use gradient accumulation to achieve larger effective batch sizes:</p>
+      <MathBlock formula={"\\text{Effective batch size} = \\text{micro batch} \\times \\text{gradient accumulation steps}"} display={true} />
+      <p>Gradient accumulation simulates a large batch by summing gradients over multiple small forward/backward passes before performing a single optimizer step. This lets you achieve stable training with large effective batch sizes even when GPU memory only fits a few examples at a time.</p>
+      <ul class="mt-2">
+        <li><strong>Micro batch size</strong>: 1-4 per GPU (limited by memory)</li>
+        <li><strong>Gradient accumulation</strong>: 4-16 steps (to reach effective batch size of 16-64)</li>
+      </ul>
+      <p class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]">Larger batch sizes give more stable gradients but fewer update steps per epoch.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Training Duration</h4>
+      <ul class="mt-2">
+        <li><strong>Epochs</strong>: 1-3 epochs is typical. More than 3 epochs often leads to overfitting, especially with small datasets.</li>
+        <li><strong>Warmup</strong>: 3-10% of total steps (helps stability in early training)</li>
+        <li><strong>Scheduler</strong>: Cosine annealing or linear decay to 0</li>
+      </ul>
+      <p class="mt-2 text-amber-700 dark:text-[hsl(var(--foreground))] font-medium">Watch for overfitting: if validation loss starts increasing while training loss keeps decreasing, stop training.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Other Important Settings</h4>
+      <ul class="mt-2">
+        <li><strong>Max sequence length</strong>: Match your data distribution. Longer sequences use more memory. Common: 512-2048 tokens.</li>
+        <li><strong>Weight decay</strong>: 0.0 to 0.01 (LoRA's low-rank constraint already regularizes)</li>
+        <li><strong>LoRA dropout</strong>: 0.0 to 0.1 (additional regularization if needed)</li>
+        <li><strong>Optimizer</strong>: AdamW with default betas or paged AdamW 8-bit for memory efficiency</li>
+      </ul>
+    </div>
+  </RevealSection>
+</section>
+
+<section>
+  <h2>Tools and Frameworks</h2>
+
+  <h3>Hugging Face PEFT + TRL</h3>
+  <p>
+    The <strong>PEFT</strong> (Parameter-Efficient Fine-Tuning) library provides LoRA, QLoRA, and other adapter implementations. <strong>TRL</strong> (Transformer Reinforcement Learning) adds supervised fine-tuning (SFTTrainer) and RLHF capabilities.
+  </p>
+
+  <pre class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto" set:html={`from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+from trl import SFTTrainer, SFTConfig
+
+# 4-bit quantization config (QLoRA)
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype="bfloat16",
+    bnb_4bit_use_double_quant=True,
+)
+
+# Load quantized model
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    quantization_config=bnb_config,
+)
+model = prepare_model_for_kbit_training(model)
+
+# Configure LoRA
+lora_config = LoraConfig(
+    r=16,
+    lora_alpha=32,
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    lora_dropout=0.05,
+    task_type="CAUSAL_LM",
+)
+
+# Train with SFTTrainer
+trainer = SFTTrainer(
+    model=model,
+    train_dataset=dataset,
+    peft_config=lora_config,
+    args=SFTConfig(
+        output_dir="./output",
+        per_device_train_batch_size=4,
+        gradient_accumulation_steps=4,
+        learning_rate=2e-4,
+        num_train_epochs=2,
+        warmup_ratio=0.05,
+        lr_scheduler_type="cosine",
+        bf16=True,
+    ),
+)
+trainer.train()`} />
+
+  <h3>Unsloth</h3>
+  <p>
+    <strong>Unsloth</strong> provides optimized kernels that make LoRA/QLoRA fine-tuning 2-5x faster than standard implementations, with 60-80% less memory usage. It achieves this through custom Triton kernels for the LoRA forward/backward pass and smart memory management.
+  </p>
+
+  <pre class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto" set:html={`from unsloth import FastLanguageModel
+
+# Load model with Unsloth optimizations
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name="unsloth/llama-2-7b-bnb-4bit",
+    max_seq_length=2048,
+    load_in_4bit=True,
+)
+
+# Add LoRA adapters
+model = FastLanguageModel.get_peft_model(
+    model,
+    r=16,
+    lora_alpha=32,
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                     "gate_proj", "up_proj", "down_proj"],
+    lora_dropout=0,
+)
+
+# Uses same SFTTrainer from TRL
+trainer = SFTTrainer(
+    model=model,
+    train_dataset=dataset,
+    # ... same config as above
+)
+trainer.train()`} />
+
+  <h3>Other Notable Tools</h3>
+  <ul>
+    <li><strong>Axolotl</strong>: YAML-config-driven fine-tuning framework supporting many methods and multi-GPU training</li>
+    <li><strong>LLaMA-Factory</strong>: Web UI for fine-tuning with 100+ model support and multiple PEFT methods</li>
+    <li><strong>torchtune</strong>: PyTorch-native fine-tuning library with full QLoRA support and multi-GPU recipes</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Evaluation: Beyond Training Loss</h2>
+
+  <p>
+    Training loss alone does not tell you if your fine-tuned model is actually better. A model can achieve low training loss while generating worse outputs (overfitting to the format rather than learning the task).
+  </p>
+
+  <h3>Evaluation Framework</h3>
+
+  <Diagram diagramId="eval-framework" title="Fine-Tuning Evaluation Pipeline" autoplay={true} animationDuration={3000}>
+    <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+      <div class="space-y-4">
+        <div class="flex items-center gap-3" data-animate style="animation-delay: 0.2s">
+          <div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+          <div class="flex-1 bg-indigo-50 p-3 rounded">
+            <div class="font-semibold text-sm">Training Metrics</div>
+            <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">Training loss, validation loss, learning rate curves</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3" data-animate style="animation-delay: 0.8s">
+          <div class="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+          <div class="flex-1 bg-purple-50 p-3 rounded">
+            <div class="font-semibold text-sm">Automated Benchmarks</div>
+            <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">MMLU, HellaSwag, HumanEval, domain-specific metrics</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3" data-animate style="animation-delay: 1.4s">
+          <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+          <div class="flex-1 bg-emerald-50 p-3 rounded">
+            <div class="font-semibold text-sm">Task-Specific Evaluation</div>
+            <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">Custom metrics for your use case (accuracy, F1, BLEU, ROUGE, etc.)</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3" data-animate style="animation-delay: 2.0s">
+          <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+          <div class="flex-1 bg-amber-50 p-3 rounded">
+            <div class="font-semibold text-sm">LLM-as-Judge / Human Evaluation</div>
+            <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">GPT-4 scoring, Chatbot Arena, human preference ratings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Diagram>
+
+  <h3>1. Training Metrics</h3>
+  <p>
+    Monitor training and validation loss curves. Key signals:
+  </p>
+  <ul>
+    <li><strong>Healthy training</strong>: Both losses decrease, validation loss stabilizes</li>
+    <li><strong>Overfitting</strong>: Training loss decreases but validation loss increases</li>
+    <li><strong>Underfitting</strong>: Both losses remain high -- increase rank, add more target modules, or train longer</li>
+  </ul>
+
+  <h3>2. Automated Benchmarks</h3>
+  <p>
+    Compare your model against standard benchmarks to check for <strong>catastrophic forgetting</strong>:
+  </p>
+  <ul>
+    <li><strong>MMLU</strong>: Tests broad knowledge across 57 subjects</li>
+    <li><strong>HellaSwag</strong>: Tests commonsense reasoning</li>
+    <li><strong>HumanEval</strong>: Tests code generation ability</li>
+  </ul>
+  <p>
+    If benchmark scores drop significantly after fine-tuning, you may be overwriting general capabilities.
+  </p>
+
+  <h3>3. Task-Specific Metrics</h3>
+  <p>
+    Design metrics specific to your use case:
+  </p>
+  <ul>
+    <li><strong>Classification</strong>: Accuracy, F1, precision/recall</li>
+    <li><strong>Summarization</strong>: ROUGE-L, BERTScore</li>
+    <li><strong>Translation</strong>: BLEU, chrF++</li>
+    <li><strong>Code generation</strong>: pass@k (percentage of generated solutions that pass test cases)</li>
+    <li><strong>Information extraction</strong>: Exact match, entity F1</li>
+  </ul>
+
+  <h3>4. LLM-as-Judge</h3>
+  <p>
+    For open-ended generation, automated metrics are insufficient. Using a strong LLM (GPT-4, Claude) to evaluate outputs on criteria like helpfulness, accuracy, and safety has become standard practice. The key is writing detailed rubrics and using pairwise comparisons (base model vs. fine-tuned).
+  </p>
+</section>
+
+<section>
+  <h2>Common Pitfalls</h2>
+
+  <RevealSection revealId="pitfalls" title="Fine-Tuning Mistakes and How to Avoid Them">
+    <div data-reveal-step>
+      <h4>1. Wrong Chat Template</h4>
+      <p>Using the wrong special tokens causes garbled outputs. Always verify the template against the model card and test with a few manual examples before training.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>2. Not Masking Loss on Instructions</h4>
+      <p>Computing loss on instruction tokens wastes model capacity learning to predict prompts. Always use completion-only loss masking in SFTTrainer.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>3. Training Too Long</h4>
+      <p>Overfitting often manifests as the model producing repetitive or overly templated responses. With small datasets (under 10K examples), 1-2 epochs is usually sufficient.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>4. Not Evaluating on Held-Out Data</h4>
+      <p>Always hold out 5-10% of your data for validation. Without this, you cannot detect overfitting until deployment.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">
+        Next →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>5. Ignoring Data Quality</h4>
+      <p>Noisy, inconsistent, or incorrect data is the number one cause of poor fine-tuning results. Invest time in data curation before hyperparameter tuning. The LIMA principle: <strong>quality over quantity</strong>.</p>
+    </div>
+  </RevealSection>
+</section>
+
+<Quiz
+  question="You fine-tune a medical QA model with LoRA (r=8) for 5 epochs on 2,000 examples. Validation loss stopped improving after epoch 2 and started increasing. What should you try first?"
+  quizId="practical-finetune"
+  options={[
+    {
+      id: "a",
+      text: "Increase the LoRA rank to r=64 for more capacity",
+      correct: false,
+      explanation: "The model is overfitting (validation loss increasing), meaning it has too much capacity relative to the data, not too little. Increasing rank would make overfitting worse."
+    },
+    {
+      id: "b",
+      text: "Reduce training to 2 epochs and/or add more training data",
+      correct: true,
+      explanation: "Correct! The validation loss divergence at epoch 2 is a clear overfitting signal. Stop at the best checkpoint (epoch 2). If you need better performance, the best investment is usually more high-quality training data."
+    },
+    {
+      id: "c",
+      text: "Increase the learning rate to converge faster",
+      correct: false,
+      explanation: "A higher learning rate would make overfitting worse and could also destabilize training. The model is already converging too quickly."
+    },
+    {
+      id: "d",
+      text: "Switch to full fine-tuning for better expressiveness",
+      correct: false,
+      explanation: "Full fine-tuning has even more parameters to overfit. With only 2,000 examples, PEFT methods are strongly preferred."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Data quality over quantity</strong>: 1,000 curated examples can outperform 100,000 noisy ones (the LIMA principle)</li>
+    <li><strong>Match the chat template</strong> exactly -- wrong special tokens cause garbled outputs and are the most common fine-tuning mistake</li>
+    <li><strong>Use loss masking</strong>: compute loss only on response tokens, not on instructions</li>
+    <li><strong>Key hyperparameters</strong>: LR ~2e-4 for LoRA, rank 8-16, 1-3 epochs, cosine scheduler</li>
+    <li><strong>Evaluate holistically</strong>: training loss alone is insufficient; use benchmarks (check for forgetting), task-specific metrics, and LLM-as-judge for open-ended generation</li>
+    <li><strong>Modern tools</strong>: PEFT + TRL for standard workflows, Unsloth for 2-5x speedups, Axolotl for config-driven training</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="LIMA: Less Is More for Alignment"
+    authors="Zhou, Liu, Xu, Iyer, Sun, et al."
+    year="2023"
+    url="https://arxiv.org/abs/2305.11206"
+    type="paper"
+  />
+
+  <PaperReference
+    title="QLoRA: Efficient Finetuning of Quantized LLMs"
+    authors="Dettmers, Pagnoni, Holtzman, Zettlemoyer"
+    year="2023"
+    url="https://arxiv.org/abs/2305.14314"
+    type="paper"
+  />
+
+  <PaperReference
+    title="LoRA: Low-Rank Adaptation of Large Language Models"
+    authors="Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, Chen"
+    year="2021"
+    url="https://arxiv.org/abs/2106.09685"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Hugging Face PEFT Documentation"
+    authors="Hugging Face"
+    year="2024"
+    url="https://huggingface.co/docs/peft"
+    type="docs"
+  />
+
+  <PaperReference
+    title="Unsloth: Fine-tune LLMs 2-5x faster"
+    authors="Unsloth AI"
+    year="2024"
+    url="https://github.com/unslothai/unsloth"
+    type="docs"
+  />
+</section>

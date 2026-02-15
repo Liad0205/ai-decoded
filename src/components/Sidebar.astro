@@ -1,0 +1,347 @@
+---
+// Clean, Professional Sidebar - responsive with collapse support
+import { Icon } from './Icon';
+import LucideIcon from './LucideIcon.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { modules } from '../content/modules';
+
+interface Props {
+  currentModuleSlug?: string;
+  currentLessonSlug?: string;
+}
+
+const { currentModuleSlug, currentLessonSlug } = Astro.props;
+---
+
+<aside
+  class="sidebar w-80 h-screen overflow-y-auto custom-scrollbar bg-white dark:bg-[hsl(var(--card))] border-r border-[hsl(var(--border))]"
+  data-sidebar
+  data-base-url={import.meta.env.BASE_URL}
+>
+  <!-- Header -->
+  <div class="p-5 border-b border-[hsl(var(--border))] bg-gradient-to-br from-slate-50 dark:from-[hsl(var(--muted))] to-white dark:to-[hsl(var(--card))]">
+    <div class="flex items-center justify-between">
+      <a href={import.meta.env.BASE_URL} class="block group flex-1 min-w-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--primary))]/70 flex items-center justify-center shrink-0">
+            <Icon name="GraduationCap" className="w-5 h-5 text-white" client:load />
+          </div>
+          <h1 class="text-base font-bold text-[hsl(var(--foreground))] group-hover:text-[hsl(var(--primary))] transition-colors truncate">AI Decoded</h1>
+        </div>
+      </a>
+      <div class="flex items-center gap-1 shrink-0 ml-2">
+        <ThemeToggle />
+        <!-- Close: mobile only -->
+        <button
+          type="button"
+          class="lg:hidden p-1.5 rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))] transition-colors"
+          data-sidebar-close
+          aria-label="Close sidebar"
+        >
+          <LucideIcon name="X" size={18} />
+        </button>
+        <!-- Collapse: desktop only -->
+        <button
+          type="button"
+          class="hidden lg:flex p-1.5 rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))] transition-colors"
+          data-sidebar-collapse
+          aria-label="Collapse sidebar"
+        >
+          <LucideIcon name="PanelLeftClose" size={18} />
+        </button>
+      </div>
+    </div>
+
+    <!-- Overall Progress -->
+    <div class="mt-3 p-3 bg-white dark:bg-[hsl(var(--card))] rounded-lg border border-[hsl(var(--border))]" data-overall-progress>
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-[hsl(var(--muted-foreground))]">Course Progress</span>
+        <span class="text-xs font-bold text-[hsl(var(--primary))]" data-overall-percentage>0%</span>
+      </div>
+      <div class="h-2 bg-[hsl(var(--muted))] rounded-full overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))]/70 rounded-full transition-all duration-500" style="width: 0%" data-overall-bar></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module Navigation -->
+  <nav class="p-4 space-y-2">
+    {modules.map(module => {
+      const isCurrentModule = module.slug === currentModuleSlug;
+
+      return (
+        <div class="module-item" data-module-id={module.id} data-module-slug={module.slug}>
+          <!-- Module Header -->
+          <button
+            type="button"
+            class="module-toggle w-full text-left p-3 rounded-lg hover:bg-[hsl(var(--muted))] transition-colors group"
+            data-module-toggle
+          >
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-[hsl(var(--muted))] flex items-center justify-center text-sm font-semibold text-[hsl(var(--muted-foreground))] group-hover:bg-[hsl(var(--primary))] group-hover:text-white transition-colors">
+                  {module.number}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-semibold text-[hsl(var(--foreground))] leading-tight truncate">
+                    {module.title}
+                  </div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <div class="flex-1 h-1 bg-[hsl(var(--muted))] rounded-full overflow-hidden">
+                      <div
+                        class="h-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))]/70 rounded-full transition-all duration-500"
+                        style="width: 0%"
+                        data-module-progress-bar
+                      ></div>
+                    </div>
+                    <span class="text-xs text-[hsl(var(--muted-foreground))] font-medium" data-module-progress-text>0%</span>
+                  </div>
+                </div>
+              </div>
+              <Icon
+                name="ChevronDown"
+                className="w-4 h-4 text-[hsl(var(--muted-foreground))] transition-transform module-chevron flex-shrink-0"
+                client:load
+              />
+            </div>
+          </button>
+
+          <!-- Lessons List (Collapsible) -->
+          <div class={`module-lessons mt-1 space-y-1 ${isCurrentModule ? '' : 'hidden'}`} data-module-lessons>
+            {module.lessons.map((lesson, index) => {
+              const isCurrentLesson = isCurrentModule && lesson.slug === currentLessonSlug;
+
+              return (
+                <a
+                  href={`${import.meta.env.BASE_URL}${module.slug}/${lesson.slug}`}
+                  class={`
+                    flex items-center gap-3 py-2.5 px-3 ml-11 rounded-lg text-sm transition-all
+                    ${isCurrentLesson
+                      ? 'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] font-medium border-l-2 border-[hsl(var(--primary))]'
+                      : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]'
+                    }
+                  `}
+                  data-lesson-link
+                  data-module-id={module.id}
+                  data-lesson-id={lesson.id}
+                >
+                  <span class="flex-1 leading-snug">
+                    {index + 1}. {lesson.title}
+                  </span>
+                  <Icon
+                    name="CircleCheck"
+                    className="w-4 h-4 text-green-500 hidden lesson-check"
+                    data-lesson-check
+                    client:load
+                  />
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      );
+    })}
+  </nav>
+</aside>
+
+<style>
+  .module-item[data-expanded="true"] .module-chevron {
+    transform: rotate(180deg);
+  }
+
+  .module-item[data-expanded="true"] .module-lessons {
+    display: block;
+  }
+
+  /* Mobile: fixed overlay, hidden off-screen */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    flex-shrink: 0;
+    translate: -100% 0;
+    transition: translate 300ms ease, opacity 300ms ease, margin 300ms ease;
+  }
+
+  /* Mobile: visible when data-open is set */
+  .sidebar[data-open] {
+    translate: 0 0;
+  }
+
+  /* Desktop: sticky in flex flow, always visible */
+  @media (min-width: 1024px) {
+    .sidebar {
+      position: sticky;
+      top: 0;
+      bottom: auto;
+      left: auto;
+      z-index: auto;
+      translate: 0 0;
+      width: 20rem;
+      min-width: 20rem;
+      transition: width 300ms ease, min-width 300ms ease, opacity 300ms ease;
+    }
+
+    .sidebar[data-collapsed] {
+      width: 0;
+      min-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+</style>
+
+<script>
+  import { getProgress, getModuleProgress, getCourseProgress } from '../scripts/progress';
+  import { modules, getTotalLessons } from '../content/modules';
+
+  if (typeof document !== 'undefined') {
+    const totalLessons = getTotalLessons();
+
+    // ── Sidebar open/close/collapse ──
+    const sidebar = document.querySelector<HTMLElement>('[data-sidebar]');
+    const backdrop = document.querySelector<HTMLElement>('[data-sidebar-backdrop]');
+    const openBtns = document.querySelectorAll<HTMLElement>('[data-sidebar-open]');
+    const closeBtn = document.querySelector<HTMLElement>('[data-sidebar-close]');
+    const collapseBtn = document.querySelector<HTMLElement>('[data-sidebar-collapse]');
+
+    function openSidebar() {
+      sidebar?.setAttribute('data-open', '');
+      backdrop?.classList.remove('opacity-0', 'pointer-events-none');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar?.removeAttribute('data-open');
+      backdrop?.classList.add('opacity-0', 'pointer-events-none');
+      document.body.style.overflow = '';
+    }
+
+    function toggleDesktopCollapse() {
+      if (!sidebar) return;
+      const isCollapsed = sidebar.hasAttribute('data-collapsed');
+      if (isCollapsed) {
+        sidebar.removeAttribute('data-collapsed');
+        openBtns.forEach(btn => btn.removeAttribute('data-show-desktop'));
+      } else {
+        sidebar.setAttribute('data-collapsed', '');
+        openBtns.forEach(btn => btn.setAttribute('data-show-desktop', ''));
+      }
+    }
+
+    // Mobile: open / close
+    openBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // If on desktop (collapsed), toggle collapse instead of opening overlay
+        if (window.innerWidth >= 1024 && sidebar?.hasAttribute('data-collapsed')) {
+          toggleDesktopCollapse();
+        } else {
+          openSidebar();
+        }
+      });
+    });
+    closeBtn?.addEventListener('click', closeSidebar);
+    backdrop?.addEventListener('click', closeSidebar);
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSidebar();
+    });
+
+    // Desktop: collapse
+    collapseBtn?.addEventListener('click', toggleDesktopCollapse);
+
+    // ── Module toggle ──
+    function initModuleToggles() {
+      const moduleItems = document.querySelectorAll('.module-item');
+
+      moduleItems.forEach(item => {
+        const toggle = item.querySelector('[data-module-toggle]');
+        const lessons = item.querySelector('[data-module-lessons]');
+        const moduleSlug = item.getAttribute('data-module-slug');
+
+        // Set initial state (expanded if current module)
+        const baseUrl = sidebar?.getAttribute('data-base-url') || '/';
+        const currentPath = window.location.pathname.replace(baseUrl, '/');
+        const isCurrentModule = currentPath.includes(`/${moduleSlug}/`);
+
+        if (isCurrentModule) {
+          item.setAttribute('data-expanded', 'true');
+          lessons?.classList.remove('hidden');
+        }
+
+        toggle?.addEventListener('click', () => {
+          const isExpanded = item.getAttribute('data-expanded') === 'true';
+
+          if (isExpanded) {
+            item.setAttribute('data-expanded', 'false');
+            lessons?.classList.add('hidden');
+          } else {
+            item.setAttribute('data-expanded', 'true');
+            lessons?.classList.remove('hidden');
+          }
+        });
+      });
+    }
+
+    // ── Progress tracking ──
+    function updateSidebar() {
+      const progress = getProgress();
+
+      // Update lesson checkmarks
+      const lessonLinks = document.querySelectorAll('[data-lesson-link]');
+      lessonLinks.forEach(link => {
+        const moduleId = link.getAttribute('data-module-id');
+        const lessonId = link.getAttribute('data-lesson-id');
+        const check = link.querySelector('[data-lesson-check]');
+
+        if (check && moduleId && lessonId) {
+          const completed = progress.some(
+            p => p.moduleId === moduleId && p.lessonId === lessonId && p.completed
+          );
+
+          if (completed) {
+            check.classList.remove('hidden');
+          } else {
+            check.classList.add('hidden');
+          }
+        }
+      });
+
+      // Update module progress bars
+      modules.forEach(module => {
+        const moduleItem = document.querySelector(`[data-module-id="${module.id}"]`);
+        if (moduleItem) {
+          const progressBar = moduleItem.querySelector('[data-module-progress-bar]') as HTMLElement;
+          const progressText = moduleItem.querySelector('[data-module-progress-text]');
+
+          if (progressBar && progressText) {
+            const percentage = getModuleProgress(module.id, module.lessons.length);
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}%`;
+          }
+        }
+      });
+
+      // Update overall progress
+      const overallBar = document.querySelector('[data-overall-bar]') as HTMLElement;
+      const overallPercentage = document.querySelector('[data-overall-percentage]');
+
+      if (overallBar && overallPercentage) {
+        const coursePercentage = getCourseProgress(totalLessons);
+        overallBar.style.width = `${coursePercentage}%`;
+        overallPercentage.textContent = `${coursePercentage}%`;
+      }
+    }
+
+    // Initialize
+    initModuleToggles();
+    updateSidebar();
+
+    // Update when progress changes
+    window.addEventListener('progressUpdated', updateSidebar);
+  }
+</script>

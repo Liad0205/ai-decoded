@@ -1,0 +1,347 @@
+---
+// Module 4, Lesson 4.2: LoRA: Low-Rank Adaptation of Large Language Models
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Quiz from '../../components/Quiz.astro';
+import RevealSection from '../../components/RevealSection.astro';
+import Diagram from '../../components/Diagram.astro';
+---
+
+<section>
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand the low-rank hypothesis: why weight updates during fine-tuning occupy a low-dimensional subspace</li>
+    <li>Derive the LoRA reparameterization <MathBlock formula="W' = W + BA" /> from first principles</li>
+    <li>Analyze rank selection and its impact on model capacity and efficiency</li>
+    <li>Understand how LoRA adapters can be merged into base weights for zero-overhead inference</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The Low-Rank Hypothesis</h2>
+
+  <p>
+    The key insight behind LoRA comes from an empirical observation: <strong>the weight changes during fine-tuning have low intrinsic rank</strong>. In other words, the difference between pretrained weights and fine-tuned weights, <MathBlock formula={"\\Delta W = W_{\\text{fine-tuned}} - W_{\\text{pretrained}}"} />, can be well-approximated by a low-rank matrix.
+  </p>
+
+  <p>
+    This is remarkable. A weight matrix in a 7B model might have dimensions <MathBlock formula={"4096 \\times 4096"} /> with rank up to 4096. But the <em>change</em> needed for task adaptation might have an effective rank of just 4, 8, or 16.
+  </p>
+
+  <h3>Why Low Rank?</h3>
+  <p>
+    Pretrained models already encode rich representations. Fine-tuning for a specific task only needs to make a small, structured adjustment -- like rotating the representation space slightly to align with task-specific features. Such structured adjustments naturally have low rank.
+  </p>
+
+  <p>
+    Aghajanyan et al. (2020) formalized this as <strong>intrinsic dimensionality</strong>: the minimum number of parameters needed to reach 90% of full fine-tuning performance. For many NLP tasks, this intrinsic dimensionality is orders of magnitude smaller than the full parameter count.
+  </p>
+</section>
+
+<section>
+  <h2>LoRA: The Core Idea</h2>
+
+  <p>
+    Instead of learning <MathBlock formula={"\\Delta W \\in \\mathbb{R}^{d \\times d}"} /> directly (which has <MathBlock formula="d^2" /> parameters), LoRA decomposes it into two smaller matrices:
+  </p>
+
+  <MathBlock formula={"\\Delta W = BA"} display={true} />
+
+  <p>
+    where <MathBlock formula={"B \\in \\mathbb{R}^{d \\times r}"} /> and <MathBlock formula={"A \\in \\mathbb{R}^{r \\times d}"} />, with rank <MathBlock formula={"r \\ll d"} />.
+  </p>
+
+  <p>
+    In plain English: instead of updating the full weight matrix (which can have millions of parameters), LoRA decomposes the update into two small matrices whose product approximates the full update. The rank <MathBlock formula="r" /> controls the expressiveness vs. efficiency tradeoff -- a rank-16 decomposition of a 4096 x 4096 matrix replaces 16.7M parameters with just 131K.
+  </p>
+
+  <p>
+    To put the savings in concrete terms: for a weight matrix of size 4096 x 4096 (16.7M parameters), a rank-16 LoRA adapter uses only 4096 x 16 + 16 x 4096 = 131K parameters -- less than 1% of the original. Across all attention layers in a 7B model, this typically means training ~10M parameters instead of 7B.
+  </p>
+
+  <p>
+    The modified forward pass becomes:
+  </p>
+
+  <MathBlock formula={"h = W'x = Wx + \\Delta Wx = Wx + BAx"} display={true} />
+  <p>
+    That is, the output is the original pretrained computation <MathBlock formula="Wx" /> plus a low-rank correction <MathBlock formula="BAx" />. The base weights <MathBlock formula="W" /> stay frozen -- only <MathBlock formula="B" /> and <MathBlock formula="A" /> are trained.
+  </p>
+
+  <Diagram diagramId="lora-decomposition" title="LoRA Weight Decomposition" autoplay={true} animationDuration={4000}>
+    <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+      <div class="flex items-center justify-center gap-4 flex-wrap">
+        <!-- Original weight -->
+        <div class="flex flex-col items-center" data-animate style="animation-delay: 0.2s">
+          <div class="w-24 h-24 bg-slate-200 border-2 border-slate-400 rounded flex items-center justify-center">
+            <span class="text-sm font-mono font-bold">W</span>
+          </div>
+          <span class="text-xs mt-1 text-slate-600">d x d</span>
+          <span class="text-xs text-slate-400">frozen</span>
+        </div>
+
+        <div class="text-2xl font-bold text-slate-400" data-animate style="animation-delay: 0.5s">+</div>
+
+        <!-- B matrix -->
+        <div class="flex flex-col items-center" data-animate style="animation-delay: 1.0s">
+          <div class="w-8 h-24 bg-indigo-400 border-2 border-indigo-600 rounded flex items-center justify-center">
+            <span class="text-xs font-mono font-bold text-white">B</span>
+          </div>
+          <span class="text-xs mt-1 text-indigo-600">d x r</span>
+          <span class="text-xs text-indigo-400">trainable</span>
+        </div>
+
+        <div class="text-lg font-bold text-slate-400" data-animate style="animation-delay: 1.2s">x</div>
+
+        <!-- A matrix -->
+        <div class="flex flex-col items-center" data-animate style="animation-delay: 1.4s">
+          <div class="w-24 h-8 bg-emerald-400 border-2 border-emerald-600 rounded flex items-center justify-center">
+            <span class="text-xs font-mono font-bold text-white">A</span>
+          </div>
+          <span class="text-xs mt-1 text-emerald-600">r x d</span>
+          <span class="text-xs text-emerald-400">trainable</span>
+        </div>
+
+        <div class="text-2xl font-bold text-slate-400" data-animate style="animation-delay: 1.6s">=</div>
+
+        <!-- Result -->
+        <div class="flex flex-col items-center" data-animate style="animation-delay: 2.0s">
+          <div class="w-24 h-24 bg-purple-200 border-2 border-purple-400 rounded flex items-center justify-center">
+            <span class="text-sm font-mono font-bold">W'</span>
+          </div>
+          <span class="text-xs mt-1 text-purple-600">d x d</span>
+          <span class="text-xs text-purple-400">adapted</span>
+        </div>
+      </div>
+
+      <div class="mt-4 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center" data-animate style="animation-delay: 3.0s">
+        With d=4096 and r=8: trainable params = 2 x 4096 x 8 = 65,536 vs. 16,777,216 for full matrix (0.4%)
+      </div>
+    </div>
+  </Diagram>
+
+  <h3>Parameter Savings</h3>
+  <p>
+    The number of trainable parameters in the LoRA decomposition:
+  </p>
+  <div class="equation-with-label">
+    <MathBlock formula={"\\text{LoRA params} = d \\times r + r \\times d = 2dr"} display={true} />
+    <div class="text-sm font-medium text-slate-700">Trainable parameters</div>
+  </div>
+  <p>
+    In other words, you only train two thin matrices (one tall, one wide), each with <MathBlock formula="d \times r" /> entries. Compared to the full matrix:
+  </p>
+  <div class="equation-with-label">
+    <MathBlock formula={"\\text{Ratio} = \\frac{2dr}{d^2} = \\frac{2r}{d}"} display={true} />
+    <div class="text-sm font-medium text-slate-700">Parameter efficiency ratio</div>
+  </div>
+  <p>
+    This ratio tells you what fraction of the original parameters you actually train. It scales linearly with rank and inversely with dimension -- so larger models get even better efficiency from LoRA.
+  </p>
+  <p>
+    For <MathBlock formula="d = 4096" /> and <MathBlock formula="r = 8" />: ratio = <MathBlock formula={"2 \\times 8 / 4096 = 0.004"} />, meaning <strong>only 0.4% of the parameters per adapted matrix</strong>.
+  </p>
+</section>
+
+<section>
+  <h2>Full LoRA Derivation</h2>
+
+  <RevealSection revealId="lora-derivation" title="Step-by-Step LoRA Math">
+    <div data-reveal-step>
+      <h4>Step 1: The Standard Linear Layer</h4>
+      <p>A pretrained linear layer computes:</p>
+      <MathBlock formula="h = Wx" display={true} />
+      <p>where <MathBlock formula={"W \\in \\mathbb{R}^{d_{\\text{out}} \\times d_{\\text{in}}}"} /> and <MathBlock formula={"x \\in \\mathbb{R}^{d_{\\text{in}}}"} />. During full fine-tuning, we learn <MathBlock formula={"W + \\Delta W"} />.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 2: Low-Rank Constraint</h4>
+      <p>LoRA constrains <MathBlock formula={"\\Delta W"} /> to have rank at most <MathBlock formula="r" />:</p>
+      <MathBlock formula={"\\Delta W = BA, \\quad B \\in \\mathbb{R}^{d_{\\text{out}} \\times r}, \\quad A \\in \\mathbb{R}^{r \\times d_{\\text{in}}}"} display={true} />
+      <p>This is equivalent to a bottleneck: input is projected down to dimension <MathBlock formula="r" /> by <MathBlock formula="A" />, then projected back up by <MathBlock formula="B" />.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 3: Initialization</h4>
+      <p>At the start of fine-tuning, <MathBlock formula={"\\Delta W"} /> should be zero (so the model starts from pretrained behavior):</p>
+      <MathBlock formula={"A \\sim \\mathcal{N}(0, \\sigma^2), \\quad B = 0"} display={true} />
+      <p><MathBlock formula="B" /> is initialized to zero so that <MathBlock formula="BA = 0" /> at initialization. <MathBlock formula="A" /> uses a random Gaussian initialization (like Kaiming).</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 4: Scaling Factor</h4>
+      <p>LoRA introduces a scaling constant <MathBlock formula={"\\alpha"} /> to control the magnitude of the adaptation. Without it, doubling the rank would roughly double the update magnitude, making hyperparameter tuning rank-dependent. Let's make this precise:</p>
+      <MathBlock formula={"h = Wx + \\frac{\\alpha}{r} BAx"} display={true} />
+      <p>The output is the frozen pretrained result plus a scaled low-rank correction. The factor <MathBlock formula={"\\alpha / r"} /> normalizes the update so its magnitude stays roughly constant when changing rank -- think of it like a learning rate specific to the LoRA path. Typical default: <MathBlock formula={"\\alpha = r"} /> (so the scaling is 1) or <MathBlock formula={"\\alpha = 2r"} />.</p>
+      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">
+        Next Step →
+      </button>
+    </div>
+
+    <div data-reveal-step>
+      <h4>Step 5: Which Matrices to Adapt?</h4>
+      <p>LoRA can be applied to any linear layer. In practice, the attention projection matrices are the primary targets:</p>
+      <ul class="mt-2 space-y-1">
+        <li><MathBlock formula="W_Q" /> and <MathBlock formula="W_V" /> -- the original LoRA paper's recommendation</li>
+        <li><MathBlock formula="W_Q, W_K, W_V, W_O" /> -- all attention projections (common in practice)</li>
+        <li>MLP layers (<MathBlock formula={"W_{\\text{up}}, W_{\\text{down}}, W_{\\text{gate}}"} />) -- sometimes included for higher capacity</li>
+      </ul>
+      <p class="mt-2 text-emerald-700 dark:text-[hsl(var(--foreground))] font-medium">More target matrices = more trainable parameters but also more capacity for complex adaptations.</p>
+    </div>
+  </RevealSection>
+</section>
+
+<section>
+  <h2>Rank Selection: The Key Hyperparameter</h2>
+
+  <p>
+    The rank <MathBlock formula="r" /> is the most important LoRA hyperparameter. It controls the expressiveness vs. efficiency tradeoff:
+  </p>
+
+  <ul>
+    <li><strong>r = 1-4</strong>: Ultra-efficient. Good for simple classification tasks where the adaptation is a small rotation of the representation space.</li>
+    <li><strong>r = 8-16</strong>: The sweet spot for most instruction-tuning and domain adaptation tasks. Captures enough task structure with minimal overhead.</li>
+    <li><strong>r = 32-64</strong>: Higher capacity. Useful for complex tasks (e.g., multilingual adaptation, significant domain shifts like code-to-medical).</li>
+    <li><strong>r = 128+</strong>: Approaches full fine-tuning expressiveness. Diminishing returns -- at this point, consider whether full fine-tuning is warranted.</li>
+  </ul>
+
+  <p>
+    The original LoRA paper found that <strong>rank 4 already captures most of the task-specific signal</strong> for many NLP benchmarks, with diminishing returns beyond rank 8. This confirms the low-rank hypothesis.
+  </p>
+
+  <h3>Memory Savings with LoRA</h3>
+  <p>
+    Because only <MathBlock formula="B" /> and <MathBlock formula="A" /> are trained, the optimizer states and gradients are dramatically reduced:
+  </p>
+  <div class="equation-with-label">
+    <MathBlock formula={"\\text{LoRA trainable params} = 2 \\times r \\times d \\times \\text{(number of adapted layers)}"} display={true} />
+    <div class="text-sm font-medium text-slate-700">Total trainable parameters</div>
+  </div>
+  <p>
+    Each adapted layer contributes two matrices (B and A), each with <MathBlock formula="r \times d" /> entries. The total across the model is simply this per-layer count times the number of layers you apply LoRA to.
+  </p>
+  <p>
+    For LLaMA-2 7B with <MathBlock formula="r = 8" /> applied to all attention projections (Q, K, V, O across 32 layers):
+  </p>
+  <div class="equation-with-label">
+    <MathBlock formula={"\\text{Trainable} = 2 \\times 8 \\times 4096 \\times 4 \\times 32 = 8{,}388{,}608 \\approx 8.4\\text{M params}"} display={true} />
+    <div class="text-sm font-medium text-slate-700">LLaMA-2 7B calculation</div>
+  </div>
+  <p>
+    That is 2 (matrices per layer) x 8 (rank) x 4096 (hidden dim) x 4 (Q, K, V, O projections) x 32 (transformer layers) = 8.4M trainable parameters. This is <strong>0.12% of the 6.74B total parameters</strong>. The optimizer states for 8.4M params in FP32 require only ~67 MB instead of ~54 GB.
+  </p>
+</section>
+
+<section>
+  <h2>Merging: Zero-Overhead Inference</h2>
+
+  <p>
+    One of LoRA's most elegant properties: <strong>adapters can be merged back into the base weights at inference time</strong>. Since the forward pass computes:
+  </p>
+  <MathBlock formula="h = Wx + BAx = (W + BA)x" display={true} />
+  <p>
+    By the distributive property, the base computation plus the LoRA correction can be factored into a single matrix multiply. We can precompute <MathBlock formula="W' = W + BA" /> and replace <MathBlock formula="W" /> entirely. The result:
+  </p>
+
+  <ul>
+    <li><strong>No extra latency</strong>: The merged model has the exact same architecture and inference speed as the base model</li>
+    <li><strong>No extra memory</strong>: No adapter matrices need to be stored at inference time</li>
+    <li><strong>Easy deployment</strong>: Swap adapters by loading different <MathBlock formula="B, A" /> matrices (each only a few MB) and remerging</li>
+  </ul>
+
+  <p>
+    For <strong>multi-task serving</strong>, you can keep the base model in GPU memory and swap lightweight LoRA adapters per request. This is far more efficient than loading separate full models.
+  </p>
+
+  <h3>Unmerging for Continued Training</h3>
+  <p>
+    If you need to continue fine-tuning, you can "unmerge" by subtracting: <MathBlock formula="W = W' - BA" />. This allows iterative refinement of adapters without retraining from scratch.
+  </p>
+</section>
+
+<Quiz
+  question="If a weight matrix W has dimensions 4096 x 4096 and you apply LoRA with rank r=16, how many trainable parameters does the LoRA adapter add for this single matrix?"
+  quizId="lora-params"
+  options={[
+    {
+      id: "a",
+      text: "65,536 (4096 x 16)",
+      correct: false,
+      explanation: "This is only one of the two matrices. LoRA uses both A (r x d) and B (d x r)."
+    },
+    {
+      id: "b",
+      text: "131,072 (2 x 4096 x 16)",
+      correct: true,
+      explanation: "Correct! LoRA adds B (4096 x 16) and A (16 x 4096), totaling 2 x 4096 x 16 = 131,072 parameters. This is only 0.78% of the original 16,777,216 parameters in W."
+    },
+    {
+      id: "c",
+      text: "256 (16 x 16)",
+      correct: false,
+      explanation: "This would be the size of the bottleneck layer itself. LoRA projects from the full dimension d to rank r and back."
+    },
+    {
+      id: "d",
+      text: "16,777,216 (4096 x 4096)",
+      correct: false,
+      explanation: "That's the full weight matrix size. LoRA's entire point is to avoid training all these parameters."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>The low-rank hypothesis</strong>: weight changes during fine-tuning occupy a low-dimensional subspace, often rank 4-16 out of thousands</li>
+    <li><strong>LoRA decomposes</strong> the weight update as <MathBlock formula={"\\Delta W = BA"} />, where B is zero-initialized and A is random, ensuring training starts from pretrained behavior</li>
+    <li><strong>Parameter savings</strong> are dramatic: 0.1-1% of parameters for most configurations, reducing optimizer memory from tens of GB to tens of MB</li>
+    <li><strong>Rank selection</strong>: r=8-16 is the sweet spot for most tasks; the LoRA paper showed diminishing returns beyond r=4 for many benchmarks</li>
+    <li><strong>Merged inference</strong>: <MathBlock formula="W' = W + BA" /> gives zero-overhead inference -- the adapted model runs at the same speed as the base model</li>
+  </ul>
+</KeyTakeaway>
+
+<section>
+  <h2>References</h2>
+
+  <PaperReference
+    title="LoRA: Low-Rank Adaptation of Large Language Models"
+    authors="Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, Chen"
+    year="2021"
+    url="https://arxiv.org/abs/2106.09685"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning"
+    authors="Aghajanyan, Gupta, Zettlemoyer"
+    year="2020"
+    url="https://arxiv.org/abs/2012.13255"
+    type="paper"
+  />
+
+  <PaperReference
+    title="DoRA: Weight-Decomposed Low-Rank Adaptation"
+    authors="Liu, Wang, Yin, Molchanov, Wang, Cheng, Chen"
+    year="2024"
+    url="https://arxiv.org/abs/2402.09353"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Practical Tips for Finetuning LLMs Using LoRA"
+    authors="Sebastian Raschka"
+    year="2023"
+    url="https://magazine.sebastianraschka.com/p/practical-tips-for-finetuning-llms"
+    type="blog"
+  />
+</section>

@@ -1,0 +1,426 @@
+---
+// Module 13, Lesson 13.1: The ML Production Lifecycle
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import Quiz from '../../components/Quiz.astro';
+import Diagram from '../../components/Diagram.astro';
+import MathBlock from '../../components/MathBlock.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Understand why most ML models never make it to production and the gap between research and deployment</li>
+  <li>Detect and measure data drift and concept drift using statistical tests</li>
+  <li>Design A/B testing experiments for ML models with proper statistical rigor</li>
+  <li>Implement experiment tracking for reproducibility using tools like MLflow and Weights &amp; Biases</li>
+  <li>Choose appropriate deployment strategies: canary, blue/green, and shadow deployments</li>
+</ul>
+
+<h2>The Gap Between ML Research and Production</h2>
+
+<p>
+  Building an ML model that performs well on a held-out test set is only a fraction of the work required to deliver value in production. Google's seminal paper on technical debt in ML systems estimated that the actual ML code in a production system represents perhaps 5% of the total codebase. The remaining 95% is infrastructure: data collection, feature extraction, data verification, configuration management, monitoring, serving, and process management.
+</p>
+
+<PaperReference
+  title="Hidden Technical Debt in Machine Learning Systems"
+  authors="Sculley, D., Holt, G., Golovin, D., et al."
+  year="2015"
+  url="https://papers.nips.cc/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html"
+/>
+
+<p>
+  The failure modes in production are fundamentally different from those in research. In research, you worry about underfitting and overfitting on a static dataset. In production, the data distribution changes continuously, the infrastructure can fail silently, and the consequences of bad predictions affect real users and real revenue. Organizations frequently cite the following challenges:
+</p>
+
+<ul>
+  <li><strong>Data distribution shift</strong>: The real-world data your model encounters differs from the training data, and this gap widens over time. For example, a recommendation model trained on holiday shopping data degrades in January when buying patterns normalize.</li>
+  <li><strong>Feedback loops</strong>: Your model's predictions influence user behavior, which in turn changes the data the model sees in the future. A content recommendation system that favors clickbait gradually trains itself on increasingly sensationalized user interactions.</li>
+  <li><strong>Silent failures</strong>: Unlike traditional software that crashes on errors, ML models degrade gracefully. They still produce outputs, but those outputs become increasingly wrong.</li>
+  <li><strong>Reproducibility</strong>: Reproducing a training run requires pinning the exact code version, data version, environment, hyperparameters, and random seeds.</li>
+  <li><strong>Coordination overhead</strong>: Data scientists, ML engineers, platform teams, and product managers must align on model requirements, service-level objectives, and release criteria.</li>
+</ul>
+
+<p>
+  MLOps (Machine Learning Operations) emerged as a discipline to address these challenges systematically, borrowing ideas from DevOps but adapting them to the unique requirements of ML systems.
+</p>
+
+<h2>Model Monitoring Fundamentals</h2>
+
+<p>
+  Monitoring is the first line of defense against production failures. Unlike traditional software where you monitor latency, error rates, and throughput, ML systems require all the traditional monitoring (latency, error rates, throughput) plus additional ML-specific dimensions: input data quality, prediction distributions, and model performance metrics. The key insight is that an ML model can be "up" and serving predictions while silently producing garbage.
+</p>
+
+<h3>Data Drift: When Input Distributions Change</h3>
+
+<p>
+  <strong>Data drift</strong> (also called covariate shift) occurs when the distribution of input features changes between training and serving time. This happens for many reasons: user demographics shift, seasonal patterns emerge, upstream data pipelines introduce bugs, or the product itself changes how it collects data.
+</p>
+
+<p>
+  Several statistical tests can detect data drift:
+</p>
+
+<h4>Population Stability Index (PSI)</h4>
+
+<p>
+  PSI measures the difference between two distributions by binning the data and comparing the proportion of observations in each bin. Given a reference distribution (training data) and a test distribution (production data), PSI is calculated as:
+</p>
+
+<MathBlock formula={"\\text{PSI} = \\sum_{i=1}^{N} (p_i - q_i) \\cdot \\ln\\left(\\frac{p_i}{q_i}\\right)"} display={true} />
+
+<p>
+  where <MathBlock formula={"p_i"} /> is the proportion in bin <MathBlock formula={"i"} /> for the test distribution and <MathBlock formula={"q_i"} /> is the proportion for the reference distribution. Interpretation thresholds are commonly:
+</p>
+
+<ul>
+  <li><strong>PSI &lt; 0.1</strong>: No significant drift.</li>
+  <li><strong>PSI 0.1 - 0.2</strong>: Moderate drift. Investigate.</li>
+  <li><strong>PSI &gt; 0.2</strong>: Significant drift. Model retraining likely needed.</li>
+</ul>
+
+<p>
+  These thresholds are rules of thumb, not statistical guarantees. The appropriate threshold depends on domain, dataset size, and feature importance.
+</p>
+
+<h4>Kolmogorov-Smirnov (KS) Test</h4>
+
+<p>
+  The KS test is a non-parametric test that compares two distributions by finding the maximum difference between their cumulative distribution functions:
+</p>
+
+<MathBlock formula={"D = \\sup_x |F_{\\text{ref}}(x) - F_{\\text{test}}(x)|"} display={true} />
+
+<p>
+  The KS test provides a p-value: a low p-value (typically &lt; 0.05) indicates statistically significant drift. Unlike PSI, the KS test does not require binning and works well for continuous features.
+</p>
+
+<h4>KL Divergence</h4>
+
+<p>
+  Kullback-Leibler divergence measures how one probability distribution diverges from a reference distribution:
+</p>
+
+<MathBlock formula={"D_{\\text{KL}}(P \\| Q) = \\sum_{x} P(x) \\ln\\left(\\frac{P(x)}{Q(x)}\\right)"} display={true} />
+
+<p>
+  KL divergence is asymmetric (<MathBlock formula={"D_{\\text{KL}}(P \\| Q) \\neq D_{\\text{KL}}(Q \\| P)"} />), which can be unintuitive. The Jensen-Shannon divergence (a symmetrized version) is often preferred for monitoring. KL divergence is unbounded and equals zero only when the distributions are identical.
+</p>
+
+<h3>Concept Drift: When Relationships Change</h3>
+
+<p>
+  <strong>Concept drift</strong> is more insidious than data drift. Even if the input distribution remains stable, the underlying relationship between inputs and outputs can change. For example:
+</p>
+
+<ul>
+  <li>A fraud detection model trained when credit card fraud patterns involved specific geographic patterns may fail when fraudsters adopt new attack vectors, such as shifting from card-present to card-not-present fraud.</li>
+  <li>A recommendation system trained before a pandemic may produce poor recommendations after consumer behavior shifts permanently. Even seasonal trends (back-to-school, holiday shopping) can cause recurring concept drift.</li>
+  <li>A sentiment analysis model trained on product reviews may degrade as language evolves and new slang emerges.</li>
+  <li>A healthcare diagnostic model may drift as patient demographics shift over time due to changes in the population served by a clinic or hospital.</li>
+</ul>
+
+<p>
+  Concept drift is harder to detect because it requires labeled ground truth. Detection approaches include:
+</p>
+
+<ul>
+  <li><strong>Performance monitoring</strong>: Track accuracy, precision, recall, or business metrics over time. A sustained decline indicates concept drift. This requires delayed labels (which may take hours, days, or weeks to arrive).</li>
+  <li><strong>Prediction distribution monitoring</strong>: Track the distribution of model predictions. If a binary classifier that historically predicts "positive" 30% of the time starts predicting "positive" 60% of the time, something has changed.</li>
+  <li><strong>Windowed statistical tests</strong>: Use Page-Hinkley or ADWIN (Adaptive Windowing) to detect change points in streaming performance metrics.</li>
+</ul>
+
+<h3>Performance Degradation Detection and Alerting</h3>
+
+<p>
+  A comprehensive monitoring system combines multiple signals into an alerting framework:
+</p>
+
+<ul>
+  <li><strong>Input validation</strong>: Check for missing features, out-of-range values, unexpected categories, and schema violations before predictions are made.</li>
+  <li><strong>Feature drift tracking</strong>: Monitor PSI or KS statistics for each input feature on a rolling window (hourly, daily). Alert when drift exceeds thresholds.</li>
+  <li><strong>Prediction monitoring</strong>: Track prediction distribution statistics (mean, variance, percentiles). Use control charts or z-score-based alerting for anomaly detection.</li>
+  <li><strong>Performance metrics</strong>: When ground truth labels are available (even delayed), compute rolling accuracy, AUC, or calibration metrics. Use CUSUM or exponentially weighted moving averages to detect sustained degradation.</li>
+  <li><strong>Infrastructure metrics</strong>: Latency, throughput, error rates, GPU utilization, memory usage. These are standard SRE metrics but are equally critical for ML systems.</li>
+</ul>
+
+<Diagram diagramId="ml-lifecycle-diagram" title="The ML Production Lifecycle">
+  <div class="bg-white p-6 rounded w-full">
+    <svg viewBox="0 0 500 400" class="w-full max-w-lg mx-auto" xmlns="http://www.w3.org/2000/svg">
+      <!-- Circular arrows -->
+      <defs>
+        <marker id="arrowhead-lc" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#6366f1" />
+        </marker>
+      </defs>
+
+      <!-- Train -->
+      <rect x="190" y="20" width="120" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="250" y="50" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e40af">Train</text>
+
+      <!-- Validate -->
+      <rect x="370" y="130" width="120" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+      <text x="430" y="160" text-anchor="middle" font-size="14" font-weight="bold" fill="#92400e">Validate</text>
+
+      <!-- Deploy -->
+      <rect x="330" y="290" width="120" height="50" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+      <text x="390" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="#065f46">Deploy</text>
+
+      <!-- Monitor -->
+      <rect x="50" y="290" width="120" height="50" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+      <text x="110" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="#9d174d">Monitor</text>
+
+      <!-- Retrain -->
+      <rect x="10" y="130" width="120" height="50" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="70" y="160" text-anchor="middle" font-size="14" font-weight="bold" fill="#5b21b6">Retrain</text>
+
+      <!-- Arrows: Train -> Validate -->
+      <line x1="310" y1="55" x2="375" y2="130" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <!-- Validate -> Deploy -->
+      <line x1="430" y1="180" x2="410" y2="290" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <!-- Deploy -> Monitor -->
+      <line x1="330" y1="315" x2="170" y2="315" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <!-- Monitor -> Retrain -->
+      <line x1="80" y1="290" x2="70" y2="180" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <!-- Retrain -> Train -->
+      <line x1="100" y1="130" x2="195" y2="65" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+
+      <!-- Center label -->
+      <text x="250" y="195" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Continuous</text>
+      <text x="250" y="212" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Improvement</text>
+    </svg>
+    <p class="text-sm text-slate-600 text-center mt-3">The ML lifecycle is circular: models are trained, validated, deployed, monitored, and retrained as data and requirements change.</p>
+  </div>
+</Diagram>
+
+<h2>A/B Testing for ML Models</h2>
+
+<p>
+  A/B testing is the gold standard for evaluating whether a new ML model actually improves business outcomes in production. Offline evaluation metrics (accuracy, AUC, BLEU) are necessary but not sufficient. They do not capture the full picture of how a model interacts with users in a live environment.
+</p>
+
+<h3>Statistical Foundations</h3>
+
+<p>
+  A well-designed A/B test requires upfront statistical planning:
+</p>
+
+<ul>
+  <li><strong>Hypothesis</strong>: Define a null hypothesis (no difference between models) and an alternative hypothesis (new model is better). Be specific about the metric and the direction of improvement.</li>
+  <li><strong>Power analysis</strong>: Before running the test, calculate the required sample size. Power analysis requires specifying:
+    <ul>
+      <li>The <strong>minimum detectable effect</strong> (MDE): the smallest improvement you care about.</li>
+      <li>The <strong>significance level</strong> (<MathBlock formula={"\\alpha"} />, typically 0.05): the probability of a false positive.</li>
+      <li>The <strong>statistical power</strong> (<MathBlock formula={"1 - \\beta"} />, typically 0.8): the probability of detecting a true effect.</li>
+      <li>The <strong>baseline metric variance</strong>: estimated from historical data.</li>
+    </ul>
+  </li>
+  <li><strong>Multiple comparisons correction</strong>: If testing multiple metrics simultaneously, apply Bonferroni correction or false discovery rate (FDR) control to avoid inflating the false positive rate.</li>
+</ul>
+
+<h3>Online vs. Offline Evaluation</h3>
+
+<p>
+  Offline and online evaluations measure different things and can disagree:
+</p>
+
+<ul>
+  <li><strong>Offline evaluation</strong>: Tests model performance on static datasets. Fast, cheap, repeatable. But offline metrics can be misleading. A model with higher offline accuracy may have worse online engagement because it fails in precisely the cases users encounter most.</li>
+  <li><strong>Online evaluation (A/B testing)</strong>: Measures actual user behavior. Captures the full system effect, including feedback loops, latency impact, and user experience. More expensive and slower (requires sufficient traffic and time).</li>
+  <li><strong>The gap</strong>: Research by Netflix, Google, and Microsoft consistently shows imperfect correlation between offline and online metrics. A model that improves NDCG by 5% offline may show zero improvement in user engagement.</li>
+</ul>
+
+<h3>Interleaving Experiments</h3>
+
+<p>
+  Interleaving is an alternative to traditional A/B testing, particularly useful for ranking and recommendation systems. Instead of splitting users into groups, interleaving blends results from two models into a single ranked list shown to each user. User interactions (clicks, purchases) are then attributed to the model that contributed each item.
+</p>
+
+<p>
+  Advantages of interleaving: it requires far fewer impressions to detect differences (typically 100x fewer than A/B tests) because within-user comparisons have lower variance than between-user comparisons. The trade-off is that interleaving only measures relative preference, not absolute metric differences.
+</p>
+
+<PaperReference
+  title="Large-Scale Validation and Analysis of Interleaved Search Evaluation"
+  authors="Chapelle, O., Joachims, T., Radlinski, F., Yue, Y."
+  year="2012"
+  url="https://doi.org/10.1145/2094072.2094078"
+/>
+
+<h2>Experiment Tracking</h2>
+
+<p>
+  Experiment tracking tools record everything needed to reproduce and compare ML experiments: hyperparameters, metrics, code versions, data versions, and artifacts.
+</p>
+
+<h3>Weights &amp; Biases (W&amp;B)</h3>
+
+<p>
+  W&amp;B has become one of the most popular experiment tracking platforms. Key features include:
+</p>
+
+<ul>
+  <li><strong>Experiment logging</strong>: Log metrics, hyperparameters, system metrics (GPU utilization, memory), and custom data with a few lines of code.</li>
+  <li><strong>Interactive dashboards</strong>: Compare runs side-by-side, create custom visualizations, and share results with your team.</li>
+  <li><strong>Artifact tracking</strong>: Version datasets, model checkpoints, and other files. Artifacts are content-addressed (deduplicated) and linked to the runs that produced or consumed them.</li>
+  <li><strong>Sweeps</strong>: Hyperparameter search with Bayesian optimization, random search, or grid search, coordinated across multiple machines.</li>
+  <li><strong>Tables</strong>: Log and visualize structured predictions, enabling rich model evaluation (e.g., logging images with predictions and ground truth labels).</li>
+</ul>
+
+<h3>MLflow</h3>
+
+<p>
+  MLflow is an open-source platform for the complete ML lifecycle. Its four main components are:
+</p>
+
+<ul>
+  <li><strong>MLflow Tracking</strong>: Log parameters, metrics, and artifacts. Similar to W&amp;B but self-hosted. Supports automatic logging for popular frameworks (scikit-learn, PyTorch, TensorFlow).</li>
+  <li><strong>MLflow Models</strong>: A standard format for packaging ML models that supports multiple serving backends (REST API, Apache Spark, AWS SageMaker).</li>
+  <li><strong>MLflow Model Registry</strong>: A centralized model store with versioning, stage transitions (Staging / Production / Archived), and approval workflows.</li>
+  <li><strong>MLflow Projects</strong>: A convention for packaging data science code in a reusable, reproducible format (conda environment + entry points).</li>
+</ul>
+
+<h3>Tracking Reproducibility</h3>
+
+<p>
+  A truly reproducible experiment requires tracking five dimensions:
+</p>
+
+<ul>
+  <li><strong>Code version</strong>: Git commit hash at training time. Some teams also store a full diff for uncommitted changes.</li>
+  <li><strong>Data version</strong>: A hash or version identifier for the exact training, validation, and test datasets used. Tools like DVC or Delta Lake enable this.</li>
+  <li><strong>Environment</strong>: Python version, package versions, CUDA version, GPU model. Docker images or conda environment files freeze the environment.</li>
+  <li><strong>Hyperparameters</strong>: Every configurable parameter, including defaults. Store the complete configuration, not just the parameters you changed.</li>
+  <li><strong>Random seeds</strong>: Seeds for Python, NumPy, and PyTorch random number generators. Note that full reproducibility on GPU still requires deterministic algorithms (which may be slower).</li>
+</ul>
+
+<h2>Model Registries and Versioning</h2>
+
+<p>
+  A model registry is the bridge between experimentation and production. It provides a central catalog of trained models with metadata, versioning, and lifecycle management.
+</p>
+
+<h3>Staging to Production Promotion</h3>
+
+<p>
+  A typical promotion workflow involves stages:
+</p>
+
+<ul>
+  <li><strong>Development</strong>: Model is being actively developed and evaluated. Any team member can register a new model version.</li>
+  <li><strong>Staging</strong>: Model has passed offline evaluation criteria and is ready for integration testing. This may include shadow deployments, load testing, and fairness audits.</li>
+  <li><strong>Production</strong>: Model is actively serving predictions. Only approved models transition to production, typically requiring sign-off from at least one ML engineer and one domain expert.</li>
+  <li><strong>Archived</strong>: Previously production models that have been superseded. Retained for rollback capability and audit purposes.</li>
+</ul>
+
+<h3>Model Lineage and Provenance</h3>
+
+<p>
+  Model lineage tracks the full genealogy of a model: what data was it trained on, what code produced it, what hyperparameters were used, and what other models it depends on. This is critical for:
+</p>
+
+<ul>
+  <li><strong>Debugging</strong>: When a model behaves unexpectedly, lineage helps trace the issue to a specific data version or code change.</li>
+  <li><strong>Compliance</strong>: Regulations like GDPR and the EU AI Act require organizations to explain how automated decisions are made. Model lineage provides the audit trail.</li>
+  <li><strong>Reproducibility</strong>: Lineage ensures any model can be retrained from scratch, which is essential for debugging, auditing, and disaster recovery.</li>
+</ul>
+
+<h2>Deployment Strategies</h2>
+
+<p>
+  Deploying a new ML model is inherently risky. Unlike traditional software deployments where a bug typically produces an error, a bad ML model silently produces incorrect predictions. Deployment strategies manage this risk by controlling the exposure of new models to production traffic.
+</p>
+
+<h3>Canary Deployments</h3>
+
+<p>
+  A canary deployment gradually rolls out the new model to an increasing percentage of traffic:
+</p>
+
+<ul>
+  <li>Start with 1-5% of traffic routed to the new model.</li>
+  <li>Monitor key metrics (latency, error rate, business metrics) for the canary population.</li>
+  <li>If metrics look good, gradually increase traffic: 5% &rarr; 10% &rarr; 25% &rarr; 50% &rarr; 100%.</li>
+  <li>If any metric degrades, automatically roll back to the previous model.</li>
+</ul>
+
+<p>
+  Canary deployments are the most common strategy for ML models because they provide early warning with minimal blast radius. The key challenge is defining automated rollback criteria: what metric thresholds trigger a rollback?
+</p>
+
+<h3>Blue/Green Deployments</h3>
+
+<p>
+  In blue/green deployment, two identical environments (blue and green) run side by side:
+</p>
+
+<ul>
+  <li><strong>Blue</strong> serves current production traffic.</li>
+  <li><strong>Green</strong> runs the new model, fully warmed up and load-tested.</li>
+  <li>A load balancer or router switches all traffic from blue to green instantaneously.</li>
+  <li>If problems arise, traffic is switched back to blue immediately.</li>
+</ul>
+
+<p>
+  Advantages: near-instant rollback, no mixed-version confusion. Disadvantages: requires double the infrastructure, no gradual exposure, and any issues affect all users at once (no partial rollout).
+</p>
+
+<h3>Shadow Deployments</h3>
+
+<p>
+  In shadow mode, the new model receives a copy of production traffic and generates predictions, but its predictions are never served to users. Instead, its predictions are logged and compared to the current production model.
+</p>
+
+<ul>
+  <li>Zero user impact: the shadow model's predictions are discarded.</li>
+  <li>Enables comparison of latency, prediction distributions, and (when labels arrive) accuracy between old and new models on real production data.</li>
+  <li>Catches issues like feature pipeline incompatibilities, unexpected input patterns, and performance regressions before any user is exposed.</li>
+  <li><strong>Limitation</strong>: Shadow mode cannot detect issues caused by user interaction with predictions (feedback loops), since the shadow model's predictions never influence users.</li>
+</ul>
+
+<p>
+  Many teams use shadow deployments as a precondition before canary deployment: the new model must survive a shadow period without regressions before any live traffic is routed to it.
+</p>
+
+<Quiz
+  quizId="drift-deployment-quiz"
+  question="A machine learning team notices that their fraud detection model's precision has dropped by 15% over the past month, but the input feature distributions remain stable according to PSI monitoring. What type of issue is this most likely?"
+  options={[
+    { id: "a", text: "Data drift - the feature distributions must have changed in ways PSI cannot detect", correct: false, explanation: "PSI is effective at detecting distribution changes. If PSI shows stable distributions, the issue is unlikely to be data drift." },
+    { id: "b", text: "Concept drift - the relationship between features and fraud has changed while feature distributions stayed the same", correct: true, explanation: "Concept drift occurs when the mapping from inputs to outputs changes. Fraudsters adapting their techniques is a classic example: the same features now indicate different outcomes. Feature distributions may appear stable even as the underlying fraud patterns evolve." },
+    { id: "c", text: "Infrastructure failure - the model is not receiving correct input data", correct: false, explanation: "Infrastructure failures typically cause dramatic metric changes or errors, not a gradual 15% precision decline over a month." },
+    { id: "d", text: "Overfitting - the model memorized the training data and cannot generalize", correct: false, explanation: "Overfitting would have been apparent at deployment time, not manifesting as a gradual decline months later. The model presumably performed well initially." }
+  ]}
+/>
+
+<h2>Putting It All Together: The Monitoring Stack</h2>
+
+<p>
+  A production ML monitoring stack typically integrates the following layers:
+</p>
+
+<ul>
+  <li><strong>Data quality layer</strong>: Validates incoming data against a schema, checks for completeness, and flags anomalies before they reach the model. Tools include Great Expectations and Pandera.</li>
+  <li><strong>Drift detection layer</strong>: Continuously computes drift statistics (PSI, KS, JS divergence) on sliding windows of production data. Tools include Evidently AI, NannyML, and WhyLabs.</li>
+  <li><strong>Performance tracking layer</strong>: Logs predictions, ground truth (when available), and business metrics. Joins prediction logs with delayed feedback to compute rolling performance metrics.</li>
+  <li><strong>Alerting layer</strong>: Applies rules and thresholds to the metrics from all layers above. Integrates with PagerDuty, Slack, or OpsGenie for notification. Distinguishes between informational alerts (investigate when convenient) and critical alerts (immediate attention required).</li>
+  <li><strong>Dashboard layer</strong>: Grafana or custom dashboards that visualize drift metrics, performance trends, traffic patterns, and system health. Dashboards should answer the question "is my model healthy?" at a glance.</li>
+</ul>
+
+<PaperReference
+  title="Monitoring Machine Learning Models in Production: A Survey and Taxonomy"
+  authors="Klaise, J., Van Looveren, A., Vacanti, G., Coca, A."
+  year="2021"
+  url="https://arxiv.org/abs/2005.11401"
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li>The ML lifecycle is circular: train, validate, deploy, monitor, retrain. Production ML requires continuous monitoring and iteration, not a one-time deployment.</li>
+    <li>Data drift (input distribution changes) can be detected with PSI, KS tests, or KL divergence. Concept drift (relationship changes) requires monitoring model performance metrics over time.</li>
+    <li>A/B testing for ML models requires rigorous statistical planning: power analysis, significance thresholds, and multiple comparisons correction. Interleaving experiments offer higher sensitivity for ranking systems.</li>
+    <li>Experiment tracking must capture five dimensions for reproducibility: code version, data version, environment, hyperparameters, and random seeds.</li>
+    <li>Deployment strategies manage risk through controlled exposure: canary deployments offer gradual rollout, blue/green provides instant cutover, and shadow deployments enable risk-free evaluation on real traffic.</li>
+    <li>Model registries with staging-to-production promotion workflows provide the governance layer between experimentation and production serving.</li>
+  </ul>
+</KeyTakeaway>

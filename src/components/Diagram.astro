@@ -1,0 +1,60 @@
+---
+// Wrapper for animated diagrams
+interface Props {
+  diagramId: string;
+  title: string;
+  autoplay?: boolean;
+  animationDuration?: number;
+}
+
+const { diagramId, title, autoplay = false, animationDuration = 3000 } = Astro.props;
+---
+
+<div
+  class="my-8 p-6 bg-[hsl(var(--card))] rounded-lg border border-[hsl(var(--border))]"
+  data-diagram={diagramId}
+  data-autoplay={autoplay}
+  data-animation-duration={animationDuration}
+>
+  <h3 class="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">{title}</h3>
+
+  <div class="diagram-content mb-4">
+    <slot />
+  </div>
+
+  <div class="flex gap-2">
+    <button
+      type="button"
+      class="px-4 py-2 text-sm bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-lg hover:opacity-90 transition-smooth disabled:opacity-40 disabled:cursor-not-allowed"
+      data-diagram-play
+    >
+      ▶ Play Animation
+    </button>
+    <button
+      type="button"
+      class="px-4 py-2 text-sm bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] rounded-lg hover:opacity-80 transition-smooth"
+      data-diagram-reset
+    >
+      ↺ Reset
+    </button>
+  </div>
+</div>
+
+<style>
+  .diagram-content {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  [data-animate] {
+    transition: all 300ms ease-out;
+  }
+
+  [data-animate].animating {
+    animation-duration: var(--animation-duration, 3s);
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+  }
+</style>

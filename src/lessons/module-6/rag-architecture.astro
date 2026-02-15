@@ -1,0 +1,337 @@
+---
+// Module 6, Lesson 6.1: RAG Architecture and Why It Matters
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Understand the core RAG architecture and why retrieval augmentation solves critical LLM limitations</li>
+  <li>Distinguish between naive RAG and advanced RAG patterns</li>
+  <li>Analyze the tradeoffs between RAG, fine-tuning, and long-context models</li>
+  <li>Design a RAG pipeline with appropriate component choices</li>
+  <li>Identify common RAG failure modes and their mitigations</li>
+</ul>
+
+<h2>Why RAG? The Limitations of Parametric Knowledge</h2>
+
+<p>
+  Large language models store knowledge <em>parametrically</em>---encoded in their billions of weights during pre-training. This approach has fundamental limitations:
+</p>
+
+<ul>
+  <li><strong>Knowledge cutoff</strong>: Models cannot know about events after their training data ends</li>
+  <li><strong>Hallucination</strong>: Models confidently generate plausible but factually incorrect information---more precisely, they <em>confabulate</em>, producing fluent text that is not grounded in any training evidence, rather than deliberately fabricating. This occurs most often when parametric knowledge is insufficient or ambiguous.</li>
+  <li><strong>No source attribution</strong>: Parametric knowledge has no provenance---you cannot verify or cite where the model learned something</li>
+  <li><strong>Update cost</strong>: Retraining or fine-tuning to incorporate new knowledge is expensive and slow</li>
+  <li><strong>Domain specificity</strong>: General models lack depth in specialized domains (legal, medical, enterprise-specific)</li>
+</ul>
+
+<p>
+  <strong>Retrieval-Augmented Generation (RAG)</strong> addresses these limitations by combining parametric knowledge (the LLM) with non-parametric knowledge (an external retrieval system). Instead of relying solely on what the model "remembers," RAG retrieves relevant information at inference time and provides it as context.
+</p>
+
+<h2>The Core RAG Architecture</h2>
+
+<p>
+  RAG decomposes generation into two phases: <strong>retrieve</strong> relevant documents, then <strong>generate</strong> a response conditioned on both the query and retrieved context.
+</p>
+
+<p>
+  Formally, for a query q, RAG computes:
+</p>
+
+<MathBlock formula={"p(y|q) = \\sum_{d \\in \\text{top-}k} p_{\\text{retriever}}(d|q) \\cdot p_{\\text{generator}}(y|q, d)"} display={true} />
+
+<p>In plain English: the probability of generating answer y is a weighted sum over the top-k retrieved documents, where each document's contribution is its retrieval relevance times the probability of generating the answer given that document.</p>
+
+<p>
+  where the retriever scores documents by relevance and the generator produces the answer conditioned on both the query and retrieved documents.
+</p>
+
+<Diagram diagramId="rag-pipeline" title="The RAG Pipeline" autoplay={true} animationDuration={6000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+    <div class="flex flex-col gap-6">
+      <!-- Indexing Phase -->
+      <div data-animate style="animation-delay: 0.3s">
+        <div class="text-sm font-semibold text-indigo-700 mb-2">Indexing Phase (offline)</div>
+        <div class="flex items-center gap-3">
+          <div class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center min-w-fit">Documents</div>
+          <div class="text-slate-400">-></div>
+          <div class="px-3 py-2 bg-orange-100 rounded text-xs text-center min-w-fit">Chunk</div>
+          <div class="text-slate-400">-></div>
+          <div class="px-3 py-2 bg-purple-100 rounded text-xs text-center min-w-fit">Embed</div>
+          <div class="text-slate-400">-></div>
+          <div class="px-3 py-2 bg-indigo-100 rounded text-xs text-center min-w-fit">Vector DB</div>
+        </div>
+      </div>
+
+      <!-- Query Phase -->
+      <div data-animate style="animation-delay: 2s">
+        <div class="text-sm font-semibold text-emerald-700 mb-2">Query Phase (online)</div>
+        <div class="flex items-center gap-3">
+          <div class="px-3 py-2 bg-emerald-100 rounded text-xs text-center min-w-fit">User Query</div>
+          <div class="text-slate-400">-></div>
+          <div class="px-3 py-2 bg-purple-100 rounded text-xs text-center min-w-fit">Embed</div>
+          <div class="text-slate-400">-></div>
+          <div class="px-3 py-2 bg-indigo-100 rounded text-xs text-center min-w-fit">Retrieve top-k</div>
+          <div class="text-slate-400">-></div>
+          <div class="px-3 py-2 bg-amber-100 rounded text-xs text-center min-w-fit">Augment Prompt</div>
+          <div class="text-slate-400">-></div>
+          <div class="px-3 py-2 bg-rose-100 rounded text-xs text-center min-w-fit">LLM Generate</div>
+        </div>
+      </div>
+
+      <!-- Answer -->
+      <div class="text-center text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))]" data-animate style="animation-delay: 4s">
+        Output: Grounded answer with source citations
+      </div>
+    </div>
+  </div>
+</Diagram>
+
+<h3>The Indexing Pipeline</h3>
+
+<p>
+  Before queries can be answered, documents must be preprocessed and indexed:
+</p>
+
+<ol>
+  <li><strong>Document loading</strong>: Ingest from various sources (PDFs, web pages, databases, APIs)</li>
+  <li><strong>Chunking</strong>: Split documents into manageable pieces (covered in detail in Lesson 6.2)</li>
+  <li><strong>Embedding</strong>: Convert each chunk into a dense vector using an embedding model</li>
+  <li><strong>Indexing</strong>: Store vectors and metadata in a vector database for efficient retrieval</li>
+</ol>
+
+<h3>The Query Pipeline</h3>
+
+<ol>
+  <li><strong>Query embedding</strong>: Convert the user query into a vector using the same embedding model</li>
+  <li><strong>Retrieval</strong>: Find the top-k most similar chunks via ANN search</li>
+  <li><strong>Prompt augmentation</strong>: Construct a prompt containing the query and retrieved context</li>
+  <li><strong>Generation</strong>: The LLM generates a response grounded in the provided context</li>
+  <li><strong>Post-processing</strong>: Extract citations, verify consistency, format the response</li>
+</ol>
+
+<h2>Naive RAG vs. Advanced RAG</h2>
+
+<h3>Naive RAG</h3>
+
+<p>
+  The simplest RAG implementation follows the pipeline above directly:
+</p>
+
+<ul>
+  <li>Fixed-size chunking (e.g., 512 tokens with 50-token overlap)</li>
+  <li>Single embedding model for both queries and documents</li>
+  <li>Top-k retrieval by cosine similarity</li>
+  <li>Simple prompt template: "Given the following context: [chunks]. Answer: [query]"</li>
+</ul>
+
+<p>
+  Naive RAG works surprisingly well for simple use cases but has systematic failure modes:
+</p>
+
+<ul>
+  <li><strong>Retrieval failures</strong>: Relevant information not retrieved due to vocabulary mismatch, poor chunking, or query-document asymmetry</li>
+  <li><strong>Context poisoning</strong>: Irrelevant or contradictory chunks confuse the generator</li>
+  <li><strong>Lost in the middle</strong>: LLMs tend to focus on the beginning and end of long contexts, neglecting information in the middle</li>
+  <li><strong>No reasoning over retrieval</strong>: The model cannot refine its search based on initial results</li>
+</ul>
+
+<h3>Advanced RAG</h3>
+
+<p>
+  Advanced RAG addresses these failures through pre-retrieval, retrieval, and post-retrieval enhancements:
+</p>
+
+<ul>
+  <li><strong>Pre-retrieval</strong>: Query transformation, expansion, decomposition (see Lesson 6.3)</li>
+  <li><strong>Retrieval</strong>: Hybrid search, multi-vector retrieval, iterative retrieval</li>
+  <li><strong>Post-retrieval</strong>: Reranking, context compression, self-consistency checks</li>
+</ul>
+
+<p>
+  Each component adds complexity but addresses specific failure modes. The art of RAG engineering is choosing the right components for your use case.
+</p>
+
+<h2>RAG vs. Fine-Tuning vs. Long Context: When to Use What</h2>
+
+<p>
+  Three approaches to grounding LLMs in specific knowledge. They are complementary, not mutually exclusive:
+</p>
+
+<h3>RAG</h3>
+<p><strong>Best for:</strong></p>
+<ul>
+  <li>Frequently updated knowledge (news, documentation, product catalogs)</li>
+  <li>Verifiable answers with source citations</li>
+  <li>Large knowledge bases that exceed any context window</li>
+  <li>Privacy-sensitive data (never enters model weights)</li>
+</ul>
+
+<p><strong>Limitations:</strong></p>
+<ul>
+  <li>Retrieval quality bottleneck---if relevant chunks are not retrieved, the model cannot use them</li>
+  <li>Added latency from the retrieval step</li>
+  <li>Requires maintaining an indexing pipeline</li>
+</ul>
+
+<h3>Fine-Tuning</h3>
+<p><strong>Best for:</strong></p>
+<ul>
+  <li>Teaching new behaviors, formats, or styles (not just new facts)</li>
+  <li>Domain adaptation (medical, legal, code in a specific language)</li>
+  <li>Consistent adherence to specific output formats or guidelines</li>
+  <li>Reducing prompt size by internalizing common instructions</li>
+</ul>
+
+<p><strong>Limitations:</strong></p>
+<ul>
+  <li>Expensive to update; requires retraining</li>
+  <li>Risk of catastrophic forgetting (losing prior capabilities)</li>
+  <li>Cannot easily attribute knowledge to specific sources</li>
+  <li>Knowledge is "baked in"---no easy way to remove incorrect information</li>
+</ul>
+
+<h3>Long Context</h3>
+<p><strong>Best for:</strong></p>
+<ul>
+  <li>Small knowledge bases that fit within the context window (e.g., 200K tokens for Claude 3.5 Sonnet, 128K for GPT-4 Turbo, up to 1M for Gemini 1.5 Pro)</li>
+  <li>Tasks requiring holistic understanding across the entire corpus</li>
+  <li>Simpler engineering---no retrieval pipeline needed</li>
+</ul>
+
+<p><strong>Limitations:</strong></p>
+<ul>
+  <li>Cost scales linearly with context length (quadratic in attention)</li>
+  <li>"Needle in a haystack" failures: models may miss specific facts in very long contexts</li>
+  <li>Cannot scale beyond the context window</li>
+  <li>Latency increases with context length</li>
+</ul>
+
+<h3>The Practical Decision Framework</h3>
+
+<p>
+  A pragmatic approach to choosing:
+</p>
+<ol>
+  <li><strong>Does your knowledge base fit in context?</strong> If yes, try long context first---simplest approach.</li>
+  <li><strong>Does the model need new behaviors or consistent formatting?</strong> Fine-tune.</li>
+  <li><strong>Does the knowledge change frequently or need citations?</strong> Use RAG.</li>
+  <li><strong>Best practice</strong>: Combine approaches. Fine-tune for style/behavior + RAG for dynamic knowledge.</li>
+</ol>
+
+<h2>RAG Prompt Engineering</h2>
+
+<p>
+  The prompt template significantly impacts RAG quality. Key principles:
+</p>
+
+<ul>
+  <li><strong>Instruct faithfulness</strong>: "Answer based ONLY on the provided context. If the context doesn't contain the answer, say so."</li>
+  <li><strong>Request citations</strong>: "Cite the specific passage(s) that support your answer."</li>
+  <li><strong>Handle uncertainty</strong>: "If the context is ambiguous or insufficient, explain what additional information would be needed."</li>
+  <li><strong>Chunk ordering</strong>: Place most relevant chunks first and last (mitigate "lost in the middle" effect)</li>
+  <li><strong>Metadata inclusion</strong>: Include source titles, dates, and authors to help the model contextualize information</li>
+</ul>
+
+<h2>Common RAG Failure Modes</h2>
+
+<p>
+  Understanding failure modes is essential for building robust RAG systems:
+</p>
+
+<ul>
+  <li><strong>Semantic gap</strong>: User query uses different terminology than the source documents. Mitigation: query expansion, synonyms, hybrid search.</li>
+  <li><strong>Chunking artifacts</strong>: Important context split across chunk boundaries. Mitigation: overlapping chunks, parent-child chunking, semantic chunking.</li>
+  <li><strong>Retrieval noise</strong>: Retrieved chunks are topically related but do not actually answer the question. Mitigation: reranking with cross-encoders, relevance filtering.</li>
+  <li><strong>Stale data</strong>: Index contains outdated information. Mitigation: timestamp-based filtering, incremental updates, freshness scoring.</li>
+  <li><strong>Multi-hop reasoning</strong>: Answer requires synthesizing information across multiple documents. Mitigation: iterative retrieval, graph-based RAG.</li>
+</ul>
+
+<Quiz
+  question="A legal firm wants to build a Q&A system over 50,000 contracts that are updated weekly. Which approach is most appropriate?"
+  quizId="rag-vs-finetune"
+  options={[
+    {
+      id: "a",
+      text: "Fine-tune an LLM on the contracts",
+      correct: false,
+      explanation: "Weekly updates would require weekly fine-tuning runs, which is expensive and impractical. Fine-tuning also makes it hard to cite specific contract clauses."
+    },
+    {
+      id: "b",
+      text: "Use long-context models with all contracts in the prompt",
+      correct: false,
+      explanation: "50,000 contracts far exceed any context window (even 1M tokens). This approach simply cannot scale to this corpus size."
+    },
+    {
+      id: "c",
+      text: "RAG with incremental indexing and source citations",
+      correct: true,
+      explanation: "Correct! RAG handles the large corpus through chunking and indexing, supports weekly updates via incremental re-indexing, and provides source citations critical for legal use cases. The retrieval pipeline surfaces relevant contract clauses without needing to fit everything in context."
+    },
+    {
+      id: "d",
+      text: "Fine-tune for legal language + RAG for specific contract lookup",
+      correct: false,
+      explanation: "While combining fine-tuning and RAG can be powerful, fine-tuning is overkill here. Modern LLMs already understand legal language well enough. RAG alone addresses the core requirements: large corpus, frequent updates, and citations."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>RAG</strong> combines parametric knowledge (LLM weights) with non-parametric knowledge (retrieved documents) to ground generation in verifiable facts</li>
+    <li><strong>The RAG pipeline</strong> has two phases: offline indexing (chunk, embed, store) and online querying (embed query, retrieve, augment prompt, generate)</li>
+    <li><strong>Naive RAG</strong> works for simple cases but fails on vocabulary mismatch, context poisoning, and multi-hop reasoning; advanced RAG adds pre/post-retrieval processing</li>
+    <li><strong>RAG vs. fine-tuning vs. long context</strong>: RAG for dynamic/large knowledge bases with citations; fine-tuning for new behaviors/styles; long context for small corpora. These approaches are complementary.</li>
+    <li><strong>Prompt engineering</strong> is critical: instruct faithfulness, request citations, handle uncertainty, and order chunks strategically</li>
+  </ul>
+</KeyTakeaway>
+
+<h2>References</h2>
+
+<PaperReference
+  title="Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  authors="Lewis et al."
+  year="2020"
+  url="https://arxiv.org/abs/2005.11401"
+  type="paper"
+/>
+
+<PaperReference
+  title="REALM: Retrieval-Augmented Language Model Pre-Training"
+  authors="Guu et al."
+  year="2020"
+  url="https://arxiv.org/abs/2002.08909"
+  type="paper"
+/>
+
+<PaperReference
+  title="Lost in the Middle: How Language Models Use Long Contexts"
+  authors="Liu et al."
+  year="2023"
+  url="https://arxiv.org/abs/2307.03172"
+  type="paper"
+/>
+
+<PaperReference
+  title="Retrieval-Augmented Generation for Large Language Models: A Survey"
+  authors="Gao et al."
+  year="2024"
+  url="https://arxiv.org/abs/2312.10997"
+  type="paper"
+/>
+
+<PaperReference
+  title="When to Retrieve: Teaching LLMs to Utilize Information Retrieval Effectively"
+  authors="Asai et al."
+  year="2023"
+  url="https://arxiv.org/abs/2310.01558"
+  type="paper"
+/>

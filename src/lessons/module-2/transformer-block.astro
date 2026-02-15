@@ -1,0 +1,254 @@
+---
+// Module 2, Lesson 2.2: The Full Transformer Block
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import RevealSection from '../../components/RevealSection.astro';
+import Quiz from '../../components/Quiz.astro';
+import Diagram from '../../components/Diagram.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Understand layer normalization and why Pre-LN outperforms Post-LN</li>
+  <li>Explain the role of feed-forward networks as transformer "memory"</li>
+  <li>Analyze residual connections from gradient flow and ensemble perspectives</li>
+  <li>Compare positional encoding schemes (sinusoidal, learned, RoPE, ALiBi)</li>
+</ul>
+
+<h2>Layer Normalization: Pre-LN vs Post-LN</h2>
+
+<p>Neural networks are sensitive to the scale of their inputs. Without normalization, activations can grow or shrink across layers, making training unstable. Layer normalization standardizes each activation vector to zero mean and unit variance, giving the optimizer a smoother loss landscape. Let's make this precise:</p>
+
+<MathBlock formula={"\\text{LayerNorm}(x) = \\gamma \\odot \\frac{x - \\mu}{\\sigma + \\epsilon} + \\beta"} display={true} />
+
+<p>In plain English: subtract the mean, divide by the standard deviation, then scale and shift by learned parameters.</p>
+
+<p>Here, μ and σ are the mean and standard deviation computed across features for each example independently, γ and β are learned per-feature scale and shift parameters, and ε is a small constant for numerical stability.</p>
+
+<h3>Post-LN (Original Transformer)</h3>
+<p>The original "Attention Is All You Need" paper used Post-LN: apply normalization after residual addition.</p>
+
+<MathBlock formula={"x' = \\text{LayerNorm}(x + \\text{Sublayer}(x))"} display={true} />
+
+<p>That is: first compute the sublayer output and add the residual, then normalize the result. The normalization happens on the "main path."</p>
+
+<h3>Pre-LN (Modern Standard)</h3>
+<p>Modern transformers use Pre-LN: normalize before each sublayer.</p>
+
+<MathBlock formula={"x' = x + \\text{Sublayer}(\\text{LayerNorm}(x))"} display={true} />
+
+<p>Here the input is normalized before entering the sublayer, and the residual carries the raw (unnormalized) activations. This means the residual path is a clean "gradient highway" with no normalization in the way.</p>
+
+<p><strong>Why Pre-LN won</strong>: Pre-LN stabilizes training at scale. Post-LN suffers from gradient explosion in very deep networks. Pre-LN ensures normalized inputs to each sublayer, making gradient flow more stable. Critical for training 100+ layer models.</p>
+
+<h2>Feed-Forward Network: The Transformer's Memory</h2>
+
+<p>After self-attention, each position passes through an identical feed-forward network (FFN) independently:</p>
+
+<MathBlock formula={"\\text{FFN}(x) = \\text{GELU}(xW_1 + b_1)W_2 + b_2"} display={true} />
+
+<p>In plain English: project the input to a wider hidden dimension, apply a nonlinearity (GELU), then project back down. This is a standard two-layer MLP applied independently to each token position.</p>
+
+<p>Typically, <MathBlock formula={"W_1 \\in \\mathbb{R}^{d \\times 4d}"} /> (expands by 4x), and <MathBlock formula={"W_2 \\in \\mathbb{R}^{4d \\times d}"} /> (projects back).</p>
+
+<h3>Why 4× Expansion?</h3>
+<ul>
+  <li><strong>Expressive capacity</strong>: The wider hidden layer provides model capacity. Most parameters in a transformer are in FFN weights, not attention.</li>
+  <li><strong>Interpretation as memory</strong>: Research suggests FFN layers store factual knowledge. The first layer <MathBlock formula="W_1" /> acts as a key-value lookup: if input matches a "key" pattern, activate corresponding neurons. Second layer <MathBlock formula="W_2" /> retrieves the "value."</li>
+  <li><strong>Empirical sweet spot</strong>: 4× expansion balances compute/memory vs performance. Larger ratios (8×, 16×) can help but hit diminishing returns.</li>
+</ul>
+
+<h2>Residual Connections: Why They're Critical</h2>
+
+<p>Every sublayer (attention, FFN) has a residual connection:</p>
+
+<MathBlock formula={"x' = x + \\text{Sublayer}(x)"} display={true} />
+
+<p>In plain English: the output is the sum of the input and whatever the sublayer computes. Even if the sublayer learns nothing useful, the input passes through unchanged.</p>
+
+<h3>Gradient Flow Perspective</h3>
+<p>During backpropagation, gradients flow through both the sublayer and the residual path. The residual provides a "gradient highway", a direct path for gradients to flow backward without being multiplied through many weight matrices.</p>
+
+<p>For a network with L layers, gradients can travel directly from layer L to layer 1 via residuals, preventing vanishing gradients.</p>
+
+<h3>Ensemble Interpretation</h3>
+<p>A network with residuals can be viewed as an ensemble of <MathBlock formula="2^L" /> paths of varying depths. At test time, the network implicitly ensembles predictions from all these paths, improving robustness.</p>
+
+<RevealSection revealId="transformer-block-walkthrough" title="Complete Forward Pass Through One Transformer Block">
+  <div data-reveal-step>
+    <h4>Step 1: Input</h4>
+    <p>Start with input <MathBlock formula={"x \\in \\mathbb{R}^{n \\times d}"} /> (n tokens, d dimensions)</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Step →</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 2: Pre-norm + Self-Attention</h4>
+    <MathBlock formula={"x_{\\text{norm}} = \\text{LayerNorm}(x)"} display={true} />
+    <MathBlock formula={"x_{\\text{attn}} = \\text{MultiHeadAttention}(x_{\\text{norm}}, x_{\\text{norm}}, x_{\\text{norm}})"} display={true} />
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Step →</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 3: Residual Connection</h4>
+    <MathBlock formula={"x' = x + x_{\\text{attn}}"} display={true} />
+    <p>Add attention output back to original input (residual skip connection)</p>
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Step →</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 4: Pre-norm + Feed-Forward</h4>
+    <MathBlock formula={"x'_{\\text{norm}} = \\text{LayerNorm}(x')"} display={true} />
+    <MathBlock formula={"x_{\\text{ffn}} = \\text{FFN}(x'_{\\text{norm}})"} display={true} />
+    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step →</button>
+  </div>
+
+  <div data-reveal-step>
+    <h4>Step 5: Final Residual</h4>
+    <MathBlock formula={"x'' = x' + x_{\\text{ffn}}"} display={true} />
+    <p class="text-emerald-700 font-medium">✓ Output x'' passes to the next transformer block!</p>
+  </div>
+</RevealSection>
+
+<h2>Positional Encoding: Injecting Sequence Order</h2>
+
+<p>Transformers process all tokens in parallel, which means they have no inherent notion of word order. Without positional information, "the cat sat on the mat" and "the mat sat on the cat" would produce identical representations. Positional encoding injects position information into the model so that attention can distinguish token order.</p>
+
+<h3>Sinusoidal Positional Encoding (Original)</h3>
+<p>The original transformer used fixed sinusoidal functions at different frequencies to encode position. Each dimension of the positional encoding uses a different frequency, so the model can learn to attend to relative positions. Mathematically:</p>
+
+<div class="equation-sequence">
+  <MathBlock formula={"PE_{(pos, 2i)} = \\sin(pos / 10000^{2i/d})"} display={true} />
+  <MathBlock formula={"PE_{(pos, 2i+1)} = \\cos(pos / 10000^{2i/d})"} display={true} />
+</div>
+
+<p>In plain English: for each position in the sequence, generate a d-dimensional vector where even dimensions use sine waves and odd dimensions use cosine waves, each at a different frequency. These vectors are added to the token embeddings before entering the transformer.</p>
+
+<p><strong>Advantages</strong>: No learned parameters, can extrapolate to longer sequences. <strong>Disadvantages</strong>: Not as flexible as learned encodings.</p>
+
+<h3>Learned Positional Embeddings</h3>
+<p>Learn a separate embedding for each position (up to max length). Used in BERT, GPT. Works well but can't extrapolate beyond training length.</p>
+
+<h3>RoPE (Rotary Position Embedding)</h3>
+<p>Instead of adding position info, rotate Q and K vectors in complex space. Used in LLaMA, PaLM. Advantages: relative position encoding, better length extrapolation.</p>
+
+<h3>ALiBi (Attention with Linear Biases)</h3>
+<p>Add a linear bias to attention scores based on distance: closer tokens get higher scores. No position embeddings needed. Excellent extrapolation to longer sequences. Used in BLOOM, MPT.</p>
+
+<Quiz
+  quizId="pre-ln-post-ln"
+  question="Why did modern transformers switch from Post-LN (original) to Pre-LN architecture?"
+  options={[
+    { id: "a", text: "Pre-LN reduces the total number of parameters", correct: false, explanation: "Both architectures have the same number of parameters, the only difference is where LayerNorm is applied." },
+    { id: "b", text: "Pre-LN produces better final model quality", correct: false, explanation: "Post-LN can actually achieve slightly better quality when trained successfully. The issue is training stability, not final quality." },
+    { id: "c", text: "Pre-LN enables more stable gradient flow during training", correct: true, explanation: "Correct! In Pre-LN, the residual path carries unnormalized activations directly, creating a clean gradient highway. This prevents gradient explosion/vanishing and eliminates the need for careful learning rate warmup." },
+    { id: "d", text: "Pre-LN was required for multi-head attention to work correctly", correct: false, explanation: "Multi-head attention works identically in both configurations, the difference is purely about where normalization occurs relative to the sublayer." }
+  ]}
+/>
+
+<Diagram diagramId="transformer-block-arch" title="Pre-LN Transformer Block Architecture">
+  <div class="w-full">
+    <svg viewBox="0 0 400 520" class="w-full h-auto max-w-md mx-auto">
+      <!-- Input -->
+      <rect x="130" y="10" width="140" height="35" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="200" y="32" text-anchor="middle" font-size="13" fill="#312e81" font-weight="bold">Input (B, T, d)</text>
+
+      <!-- Arrow -->
+      <line x1="200" y1="45" x2="200" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- LayerNorm 1 -->
+      <rect x="130" y="65" width="140" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="200" y="85" text-anchor="middle" font-size="12" fill="#92400e">LayerNorm</text>
+
+      <line x1="200" y1="95" x2="200" y2="115" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Multi-Head Attention -->
+      <rect x="110" y="115" width="180" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="200" y="137" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="bold">Multi-Head Attention</text>
+
+      <line x1="200" y1="150" x2="200" y2="175" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Add (residual) -->
+      <circle cx="200" cy="190" r="15" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="200" y="195" text-anchor="middle" font-size="16" fill="#166534" font-weight="bold">+</text>
+      <!-- Residual connection line -->
+      <path d="M 80 30 L 80 190 L 185 190" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+      <line x1="200" y1="205" x2="200" y2="230" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- LayerNorm 2 -->
+      <rect x="130" y="230" width="140" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="200" y="250" text-anchor="middle" font-size="12" fill="#92400e">LayerNorm</text>
+
+      <line x1="200" y1="260" x2="200" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- FFN -->
+      <rect x="110" y="280" width="180" height="35" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+      <text x="200" y="302" text-anchor="middle" font-size="12" fill="#9d174d" font-weight="bold">Feed-Forward Network</text>
+
+      <!-- FFN detail -->
+      <text x="200" y="335" text-anchor="middle" font-size="10" fill="#64748b">Linear(d→4d) → GELU → Linear(4d→d)</text>
+
+      <line x1="200" y1="345" x2="200" y2="365" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Add (residual 2) -->
+      <circle cx="200" cy="380" r="15" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="200" y="385" text-anchor="middle" font-size="16" fill="#166534" font-weight="bold">+</text>
+      <!-- Residual connection line 2 -->
+      <path d="M 80 190 L 80 380 L 185 380" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+      <line x1="200" y1="395" x2="200" y2="420" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Output -->
+      <rect x="130" y="420" width="140" height="35" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="200" y="442" text-anchor="middle" font-size="13" fill="#312e81" font-weight="bold">Output (B, T, d)</text>
+
+      <!-- Tensor shape annotations -->
+      <text x="310" y="137" font-size="10" fill="#64748b">(B, T, d) → (B, T, d)</text>
+      <text x="310" y="302" font-size="10" fill="#64748b">(B, T, d) → (B, T, d)</text>
+
+      <!-- Arrow marker definition -->
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+</Diagram>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>Pre-LN</strong> (normalize before sublayers) is the modern standard, offering more stable training than Post-LN at scale</li>
+    <li><strong>Feed-forward networks</strong> typically expand by 4× and act as the transformer's "memory," storing factual knowledge</li>
+    <li><strong>Residual connections</strong> provide gradient highways and enable ensemble-like behavior across exponentially many paths</li>
+    <li><strong>Positional encoding</strong> injects sequence order; modern choices (RoPE, ALiBi) offer better length extrapolation than fixed sinusoids</li>
+    <li><strong>A complete transformer block</strong> combines: LayerNorm → Attention → Residual → LayerNorm → FFN → Residual</li>
+  </ul>
+</KeyTakeaway>
+
+<h2>References</h2>
+
+<PaperReference
+  title="On Layer Normalization in the Transformer Architecture"
+  authors="Xiong et al."
+  year="2020"
+  url="https://arxiv.org/abs/2002.04745"
+  type="paper"
+/>
+
+<PaperReference
+  title="RoFormer: Enhanced Transformer with Rotary Position Embedding"
+  authors="Su et al."
+  year="2021"
+  url="https://arxiv.org/abs/2104.09864"
+  type="paper"
+/>
+
+<PaperReference
+  title="Train Short, Test Long: Attention with Linear Biases Enables Input Length Extrapolation"
+  authors="Press et al."
+  year="2022"
+  url="https://arxiv.org/abs/2108.12409"
+  type="paper"
+/>

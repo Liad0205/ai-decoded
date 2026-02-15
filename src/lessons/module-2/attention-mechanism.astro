@@ -1,0 +1,245 @@
+---
+// Module 2, Lesson 2.1: Attention Is All You Need - From Scratch
+import KeyTakeaway from '../../components/KeyTakeaway.astro';
+import PaperReference from '../../components/PaperReference.astro';
+import MathBlock from '../../components/MathBlock.astro';
+import Diagram from '../../components/Diagram.astro';
+import Quiz from '../../components/Quiz.astro';
+---
+
+<h2>Learning Objectives</h2>
+<ul>
+  <li>Understand why RNNs and LSTMs became bottlenecks for sequence modeling</li>
+  <li>Derive scaled dot-product attention from first principles</li>
+  <li>Explain why we scale by √d_k through variance analysis</li>
+  <li>Implement multi-head attention conceptually</li>
+</ul>
+
+<h2>The Problem with RNNs and LSTMs</h2>
+<p>
+  Before transformers, sequence modeling relied on recurrent architectures (RNNs, LSTMs, GRUs). While LSTMs solved vanishing gradients via gating mechanisms, they suffered from fundamental limitations:
+</p>
+
+<ul>
+  <li><strong>Sequential bottleneck</strong>: Processing step t requires completion of step t-1. This prevents parallelization across the sequence, making training on modern GPUs inefficient.</li>
+  <li><strong>Long-range dependencies</strong>: Despite improvements over vanilla RNNs, LSTMs still struggle with dependencies spanning hundreds of tokens. Information must flow through many sequential steps, creating an information bottleneck.</li>
+  <li><strong>Fixed hidden state</strong>: The entire sequence history must compress into a fixed-size hidden vector, limiting capacity for long contexts.</li>
+</ul>
+
+<h2>Self-Attention: The Core Idea</h2>
+<p>
+  <strong>Self-attention</strong> allows each position in a sequence to directly attend to all other positions, computing outputs in parallel. No sequential dependency chain.
+</p>
+
+<p>
+  For each position i, self-attention computes a weighted combination of all positions, where weights reflect how much position i should "attend to" position j.
+</p>
+
+<h2>Scaled Dot-Product Attention: Full Derivation</h2>
+
+<p>
+  Given input sequence <MathBlock formula={"X \\in \\mathbb{R}^{n \\times d}"} /> (n tokens, d-dimensional embeddings), we project each token into three roles, borrowed from information retrieval. Think of it like a key-value store lookup:
+</p>
+
+<ul>
+  <li><strong>Query (Q)</strong>: "What am I looking for?" -- the search query each token issues</li>
+  <li><strong>Key (K)</strong>: "What do I contain?" -- the label each token advertises to incoming queries</li>
+  <li><strong>Value (V)</strong>: "What information do I provide?" -- the actual content returned when a query matches a key</li>
+</ul>
+
+<p>
+  A query dot-producted with a key measures relevance (like a search score), and the result is used to weight the corresponding values. Mathematically, the three matrices are computed as:
+</p>
+
+<MathBlock formula={"Q = XW^Q, \\quad K = XW^K, \\quad V = XW^V"} display={true} />
+
+<p>
+  where <MathBlock formula={"W^Q, W^K, W^V \\in \\mathbb{R}^{d \\times d_k}"} /> are learned projection matrices.
+</p>
+
+<p>
+  The attention mechanism computes outputs through the following sequence:
+</p>
+
+<div class="equation-with-label">
+  <p class="equation-label">1. Compute similarity scores (dot product):</p>
+  <MathBlock formula={"\\text{scores}_{ij} = q_i^T k_j"} display={true} />
+</div>
+
+<div class="equation-with-label">
+  <p class="equation-label">2. Normalize via softmax (higher scores = more attention):</p>
+  <MathBlock formula={"\\alpha_{ij} = \\frac{\\exp(q_i^T k_j / \\sqrt{d_k})}{\\sum_{j'} \\exp(q_i^T k_{j'} / \\sqrt{d_k})}"} display={true} />
+</div>
+
+<div class="equation-with-label">
+  <p class="equation-label">3. Weighted sum of values:</p>
+  <MathBlock formula={"z_i = \\sum_j \\alpha_{ij} v_j"} display={true} />
+</div>
+
+<div class="equation-with-label">
+  <p class="equation-label">4. Matrix form:</p>
+  <MathBlock formula={"\\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V"} display={true} />
+</div>
+
+<p>In words: compute how much each position should attend to every other position (via dot products of queries and keys), normalize these attention weights to sum to 1 (softmax), then use them to take a weighted combination of the values.</p>
+
+<h3>Why Scale by √d_k?</h3>
+
+<p>
+  The scaling factor <MathBlock formula={"1/\\sqrt{d_k}"} /> is critical. Here's why:
+</p>
+
+<p>
+  Assume query and key vectors have zero mean, unit variance entries. Their dot product <MathBlock formula={"q^T k = \\sum_{i=1}^{d_k} q_i k_i"} /> is a sum of <MathBlock formula="d_k" /> random variables.
+</p>
+
+<p>
+  By the Central Limit Theorem:
+</p>
+<ul>
+  <li>Mean of <MathBlock formula="q^T k" />: 0</li>
+  <li>Variance of <MathBlock formula="q^T k" />: <MathBlock formula="d_k" /> (sum of <MathBlock formula="d_k" /> unit-variance variables)</li>
+</ul>
+
+<p>
+  As <MathBlock formula="d_k" /> grows, dot products grow in magnitude proportionally to <MathBlock formula={"\\sqrt{d_k}"} />. Large dot products push softmax into saturated regions where gradients vanish.
+</p>
+
+<p>
+  Scaling by <MathBlock formula={"1/\\sqrt{d_k}"} /> keeps variance at 1 regardless of <MathBlock formula="d_k" />, stabilizing gradients.
+</p>
+
+<Diagram diagramId="attention-viz" title="Attention Mechanism Visualization" autoplay={true} animationDuration={4000}>
+  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+    <div class="grid grid-cols-3 gap-8 items-center justify-center">
+      <!-- Input tokens -->
+      <div class="flex flex-col gap-2" data-animate style="animation-delay: 0.2s">
+        <div class="text-center font-semibold text-sm mb-2">Input Sequence</div>
+        <div class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center">"The"</div>
+        <div class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center">"cat"</div>
+        <div class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center">"sat"</div>
+      </div>
+
+      <!-- Q, K, V projections -->
+      <div class="flex flex-col gap-2" data-animate style="animation-delay: 1s">
+        <div class="text-center font-semibold text-sm mb-2">Project to Q, K, V</div>
+        <div class="text-xs text-center text-slate-600">
+          <div class="mb-1">Q: queries</div>
+          <div class="mb-1">K: keys</div>
+          <div>V: values</div>
+        </div>
+        <div class="text-xs text-center font-mono text-indigo-600">
+          QK<sup>T</sup> / √d<sub>k</sub>
+        </div>
+      </div>
+
+      <!-- Attention output -->
+      <div class="flex flex-col gap-2" data-animate style="animation-delay: 2s">
+        <div class="text-center font-semibold text-sm mb-2">Attended Output</div>
+        <div class="px-3 py-2 bg-indigo-100 rounded text-xs text-center">z₁</div>
+        <div class="px-3 py-2 bg-indigo-100 rounded text-xs text-center">z₂</div>
+        <div class="px-3 py-2 bg-indigo-100 rounded text-xs text-center">z₃</div>
+      </div>
+    </div>
+
+    <div class="mt-6 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center" data-animate style="animation-delay: 3s">
+      Each output z<sub>i</sub> is a weighted combination of all values, where weights come from softmax(QK<sup>T</sup>)
+    </div>
+  </div>
+</Diagram>
+
+<h2>Multi-Head Attention</h2>
+
+<p>
+  A single attention "head" focuses on one type of relationship (e.g., syntactic, semantic). <strong>Multi-head attention</strong> runs multiple attention operations in parallel, each with different learned projections.
+</p>
+
+<p>
+  For h heads:
+</p>
+
+<MathBlock formula={"\\text{head}_i = \\text{Attention}(QW_i^Q, KW_i^K, VW_i^V)"} display={true} />
+
+<p>
+  where each <MathBlock formula={"W_i^Q, W_i^K, W_i^V \\in \\mathbb{R}^{d \\times d_k}"} /> with <MathBlock formula="d_k = d/h" />. Concatenate heads and project:
+</p>
+
+<MathBlock formula={"\\text{MultiHead}(Q, K, V) = \\text{Concat}(\\text{head}_1, \\ldots, \\text{head}_h)W^O"} display={true} />
+
+<p>In plain English: run h separate attention operations in parallel (each with its own learned projections), concatenate their outputs, and project back to the original dimension.</p>
+
+<p>
+  <strong>Why multi-head?</strong>
+</p>
+<ul>
+  <li>Different heads can capture different relationships: one head for syntax, another for coreference, another for semantic similarity</li>
+  <li>Reduces risk of attention collapse (all positions attending to one dominant position)</li>
+  <li>Empirically, 8-16 heads work well for most models</li>
+</ul>
+
+<Quiz
+  question="What happens if we don't scale by √d_k in attention?"
+  quizId="scaling-factor"
+  options={[
+    {
+      id: "a",
+      text: "Training becomes slower but converges to the same solution",
+      correct: false,
+      explanation: "The problem is not just speed, unscaled attention fundamentally hurts gradient flow."
+    },
+    {
+      id: "b",
+      text: "Dot products grow large, pushing softmax into saturated regions with vanishing gradients",
+      correct: true,
+      explanation: "Correct! As d_k increases, dot products have variance proportional to d_k. Large logits cause softmax to output near-one-hot distributions with nearly zero gradients, preventing learning."
+    },
+    {
+      id: "c",
+      text: "The model becomes too sensitive to small changes in input",
+      correct: false,
+      explanation: "Actually, the opposite: softmax saturation makes the model less sensitive (stuck in flat regions)."
+    },
+    {
+      id: "d",
+      text: "Numerical overflow in the exponential function",
+      correct: false,
+      explanation: "While large values can cause overflow, modern frameworks handle this with numerical tricks. The gradient problem is more fundamental."
+    }
+  ]}
+/>
+
+<KeyTakeaway>
+  <ul>
+    <li><strong>RNNs and LSTMs</strong> have sequential bottlenecks preventing parallelization and struggle with long-range dependencies despite gating mechanisms</li>
+    <li><strong>Self-attention</strong> allows each position to directly attend to all others in parallel, eliminating sequential dependencies</li>
+    <li><strong>Scaled dot-product attention</strong> uses QK<sup>T</sup>/√d<sub>k</sub> to compute attention scores; scaling prevents softmax saturation as dimensionality grows</li>
+    <li><strong>Multi-head attention</strong> runs multiple attention operations in parallel to capture diverse relationships (syntactic, semantic, etc.)</li>
+    <li><strong>The transformer's parallelism</strong> enables training on modern hardware at unprecedented scale, catalyzing the foundation model era</li>
+  </ul>
+</KeyTakeaway>
+
+<h2>References</h2>
+
+<PaperReference
+  title="Attention Is All You Need"
+  authors="Vaswani, Shazeer, Parmar, et al."
+  year="2017"
+  url="https://arxiv.org/abs/1706.03762"
+  type="paper"
+/>
+
+<PaperReference
+  title="Long Short-Term Memory"
+  authors="Hochreiter, Schmidhuber"
+  year="1997"
+  url="https://www.bioinf.jku.at/publications/older/2604.pdf"
+  type="paper"
+/>
+
+<PaperReference
+  title="The Illustrated Transformer"
+  authors="Jay Alammar"
+  year="2018"
+  url="https://jalammar.github.io/illustrated-transformer/"
+  type="blog"
+/>

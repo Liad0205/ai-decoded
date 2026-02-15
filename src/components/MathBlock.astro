@@ -1,0 +1,23 @@
+---
+// Math rendering component using KaTeX
+import katex from 'katex';
+
+interface Props {
+  formula: string;
+  display?: boolean;
+}
+
+const { formula, display = false } = Astro.props;
+
+const html = katex.renderToString(formula, {
+  displayMode: display,
+  throwOnError: false,
+  trust: true,
+  strict: false  // Disable strict mode warnings for valid LaTeX edge cases
+});
+---
+
+<span
+  class={display ? 'math-display block' : 'math-inline inline-block'}
+  set:html={html}
+/>

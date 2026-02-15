@@ -1,0 +1,104 @@
+---
+// Professional Module Card Component
+import { Icon } from './Icon';
+import Card from './ui/Card.astro';
+
+interface Props {
+  moduleId: string;
+  number: number;
+  title: string;
+  description: string;
+  icon: string;  // Lucide icon name
+  slug: string;
+  totalLessons: number;
+}
+
+const { moduleId, number, title, description, icon, slug, totalLessons } = Astro.props;
+---
+
+<Card variant="elevated" className="group hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+  <a href={`${import.meta.env.BASE_URL}${slug}`} class="block p-8">
+    <div class="flex items-start gap-6">
+      <!-- Icon Container -->
+      <div class="flex-shrink-0">
+        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--primary))]/70 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+          <Icon name={icon} className="w-8 h-8 text-white" client:load />
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="inline-flex items-center justify-center h-6 px-2.5 rounded-full bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] text-xs font-semibold">
+            Module {number}
+          </span>
+          <span class="text-sm text-[hsl(var(--muted-foreground))]">
+            {totalLessons} {totalLessons === 1 ? 'Lesson' : 'Lessons'}
+          </span>
+        </div>
+
+        <h3 class="text-xl font-semibold text-[hsl(var(--foreground))] mb-2 group-hover:text-[hsl(var(--primary))] transition-colors">
+          {title}
+        </h3>
+
+        <p class="text-[hsl(var(--muted-foreground))] leading-relaxed text-sm mb-4">
+          {description}
+        </p>
+
+        <!-- Progress Bar -->
+        <div class="space-y-2" data-module-progress={moduleId} data-total-lessons={totalLessons}>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-[hsl(var(--muted-foreground))]">Progress</span>
+            <span class="font-medium text-[hsl(var(--foreground))]" data-progress-text>0%</span>
+          </div>
+          <div class="h-2 bg-[hsl(var(--muted))] rounded-full overflow-hidden">
+            <div
+              class="h-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))]/70 rounded-full transition-all duration-500"
+              style="width: 0%"
+              data-progress-bar
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow Icon -->
+      <div class="flex-shrink-0 self-center">
+        <Icon
+          name="ChevronRight"
+          className="w-6 h-6 text-[hsl(var(--muted-foreground))] group-hover:text-[hsl(var(--primary))] group-hover:translate-x-1 transition-all"
+          client:load
+        />
+      </div>
+    </div>
+  </a>
+</Card>
+
+<script>
+  import { getModuleProgress } from '../scripts/progress';
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+      const containers = document.querySelectorAll('[data-module-progress]');
+
+      containers.forEach(container => {
+        const moduleId = container.getAttribute('data-module-progress');
+        const progressBar = container.querySelector('[data-progress-bar]');
+        const progressText = container.querySelector('[data-progress-text]');
+        const totalLessonsAttr = container.getAttribute('data-total-lessons');
+
+        if (moduleId && progressBar && progressText && totalLessonsAttr) {
+          const totalLessons = parseInt(totalLessonsAttr, 10);
+
+          function updateProgress() {
+            const progress = getModuleProgress(moduleId, totalLessons);
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+          }
+
+          updateProgress();
+          window.addEventListener('progressUpdated', updateProgress);
+        }
+      });
+    });
+  }
+</script>
