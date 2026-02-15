@@ -1,154 +1,356 @@
 ---
 // Module 3, Lesson 3.1: Pretraining - Building the Foundation
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Understand the pretraining data pipeline: sourcing, filtering, deduplication, and tokenization</li>
-  <li>Derive the next-token prediction objective and explain why it produces general-purpose representations</li>
-  <li>Explain distributed training strategies: data parallelism, tensor parallelism, and pipeline parallelism</li>
-  <li>Understand mixed-precision training and why it enables efficient large-scale training</li>
+  <li>
+    Understand the pretraining data pipeline: sourcing,
+    filtering, deduplication, and tokenization
+  </li>
+  <li>
+    Derive the next-token prediction objective and explain
+    why it produces general-purpose representations
+  </li>
+  <li>
+    Explain distributed training strategies: data
+    parallelism, tensor parallelism, and pipeline
+    parallelism
+  </li>
+  <li>
+    Understand mixed-precision training and why it enables
+    efficient large-scale training
+  </li>
 </ul>
 
 <h2>The Pretraining Data Pipeline</h2>
 
 <p>
-  Pretraining is where an LLM acquires its broad knowledge of language, facts, and reasoning patterns. The quality and scale of pretraining data fundamentally determine what the model can learn.
+  Pretraining is where an LLM acquires its broad knowledge
+  of language, facts, and reasoning patterns. The quality
+  and scale of pretraining data fundamentally determine what
+  the model can learn.
 </p>
 
 <h3>Data Sources</h3>
 <p>
-  Modern LLMs train on trillions of tokens from diverse sources:
+  Modern LLMs train on trillions of tokens from diverse
+  sources:
 </p>
 <ul>
-  <li><strong>Web crawls</strong>: Common Crawl provides petabytes of raw HTML. After filtering, this yields hundreds of billions of tokens. Projects like RefinedWeb and FineWeb apply aggressive quality filtering to Common Crawl data.</li>
-  <li><strong>Books and literature</strong>: Books3, Project Gutenberg, and curated book corpora provide long-form, high-quality text with coherent structure.</li>
-  <li><strong>Code</strong>: GitHub repositories, Stack Overflow. Code data significantly improves reasoning and structured thinking, even for non-code tasks.</li>
-  <li><strong>Scientific papers</strong>: ArXiv, PubMed, Semantic Scholar. Domain-specific technical knowledge.</li>
-  <li><strong>Curated datasets</strong>: Wikipedia, StackExchange, high-quality forums. These are heavily upweighted despite their small size relative to web data.</li>
+  <li>
+    <strong>Web crawls</strong>: Common Crawl provides
+    petabytes of raw HTML. After filtering, this yields
+    hundreds of billions of tokens. Projects like RefinedWeb
+    and FineWeb apply aggressive quality filtering to Common
+    Crawl data.
+  </li>
+  <li>
+    <strong>Books and literature</strong>: Books3, Project
+    Gutenberg, and curated book corpora provide long-form,
+    high-quality text with coherent structure.
+  </li>
+  <li>
+    <strong>Code</strong>: GitHub repositories, Stack
+    Overflow. Code data significantly improves reasoning and
+    structured thinking, even for non-code tasks.
+  </li>
+  <li>
+    <strong>Scientific papers</strong>: ArXiv, PubMed,
+    Semantic Scholar. Domain-specific technical knowledge.
+  </li>
+  <li>
+    <strong>Curated datasets</strong>: Wikipedia,
+    StackExchange, high-quality forums. These are heavily
+    upweighted despite their small size relative to web
+    data.
+  </li>
 </ul>
 
 <h3>Data Quality Filtering</h3>
 <p>
-  Raw web text is noisy. Filtering is critical and typically involves multiple stages:
+  Raw web text is noisy. Filtering is critical and typically
+  involves multiple stages:
 </p>
 <ul>
-  <li><strong>Heuristic filters</strong>: Remove pages with too many special characters, extreme length, low word count, or high perplexity under a reference language model.</li>
-  <li><strong>Deduplication</strong>: Near-duplicate removal using MinHash or exact n-gram matching. Deduplication reduces memorization and improves generalization. Studies show that deduplicating training data can reduce the required dataset size by 30-50% with no loss in quality.</li>
-  <li><strong>Toxicity filtering</strong>: Classifier-based removal of harmful, biased, or low-quality content.</li>
-  <li><strong>Language identification</strong>: FastText classifiers separate languages for appropriate mixing ratios.</li>
+  <li>
+    <strong>Heuristic filters</strong>: Remove pages with
+    too many special characters, extreme length, low word
+    count, or high perplexity under a reference language
+    model.
+  </li>
+  <li>
+    <strong>Deduplication</strong>: Near-duplicate removal
+    using MinHash or exact n-gram matching. Deduplication
+    reduces memorization and improves generalization.
+    Studies show that deduplicating training data can reduce
+    the required dataset size by 30-50% with no loss in
+    quality.
+  </li>
+  <li>
+    <strong>Toxicity filtering</strong>: Classifier-based
+    removal of harmful, biased, or low-quality content.
+  </li>
+  <li>
+    <strong>Language identification</strong>: FastText
+    classifiers separate languages for appropriate mixing
+    ratios.
+  </li>
 </ul>
 
 <h3>Data Mixing</h3>
 <p>
-  Not all data sources are equal. Training mixes are carefully tuned:
+  Not all data sources are equal. Training mixes are
+  carefully tuned:
 </p>
 <ul>
-  <li>High-quality sources (Wikipedia, books, code) are upsampled despite being a small fraction of total data.</li>
-  <li>LLaMA trained on roughly: 67% web, 4.5% Wikipedia, 4.5% books, 6.5% code (GitHub), and various other sources.</li>
-  <li>The optimal mix is an active research area. Models like GPT-4 and Claude use proprietary data mixtures that are closely guarded.</li>
+  <li>
+    High-quality sources (Wikipedia, books, code) are
+    upsampled despite being a small fraction of total data.
+  </li>
+  <li>
+    LLaMA trained on roughly: 67% web, 4.5% Wikipedia, 4.5%
+    books, 6.5% code (GitHub), and various other sources.
+  </li>
+  <li>
+    The optimal mix is an active research area. Models like
+    GPT-4 and Claude use proprietary data mixtures that are
+    closely guarded.
+  </li>
 </ul>
 
 <h3>Tokenization</h3>
 <p>
-  Raw text must be converted into a sequence of discrete tokens. Modern LLMs use subword tokenization:
+  Raw text must be converted into a sequence of discrete
+  tokens. Modern LLMs use subword tokenization:
 </p>
 <ul>
-  <li><strong>Byte Pair Encoding (BPE)</strong>: Iteratively merges the most frequent byte pairs. Used by GPT models. Vocabulary sizes typically range from 32K to 100K+ tokens.</li>
-  <li><strong>SentencePiece</strong>: Language-agnostic tokenizer that works directly on raw text (no pre-tokenization). Used by LLaMA, T5.</li>
-  <li><strong>Tokenizer-free approaches</strong>: Byte-level models operate directly on raw bytes, eliminating tokenization artifacts but requiring longer sequences.</li>
+  <li>
+    <strong>Byte Pair Encoding (BPE)</strong>: Iteratively
+    merges the most frequent byte pairs. Used by GPT models.
+    Vocabulary sizes typically range from 32K to 100K+
+    tokens.
+  </li>
+  <li>
+    <strong>SentencePiece</strong>: Language-agnostic
+    tokenizer that works directly on raw text (no
+    pre-tokenization). Used by LLaMA, T5.
+  </li>
+  <li>
+    <strong>Tokenizer-free approaches</strong>: Byte-level
+    models operate directly on raw bytes, eliminating
+    tokenization artifacts but requiring longer sequences.
+  </li>
 </ul>
 
 <p>
-  <strong>Tokenization matters</strong>: The choice of tokenizer affects the effective context length, multilingual performance, and computational cost. A tokenizer trained primarily on English text may represent non-English languages with 2-3x more tokens per word, effectively reducing context length for those languages.
+  <strong>Tokenization matters</strong>: The choice of
+  tokenizer affects the effective context length,
+  multilingual performance, and computational cost. A
+  tokenizer trained primarily on English text may represent
+  non-English languages with 2-3x more tokens per word,
+  effectively reducing context length for those languages.
 </p>
 
 <h2>The Pretraining Objective: Next-Token Prediction</h2>
 
 <p>
-  The core training objective is deceptively simple: given a sequence of tokens, predict the next one.
+  The core training objective is deceptively simple: given a
+  sequence of tokens, predict the next one.
 </p>
 
 <p>
-  Given a sequence <MathBlock formula={"x_1, x_2, \\ldots, x_T"} />, the model learns to maximize the probability of each token given all preceding tokens:
+  Given a sequence <MathBlock
+    formula={"x_1, x_2, \\ldots, x_T"}
+  />, the model learns to maximize the probability of each
+  token given all preceding tokens:
 </p>
 
-<MathBlock formula={"\\mathcal{L}(\\theta) = -\\sum_{t=1}^{T} \\log P_\\theta(x_t \\mid x_1, \\ldots, x_{t-1})"} display={true} />
-
-<p>In plain English: sum the negative log-probability of each token given everything before it. The model is penalized for being surprised by the next token, so it learns to predict accurately.</p>
+<MathBlock
+  formula={"\\mathcal{L}(\\theta) = -\\sum_{t=1}^{T} \\log P_\\theta(x_t \\mid x_1, \\ldots, x_{t-1})"}
+  display={true}
+/>
 
 <p>
-  This is the <strong>causal language modeling</strong> objective, also called autoregressive modeling. The model processes the entire sequence in one forward pass using a causal attention mask that prevents position t from attending to positions t+1, t+2, ... This enables efficient parallel training despite the sequential nature of generation.
+  Intuition: sum the negative log-probability of each token
+  given everything before it. The model is penalized for
+  being surprised by the next token, so it learns to predict
+  accurately.
+</p>
+
+<p>
+  This is the <strong>causal language modeling</strong> objective,
+  also called autoregressive modeling. The model processes the
+  entire sequence in one forward pass using a causal attention
+  mask that prevents position t from attending to positions t+1,
+  t+2, ... This enables efficient parallel training despite the
+  sequential nature of generation.
 </p>
 
 <h3>Why Next-Token Prediction Works So Well</h3>
 
 <p>
-  Predicting the next token in internet text requires an incredibly broad set of capabilities:
+  Predicting the next token in internet text requires an
+  incredibly broad set of capabilities:
 </p>
 <ul>
-  <li><strong>Syntax and grammar</strong>: To predict the next word, the model must learn linguistic structure.</li>
-  <li><strong>Semantics</strong>: Predicting the right word requires understanding meaning and context.</li>
-  <li><strong>World knowledge</strong>: Completing factual text requires knowing facts about the world.</li>
-  <li><strong>Reasoning</strong>: Predicting the next step in a mathematical proof or logical argument requires reasoning.</li>
-  <li><strong>Style and pragmatics</strong>: The model must learn to match tone, register, and communicative intent.</li>
+  <li>
+    <strong>Syntax and grammar</strong>: To predict the next
+    word, the model must learn linguistic structure.
+  </li>
+  <li>
+    <strong>Semantics</strong>: Predicting the right word
+    requires understanding meaning and context.
+  </li>
+  <li>
+    <strong>World knowledge</strong>: Completing factual
+    text requires knowing facts about the world.
+  </li>
+  <li>
+    <strong>Reasoning</strong>: Predicting the next step in
+    a mathematical proof or logical argument requires
+    reasoning.
+  </li>
+  <li>
+    <strong>Style and pragmatics</strong>: The model must
+    learn to match tone, register, and communicative intent.
+  </li>
 </ul>
 
 <p>
-  As Ilya Sutskever famously argued: prediction is compression, and compression requires understanding. A model that achieves very low perplexity on internet text has necessarily learned a rich world model.
+  As Ilya Sutskever famously argued: prediction is
+  compression, and compression requires understanding. A
+  model that achieves very low perplexity on internet text
+  has necessarily learned a rich world model.
 </p>
 
 <h3>Cross-Entropy Loss and Perplexity</h3>
 
 <p>
-  The training loss is the cross-entropy between the model's predicted distribution and the true next token. <strong>Perplexity</strong> is the exponentiated average cross-entropy loss:
+  The training loss is the cross-entropy between the model's
+  predicted distribution and the true next token. <strong
+    >Perplexity</strong
+  > is the exponentiated average cross-entropy loss:
 </p>
 
-<MathBlock formula={"\\text{PPL} = \\exp\\left(-\\frac{1}{T}\\sum_{t=1}^{T} \\log P_\\theta(x_t \\mid x_{<t})\\right)"} display={true} />
-
-<p>In plain English: perplexity exponentiates the average per-token loss. It represents the effective number of equally likely choices the model faces at each step.</p>
+<MathBlock
+  formula={"\\text{PPL} = \\exp\\left(-\\frac{1}{T}\\sum_{t=1}^{T} \\log P_\\theta(x_t \\mid x_{<t})\\right)"}
+  display={true}
+/>
 
 <p>
-  Perplexity has an intuitive interpretation: a perplexity of k means the model is, on average, as uncertain as if it were choosing uniformly among k options at each step. Lower is better. State-of-the-art LLMs achieve perplexities around 5-10 on typical web text.
+  Intuition: perplexity exponentiates the average per-token
+  loss. It represents the effective number of equally likely
+  choices the model faces at each step.
 </p>
 
-<Diagram diagramId="pretraining-pipeline" title="Pretraining Pipeline Overview" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+<p>
+  Perplexity has an intuitive interpretation: a perplexity
+  of k means the model is, on average, as uncertain as if it
+  were choosing uniformly among k options at each step.
+  Lower is better. State-of-the-art LLMs achieve
+  perplexities around 5-10 on typical web text.
+</p>
+
+<Diagram
+  diagramId="pretraining-pipeline"
+  title="Pretraining Pipeline Overview"
+  autoplay={true}
+  animationDuration={5000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+  >
     <div class="flex flex-col gap-4 items-center">
       <!-- Stage 1: Data -->
-      <div class="flex gap-3 items-center w-full justify-center" data-animate style="animation-delay: 0.3s">
-        <div class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium">Web Crawl</div>
-        <div class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium">Books</div>
-        <div class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium">Code</div>
-        <div class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium">Papers</div>
+      <div
+        class="flex gap-3 items-center w-full justify-center"
+        data-animate
+        style="animation-delay: 0.3s"
+      >
+        <div
+          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+        >
+          Web Crawl
+        </div>
+        <div
+          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+        >
+          Books
+        </div>
+        <div
+          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+        >
+          Code
+        </div>
+        <div
+          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+        >
+          Papers
+        </div>
       </div>
-      <div class="text-slate-400" data-animate style="animation-delay: 0.8s">&#8595;</div>
+      <div
+        class="text-slate-400"
+        data-animate
+        style="animation-delay: 0.8s"
+      >
+        &#8595;
+      </div>
 
       <!-- Stage 2: Filtering -->
-      <div class="px-4 py-2 bg-amber-100 rounded text-xs text-center font-medium w-64" data-animate style="animation-delay: 1.2s">
+      <div
+        class="px-4 py-2 bg-amber-100 rounded text-xs text-center font-medium w-64"
+        data-animate
+        style="animation-delay: 1.2s"
+      >
         Filter + Deduplicate + Tokenize
       </div>
-      <div class="text-slate-400" data-animate style="animation-delay: 1.6s">&#8595;</div>
+      <div
+        class="text-slate-400"
+        data-animate
+        style="animation-delay: 1.6s"
+      >
+        &#8595;
+      </div>
 
       <!-- Stage 3: Training -->
-      <div class="px-4 py-2 bg-indigo-100 rounded text-xs text-center font-medium w-64" data-animate style="animation-delay: 2.0s">
+      <div
+        class="px-4 py-2 bg-indigo-100 rounded text-xs text-center font-medium w-64"
+        data-animate
+        style="animation-delay: 2.0s"
+      >
         Next-Token Prediction on Trillions of Tokens
       </div>
-      <div class="text-slate-400" data-animate style="animation-delay: 2.4s">&#8595;</div>
+      <div
+        class="text-slate-400"
+        data-animate
+        style="animation-delay: 2.4s"
+      >
+        &#8595;
+      </div>
 
       <!-- Stage 4: Output -->
-      <div class="px-4 py-3 bg-emerald-100 rounded text-sm text-center font-semibold w-64" data-animate style="animation-delay: 3.0s">
+      <div
+        class="px-4 py-3 bg-emerald-100 rounded text-sm text-center font-semibold w-64"
+        data-animate
+        style="animation-delay: 3.0s"
+      >
         Pretrained Base Model
       </div>
     </div>
 
-    <div class="mt-4 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center" data-animate style="animation-delay: 4s">
-      Base models are powerful text completors but not yet aligned for instruction-following
+    <div
+      class="mt-4 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center"
+      data-animate
+      style="animation-delay: 4s"
+    >
+      Base models are powerful text completors but not yet
+      aligned for instruction-following
     </div>
   </div>
 </Diagram>
@@ -156,86 +358,164 @@ import Quiz from '../../components/Quiz.astro';
 <h2>Distributed Training</h2>
 
 <p>
-  Training a frontier LLM requires thousands of GPUs working in concert. A single GPU cannot hold the model parameters, optimizer states, gradients, and activations simultaneously. Distributed training strategies address this by partitioning the work across devices.
+  Training a frontier LLM requires thousands of GPUs working
+  in concert. A single GPU cannot hold the model parameters,
+  optimizer states, gradients, and activations
+  simultaneously. Distributed training strategies address
+  this by partitioning the work across devices.
 </p>
 
 <h3>Data Parallelism (DP)</h3>
 
 <p>
-  The simplest strategy: replicate the full model on each GPU, split the batch across GPUs, and average gradients.
+  The simplest strategy: replicate the full model on each
+  GPU, split the batch across GPUs, and average gradients.
 </p>
 <ul>
   <li>Each GPU processes a different mini-batch shard.</li>
-  <li>After the backward pass, gradients are synchronized via <strong>all-reduce</strong> (each GPU gets the averaged gradient).</li>
-  <li><strong>Limitation</strong>: Every GPU must hold the full model. A 70B parameter model with Adam optimizer states requires ~280GB of memory per replica (parameters in FP16 + optimizer states in FP32), exceeding single-GPU capacity.</li>
+  <li>
+    After the backward pass, gradients are synchronized via <strong
+      >all-reduce</strong
+    > (each GPU gets the averaged gradient).
+  </li>
+  <li>
+    <strong>Limitation</strong>: Every GPU must hold the
+    full model. A 70B parameter model with Adam optimizer
+    states requires ~280GB of memory per replica (parameters
+    in FP16 + optimizer states in FP32), exceeding
+    single-GPU capacity.
+  </li>
 </ul>
 
 <h3>ZeRO: Zero Redundancy Optimizer</h3>
 
 <p>
-  ZeRO (DeepSpeed) partitions optimizer states, gradients, and parameters across GPUs to eliminate redundancy:
+  ZeRO (DeepSpeed) partitions optimizer states, gradients,
+  and parameters across GPUs to eliminate redundancy:
 </p>
 <ul>
-  <li><strong>ZeRO Stage 1</strong>: Partition optimizer states. Reduces memory by ~4x.</li>
-  <li><strong>ZeRO Stage 2</strong>: Partition gradients as well. Additional ~2x reduction.</li>
-  <li><strong>ZeRO Stage 3</strong>: Partition parameters too. Each GPU holds only a shard of the full model. Parameters are gathered on-demand during forward/backward passes.</li>
+  <li>
+    <strong>ZeRO Stage 1</strong>: Partition optimizer
+    states. Reduces memory by ~4x.
+  </li>
+  <li>
+    <strong>ZeRO Stage 2</strong>: Partition gradients as
+    well. Additional ~2x reduction.
+  </li>
+  <li>
+    <strong>ZeRO Stage 3</strong>: Partition parameters too.
+    Each GPU holds only a shard of the full model.
+    Parameters are gathered on-demand during
+    forward/backward passes.
+  </li>
 </ul>
 
 <p>
-  ZeRO enables data-parallel training of much larger models by eliminating the requirement that each GPU hold a full copy of everything.
+  ZeRO enables data-parallel training of much larger models
+  by eliminating the requirement that each GPU hold a full
+  copy of everything.
 </p>
 
-<div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg my-4">
-  <p class="font-semibold text-indigo-800 dark:text-indigo-200">The "Pizza Party" Analogy</p>
+<div
+  class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg my-4"
+>
+  <p
+    class="font-semibold text-indigo-800 dark:text-indigo-200"
+  >
+    The "Pizza Party" Analogy
+  </p>
   <p class="text-sm">
-    Imagine a group of chefs (GPUs) trying to bake a massive pizza (train a model).
+    Imagine a group of chefs (GPUs) trying to bake a massive
+    pizza (train a model).
   </p>
   <ul class="list-disc list-inside text-sm mt-2 ml-2">
-    <li><strong>Standard Data Parallelism</strong>: Every chef must memorize the <em>entire</em> 1,000-page recipe book. This is redundant and wastes brainpower (memory).</li>
-    <li><strong>ZeRO</strong>: We split the recipe book. Chef A holds pages 1-100, Chef B holds 101-200, etc. When Chef A needs to check step 150, they ask Chef B for that page, use it, and return it.</li>
+    <li>
+      <strong>Standard Data Parallelism</strong>: Every chef
+      must memorize the <em>entire</em> 1,000-page recipe book.
+      This is redundant and wastes brainpower (memory).
+    </li>
+    <li>
+      <strong>ZeRO</strong>: We split the recipe book. Chef
+      A holds pages 1-100, Chef B holds 101-200, etc. When
+      Chef A needs to check step 150, they ask Chef B for
+      that page, use it, and return it.
+    </li>
   </ul>
   <p class="text-sm mt-2">
-    By sharing the recipe (parameters/optimizer states) instead of duplicating it, we can bake much bigger pizzas.
+    By sharing the recipe (parameters/optimizer states)
+    instead of duplicating it, we can bake much bigger
+    pizzas.
   </p>
 </div>
 
 <h3>Tensor Parallelism (TP)</h3>
 
 <p>
-  Split individual weight matrices across GPUs. For a linear layer <MathBlock formula="Y = XW" />, split the weight matrix <MathBlock formula="W" /> column-wise across N GPUs:
+  Split individual weight matrices across GPUs. For a linear
+  layer <MathBlock formula="Y = XW" />, split the weight
+  matrix <MathBlock formula="W" /> column-wise across N GPUs:
 </p>
 
-<MathBlock formula={"W = [W_1 | W_2 | \\ldots | W_N]"} display={true} />
-
-<p>In plain English: split each weight matrix into N column-wise shards, one per GPU. Each GPU multiplies the input by its shard, then the partial results are combined.</p>
+<MathBlock
+  formula={"W = [W_1 | W_2 | \\ldots | W_N]"}
+  display={true}
+/>
 
 <p>
-  Each GPU computes <MathBlock formula="Y_i = XW_i" />, then results are combined via all-reduce. This is commonly applied to the attention and FFN layers.
+  Intuition: split each weight matrix into N column-wise
+  shards, one per GPU. Each GPU multiplies the input by its
+  shard, then the partial results are combined.
 </p>
 
 <p>
-  <strong>Trade-off</strong>: Tensor parallelism requires high-bandwidth interconnect (NVLink) between GPUs because communication happens within every layer. Best used within a single node (8 GPUs).
+  Each GPU computes <MathBlock formula="Y_i = XW_i" />, then
+  results are combined via all-reduce. This is commonly
+  applied to the attention and FFN layers.
+</p>
+
+<p>
+  <strong>Trade-off</strong>: Tensor parallelism requires
+  high-bandwidth interconnect (NVLink) between GPUs because
+  communication happens within every layer. Best used within
+  a single node (8 GPUs).
 </p>
 
 <h3>Pipeline Parallelism (PP)</h3>
 
 <p>
-  Assign different layers to different GPUs. GPU 0 runs layers 1-10, GPU 1 runs layers 11-20, etc.
+  Assign different layers to different GPUs. GPU 0 runs
+  layers 1-10, GPU 1 runs layers 11-20, etc.
 </p>
 <ul>
-  <li><strong>Naive approach</strong>: Only one GPU active at a time (the "bubble" problem).</li>
-  <li><strong>Micro-batching</strong> (GPipe): Split mini-batch into micro-batches, pipeline them through stages. Reduces the bubble but doesn't eliminate it.</li>
-  <li><strong>1F1B scheduling</strong>: Interleave forward and backward passes of different micro-batches to minimize pipeline bubbles.</li>
+  <li>
+    <strong>Naive approach</strong>: Only one GPU active at
+    a time (the "bubble" problem).
+  </li>
+  <li>
+    <strong>Micro-batching</strong> (GPipe): Split mini-batch
+    into micro-batches, pipeline them through stages. Reduces
+    the bubble but doesn't eliminate it.
+  </li>
+  <li>
+    <strong>1F1B scheduling</strong>: Interleave forward and
+    backward passes of different micro-batches to minimize
+    pipeline bubbles.
+  </li>
 </ul>
 
 <p>
-  Pipeline parallelism works well across nodes since inter-layer communication (passing activations) requires less bandwidth than intra-layer communication (tensor parallelism).
+  Pipeline parallelism works well across nodes since
+  inter-layer communication (passing activations) requires
+  less bandwidth than intra-layer communication (tensor
+  parallelism).
 </p>
 
 <h3>3D Parallelism in Practice</h3>
 
 <p>
-  Frontier models combine all three: TP within a node, PP across nodes, and DP (with ZeRO) across replicas. For example, training a 175B model on 1024 GPUs might use:
+  Frontier models combine all three: TP within a node, PP
+  across nodes, and DP (with ZeRO) across replicas. For
+  example, training a 175B model on 1024 GPUs might use:
 </p>
 <ul>
   <li>TP = 8 (within each 8-GPU node)</li>
@@ -247,43 +527,92 @@ import Quiz from '../../components/Quiz.astro';
 <h2>Mixed-Precision Training</h2>
 
 <p>
-  Training in full FP32 precision is wasteful. Modern training uses mixed precision: FP16 or BF16 for most operations, FP32 for critical accumulations.
+  Training in full FP32 precision is wasteful. Modern
+  training uses mixed precision: FP16 or BF16 for most
+  operations, FP32 for critical accumulations.
 </p>
 
 <h3>FP16 vs BF16</h3>
 <ul>
-  <li><strong>FP16</strong> (half precision): 1 sign, 5 exponent, 10 mantissa bits. Range: ±65,504. High precision but limited range, requiring loss scaling to prevent underflow.</li>
-  <li><strong>BF16</strong> (bfloat16): 1 sign, 8 exponent, 7 mantissa bits. Same range as FP32 but lower precision. No loss scaling needed. Preferred for LLM training.</li>
+  <li>
+    <strong>FP16</strong> (half precision): 1 sign, 5 exponent,
+    10 mantissa bits. Range: ±65,504. High precision but limited
+    range, requiring loss scaling to prevent underflow.
+  </li>
+  <li>
+    <strong>BF16</strong> (bfloat16): 1 sign, 8 exponent, 7 mantissa
+    bits. Same range as FP32 but lower precision. No loss scaling
+    needed. Preferred for LLM training.
+  </li>
 </ul>
 
 <h3>The Mixed-Precision Recipe</h3>
 
 <p>
-  The key insight: forward and backward passes can use reduced precision (BF16), but certain operations need FP32 for numerical stability:
+  The key insight: forward and backward passes can use
+  reduced precision (BF16), but certain operations need FP32
+  for numerical stability:
 </p>
 <ul>
-  <li><strong>Master weights in FP32</strong>: Maintain a full-precision copy of parameters. Small gradient updates in FP16 would be rounded to zero (gradient underflow).</li>
-  <li><strong>Forward/backward in BF16</strong>: Activations and gradients computed in reduced precision. This halves memory for activations and doubles throughput on modern GPUs (Tensor Cores).</li>
-  <li><strong>Accumulations in FP32</strong>: Reduction operations (summing gradients, softmax denominators) use FP32 to prevent numerical errors from accumulating.</li>
+  <li>
+    <strong>Master weights in FP32</strong>: Maintain a
+    full-precision copy of parameters. Small gradient
+    updates in FP16 would be rounded to zero (gradient
+    underflow).
+  </li>
+  <li>
+    <strong>Forward/backward in BF16</strong>: Activations
+    and gradients computed in reduced precision. This halves
+    memory for activations and doubles throughput on modern
+    GPUs (Tensor Cores).
+  </li>
+  <li>
+    <strong>Accumulations in FP32</strong>: Reduction
+    operations (summing gradients, softmax denominators) use
+    FP32 to prevent numerical errors from accumulating.
+  </li>
 </ul>
 
-<MathBlock formula={"\\theta_{t+1}^{\\text{FP32}} = \\theta_t^{\\text{FP32}} - \\eta \\cdot g_t^{\\text{BF16} \\to \\text{FP32}}"} display={true} />
-
-<p>In plain English: gradients are computed in BF16 for speed, then cast to FP32 before updating the master copy of the weights. This preserves the precision of small gradient updates that would be lost in half-precision.</p>
+<MathBlock
+  formula={"\\theta_{t+1}^{\\text{FP32}} = \\theta_t^{\\text{FP32}} - \\eta \\cdot g_t^{\\text{BF16} \\to \\text{FP32}}"}
+  display={true}
+/>
 
 <p>
-  <strong>Impact</strong>: Mixed precision reduces memory usage by ~50% and increases training throughput by 2-3x on modern hardware, with negligible impact on model quality.
+  Intuition: gradients are computed in BF16 for speed, then
+  cast to FP32 before updating the master copy of the
+  weights. This preserves the precision of small gradient
+  updates that would be lost in half-precision.
+</p>
+
+<p>
+  <strong>Impact</strong>: Mixed precision reduces memory
+  usage by ~50% and increases training throughput by 2-3x on
+  modern hardware, with negligible impact on model quality.
 </p>
 
 <h3>Activation Checkpointing</h3>
 
 <p>
-  During the forward pass, all intermediate activations must be stored for the backward pass. For large models, this dominates memory usage. <strong>Activation checkpointing</strong> (gradient checkpointing) trades compute for memory:
+  During the forward pass, all intermediate activations must
+  be stored for the backward pass. For large models, this
+  dominates memory usage. <strong
+    >Activation checkpointing</strong
+  > (gradient checkpointing) trades compute for memory:
 </p>
 <ul>
-  <li>Only store activations at checkpoint boundaries (e.g., every N layers).</li>
-  <li>During backward pass, recompute intermediate activations from the nearest checkpoint.</li>
-  <li>Reduces activation memory from O(L) to O(sqrt(L)) at the cost of ~33% extra compute.</li>
+  <li>
+    Only store activations at checkpoint boundaries (e.g.,
+    every N layers).
+  </li>
+  <li>
+    During backward pass, recompute intermediate activations
+    from the nearest checkpoint.
+  </li>
+  <li>
+    Reduces activation memory from O(L) to O(sqrt(L)) at the
+    cost of ~33% extra compute.
+  </li>
 </ul>
 
 <Quiz
@@ -294,36 +623,61 @@ import Quiz from '../../components/Quiz.astro';
       id: "a",
       text: "BF16 has higher precision (more mantissa bits) than FP16",
       correct: false,
-      explanation: "Actually, BF16 has fewer mantissa bits (7 vs 10) than FP16, giving it lower precision."
+      explanation:
+        "Actually, BF16 has fewer mantissa bits (7 vs 10) than FP16, giving it lower precision.",
     },
     {
       id: "b",
       text: "BF16 has the same dynamic range as FP32, eliminating the need for loss scaling",
       correct: true,
-      explanation: "Correct! BF16 has 8 exponent bits (same as FP32), giving it a much larger dynamic range than FP16. This means gradients rarely underflow, eliminating the need for the loss scaling workaround required by FP16."
+      explanation:
+        "Correct! BF16 has 8 exponent bits (same as FP32), giving it a much larger dynamic range than FP16. This means gradients rarely underflow, eliminating the need for the loss scaling workaround required by FP16.",
     },
     {
       id: "c",
       text: "BF16 uses less memory than FP16",
       correct: false,
-      explanation: "Both BF16 and FP16 use 16 bits (2 bytes) per value. They use the same amount of memory."
+      explanation:
+        "Both BF16 and FP16 use 16 bits (2 bytes) per value. They use the same amount of memory.",
     },
     {
       id: "d",
       text: "BF16 is faster to compute than FP16 on all hardware",
       correct: false,
-      explanation: "Performance depends on hardware support. Both formats run at similar speed on modern GPUs with Tensor Core support."
-    }
+      explanation:
+        "Performance depends on hardware support. Both formats run at similar speed on modern GPUs with Tensor Core support.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Pretraining data quality</strong> is paramount: careful filtering, deduplication, and mixing of diverse sources (web, books, code, papers) determines model capabilities</li>
-    <li><strong>Next-token prediction</strong> is a deceptively powerful objective: predicting internet text requires learning syntax, semantics, world knowledge, and reasoning</li>
-    <li><strong>Distributed training</strong> combines data parallelism (split batches), tensor parallelism (split weight matrices), and pipeline parallelism (split layers) to scale across thousands of GPUs</li>
-    <li><strong>Mixed precision</strong> (BF16 forward/backward, FP32 master weights) cuts memory by ~50% and doubles throughput with minimal quality loss</li>
-    <li><strong>Activation checkpointing</strong> trades ~33% extra compute for dramatically reduced memory, enabling training of larger models</li>
+    <li>
+      <strong>Pretraining data quality</strong> is paramount:
+      careful filtering, deduplication, and mixing of diverse
+      sources (web, books, code, papers) determines model capabilities
+    </li>
+    <li>
+      <strong>Next-token prediction</strong> is a deceptively
+      powerful objective: predicting internet text requires learning
+      syntax, semantics, world knowledge, and reasoning
+    </li>
+    <li>
+      <strong>Distributed training</strong> combines data parallelism
+      (split batches), tensor parallelism (split weight matrices),
+      and pipeline parallelism (split layers) to scale across
+      thousands of GPUs
+    </li>
+    <li>
+      <strong>Mixed precision</strong> (BF16 forward/backward,
+      FP32 master weights) cuts memory by ~50% and doubles throughput
+      with minimal quality loss
+    </li>
+    <li>
+      <strong>Activation checkpointing</strong> trades ~33% extra
+      compute for dramatically reduced memory, enabling training
+      of larger models
+    </li>
   </ul>
 </KeyTakeaway>
 

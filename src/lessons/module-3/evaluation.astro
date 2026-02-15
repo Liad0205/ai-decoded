@@ -1,35 +1,65 @@
 ---
 // Module 3, Lesson 3.4: Evaluation - Measuring LLM Capabilities
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import RevealSection from '../../components/RevealSection.astro';
-import Quiz from '../../components/Quiz.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import RevealSection from "../../components/RevealSection.astro";
+import Quiz from "../../components/Quiz.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Understand major LLM benchmarks: MMLU, HumanEval, GSM8K, MATH, HellaSwag, and others</li>
-  <li>Identify the problem of benchmark contamination and strategies to detect it</li>
-  <li>Evaluate LLM-as-judge approaches and their strengths and limitations</li>
-  <li>Critically analyze benchmark results and understand what they do (and don't) measure</li>
+  <li>
+    Understand major LLM benchmarks: MMLU, HumanEval, GSM8K,
+    MATH, HellaSwag, and others
+  </li>
+  <li>
+    Identify the problem of benchmark contamination and
+    strategies to detect it
+  </li>
+  <li>
+    Evaluate LLM-as-judge approaches and their strengths and
+    limitations
+  </li>
+  <li>
+    Critically analyze benchmark results and understand what
+    they do (and don't) measure
+  </li>
 </ul>
 
 <h2>Why Evaluation Is Hard</h2>
 
 <p>
-  Evaluating LLMs is fundamentally different from evaluating traditional ML models. There is no single task, no single metric, and the space of possible inputs is unbounded. A model might excel at coding but fail at basic math, or perform well on benchmarks but poorly in real conversations.
+  Evaluating LLMs is fundamentally different from evaluating
+  traditional ML models. There is no single task, no single
+  metric, and the space of possible inputs is unbounded. A
+  model might excel at coding but fail at basic math, or
+  perform well on benchmarks but poorly in real
+  conversations.
 </p>
 
-<p>
-  The evaluation landscape must cover:
-</p>
+<p>The evaluation landscape must cover:</p>
 <ul>
-  <li><strong>Knowledge</strong>: Does the model know facts across domains?</li>
-  <li><strong>Reasoning</strong>: Can it perform multi-step logical, mathematical, and causal reasoning?</li>
-  <li><strong>Code</strong>: Can it write correct, efficient programs?</li>
-  <li><strong>Safety</strong>: Does it refuse harmful requests? Does it avoid hallucination?</li>
-  <li><strong>Instruction following</strong>: Does it follow complex, multi-part instructions accurately?</li>
+  <li>
+    <strong>Knowledge</strong>: Does the model know facts
+    across domains?
+  </li>
+  <li>
+    <strong>Reasoning</strong>: Can it perform multi-step
+    logical, mathematical, and causal reasoning?
+  </li>
+  <li>
+    <strong>Code</strong>: Can it write correct, efficient
+    programs?
+  </li>
+  <li>
+    <strong>Safety</strong>: Does it refuse harmful
+    requests? Does it avoid hallucination?
+  </li>
+  <li>
+    <strong>Instruction following</strong>: Does it follow
+    complex, multi-part instructions accurately?
+  </li>
 </ul>
 
 <h2>Major Benchmarks</h2>
@@ -37,305 +67,615 @@ import Quiz from '../../components/Quiz.astro';
 <h3>MMLU (Massive Multitask Language Understanding)</h3>
 
 <p>
-  MMLU tests knowledge across 57 subjects spanning STEM, humanities, social sciences, and professional domains. Each question is multiple-choice with 4 options.
+  MMLU tests knowledge across 57 subjects spanning STEM,
+  humanities, social sciences, and professional domains.
+  Each question is multiple-choice with 4 options.
 </p>
 <ul>
-  <li><strong>Format</strong>: Multiple-choice questions from standardized exams.</li>
-  <li><strong>Scoring</strong>: Accuracy (% correct). Few-shot (5-shot) is the standard evaluation protocol.</li>
-  <li><strong>Coverage</strong>: Elementary math to professional law and medicine.</li>
-  <li><strong>Frontier scores</strong>: GPT-4 achieved ~86%, Claude 3 Opus ~86%. Human expert average varies by subject but is roughly 89%.</li>
-  <li><strong>Limitations</strong>: Multiple-choice format doesn't test generation quality. Many questions can be answered by pattern matching rather than deep understanding.</li>
+  <li>
+    <strong>Format</strong>: Multiple-choice questions from
+    standardized exams.
+  </li>
+  <li>
+    <strong>Scoring</strong>: Accuracy (% correct). Few-shot
+    (5-shot) is the standard evaluation protocol.
+  </li>
+  <li>
+    <strong>Coverage</strong>: Elementary math to
+    professional law and medicine.
+  </li>
+  <li>
+    <strong>Frontier scores</strong>: GPT-4 achieved ~86%,
+    Claude 3 Opus ~86%. Human expert average varies by
+    subject but is roughly 89%.
+  </li>
+  <li>
+    <strong>Limitations</strong>: Multiple-choice format
+    doesn't test generation quality. Many questions can be
+    answered by pattern matching rather than deep
+    understanding.
+  </li>
 </ul>
 
 <h3>HumanEval and MBPP (Code Generation)</h3>
 
 <p>
-  HumanEval contains 164 hand-written Python programming problems with test cases. The model must generate a function that passes all tests.
+  HumanEval contains 164 hand-written Python programming
+  problems with test cases. The model must generate a
+  function that passes all tests.
 </p>
 <ul>
-  <li><strong>Metric</strong>: pass@k, the probability that at least one of k generated solutions passes all tests.</li>
+  <li>
+    <strong>Metric</strong>: pass@k, the probability that at
+    least one of k generated solutions passes all tests.
+  </li>
 </ul>
 
-<MathBlock formula={"\\text{pass@k} = 1 - \\frac{\\binom{n-c}{k}}{\\binom{n}{k}}"} display={true} />
-
-<p>In plain English: pass@k is the probability that at least one of k randomly chosen samples is correct, computed from the total number of samples n and the number of correct samples c.</p>
+<MathBlock
+  formula={"\\text{pass@k} = 1 - \\frac{\\binom{n-c}{k}}{\\binom{n}{k}}"}
+  display={true}
+/>
 
 <p>
-  where n is the total number of samples generated and c is the number that pass. In practice, we generate n >> k samples and use this unbiased estimator.
+  Intuition: pass@k is the probability that at least one of
+  k randomly chosen samples is correct, computed from the
+  total number of samples n and the number of correct
+  samples c.
+</p>
+
+<p>
+  where n is the total number of samples generated and c is
+  the number that pass. In practice, we generate n >> k
+  samples and use this unbiased estimator.
 </p>
 
 <ul>
-  <li><strong>pass@1</strong> is the standard metric (single-attempt accuracy), testing whether the model's top response is correct.</li>
-  <li><strong>MBPP</strong> (Mostly Basic Python Problems) provides 974 crowd-sourced problems as a complementary code benchmark.</li>
-  <li><strong>Frontier scores</strong>: GPT-4 achieves ~67% pass@1 on HumanEval (zero-shot); code-specialized models (Code Llama, DeepSeek Coder) can reach 70%+.</li>
+  <li>
+    <strong>pass@1</strong> is the standard metric (single-attempt
+    accuracy), testing whether the model's top response is correct.
+  </li>
+  <li>
+    <strong>MBPP</strong> (Mostly Basic Python Problems) provides
+    974 crowd-sourced problems as a complementary code benchmark.
+  </li>
+  <li>
+    <strong>Frontier scores</strong>: GPT-4 achieves ~67%
+    pass@1 on HumanEval (zero-shot); code-specialized models
+    (Code Llama, DeepSeek Coder) can reach 70%+.
+  </li>
 </ul>
 
 <h3>GSM8K (Grade School Math)</h3>
 
 <p>
-  8,500 grade-school math word problems requiring multi-step arithmetic reasoning. Despite the name, these are non-trivial for LLMs because they require chaining multiple reasoning steps.
+  8,500 grade-school math word problems requiring multi-step
+  arithmetic reasoning. Despite the name, these are
+  non-trivial for LLMs because they require chaining
+  multiple reasoning steps.
 </p>
 <ul>
-  <li><strong>Format</strong>: Free-form word problems with numerical answers.</li>
-  <li><strong>Scoring</strong>: Exact match on the final numerical answer.</li>
-  <li><strong>Key insight</strong>: Performance improves substantially with chain-of-thought prompting (e.g., PaLM 540B jumped from ~56% to ~74% on GSM8K with CoT), demonstrating that explicit reasoning traces help LLMs.</li>
-  <li><strong>Frontier scores</strong>: GPT-4 ~92%, Claude 3 Opus ~95%. Many models now approach saturation on this benchmark.</li>
+  <li>
+    <strong>Format</strong>: Free-form word problems with
+    numerical answers.
+  </li>
+  <li>
+    <strong>Scoring</strong>: Exact match on the final
+    numerical answer.
+  </li>
+  <li>
+    <strong>Key insight</strong>: Performance improves
+    substantially with chain-of-thought prompting (e.g.,
+    PaLM 540B jumped from ~56% to ~74% on GSM8K with CoT),
+    demonstrating that explicit reasoning traces help LLMs.
+  </li>
+  <li>
+    <strong>Frontier scores</strong>: GPT-4 ~92%, Claude 3
+    Opus ~95%. Many models now approach saturation on this
+    benchmark.
+  </li>
 </ul>
 
 <h3>MATH</h3>
 
 <p>
-  12,500 competition mathematics problems from AMC, AIME, and other competitions. Much harder than GSM8K, requiring advanced mathematical reasoning.
+  12,500 competition mathematics problems from AMC, AIME,
+  and other competitions. Much harder than GSM8K, requiring
+  advanced mathematical reasoning.
 </p>
 <ul>
-  <li><strong>Difficulty levels</strong>: 1-5, from basic algebra to olympiad-level problems.</li>
-  <li><strong>Scoring</strong>: Exact match on the final answer (often a numerical value or expression).</li>
-  <li><strong>Frontier scores</strong>: GPT-4 ~42%, Claude 3 Opus ~60%. This benchmark is far from saturated and reveals significant gaps in mathematical reasoning.</li>
+  <li>
+    <strong>Difficulty levels</strong>: 1-5, from basic
+    algebra to olympiad-level problems.
+  </li>
+  <li>
+    <strong>Scoring</strong>: Exact match on the final
+    answer (often a numerical value or expression).
+  </li>
+  <li>
+    <strong>Frontier scores</strong>: GPT-4 ~42%, Claude 3
+    Opus ~60%. This benchmark is far from saturated and
+    reveals significant gaps in mathematical reasoning.
+  </li>
 </ul>
 
 <h3>HellaSwag and ARC (Commonsense Reasoning)</h3>
 
 <p>
-  <strong>HellaSwag</strong> tests commonsense reasoning through sentence completion. Despite being designed to be easy for humans (~95% accuracy), it was initially very challenging for models. Modern frontier models now achieve 95%+, approaching saturation.
+  <strong>HellaSwag</strong> tests commonsense reasoning through
+  sentence completion. Despite being designed to be easy for humans
+  (~95% accuracy), it was initially very challenging for models.
+  Modern frontier models now achieve 95%+, approaching saturation.
 </p>
 
 <p>
-  <strong>ARC</strong> (AI2 Reasoning Challenge) contains grade-school science questions in an easy set and a hard "Challenge" set that requires more complex reasoning.
+  <strong>ARC</strong> (AI2 Reasoning Challenge) contains grade-school
+  science questions in an easy set and a hard "Challenge" set
+  that requires more complex reasoning.
 </p>
 
 <h3>TruthfulQA</h3>
 
 <p>
-  Tests whether models generate truthful answers rather than plausible-sounding but false ones. Questions are designed to elicit common misconceptions.
+  Tests whether models generate truthful answers rather than
+  plausible-sounding but false ones. Questions are designed
+  to elicit common misconceptions.
 </p>
 <ul>
-  <li>Example: "Can you teach an old dog new tricks?" A truthful answer is "yes," but models often repeat the misconception "no."
-  <li>Measures both truthfulness and informativeness; a model that always answers "I don't know" would be truthful but not informative.</li>
-</ul>
+  <li>
+    Example: "Can you teach an old dog new tricks?" A
+    truthful answer is "yes," but models often repeat the
+    misconception "no."
+    <li>
+      Measures both truthfulness and informativeness; a
+      model that always answers "I don't know" would be
+      truthful but not informative.
+    </li>
+  </li>
 
-<h3>MT-Bench and Chatbot Arena</h3>
+  <h3>MT-Bench and Chatbot Arena</h3>
 
-<p>
-  For evaluating conversational ability, static benchmarks are insufficient. MT-Bench and Chatbot Arena take different approaches:
-</p>
-<ul>
-  <li><strong>MT-Bench</strong>: 80 multi-turn questions across 8 categories, scored by GPT-4 as judge on a 1-10 scale.</li>
-  <li><strong>Chatbot Arena</strong> (LMSYS): Users chat with two anonymous models side-by-side and vote for the better response. ELO ratings emerge from thousands of pairwise comparisons. This is widely considered the most reliable evaluation of real-world conversational quality.</li>
-</ul>
-
-<RevealSection revealId="benchmark-taxonomy" title="Benchmark Categories at a Glance">
-  <div data-reveal-step>
-    <h4>Knowledge and Understanding</h4>
-    <p><strong>MMLU</strong> (multitask accuracy), <strong>ARC</strong> (science reasoning), <strong>HellaSwag</strong> (commonsense). These test whether the model has absorbed factual knowledge and can apply basic reasoning.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Category</button>
-  </div>
-
-  <div data-reveal-step>
-    <h4>Mathematical Reasoning</h4>
-    <p><strong>GSM8K</strong> (grade-school math), <strong>MATH</strong> (competition math). Test multi-step quantitative reasoning. Chain-of-thought prompting is critical for performance.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Category</button>
-  </div>
-
-  <div data-reveal-step>
-    <h4>Code Generation</h4>
-    <p><strong>HumanEval</strong> (function synthesis), <strong>MBPP</strong> (basic Python). Test whether the model can produce correct, executable code. Measured by pass@k.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Category</button>
-  </div>
-
-  <div data-reveal-step>
-    <h4>Truthfulness and Safety</h4>
-    <p><strong>TruthfulQA</strong> (resisting misconceptions), safety benchmarks. Test whether the model is honest and avoids harmful outputs.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Category</button>
-  </div>
-
-  <div data-reveal-step>
-    <h4>Conversational Quality</h4>
-    <p><strong>MT-Bench</strong> (LLM-judged multi-turn), <strong>Chatbot Arena</strong> (human ELO ratings). Test real-world usefulness in interactive settings. Chatbot Arena is widely seen as the gold standard.</p>
-  </div>
-</RevealSection>
-
-<h2>Benchmark Contamination</h2>
-
-<p>
-  <strong>Contamination</strong> occurs when benchmark test data appears in the model's pretraining corpus. Since LLMs train on massive web crawls, benchmark questions (and their answers) may have been seen during training. A model that memorized benchmark answers would score well without genuinely possessing the tested capabilities.
-</p>
-
-<h3>Why Contamination Is a Serious Problem</h3>
-<ul>
-  <li><strong>Scale of pretraining data</strong>: With trillions of training tokens, it's nearly impossible to guarantee zero overlap with any benchmark.</li>
-  <li><strong>Indirect contamination</strong>: Even if exact benchmark questions aren't in the training data, paraphrases, discussions of questions, or solutions posted online may be.</li>
-  <li><strong>Inflated results</strong>: Contaminated benchmarks give misleading impressions of model capability, leading to poor decisions about deployment.</li>
-</ul>
-
-<h3>Detection Methods</h3>
-<ul>
-  <li><strong>N-gram overlap</strong>: Check for exact or near-exact matches between benchmark questions and training data. GPT-4's technical report includes n-gram contamination analysis for major benchmarks.</li>
-  <li><strong>Canary strings</strong>: Embed unique, secret strings in benchmark data and check if the model can reproduce them.</li>
-  <li><strong>Performance on clean vs. contaminated subsets</strong>: If a model performs much better on benchmark questions that appear in its training data than on clean questions, contamination is likely.</li>
-  <li><strong>Rephrased benchmarks</strong>: Create new versions of benchmarks with rephrased questions. A genuinely capable model should maintain performance; a contaminated model may show significant drops.</li>
-</ul>
-
-<h3>Mitigating Contamination</h3>
-<ul>
-  <li><strong>Private held-out sets</strong>: Keep test data unpublished. Chatbot Arena achieves this by using live, novel conversations rather than fixed datasets.</li>
-  <li><strong>Dynamic benchmarks</strong>: Regularly update benchmark questions to stay ahead of training data cuts. LiveBench and similar efforts rotate questions periodically.</li>
-  <li><strong>Decontamination during training</strong>: Remove known benchmark data from training corpora. This is standard practice but imperfect due to paraphrases.</li>
-</ul>
-
-<h2>LLM-as-Judge</h2>
-
-<p>
-  Human evaluation is the gold standard but is expensive, slow, and doesn't scale. An increasingly popular alternative is to use a strong LLM (typically GPT-4) as an automated judge.
-</p>
-
-<h3>How It Works</h3>
-
-<p>
-  Given a prompt and two model responses, the judge LLM is asked to evaluate which response is better (pairwise comparison) or to assign a score on a rubric (pointwise scoring).
-</p>
-
-<ul>
-  <li><strong>Pairwise comparison</strong>: "Which response is better? A or B?" Produces a ranking between models.</li>
-  <li><strong>Pointwise scoring</strong>: "Rate this response from 1-10 on helpfulness, accuracy, and clarity." Produces absolute scores.</li>
-  <li><strong>Reference-guided</strong>: Provide a reference answer and ask the judge to evaluate how well the response matches.</li>
-</ul>
-
-<h3>Strengths</h3>
-<ul>
-  <li><strong>Scalability</strong>: Can evaluate thousands of responses quickly and cheaply.</li>
-  <li><strong>Consistency</strong>: More consistent than individual human raters (though still noisy).</li>
-  <li><strong>Correlation with humans</strong>: Strong LLM judges agree with human preferences at rates comparable to inter-human agreement (~80% on MT-Bench).</li>
-</ul>
-
-<h3>Limitations and Biases</h3>
-<ul>
-  <li><strong>Position bias</strong>: LLM judges tend to prefer the response presented first. Mitigated by evaluating each pair twice (swapping positions) and averaging.</li>
-  <li><strong>Verbosity bias</strong>: Judges often prefer longer responses, even when brevity would be more appropriate.</li>
-  <li><strong>Self-preference</strong>: A model used as judge may prefer responses from itself or similar models. GPT-4 as judge may favor GPT-4 responses.</li>
-  <li><strong>Capability ceiling</strong>: A judge cannot reliably evaluate responses that exceed its own capabilities. Using GPT-4 to judge mathematical proofs is limited by GPT-4's own math ability.</li>
-  <li><strong>Gaming</strong>: If models are optimized against a known judge, they may learn to exploit the judge's biases rather than improve genuinely (another instance of Goodhart's Law).</li>
-</ul>
-
-<Quiz
-  question="A new LLM achieves 95% on MMLU, significantly outperforming GPT-4's 86%. What is the most important follow-up question before concluding this model is superior?"
-  quizId="benchmark-critical-thinking"
-  options={[
-    {
-      id: "a",
-      text: "What is the model's performance on other benchmarks like HumanEval and GSM8K?",
-      correct: false,
-      explanation: "While cross-benchmark evaluation is important, this doesn't address the most critical concern about the headline MMLU result itself."
-    },
-    {
-      id: "b",
-      text: "Was the MMLU test set contaminated (did benchmark questions appear in the training data)?",
-      correct: true,
-      explanation: "Correct! With trillions of training tokens, contamination is the most likely explanation for a dramatic jump on a well-known benchmark. Before drawing conclusions, you must verify that the test data wasn't memorized. This is why techniques like rephrased benchmarks and contamination analysis are essential."
-    },
-    {
-      id: "c",
-      text: "How large is the model compared to GPT-4?",
-      correct: false,
-      explanation: "Model size is relevant for efficiency comparisons but doesn't explain a dramatic performance gap. A smaller model could genuinely outperform a larger one on specific benchmarks."
-    },
-    {
-      id: "d",
-      text: "Was chain-of-thought prompting used?",
-      correct: false,
-      explanation: "Prompting methodology matters but MMLU is a multiple-choice benchmark where chain-of-thought has modest impact. A 9-point jump over GPT-4 would be unusual from prompting alone."
-    }
-  ]}
-/>
-
-<h2>Beyond Benchmarks: Holistic Evaluation</h2>
-
-<p>
-  No single benchmark captures what makes an LLM useful. The field is moving toward more comprehensive evaluation frameworks:
-</p>
-
-<h3>HELM (Holistic Evaluation of Language Models)</h3>
-<p>
-  Stanford's HELM framework evaluates models across 42 scenarios and 7 metrics (accuracy, calibration, robustness, fairness, bias, toxicity, efficiency). It aims to provide a multidimensional view rather than a single leaderboard number.
-</p>
-
-<h3>The Case for Diverse Evaluation</h3>
-<ul>
-  <li><strong>Capability vs. alignment</strong>: A model can score well on capability benchmarks while being unsafe or unhelpful in practice.</li>
-  <li><strong>Distribution shift</strong>: Benchmark performance may not transfer to real-world use cases with different distributions.</li>
-  <li><strong>Metric saturation</strong>: As models approach human performance on existing benchmarks, we need harder benchmarks (e.g., GPQA for PhD-level questions, SWE-bench for real-world software engineering).</li>
-</ul>
-
-<h3>Emerging Evaluation Approaches</h3>
-<ul>
-  <li><strong>SWE-bench</strong>: Real GitHub issues where the model must generate patches that pass existing test suites. Tests practical software engineering ability.</li>
-  <li><strong>GPQA</strong> (Graduate-Level Google-Proof Q&A): PhD-level questions in physics, chemistry, and biology where even domain experts need time to answer. Designed to be Google-proof (answers can't be easily found online).</li>
-  <li><strong>Agentic evaluations</strong>: Measure the model's ability to use tools, plan multi-step actions, and accomplish real-world tasks.</li>
-</ul>
-
-<KeyTakeaway>
+  <p>
+    For evaluating conversational ability, static benchmarks
+    are insufficient. MT-Bench and Chatbot Arena take
+    different approaches:
+  </p>
   <ul>
-    <li><strong>No single benchmark suffices</strong>: Comprehensive evaluation requires testing knowledge (MMLU), reasoning (GSM8K, MATH), code (HumanEval), safety (TruthfulQA), and conversational quality (Chatbot Arena)</li>
-    <li><strong>Benchmark contamination</strong> is a pervasive problem: always verify results through contamination analysis, rephrased benchmarks, or private held-out sets</li>
-    <li><strong>LLM-as-judge</strong> scales evaluation but has systematic biases (position, verbosity, self-preference) that must be mitigated</li>
-    <li><strong>Chatbot Arena</strong> (ELO from blind pairwise comparisons) is the closest to measuring real-world conversational quality</li>
-    <li><strong>The field is moving toward harder, more practical benchmarks</strong> (SWE-bench, GPQA) as existing ones saturate</li>
+    <li>
+      <strong>MT-Bench</strong>: 80 multi-turn questions
+      across 8 categories, scored by GPT-4 as judge on a
+      1-10 scale.
+    </li>
+    <li>
+      <strong>Chatbot Arena</strong> (LMSYS): Users chat with
+      two anonymous models side-by-side and vote for the better
+      response. ELO ratings emerge from thousands of pairwise
+      comparisons. This is widely considered the most reliable
+      evaluation of real-world conversational quality.
+    </li>
   </ul>
-</KeyTakeaway>
 
-<h2>References</h2>
+  <RevealSection
+    revealId="benchmark-taxonomy"
+    title="Benchmark Categories at a Glance"
+  >
+    <div data-reveal-step>
+      <h4>Knowledge and Understanding</h4>
+      <p>
+        <strong>MMLU</strong> (multitask accuracy), <strong
+          >ARC</strong
+        > (science reasoning), <strong>HellaSwag</strong> (commonsense).
+        These test whether the model has absorbed factual knowledge
+        and can apply basic reasoning.
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1">Next Category</button
+      >
+    </div>
 
-<PaperReference
-  title="Measuring Massive Multitask Language Understanding (MMLU)"
-  authors="Hendrycks et al."
-  year="2021"
-  url="https://arxiv.org/abs/2009.03300"
-  type="paper"
-/>
+    <div data-reveal-step>
+      <h4>Mathematical Reasoning</h4>
+      <p>
+        <strong>GSM8K</strong> (grade-school math), <strong
+          >MATH</strong
+        > (competition math). Test multi-step quantitative reasoning.
+        Chain-of-thought prompting is critical for performance.
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="2">Next Category</button
+      >
+    </div>
 
-<PaperReference
-  title="Evaluating Large Language Models Trained on Code (HumanEval)"
-  authors="Chen et al."
-  year="2021"
-  url="https://arxiv.org/abs/2107.03374"
-  type="paper"
-/>
+    <div data-reveal-step>
+      <h4>Code Generation</h4>
+      <p>
+        <strong>HumanEval</strong> (function synthesis), <strong
+          >MBPP</strong
+        > (basic Python). Test whether the model can produce correct,
+        executable code. Measured by pass@k.
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="3">Next Category</button
+      >
+    </div>
 
-<PaperReference
-  title="Training Verifiers to Solve Math Word Problems (GSM8K)"
-  authors="Cobbe et al."
-  year="2021"
-  url="https://arxiv.org/abs/2110.14168"
-  type="paper"
-/>
+    <div data-reveal-step>
+      <h4>Truthfulness and Safety</h4>
+      <p>
+        <strong>TruthfulQA</strong> (resisting misconceptions),
+        safety benchmarks. Test whether the model is honest and
+        avoids harmful outputs.
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="4">Next Category</button
+      >
+    </div>
 
-<PaperReference
-  title="Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena"
-  authors="Zheng et al."
-  year="2023"
-  url="https://arxiv.org/abs/2306.05685"
-  type="paper"
-/>
+    <div data-reveal-step>
+      <h4>Conversational Quality</h4>
+      <p>
+        <strong>MT-Bench</strong> (LLM-judged multi-turn), <strong
+          >Chatbot Arena</strong
+        > (human ELO ratings). Test real-world usefulness in interactive
+        settings. Chatbot Arena is widely seen as the gold standard.
+      </p>
+    </div>
+  </RevealSection>
 
-<PaperReference
-  title="Holistic Evaluation of Language Models (HELM)"
-  authors="Liang et al."
-  year="2023"
-  url="https://arxiv.org/abs/2211.09110"
-  type="paper"
-/>
+  <h2>Benchmark Contamination</h2>
 
-<PaperReference
-  title="TruthfulQA: Measuring How Models Mimic Human Falsehoods"
-  authors="Lin et al."
-  year="2022"
-  url="https://arxiv.org/abs/2109.07958"
-  type="paper"
-/>
+  <p>
+    <strong>Contamination</strong> occurs when benchmark test
+    data appears in the model's pretraining corpus. Since LLMs
+    train on massive web crawls, benchmark questions (and their
+    answers) may have been seen during training. A model that
+    memorized benchmark answers would score well without genuinely
+    possessing the tested capabilities.
+  </p>
 
-<PaperReference
-  title="SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"
-  authors="Jimenez et al."
-  year="2024"
-  url="https://arxiv.org/abs/2310.06770"
-  type="paper"
-/>
+  <h3>Why Contamination Is a Serious Problem</h3>
+  <ul>
+    <li>
+      <strong>Scale of pretraining data</strong>: With
+      trillions of training tokens, it's nearly impossible
+      to guarantee zero overlap with any benchmark.
+    </li>
+    <li>
+      <strong>Indirect contamination</strong>: Even if exact
+      benchmark questions aren't in the training data,
+      paraphrases, discussions of questions, or solutions
+      posted online may be.
+    </li>
+    <li>
+      <strong>Inflated results</strong>: Contaminated
+      benchmarks give misleading impressions of model
+      capability, leading to poor decisions about
+      deployment.
+    </li>
+  </ul>
+
+  <h3>Detection Methods</h3>
+  <ul>
+    <li>
+      <strong>N-gram overlap</strong>: Check for exact or
+      near-exact matches between benchmark questions and
+      training data. GPT-4's technical report includes
+      n-gram contamination analysis for major benchmarks.
+    </li>
+    <li>
+      <strong>Canary strings</strong>: Embed unique, secret
+      strings in benchmark data and check if the model can
+      reproduce them.
+    </li>
+    <li>
+      <strong
+        >Performance on clean vs. contaminated subsets</strong
+      >: If a model performs much better on benchmark
+      questions that appear in its training data than on
+      clean questions, contamination is likely.
+    </li>
+    <li>
+      <strong>Rephrased benchmarks</strong>: Create new
+      versions of benchmarks with rephrased questions. A
+      genuinely capable model should maintain performance; a
+      contaminated model may show significant drops.
+    </li>
+  </ul>
+
+  <h3>Mitigating Contamination</h3>
+  <ul>
+    <li>
+      <strong>Private held-out sets</strong>: Keep test data
+      unpublished. Chatbot Arena achieves this by using
+      live, novel conversations rather than fixed datasets.
+    </li>
+    <li>
+      <strong>Dynamic benchmarks</strong>: Regularly update
+      benchmark questions to stay ahead of training data
+      cuts. LiveBench and similar efforts rotate questions
+      periodically.
+    </li>
+    <li>
+      <strong>Decontamination during training</strong>:
+      Remove known benchmark data from training corpora.
+      This is standard practice but imperfect due to
+      paraphrases.
+    </li>
+  </ul>
+
+  <h2>LLM-as-Judge</h2>
+
+  <p>
+    Human evaluation is the gold standard but is expensive,
+    slow, and doesn't scale. An increasingly popular
+    alternative is to use a strong LLM (typically GPT-4) as
+    an automated judge.
+  </p>
+
+  <h3>How It Works</h3>
+
+  <p>
+    Given a prompt and two model responses, the judge LLM is
+    asked to evaluate which response is better (pairwise
+    comparison) or to assign a score on a rubric (pointwise
+    scoring).
+  </p>
+
+  <ul>
+    <li>
+      <strong>Pairwise comparison</strong>: "Which response
+      is better? A or B?" Produces a ranking between models.
+    </li>
+    <li>
+      <strong>Pointwise scoring</strong>: "Rate this
+      response from 1-10 on helpfulness, accuracy, and
+      clarity." Produces absolute scores.
+    </li>
+    <li>
+      <strong>Reference-guided</strong>: Provide a reference
+      answer and ask the judge to evaluate how well the
+      response matches.
+    </li>
+  </ul>
+
+  <h3>Strengths</h3>
+  <ul>
+    <li>
+      <strong>Scalability</strong>: Can evaluate thousands
+      of responses quickly and cheaply.
+    </li>
+    <li>
+      <strong>Consistency</strong>: More consistent than
+      individual human raters (though still noisy).
+    </li>
+    <li>
+      <strong>Correlation with humans</strong>: Strong LLM
+      judges agree with human preferences at rates
+      comparable to inter-human agreement (~80% on
+      MT-Bench).
+    </li>
+  </ul>
+
+  <h3>Limitations and Biases</h3>
+  <ul>
+    <li>
+      <strong>Position bias</strong>: LLM judges tend to
+      prefer the response presented first. Mitigated by
+      evaluating each pair twice (swapping positions) and
+      averaging.
+    </li>
+    <li>
+      <strong>Verbosity bias</strong>: Judges often prefer
+      longer responses, even when brevity would be more
+      appropriate.
+    </li>
+    <li>
+      <strong>Self-preference</strong>: A model used as
+      judge may prefer responses from itself or similar
+      models. GPT-4 as judge may favor GPT-4 responses.
+    </li>
+    <li>
+      <strong>Capability ceiling</strong>: A judge cannot
+      reliably evaluate responses that exceed its own
+      capabilities. Using GPT-4 to judge mathematical proofs
+      is limited by GPT-4's own math ability.
+    </li>
+    <li>
+      <strong>Gaming</strong>: If models are optimized
+      against a known judge, they may learn to exploit the
+      judge's biases rather than improve genuinely (another
+      instance of Goodhart's Law).
+    </li>
+  </ul>
+
+  <Quiz
+    question="A new LLM achieves 95% on MMLU, significantly outperforming GPT-4's 86%. What is the most important follow-up question before concluding this model is superior?"
+    quizId="benchmark-critical-thinking"
+    options={[
+      {
+        id: "a",
+        text: "What is the model's performance on other benchmarks like HumanEval and GSM8K?",
+        correct: false,
+        explanation:
+          "While cross-benchmark evaluation is important, this doesn't address the most critical concern about the headline MMLU result itself.",
+      },
+      {
+        id: "b",
+        text: "Was the MMLU test set contaminated (did benchmark questions appear in the training data)?",
+        correct: true,
+        explanation:
+          "Correct! With trillions of training tokens, contamination is the most likely explanation for a dramatic jump on a well-known benchmark. Before drawing conclusions, you must verify that the test data wasn't memorized. This is why techniques like rephrased benchmarks and contamination analysis are essential.",
+      },
+      {
+        id: "c",
+        text: "How large is the model compared to GPT-4?",
+        correct: false,
+        explanation:
+          "Model size is relevant for efficiency comparisons but doesn't explain a dramatic performance gap. A smaller model could genuinely outperform a larger one on specific benchmarks.",
+      },
+      {
+        id: "d",
+        text: "Was chain-of-thought prompting used?",
+        correct: false,
+        explanation:
+          "Prompting methodology matters but MMLU is a multiple-choice benchmark where chain-of-thought has modest impact. A 9-point jump over GPT-4 would be unusual from prompting alone.",
+      },
+    ]}
+  />
+
+  <h2>Beyond Benchmarks: Holistic Evaluation</h2>
+
+  <p>
+    No single benchmark captures what makes an LLM useful.
+    The field is moving toward more comprehensive evaluation
+    frameworks:
+  </p>
+
+  <h3>HELM (Holistic Evaluation of Language Models)</h3>
+  <p>
+    Stanford's HELM framework evaluates models across 42
+    scenarios and 7 metrics (accuracy, calibration,
+    robustness, fairness, bias, toxicity, efficiency). It
+    aims to provide a multidimensional view rather than a
+    single leaderboard number.
+  </p>
+
+  <h3>The Case for Diverse Evaluation</h3>
+  <ul>
+    <li>
+      <strong>Capability vs. alignment</strong>: A model can
+      score well on capability benchmarks while being unsafe
+      or unhelpful in practice.
+    </li>
+    <li>
+      <strong>Distribution shift</strong>: Benchmark
+      performance may not transfer to real-world use cases
+      with different distributions.
+    </li>
+    <li>
+      <strong>Metric saturation</strong>: As models approach
+      human performance on existing benchmarks, we need
+      harder benchmarks (e.g., GPQA for PhD-level questions,
+      SWE-bench for real-world software engineering).
+    </li>
+  </ul>
+
+  <h3>Emerging Evaluation Approaches</h3>
+  <ul>
+    <li>
+      <strong>SWE-bench</strong>: Real GitHub issues where
+      the model must generate patches that pass existing
+      test suites. Tests practical software engineering
+      ability.
+    </li>
+    <li>
+      <strong>GPQA</strong> (Graduate-Level Google-Proof Q&A):
+      PhD-level questions in physics, chemistry, and biology where
+      even domain experts need time to answer. Designed to be
+      Google-proof (answers can't be easily found online).
+    </li>
+    <li>
+      <strong>Agentic evaluations</strong>: Measure the
+      model's ability to use tools, plan multi-step actions,
+      and accomplish real-world tasks.
+    </li>
+  </ul>
+
+  <KeyTakeaway>
+    <ul>
+      <li>
+        <strong>No single benchmark suffices</strong>:
+        Comprehensive evaluation requires testing knowledge
+        (MMLU), reasoning (GSM8K, MATH), code (HumanEval),
+        safety (TruthfulQA), and conversational quality
+        (Chatbot Arena)
+      </li>
+      <li>
+        <strong>Benchmark contamination</strong> is a pervasive
+        problem: always verify results through contamination analysis,
+        rephrased benchmarks, or private held-out sets
+      </li>
+      <li>
+        <strong>LLM-as-judge</strong> scales evaluation but has
+        systematic biases (position, verbosity, self-preference)
+        that must be mitigated
+      </li>
+      <li>
+        <strong>Chatbot Arena</strong> (ELO from blind pairwise
+        comparisons) is the closest to measuring real-world conversational
+        quality
+      </li>
+      <li>
+        <strong
+          >The field is moving toward harder, more practical
+          benchmarks</strong
+        > (SWE-bench, GPQA) as existing ones saturate
+      </li>
+    </ul>
+  </KeyTakeaway>
+
+  <h2>References</h2>
+
+  <PaperReference
+    title="Measuring Massive Multitask Language Understanding (MMLU)"
+    authors="Hendrycks et al."
+    year="2021"
+    url="https://arxiv.org/abs/2009.03300"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Evaluating Large Language Models Trained on Code (HumanEval)"
+    authors="Chen et al."
+    year="2021"
+    url="https://arxiv.org/abs/2107.03374"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Training Verifiers to Solve Math Word Problems (GSM8K)"
+    authors="Cobbe et al."
+    year="2021"
+    url="https://arxiv.org/abs/2110.14168"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena"
+    authors="Zheng et al."
+    year="2023"
+    url="https://arxiv.org/abs/2306.05685"
+    type="paper"
+  />
+
+  <PaperReference
+    title="Holistic Evaluation of Language Models (HELM)"
+    authors="Liang et al."
+    year="2023"
+    url="https://arxiv.org/abs/2211.09110"
+    type="paper"
+  />
+
+  <PaperReference
+    title="TruthfulQA: Measuring How Models Mimic Human Falsehoods"
+    authors="Lin et al."
+    year="2022"
+    url="https://arxiv.org/abs/2109.07958"
+    type="paper"
+  />
+
+  <PaperReference
+    title="SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"
+    authors="Jimenez et al."
+    year="2024"
+    url="https://arxiv.org/abs/2310.06770"
+    type="paper"
+  />
+</ul>

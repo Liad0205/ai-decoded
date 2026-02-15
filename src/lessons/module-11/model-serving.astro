@@ -67,11 +67,11 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: the maximum token generation rate is
-    limited by how fast you can read the model weights from
-    memory. Each token requires one full read of all
-    weights, so you divide the memory bandwidth by the model
-    size to get the throughput ceiling.
+    Intuition: the maximum token generation rate is limited
+    by how fast you can read the model weights from memory.
+    Each token requires one full read of all weights, so you
+    divide the memory bandwidth by the model size to get the
+    throughput ceiling.
   </p>
 
   <p>
@@ -124,11 +124,10 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: for each transformer layer, you store
-    a key vector and a value vector at every sequence
-    position for every KV head. The total memory is
-    proportional to context length, model depth, and the
-    number of KV heads.
+    Intuition: for each transformer layer, you store a key
+    vector and a value vector at every sequence position for
+    every KV head. The total memory is proportional to
+    context length, model depth, and the number of KV heads.
   </p>
 
   <p>
@@ -965,7 +964,7 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: total throughput equals the number of
+    Intuition: total throughput equals the number of
     concurrent requests multiplied by the per-request
     generation speed. Since each decode step loads model
     weights once for the entire batch, increasing batch size

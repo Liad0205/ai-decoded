@@ -1,20 +1,32 @@
 ---
 // Module 4, Lesson 4.3: QLoRA: Quantized Low-Rank Adaptation
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
-import Diagram from '../../components/Diagram.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Quiz from "../../components/Quiz.astro";
+import RevealSection from "../../components/RevealSection.astro";
+import Diagram from "../../components/Diagram.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
-    <li>Understand quantization: how floating-point numbers are compressed to lower precision (FP32, FP16, INT8, INT4)</li>
-    <li>Explain NormalFloat4 (NF4) quantization and why it is optimal for normally-distributed weights</li>
-    <li>Derive the memory savings of double quantization</li>
-    <li>Calculate the total memory footprint of QLoRA vs. full fine-tuning and standard LoRA</li>
+    <li>
+      Understand quantization: how floating-point numbers
+      are compressed to lower precision (FP32, FP16, INT8,
+      INT4)
+    </li>
+    <li>
+      Explain NormalFloat4 (NF4) quantization and why it is
+      optimal for normally-distributed weights
+    </li>
+    <li>
+      Derive the memory savings of double quantization
+    </li>
+    <li>
+      Calculate the total memory footprint of QLoRA vs. full
+      fine-tuning and standard LoRA
+    </li>
   </ul>
 </section>
 
@@ -22,90 +34,251 @@ import Diagram from '../../components/Diagram.astro';
   <h2>The Quantization Landscape</h2>
 
   <p>
-    <strong>Quantization</strong> reduces the precision of numerical representations, trading a small amount of accuracy for dramatic memory savings. In the context of LLMs, we quantize model weights from their native precision (FP32 or BF16) to lower-bit formats.
+    <strong>Quantization</strong> reduces the precision of numerical
+    representations, trading a small amount of accuracy for dramatic
+    memory savings. In the context of LLMs, we quantize model
+    weights from their native precision (FP32 or BF16) to lower-bit
+    formats.
   </p>
 
   <h3>Number Formats in Deep Learning</h3>
 
   <p>
-    Each format uses a different number of bits to represent values:
+    Each format uses a different number of bits to represent
+    values:
   </p>
 
-  <Diagram diagramId="precision-formats" title="Numerical Precision Formats" autoplay={true} animationDuration={3000}>
-    <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+  <Diagram
+    diagramId="precision-formats"
+    title="Numerical Precision Formats"
+    autoplay={true}
+    animationDuration={3000}
+  >
+    <div
+      class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    >
       <div class="space-y-2">
-        <div class="flex items-center gap-3" data-animate style="animation-delay: 0.2s">
-          <div class="w-16 text-right text-sm font-mono font-bold">FP32</div>
-          <div class="flex-1 flex gap-0.5">
-            <div class="h-6 bg-rose-400 rounded-l" style="width: 3.125%" title="sign"></div>
-            <div class="h-6 bg-amber-400" style="width: 25%" title="exponent (8 bits)"></div>
-            <div class="h-6 bg-sky-400 rounded-r" style="width: 71.875%" title="mantissa (23 bits)"></div>
+        <div
+          class="flex items-center gap-3"
+          data-animate
+          style="animation-delay: 0.2s"
+        >
+          <div
+            class="w-16 text-right text-sm font-mono font-bold"
+          >
+            FP32
           </div>
-          <div class="w-20 text-xs text-slate-500">32 bits / 4 bytes</div>
+          <div class="flex-1 flex gap-0.5">
+            <div
+              class="h-6 bg-rose-400 rounded-l"
+              style="width: 3.125%"
+              title="sign"
+            >
+            </div>
+            <div
+              class="h-6 bg-amber-400"
+              style="width: 25%"
+              title="exponent (8 bits)"
+            >
+            </div>
+            <div
+              class="h-6 bg-sky-400 rounded-r"
+              style="width: 71.875%"
+              title="mantissa (23 bits)"
+            >
+            </div>
+          </div>
+          <div class="w-20 text-xs text-slate-500">
+            32 bits / 4 bytes
+          </div>
         </div>
-        <div class="flex items-center gap-3" data-animate style="animation-delay: 0.6s">
-          <div class="w-16 text-right text-sm font-mono font-bold">BF16</div>
-          <div class="flex-1 flex gap-0.5">
-            <div class="h-6 bg-rose-400 rounded-l" style="width: 6.25%" title="sign"></div>
-            <div class="h-6 bg-amber-400" style="width: 50%" title="exponent (8 bits)"></div>
-            <div class="h-6 bg-sky-400 rounded-r" style="width: 43.75%" title="mantissa (7 bits)"></div>
+        <div
+          class="flex items-center gap-3"
+          data-animate
+          style="animation-delay: 0.6s"
+        >
+          <div
+            class="w-16 text-right text-sm font-mono font-bold"
+          >
+            BF16
           </div>
-          <div class="w-20 text-xs text-slate-500">16 bits / 2 bytes</div>
+          <div class="flex-1 flex gap-0.5">
+            <div
+              class="h-6 bg-rose-400 rounded-l"
+              style="width: 6.25%"
+              title="sign"
+            >
+            </div>
+            <div
+              class="h-6 bg-amber-400"
+              style="width: 50%"
+              title="exponent (8 bits)"
+            >
+            </div>
+            <div
+              class="h-6 bg-sky-400 rounded-r"
+              style="width: 43.75%"
+              title="mantissa (7 bits)"
+            >
+            </div>
+          </div>
+          <div class="w-20 text-xs text-slate-500">
+            16 bits / 2 bytes
+          </div>
         </div>
-        <div class="flex items-center gap-3" data-animate style="animation-delay: 1.0s">
-          <div class="w-16 text-right text-sm font-mono font-bold">FP16</div>
-          <div class="flex-1 flex gap-0.5">
-            <div class="h-6 bg-rose-400 rounded-l" style="width: 6.25%" title="sign"></div>
-            <div class="h-6 bg-amber-400" style="width: 31.25%" title="exponent (5 bits)"></div>
-            <div class="h-6 bg-sky-400 rounded-r" style="width: 62.5%" title="mantissa (10 bits)"></div>
+        <div
+          class="flex items-center gap-3"
+          data-animate
+          style="animation-delay: 1.0s"
+        >
+          <div
+            class="w-16 text-right text-sm font-mono font-bold"
+          >
+            FP16
           </div>
-          <div class="w-20 text-xs text-slate-500">16 bits / 2 bytes</div>
+          <div class="flex-1 flex gap-0.5">
+            <div
+              class="h-6 bg-rose-400 rounded-l"
+              style="width: 6.25%"
+              title="sign"
+            >
+            </div>
+            <div
+              class="h-6 bg-amber-400"
+              style="width: 31.25%"
+              title="exponent (5 bits)"
+            >
+            </div>
+            <div
+              class="h-6 bg-sky-400 rounded-r"
+              style="width: 62.5%"
+              title="mantissa (10 bits)"
+            >
+            </div>
+          </div>
+          <div class="w-20 text-xs text-slate-500">
+            16 bits / 2 bytes
+          </div>
         </div>
-        <div class="flex items-center gap-3" data-animate style="animation-delay: 1.4s">
-          <div class="w-16 text-right text-sm font-mono font-bold">INT8</div>
-          <div class="flex-1 flex gap-0.5">
-            <div class="h-6 bg-emerald-400 rounded" style="width: 50%" title="integer (8 bits)"></div>
+        <div
+          class="flex items-center gap-3"
+          data-animate
+          style="animation-delay: 1.4s"
+        >
+          <div
+            class="w-16 text-right text-sm font-mono font-bold"
+          >
+            INT8
           </div>
-          <div class="w-20 text-xs text-slate-500">8 bits / 1 byte</div>
+          <div class="flex-1 flex gap-0.5">
+            <div
+              class="h-6 bg-emerald-400 rounded"
+              style="width: 50%"
+              title="integer (8 bits)"
+            >
+            </div>
+          </div>
+          <div class="w-20 text-xs text-slate-500">
+            8 bits / 1 byte
+          </div>
         </div>
-        <div class="flex items-center gap-3" data-animate style="animation-delay: 1.8s">
-          <div class="w-16 text-right text-sm font-mono font-bold">NF4</div>
-          <div class="flex-1 flex gap-0.5">
-            <div class="h-6 bg-purple-400 rounded" style="width: 25%" title="4-bit quantized"></div>
+        <div
+          class="flex items-center gap-3"
+          data-animate
+          style="animation-delay: 1.8s"
+        >
+          <div
+            class="w-16 text-right text-sm font-mono font-bold"
+          >
+            NF4
           </div>
-          <div class="w-20 text-xs text-slate-500">4 bits / 0.5 bytes</div>
+          <div class="flex-1 flex gap-0.5">
+            <div
+              class="h-6 bg-purple-400 rounded"
+              style="width: 25%"
+              title="4-bit quantized"
+            >
+            </div>
+          </div>
+          <div class="w-20 text-xs text-slate-500">
+            4 bits / 0.5 bytes
+          </div>
         </div>
       </div>
-      <div class="mt-3 flex gap-4 text-xs text-slate-500 justify-center" data-animate style="animation-delay: 2.4s">
-        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-rose-400 rounded"></span> sign</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-amber-400 rounded"></span> exponent</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-sky-400 rounded"></span> mantissa</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-emerald-400 rounded"></span> integer</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-purple-400 rounded"></span> quantized</span>
+      <div
+        class="mt-3 flex gap-4 text-xs text-slate-500 justify-center"
+        data-animate
+        style="animation-delay: 2.4s"
+      >
+        <span class="flex items-center gap-1"
+          ><span class="w-3 h-3 bg-rose-400 rounded"></span> sign</span
+        >
+        <span class="flex items-center gap-1"
+          ><span class="w-3 h-3 bg-amber-400 rounded"
+          ></span> exponent</span
+        >
+        <span class="flex items-center gap-1"
+          ><span class="w-3 h-3 bg-sky-400 rounded"></span> mantissa</span
+        >
+        <span class="flex items-center gap-1"
+          ><span class="w-3 h-3 bg-emerald-400 rounded"
+          ></span> integer</span
+        >
+        <span class="flex items-center gap-1"
+          ><span class="w-3 h-3 bg-purple-400 rounded"
+          ></span> quantized</span
+        >
       </div>
     </div>
   </Diagram>
 
   <h3>How Quantization Works</h3>
   <p>
-    The simplest quantization scheme maps a range of floating-point values to a fixed set of integer levels. For <MathBlock formula="b" />-bit quantization:
+    The simplest quantization scheme maps a range of
+    floating-point values to a fixed set of integer levels.
+    For <MathBlock formula="b" />-bit quantization:
   </p>
   <div class="equation-with-label">
-    <MathBlock formula={"x_q = \\text{round}\\left(\\frac{x - \\text{min}(X)}{s}\\right), \\quad s = \\frac{\\text{max}(X) - \\text{min}(X)}{2^b - 1}"} display={true} />
-    <div class="text-sm font-medium text-slate-700">Quantization formula</div>
+    <MathBlock
+      formula={"x_q = \\text{round}\\left(\\frac{x - \\text{min}(X)}{s}\\right), \\quad s = \\frac{\\text{max}(X) - \\text{min}(X)}{2^b - 1}"}
+      display={true}
+    />
+    <div class="text-sm font-medium text-slate-700">
+      Quantization formula
+    </div>
   </div>
   <p>
-    In plain English: shift each value so the minimum maps to 0, then divide by the step size <MathBlock formula="s" /> and round to the nearest integer. The scale factor <MathBlock formula="s" /> divides the value range into <MathBlock formula={"2^b - 1"} /> equal steps, where <MathBlock formula="b" /> is the bit width. The quantized integer <MathBlock formula="x_q" /> is what gets stored. Dequantization recovers the approximate value:
+    Intuition: shift each value so the minimum maps to 0,
+    then divide by the step size <MathBlock formula="s" /> and
+    round to the nearest integer. The scale factor <MathBlock
+      formula="s"
+    /> divides the value range into <MathBlock
+      formula={"2^b - 1"}
+    /> equal steps, where <MathBlock formula="b" /> is the bit
+    width. The quantized integer <MathBlock formula="x_q" /> is
+    what gets stored. Dequantization recovers the approximate
+    value:
   </p>
   <div class="equation-with-label">
-    <MathBlock formula={"\\hat{x} = s \\cdot x_q + \\text{min}(X)"} display={true} />
-    <div class="text-sm font-medium text-slate-700">Dequantization formula</div>
+    <MathBlock
+      formula={"\\hat{x} = s \\cdot x_q + \\text{min}(X)"}
+      display={true}
+    />
+    <div class="text-sm font-medium text-slate-700">
+      Dequantization formula
+    </div>
   </div>
   <p>
-    This reverses the process: multiply the stored integer by the step size and add back the offset. The result is an approximation of the original value, with error bounded by half the step size.
+    This reverses the process: multiply the stored integer
+    by the step size and add back the offset. The result is
+    an approximation of the original value, with error
+    bounded by half the step size.
   </p>
   <p>
-    This introduces <strong>quantization error</strong> <MathBlock formula={"|x - \\hat{x}|"} />, which depends on the bit width and the distribution of values being quantized.
+    This introduces <strong>quantization error</strong>
+    <MathBlock formula={"|x - \\hat{x}|"} />, which depends
+    on the bit width and the distribution of values being
+    quantized.
   </p>
 </section>
 
@@ -113,41 +286,101 @@ import Diagram from '../../components/Diagram.astro';
   <h2>NF4: Quantization Designed for Neural Networks</h2>
 
   <p>
-    Standard uniform quantization allocates equal spacing between quantization levels. But neural network weights are not uniformly distributed -- they follow a roughly <strong>normal distribution</strong> centered around zero. This means most weights cluster near zero, with few large outliers.
+    Standard uniform quantization allocates equal spacing
+    between quantization levels. But neural network weights
+    are not uniformly distributed -- they follow a roughly <strong
+      >normal distribution</strong
+    > centered around zero. This means most weights cluster near
+    zero, with few large outliers.
   </p>
 
   <p>
-    <strong>NormalFloat4 (NF4)</strong>, introduced in the QLoRA paper, exploits this by placing quantization levels at the <strong>quantiles of the standard normal distribution</strong>:
+    <strong>NormalFloat4 (NF4)</strong>, introduced in the
+    QLoRA paper, exploits this by placing quantization
+    levels at the <strong
+      >quantiles of the standard normal distribution</strong
+    >:
   </p>
 
-  <MathBlock formula={"q_i = \\Phi^{-1}\\left(\\frac{i + 0.5}{2^b}\\right), \\quad i = 0, 1, \\ldots, 2^b - 1"} display={true} />
+  <MathBlock
+    formula={"q_i = \\Phi^{-1}\\left(\\frac{i + 0.5}{2^b}\\right), \\quad i = 0, 1, \\ldots, 2^b - 1"}
+    display={true}
+  />
 
   <p>
-    Each quantization level <MathBlock formula="q_i" /> is placed at the point where a fixed fraction of a normal distribution's probability mass falls. <MathBlock formula={"\\Phi^{-1}"} /> is the inverse CDF (probit function) of the standard normal -- it converts a uniform probability into the corresponding z-score. For 4-bit (16 levels), this places levels more densely near zero (where most weights are) and more sparsely in the tails.
+    Each quantization level <MathBlock formula="q_i" /> is placed
+    at the point where a fixed fraction of a normal distribution's
+    probability mass falls. <MathBlock
+      formula={"\\Phi^{-1}"}
+    /> is the inverse CDF (probit function) of the standard normal
+    -- it converts a uniform probability into the corresponding
+    z-score. For 4-bit (16 levels), this places levels more densely
+    near zero (where most weights are) and more sparsely in the
+    tails.
   </p>
 
   <p>
-    In short, NF4 is an information-theoretically optimal 4-bit data type for normally distributed weights. It spaces quantization levels to match the bell curve of neural network weights, minimizing quantization error where it matters most. Empirically, it introduces less error than uniform INT4 quantization for transformer weights.
+    In short, NF4 is an information-theoretically optimal
+    4-bit data type for normally distributed weights. It
+    spaces quantization levels to match the bell curve of
+    neural network weights, minimizing quantization error
+    where it matters most. Empirically, it introduces less
+    error than uniform INT4 quantization for transformer
+    weights.
   </p>
 
-  <RevealSection revealId="nf4-levels" title="NF4 Quantization Levels">
+  <RevealSection
+    revealId="nf4-levels"
+    title="NF4 Quantization Levels"
+  >
     <div data-reveal-step>
       <h4>The 16 NF4 Levels</h4>
-      <p>For 4-bit precision with zero as a quantization level, the actual NF4 values (normalized to [-1, 1]) are:</p>
-      <pre class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-3 rounded text-xs font-mono overflow-x-auto mt-2">[-1.0, -0.6962, -0.5251, -0.3949, -0.2844, -0.1848, -0.0911, 0.0,
+      <p>
+        For 4-bit precision with zero as a quantization
+        level, the actual NF4 values (normalized to [-1, 1])
+        are:
+      </p>
+      <pre
+        class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-3 rounded text-xs font-mono overflow-x-auto mt-2">[-1.0, -0.6962, -0.5251, -0.3949, -0.2844, -0.1848, -0.0911, 0.0,
   0.0796,  0.1609,  0.2461,  0.3379,  0.4407,  0.5626,  0.7230, 1.0]</pre>
-      <p class="mt-2">Notice the denser spacing near zero: the gap between -0.0911 and 0.0 is 0.091, while the gap between 0.7230 and 1.0 is 0.277. This matches the normal distribution's density.</p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <p class="mt-2">
+        Notice the denser spacing near zero: the gap between
+        -0.0911 and 0.0 is 0.091, while the gap between
+        0.7230 and 1.0 is 0.277. This matches the normal
+        distribution's density.
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Block-wise Quantization</h4>
-      <p>Weights are quantized in blocks of 64 values. Each block has its own scale factor:</p>
-      <MathBlock formula={"s = \\frac{\\text{absmax}(X_{\\text{block}})}{q_{\\text{max}}}"} display={true} />
-      <p>The scale factor is simply the block's largest absolute value divided by the maximum quantization level. This maps the block's range onto the NF4 levels. Per-block scaling handles layers with different weight magnitudes, reducing quantization error compared to per-tensor scaling.</p>
-      <p class="mt-2 text-emerald-700 font-medium">Each block of 64 weights requires one FP32 scale factor (4 bytes overhead per 64 weights = 0.5 bits per weight).</p>
+      <p>
+        Weights are quantized in blocks of 64 values. Each
+        block has its own scale factor:
+      </p>
+      <MathBlock
+        formula={"s = \\frac{\\text{absmax}(X_{\\text{block}})}{q_{\\text{max}}}"}
+        display={true}
+      />
+      <p>
+        The scale factor is simply the block's largest
+        absolute value divided by the maximum quantization
+        level. This maps the block's range onto the NF4
+        levels. Per-block scaling handles layers with
+        different weight magnitudes, reducing quantization
+        error compared to per-tensor scaling.
+      </p>
+      <p class="mt-2 text-emerald-700 font-medium">
+        Each block of 64 weights requires one FP32 scale
+        factor (4 bytes overhead per 64 weights = 0.5 bits
+        per weight).
+      </p>
     </div>
   </RevealSection>
 </section>
@@ -156,26 +389,55 @@ import Diagram from '../../components/Diagram.astro';
   <h2>Double Quantization</h2>
 
   <p>
-    Block-wise quantization introduces one scale factor per block of 64 weights. For a 7B model, that is roughly <MathBlock formula={"7 \\times 10^9 / 64 \\approx 109\\text{M}"} /> FP32 scale factors, consuming ~437 MB. This overhead partially offsets the memory savings of 4-bit quantization.
+    Block-wise quantization introduces one scale factor per
+    block of 64 weights. For a 7B model, that is roughly <MathBlock
+      formula={"7 \\times 10^9 / 64 \\approx 109\\text{M}"}
+    /> FP32 scale factors, consuming ~437 MB. This overhead partially
+    offsets the memory savings of 4-bit quantization.
   </p>
 
   <p>
-    <strong>Double quantization</strong> addresses this by quantizing the scale factors themselves. The quantization constants from the first quantization are gathered into groups of 256, and each group is quantized to 8-bit precision with a single FP32 scale factor:
+    <strong>Double quantization</strong> addresses this by quantizing
+    the scale factors themselves. The quantization constants from
+    the first quantization are gathered into groups of 256, and
+    each group is quantized to 8-bit precision with a single FP32
+    scale factor:
   </p>
 
   <div class="equation-sequence">
-    <MathBlock formula={"\\text{Memory per weight} = 4\\text{ bits (NF4 weight)} + \\frac{8\\text{ bits (INT8 scale)}}{64} + \\frac{32\\text{ bits (FP32 second-level scale)}}{64 \\times 256}"} display={true} />
+    <MathBlock
+      formula={"\\text{Memory per weight} = 4\\text{ bits (NF4 weight)} + \\frac{8\\text{ bits (INT8 scale)}}{64} + \\frac{32\\text{ bits (FP32 second-level scale)}}{64 \\times 256}"}
+      display={true}
+    />
 
-    <MathBlock formula={"= 4 + 0.125 + 0.002 \\approx 4.127 \\text{ bits per weight}"} display={true} />
+    <MathBlock
+      formula={"= 4 + 0.125 + 0.002 \\approx 4.127 \\text{ bits per weight}"}
+      display={true}
+    />
 
     <p class="mt-2">
-      Each weight costs 4 bits for its quantized value, plus an amortized fraction of the two levels of scale factors. The first-level INT8 scale is shared across 64 weights (0.125 bits each), and the second-level FP32 scale is shared across 64 x 256 = 16,384 weights (negligible per weight). Compare this to single quantization:
+      Each weight costs 4 bits for its quantized value, plus
+      an amortized fraction of the two levels of scale
+      factors. The first-level INT8 scale is shared across
+      64 weights (0.125 bits each), and the second-level
+      FP32 scale is shared across 64 x 256 = 16,384 weights
+      (negligible per weight). Compare this to single
+      quantization:
     </p>
-    <MathBlock formula={"\\text{Single quantization} = 4 + \\frac{32}{64} = 4.5 \\text{ bits per weight}"} display={true} />
+    <MathBlock
+      formula={"\\text{Single quantization} = 4 + \\frac{32}{64} = 4.5 \\text{ bits per weight}"}
+      display={true}
+    />
   </div>
 
   <p>
-    With single quantization, each FP32 scale factor costs 0.5 bits per weight -- a significant overhead on top of the 4-bit weight itself. Double quantization saves <MathBlock formula="0.373" /> bits per parameter. For a 7B model: <MathBlock formula={"7 \\times 10^9 \\times 0.373 / 8 \\approx 326\\text{ MB}"} /> saved. This adds up.
+    With single quantization, each FP32 scale factor costs
+    0.5 bits per weight -- a significant overhead on top of
+    the 4-bit weight itself. Double quantization saves <MathBlock
+      formula="0.373"
+    /> bits per parameter. For a 7B model: <MathBlock
+      formula={"7 \\times 10^9 \\times 0.373 / 8 \\approx 326\\text{ MB}"}
+    /> saved. This adds up.
   </p>
 </section>
 
@@ -183,30 +445,63 @@ import Diagram from '../../components/Diagram.astro';
   <h2>QLoRA: Putting It All Together</h2>
 
   <p>
-    <strong>QLoRA</strong> combines three innovations to enable fine-tuning a 65B parameter model on a single 48 GB GPU:
+    <strong>QLoRA</strong> combines three innovations to enable
+    fine-tuning a 65B parameter model on a single 48 GB GPU:
   </p>
 
   <ol>
-    <li><strong>4-bit NF4 quantization</strong> of the base model weights</li>
-    <li><strong>Double quantization</strong> of the quantization constants</li>
-    <li><strong>LoRA</strong> adapters trained in BF16 on top of the quantized base</li>
+    <li>
+      <strong>4-bit NF4 quantization</strong> of the base model
+      weights
+    </li>
+    <li>
+      <strong>Double quantization</strong> of the quantization
+      constants
+    </li>
+    <li>
+      <strong>LoRA</strong> adapters trained in BF16 on top of
+      the quantized base
+    </li>
   </ol>
 
-  <p>
-    The forward pass with QLoRA:
-  </p>
-  <MathBlock formula={"h = \\text{dequant}(W_{\\text{NF4}}) \\cdot x + \\frac{\\alpha}{r} BAx"} display={true} />
+  <p>The forward pass with QLoRA:</p>
+  <MathBlock
+    formula={"h = \\text{dequant}(W_{\\text{NF4}}) \\cdot x + \\frac{\\alpha}{r} BAx"}
+    display={true}
+  />
 
   <p>
-    The output is the sum of two terms: the base model's computation (using dequantized 4-bit weights) plus the LoRA adapter's low-rank correction (in full BF16 precision). During the forward pass, NF4 weights are dequantized to BF16 on-the-fly for matrix multiplication. Only the LoRA matrices <MathBlock formula="B" /> and <MathBlock formula="A" /> receive gradient updates. The quantized base weights are never modified.
+    The output is the sum of two terms: the base model's
+    computation (using dequantized 4-bit weights) plus the
+    LoRA adapter's low-rank correction (in full BF16
+    precision). During the forward pass, NF4 weights are
+    dequantized to BF16 on-the-fly for matrix
+    multiplication. Only the LoRA matrices <MathBlock
+      formula="B"
+    /> and <MathBlock formula="A" /> receive gradient updates.
+    The quantized base weights are never modified.
   </p>
 
   <h3>Paged Optimizers</h3>
   <p>
-    QLoRA also introduces <strong>paged optimizers</strong>, which use NVIDIA unified memory to automatically page optimizer states between GPU and CPU memory. When GPU memory runs low during a gradient spike (e.g., a particularly long sequence), optimizer states are evicted to CPU RAM and paged back when needed. This prevents out-of-memory crashes at the cost of a small speed reduction.
+    QLoRA also introduces <strong>paged optimizers</strong>,
+    which use NVIDIA unified memory to automatically page
+    optimizer states between GPU and CPU memory. When GPU
+    memory runs low during a gradient spike (e.g., a
+    particularly long sequence), optimizer states are
+    evicted to CPU RAM and paged back when needed. This
+    prevents out-of-memory crashes at the cost of a small
+    speed reduction.
   </p>
-  <p class="text-sm text-amber-700 dark:text-amber-400 mt-2">
-    <strong>Trade-off</strong>: While this prevents OOM errors, moving data over the PCIe bus (between GPU and CPU) is much slower than internal GPU memory access. Training will be slightly slower when paging is active, but it enables training larger models on consumer hardware.
+  <p
+    class="text-sm text-amber-700 dark:text-amber-400 mt-2"
+  >
+    <strong>Trade-off</strong>: While this prevents OOM
+    errors, moving data over the PCIe bus (between GPU and
+    CPU) is much slower than internal GPU memory access.
+    Training will be slightly slower when paging is active,
+    but it enables training larger models on consumer
+    hardware.
   </p>
 </section>
 
@@ -214,49 +509,144 @@ import Diagram from '../../components/Diagram.astro';
   <h2>Memory Comparison</h2>
 
   <p>
-    To see the impact in concrete terms: a 7B parameter model in FP16 requires 14 GB of GPU memory just to hold the weights. With QLoRA's 4-bit quantization, the base model shrinks to ~3.5 GB, plus ~100 MB for the LoRA adapters and optimizer -- fitting comfortably on a single 8 GB consumer GPU. The following breakdown shows exactly where memory goes under each approach.
+    To see the impact in concrete terms: a 7B parameter
+    model in FP16 requires 14 GB of GPU memory just to hold
+    the weights. With QLoRA's 4-bit quantization, the base
+    model shrinks to ~3.5 GB, plus ~100 MB for the LoRA
+    adapters and optimizer -- fitting comfortably on a
+    single 8 GB consumer GPU. The following breakdown shows
+    exactly where memory goes under each approach.
   </p>
 
-  <RevealSection revealId="memory-comparison" title="LLaMA-2 7B: Memory Across Methods">
+  <RevealSection
+    revealId="memory-comparison"
+    title="LLaMA-2 7B: Memory Across Methods"
+  >
     <div data-reveal-step>
       <h4>Full Fine-Tuning (FP16 + FP32 optimizer)</h4>
-      <p>Every parameter needs storage for weights, optimizer state, and gradients:</p>
-      <MathBlock formula={"\\text{Weights: } 6.74\\text{B} \\times 6 = 40.4\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\text{Optimizer: } 6.74\\text{B} \\times 8 = 53.9\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\text{Gradients: } 6.74\\text{B} \\times 2 = 13.5\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\textbf{Total: } \\sim 108\\text{ GB}"} display={true} />
-      <p>The total is 6 + 8 + 2 = 16 bytes per parameter. Optimizer states alone (Adam's momentum and variance) consume more memory than the weights themselves.</p>
-      <p class="text-rose-600 dark:text-[hsl(var(--foreground))] font-medium">Requires: 2x A100 80GB</p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <p>
+        Every parameter needs storage for weights, optimizer
+        state, and gradients:
+      </p>
+      <MathBlock
+        formula={"\\text{Weights: } 6.74\\text{B} \\times 6 = 40.4\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\text{Optimizer: } 6.74\\text{B} \\times 8 = 53.9\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\text{Gradients: } 6.74\\text{B} \\times 2 = 13.5\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\textbf{Total: } \\sim 108\\text{ GB}"}
+        display={true}
+      />
+      <p>
+        The total is 6 + 8 + 2 = 16 bytes per parameter.
+        Optimizer states alone (Adam's momentum and
+        variance) consume more memory than the weights
+        themselves.
+      </p>
+      <p
+        class="text-rose-600 dark:text-[hsl(var(--foreground))] font-medium"
+      >
+        Requires: 2x A100 80GB
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1"
+      >
         Next: LoRA →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>LoRA (FP16 base + FP32 adapter optimizer)</h4>
-      <p>The base model is frozen in FP16, so no optimizer states or gradients are needed for it. Only the tiny LoRA adapters incur optimizer overhead:</p>
-      <MathBlock formula={"\\text{Base weights (frozen, FP16): } 6.74\\text{B} \\times 2 = 13.5\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\text{LoRA params (r=8, all attn): } \\sim 8.4\\text{M}"} display={true} />
-      <MathBlock formula={"\\text{LoRA optimizer: } 8.4\\text{M} \\times 12 = 0.1\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\textbf{Total: } \\sim 14\\text{ GB}"} display={true} />
-      <p>The 12 bytes per LoRA parameter covers the parameter itself (2 bytes BF16), gradients (2 bytes), and Adam states (8 bytes FP32). But 8.4M is so small that this only adds ~100 MB.</p>
-      <p class="text-amber-600 dark:text-[hsl(var(--foreground))] font-medium">Requires: 1x A100 40GB (or a high-end consumer GPU)</p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+      <p>
+        The base model is frozen in FP16, so no optimizer
+        states or gradients are needed for it. Only the tiny
+        LoRA adapters incur optimizer overhead:
+      </p>
+      <MathBlock
+        formula={"\\text{Base weights (frozen, FP16): } 6.74\\text{B} \\times 2 = 13.5\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\text{LoRA params (r=8, all attn): } \\sim 8.4\\text{M}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\text{LoRA optimizer: } 8.4\\text{M} \\times 12 = 0.1\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\textbf{Total: } \\sim 14\\text{ GB}"}
+        display={true}
+      />
+      <p>
+        The 12 bytes per LoRA parameter covers the parameter
+        itself (2 bytes BF16), gradients (2 bytes), and Adam
+        states (8 bytes FP32). But 8.4M is so small that
+        this only adds ~100 MB.
+      </p>
+      <p
+        class="text-amber-600 dark:text-[hsl(var(--foreground))] font-medium"
+      >
+        Requires: 1x A100 40GB (or a high-end consumer GPU)
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="2"
+      >
         Next: QLoRA →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>QLoRA (NF4 base + BF16 adapters)</h4>
-      <p>The base model is compressed to 4-bit NF4 (with double quantization adding ~0.127 bits per weight, so ~0.52 bytes per parameter total). The LoRA adapters remain in BF16:</p>
-      <MathBlock formula={"\\text{Base weights (NF4): } 6.74\\text{B} \\times 0.52 = 3.5\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\text{LoRA params + optimizer: } \\sim 0.1\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\text{Activations + overhead: } \\sim 2\\text{ GB}"} display={true} />
-      <MathBlock formula={"\\textbf{Total: } \\sim 6\\text{ GB}"} display={true} />
-      <p>The 4-bit base model is roughly 4x smaller than FP16. Combined with LoRA's minimal adapter overhead, the total is 18x less than full fine-tuning.</p>
-      <p class="text-emerald-600 dark:text-[hsl(var(--foreground))] font-medium">Requires: 1x RTX 3090 / 4090 (consumer GPU)</p>
-      <p class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
-        QLoRA reduces memory by <strong>18x</strong> compared to full fine-tuning, with less than 1% quality degradation on most benchmarks.
+      <p>
+        The base model is compressed to 4-bit NF4 (with
+        double quantization adding ~0.127 bits per weight,
+        so ~0.52 bytes per parameter total). The LoRA
+        adapters remain in BF16:
+      </p>
+      <MathBlock
+        formula={"\\text{Base weights (NF4): } 6.74\\text{B} \\times 0.52 = 3.5\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\text{LoRA params + optimizer: } \\sim 0.1\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\text{Activations + overhead: } \\sim 2\\text{ GB}"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\textbf{Total: } \\sim 6\\text{ GB}"}
+        display={true}
+      />
+      <p>
+        The 4-bit base model is roughly 4x smaller than
+        FP16. Combined with LoRA's minimal adapter overhead,
+        the total is 18x less than full fine-tuning.
+      </p>
+      <p
+        class="text-emerald-600 dark:text-[hsl(var(--foreground))] font-medium"
+      >
+        Requires: 1x RTX 3090 / 4090 (consumer GPU)
+      </p>
+      <p
+        class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+      >
+        QLoRA reduces memory by <strong>18x</strong> compared
+        to full fine-tuning, with less than 1% quality degradation
+        on most benchmarks.
       </p>
     </div>
   </RevealSection>
@@ -266,15 +656,29 @@ import Diagram from '../../components/Diagram.astro';
   <h2>Quality: Does Quantization Hurt?</h2>
 
   <p>
-    The QLoRA paper's key finding: <strong>4-bit QLoRA matches 16-bit full fine-tuning performance</strong> on a wide range of benchmarks. The authors fine-tuned LLaMA-65B using QLoRA on the OASST1 dataset and achieved state-of-the-art chatbot performance (at the time), surpassing all previous models on the Vicuna benchmark.
+    The QLoRA paper's key finding: <strong
+      >4-bit QLoRA matches 16-bit full fine-tuning
+      performance</strong
+    > on a wide range of benchmarks. The authors fine-tuned LLaMA-65B
+    using QLoRA on the OASST1 dataset and achieved state-of-the-art
+    chatbot performance (at the time), surpassing all previous
+    models on the Vicuna benchmark.
   </p>
 
-  <p>
-    Why does extreme quantization work? Two reasons:
-  </p>
+  <p>Why does extreme quantization work? Two reasons:</p>
   <ul>
-    <li><strong>LoRA compensates</strong>: The BF16 LoRA adapters can learn to correct any errors introduced by quantization. The adapters effectively act as a "quantization-aware" correction layer.</li>
-    <li><strong>NF4 is near-optimal</strong>: By matching the weight distribution, NF4 minimizes information loss per bit. The quantization error is as small as theoretically possible for 4 bits.</li>
+    <li>
+      <strong>LoRA compensates</strong>: The BF16 LoRA
+      adapters can learn to correct any errors introduced by
+      quantization. The adapters effectively act as a
+      "quantization-aware" correction layer.
+    </li>
+    <li>
+      <strong>NF4 is near-optimal</strong>: By matching the
+      weight distribution, NF4 minimizes information loss
+      per bit. The quantization error is as small as
+      theoretically possible for 4 bits.
+    </li>
   </ul>
 
   <Quiz
@@ -285,37 +689,62 @@ import Diagram from '../../components/Diagram.astro';
         id: "a",
         text: "NF4 uses more total bits when you include the scale factors",
         correct: false,
-        explanation: "NF4 actually uses fewer effective bits than standard approaches due to double quantization."
+        explanation:
+          "NF4 actually uses fewer effective bits than standard approaches due to double quantization.",
       },
       {
         id: "b",
         text: "NF4 places quantization levels at normal distribution quantiles, matching the weight distribution for minimal error",
         correct: true,
-        explanation: "Correct! Neural network weights are approximately normally distributed. NF4 places more quantization levels near zero (where most weights cluster) and fewer in the tails, achieving information-theoretically optimal quantization for this distribution."
+        explanation:
+          "Correct! Neural network weights are approximately normally distributed. NF4 places more quantization levels near zero (where most weights cluster) and fewer in the tails, achieving information-theoretically optimal quantization for this distribution.",
       },
       {
         id: "c",
         text: "NF4 uses a different rounding strategy that is more accurate",
         correct: false,
-        explanation: "NF4 uses standard nearest-value rounding. The improvement comes from the placement of quantization levels, not the rounding method."
+        explanation:
+          "NF4 uses standard nearest-value rounding. The improvement comes from the placement of quantization levels, not the rounding method.",
       },
       {
         id: "d",
         text: "NF4 only quantizes unimportant weights and keeps important ones in full precision",
         correct: false,
-        explanation: "NF4 quantizes all weights uniformly to 4 bits. It does not make importance-based decisions."
-      }
+        explanation:
+          "NF4 quantizes all weights uniformly to 4 bits. It does not make importance-based decisions.",
+      },
     ]}
   />
 </section>
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Quantization</strong> compresses model weights from 32/16 bits to 8/4 bits, with memory savings proportional to the compression ratio</li>
-    <li><strong>NF4</strong> places quantization levels at normal distribution quantiles, achieving optimal 4-bit quantization for the typically Gaussian weight distributions in transformers</li>
-    <li><strong>Double quantization</strong> further compresses the quantization scale factors themselves, reducing overhead from 0.5 to 0.127 bits per weight</li>
-    <li><strong>QLoRA</strong> combines NF4 quantization + double quantization + LoRA adapters to fine-tune a 7B model in ~6 GB (vs. ~108 GB for full fine-tuning)</li>
-    <li><strong>Quality preservation</strong>: 4-bit QLoRA matches 16-bit full fine-tuning on most benchmarks, because LoRA adapters compensate for quantization error</li>
+    <li>
+      <strong>Quantization</strong> compresses model weights from
+      32/16 bits to 8/4 bits, with memory savings proportional
+      to the compression ratio
+    </li>
+    <li>
+      <strong>NF4</strong> places quantization levels at normal
+      distribution quantiles, achieving optimal 4-bit quantization
+      for the typically Gaussian weight distributions in transformers
+    </li>
+    <li>
+      <strong>Double quantization</strong> further compresses
+      the quantization scale factors themselves, reducing overhead
+      from 0.5 to 0.127 bits per weight
+    </li>
+    <li>
+      <strong>QLoRA</strong> combines NF4 quantization + double
+      quantization + LoRA adapters to fine-tune a 7B model in
+      ~6 GB (vs. ~108 GB for full fine-tuning)
+    </li>
+    <li>
+      <strong>Quality preservation</strong>: 4-bit QLoRA
+      matches 16-bit full fine-tuning on most benchmarks,
+      because LoRA adapters compensate for quantization
+      error
+    </li>
   </ul>
 </KeyTakeaway>
 

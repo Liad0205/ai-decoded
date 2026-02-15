@@ -318,13 +318,13 @@ import RevealSection from "../../components/RevealSection.astro";
   />
 
   <p>
-    In plain English: we accept the draft token if the
-    target model would have been at least as likely to
-    generate it as the draft model was. When the draft model
-    is "too confident" (assigns higher probability than the
-    target), we accept with probability equal to the
-    target/draft ratio, preserving the exact output
-    distribution of the target model.
+    Intuition: we accept the draft token if the target model
+    would have been at least as likely to generate it as the
+    draft model was. When the draft model is "too confident"
+    (assigns higher probability than the target), we accept
+    with probability equal to the target/draft ratio,
+    preserving the exact output distribution of the target
+    model.
   </p>
 
   <p>
@@ -464,9 +464,9 @@ import RevealSection from "../../components/RevealSection.astro";
   />
 
   <p>
-    In plain English: the student learns from two signals --
-    the ground-truth labels (task loss) and the teacher's
-    soft probability distribution (KL divergence). The
+    Intuition: the student learns from two signals -- the
+    ground-truth labels (task loss) and the teacher's soft
+    probability distribution (KL divergence). The
     temperature T softens both distributions so that the
     relative probabilities between wrong classes become
     visible, exposing the "dark knowledge" the teacher has
@@ -516,8 +516,8 @@ import RevealSection from "../../components/RevealSection.astro";
   />
 
   <p>
-    In plain English: at every token position, minimize the
-    KL divergence between the teacher's and student's
+    Intuition: at every token position, minimize the KL
+    divergence between the teacher's and student's
     next-token probability distributions. This forces the
     student to match the teacher's full predictive behavior,
     not just its top-1 prediction.
@@ -545,14 +545,13 @@ import RevealSection from "../../components/RevealSection.astro";
   />
 
   <p>
-    In plain English: at selected intermediate layers,
-    minimize the distance between the student's hidden
-    states (projected to match dimensions) and the
-    corresponding teacher hidden states. This provides a
-    richer training signal than output-only distillation
-    because the student learns to match the teacher's
-    internal representations, not just its final
-    predictions.
+    Intuition: at selected intermediate layers, minimize the
+    distance between the student's hidden states (projected
+    to match dimensions) and the corresponding teacher
+    hidden states. This provides a richer training signal
+    than output-only distillation because the student learns
+    to match the teacher's internal representations, not
+    just its final predictions.
   </p>
 
   <p>

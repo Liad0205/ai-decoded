@@ -1,41 +1,77 @@
 ---
 // Module 9, Lesson 9.1: Diffusion Models: Theory and Foundations
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
+import RevealSection from "../../components/RevealSection.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
-    <li>Understand the forward and reverse diffusion processes as Markov chains</li>
-    <li>Derive the Evidence Lower Bound (ELBO) for diffusion models from variational principles</li>
-    <li>Explain the noise schedule and its role in training stability</li>
-    <li>Trace the evolution from DDPM to DDIM and understand the speed-quality tradeoff</li>
-    <li>Compare diffusion models to GANs and VAEs on theoretical and practical grounds</li>
+    <li>
+      Understand the forward and reverse diffusion processes
+      as Markov chains
+    </li>
+    <li>
+      Derive the Evidence Lower Bound (ELBO) for diffusion
+      models from variational principles
+    </li>
+    <li>
+      Explain the noise schedule and its role in training
+      stability
+    </li>
+    <li>
+      Trace the evolution from DDPM to DDIM and understand
+      the speed-quality tradeoff
+    </li>
+    <li>
+      Compare diffusion models to GANs and VAEs on
+      theoretical and practical grounds
+    </li>
   </ul>
 </section>
 
 <section>
-  <h2>Intuition: Destroying and Reconstructing Structure</h2>
+  <h2>
+    Intuition: Destroying and Reconstructing Structure
+  </h2>
 
   <p>
-    Diffusion models are built on a striking idea: learning to generate data by learning to <strong>reverse a gradual corruption process</strong>. Imagine dropping ink into water. The ink slowly diffuses until the water is uniformly colored, becoming pure noise. If we could train a neural network to reverse this process, we could start from uniform noise and reconstruct the original ink pattern.
+    Diffusion models are built on a striking idea: learning
+    to generate data by learning to <strong
+      >reverse a gradual corruption process</strong
+    >. Imagine dropping ink into water. The ink slowly
+    diffuses until the water is uniformly colored, becoming
+    pure noise. If we could train a neural network to
+    reverse this process, we could start from uniform noise
+    and reconstruct the original ink pattern.
   </p>
 
   <p>
     More formally, diffusion models define two processes:
   </p>
   <ol>
-    <li><strong>Forward process (diffusion)</strong>: gradually add Gaussian noise to data over T steps until it becomes pure noise</li>
-    <li><strong>Reverse process (denoising)</strong>: learn a neural network to gradually remove noise, step by step, reconstructing data from noise</li>
+    <li>
+      <strong>Forward process (diffusion)</strong>:
+      gradually add Gaussian noise to data over T steps
+      until it becomes pure noise
+    </li>
+    <li>
+      <strong>Reverse process (denoising)</strong>: learn a
+      neural network to gradually remove noise, step by
+      step, reconstructing data from noise
+    </li>
   </ol>
 
   <p>
-    This framework has several remarkable properties: training is stable (no adversarial dynamics like GANs), the objective has a clean mathematical derivation, and the generated samples achieve state-of-the-art quality across images, audio, video, and 3D content.
+    This framework has several remarkable properties:
+    training is stable (no adversarial dynamics like GANs),
+    the objective has a clean mathematical derivation, and
+    the generated samples achieve state-of-the-art quality
+    across images, audio, video, and 3D content.
   </p>
 </section>
 
@@ -43,128 +79,314 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>The Forward Process: Controlled Destruction</h2>
 
   <p>
-    Starting from a data sample <MathBlock formula={"x_0 \\sim q(x_0)"} />, the forward process defines a Markov chain that progressively adds Gaussian noise over T timesteps:
+    Starting from a data sample <MathBlock
+      formula={"x_0 \\sim q(x_0)"}
+    />, the forward process defines a Markov chain that
+    progressively adds Gaussian noise over T timesteps:
   </p>
 
   <div class="equation-sequence">
-    <MathBlock formula={"q(x_t \\mid x_{t-1}) = \\mathcal{N}(x_t; \\sqrt{1 - \\beta_t}\\, x_{t-1},\\; \\beta_t I)"} display={true} />
+    <MathBlock
+      formula={"q(x_t \\mid x_{t-1}) = \\mathcal{N}(x_t; \\sqrt{1 - \\beta_t}\\, x_{t-1},\\; \\beta_t I)"}
+      display={true}
+    />
 
     <p>
-      Here <MathBlock formula={"\\beta_t \\in (0, 1)"} /> is the <strong>noise schedule</strong>, controlling how much noise is added at each step. The full forward process is:
+      Here <MathBlock formula={"\\beta_t \\in (0, 1)"} /> is the
+      <strong>noise schedule</strong>, controlling how much
+      noise is added at each step. The full forward process
+      is:
     </p>
 
-    <MathBlock formula={"q(x_{1:T} \\mid x_0) = \\prod_{t=1}^{T} q(x_t \\mid x_{t-1})"} display={true} />
+    <MathBlock
+      formula={"q(x_{1:T} \\mid x_0) = \\prod_{t=1}^{T} q(x_t \\mid x_{t-1})"}
+      display={true}
+    />
   </div>
 
   <p>
-    In plain English: each step takes the previous image, shrinks it slightly (by <MathBlock formula={"\\sqrt{1 - \\beta_t}"} />), and adds a small amount of Gaussian noise. The noise schedule <MathBlock formula={"\\beta_t"} /> controls the shrink-vs-noise tradeoff at each step. The full forward process is simply the chain of all T such steps applied in sequence.
+    Intuition: each step takes the previous image, shrinks
+    it slightly (by <MathBlock
+      formula={"\\sqrt{1 - \\beta_t}"}
+    />), and adds a small amount of Gaussian noise. The
+    noise schedule <MathBlock formula={"\\beta_t"} /> controls
+    the shrink-vs-noise tradeoff at each step. The full forward
+    process is simply the chain of all T such steps applied in
+    sequence.
   </p>
 
   <h3>The Reparameterization Trick: Direct Sampling</h3>
 
   <p>
-    A critical property: we can sample <MathBlock formula="x_t" /> directly from <MathBlock formula="x_0" /> without iterating through all intermediate steps. Define <MathBlock formula={"\\alpha_t = 1 - \\beta_t"} /> and <MathBlock formula={"\\bar{\\alpha}_t = \\prod_{s=1}^{t} \\alpha_s"} />. Then:
+    A critical property: we can sample <MathBlock
+      formula="x_t"
+    /> directly from <MathBlock formula="x_0" /> without iterating
+    through all intermediate steps. Define <MathBlock
+      formula={"\\alpha_t = 1 - \\beta_t"}
+    /> and <MathBlock
+      formula={"\\bar{\\alpha}_t = \\prod_{s=1}^{t} \\alpha_s"}
+    />. Then:
   </p>
 
   <div class="equation-sequence">
-    <MathBlock formula={"q(x_t \\mid x_0) = \\mathcal{N}(x_t; \\sqrt{\\bar{\\alpha}_t}\\, x_0,\\; (1 - \\bar{\\alpha}_t) I)"} display={true} />
+    <MathBlock
+      formula={"q(x_t \\mid x_0) = \\mathcal{N}(x_t; \\sqrt{\\bar{\\alpha}_t}\\, x_0,\\; (1 - \\bar{\\alpha}_t) I)"}
+      display={true}
+    />
 
     <p>
-      Or equivalently, using the reparameterization trick with <MathBlock formula={"\\epsilon \\sim \\mathcal{N}(0, I)"} />:
+      Or equivalently, using the reparameterization trick
+      with <MathBlock
+        formula={"\\epsilon \\sim \\mathcal{N}(0, I)"}
+      />:
     </p>
 
-    <MathBlock formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"} display={true} />
+    <MathBlock
+      formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"}
+      display={true}
+    />
   </div>
 
   <ul>
-    <li><MathBlock formula={"\\alpha_t = 1 - \\beta_t"} /> is the "keep signal" fraction at step t (close to 1 for small noise)</li>
-    <li><MathBlock formula={"\\bar{\\alpha}_t = \\prod_{s=1}^{t} \\alpha_s"} /> is the cumulative product -- the fraction of original signal surviving after t steps</li>
-    <li><MathBlock formula={"\\epsilon \\sim \\mathcal{N}(0, I)"} /> is standard Gaussian noise</li>
+    <li>
+      <MathBlock formula={"\\alpha_t = 1 - \\beta_t"} /> is the
+      "keep signal" fraction at step t (close to 1 for small noise)
+    </li>
+    <li>
+      <MathBlock
+        formula={"\\bar{\\alpha}_t = \\prod_{s=1}^{t} \\alpha_s"}
+      /> is the cumulative product -- the fraction of original
+      signal surviving after t steps
+    </li>
+    <li>
+      <MathBlock
+        formula={"\\epsilon \\sim \\mathcal{N}(0, I)"}
+      /> is standard Gaussian noise
+    </li>
   </ul>
 
   <p>
-    This closed-form expression means we can jump directly to any noisy version <MathBlock formula="x_t" /> without simulating all intermediate steps -- a key efficiency win for training, since each training iteration only needs a single random timestep.
+    This closed-form expression means we can jump directly
+    to any noisy version <MathBlock formula="x_t" /> without simulating
+    all intermediate steps -- a key efficiency win for training,
+    since each training iteration only needs a single random timestep.
   </p>
 
   <p>
-    This is simply a weighted mixture of the original data and pure noise. As <MathBlock formula={"t \\to T"} />, <MathBlock formula={"\\bar{\\alpha}_t \\to 0"} />, so <MathBlock formula={"x_T \\approx \\epsilon"} /> (the signal is completely destroyed).
+    This is simply a weighted mixture of the original data
+    and pure noise. As <MathBlock formula={"t \\to T"} />, <MathBlock
+      formula={"\\bar{\\alpha}_t \\to 0"}
+    />, so <MathBlock formula={"x_T \\approx \\epsilon"} /> (the
+    signal is completely destroyed).
   </p>
 
-  <RevealSection revealId="forward-derivation" title="Derivation: Why Can We Sample x_t Directly?">
+  <RevealSection
+    revealId="forward-derivation"
+    title="Derivation: Why Can We Sample x_t Directly?"
+  >
     <div data-reveal-step>
       <h4>Step 1: Single Step</h4>
-      <p>From the forward process definition, <MathBlock formula={"x_t = \\sqrt{\\alpha_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, \\epsilon_t"} /> where <MathBlock formula={"\\epsilon_t \\sim \\mathcal{N}(0, I)"} />.</p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <p>
+        From the forward process definition, <MathBlock
+          formula={"x_t = \\sqrt{\\alpha_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, \\epsilon_t"}
+        /> where <MathBlock
+          formula={"\\epsilon_t \\sim \\mathcal{N}(0, I)"}
+        />.
+      </p>
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 2: Recursive Substitution</h4>
-      <p>Substituting <MathBlock formula={"x_{t-1} = \\sqrt{\\alpha_{t-1}}\\, x_{t-2} + \\sqrt{\\beta_{t-1}}\\, \\epsilon_{t-1}"} />:</p>
-      <MathBlock formula={"x_t = \\sqrt{\\alpha_t \\alpha_{t-1}}\\, x_{t-2} + \\sqrt{\\alpha_t \\beta_{t-1}}\\, \\epsilon_{t-1} + \\sqrt{\\beta_t}\\, \\epsilon_t"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+      <p>
+        Substituting <MathBlock
+          formula={"x_{t-1} = \\sqrt{\\alpha_{t-1}}\\, x_{t-2} + \\sqrt{\\beta_{t-1}}\\, \\epsilon_{t-1}"}
+        />:
+      </p>
+      <MathBlock
+        formula={"x_t = \\sqrt{\\alpha_t \\alpha_{t-1}}\\, x_{t-2} + \\sqrt{\\alpha_t \\beta_{t-1}}\\, \\epsilon_{t-1} + \\sqrt{\\beta_t}\\, \\epsilon_t"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="2"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 3: Combining Gaussian Noise</h4>
-      <p>The sum of two independent Gaussians <MathBlock formula={"\\mathcal{N}(0, \\sigma_1^2 I) + \\mathcal{N}(0, \\sigma_2^2 I) = \\mathcal{N}(0, (\\sigma_1^2 + \\sigma_2^2) I)"} />. The combined noise variance is:</p>
-      <MathBlock formula={"\\alpha_t \\beta_{t-1} + \\beta_t = \\alpha_t(1 - \\alpha_{t-1}) + (1 - \\alpha_t) = 1 - \\alpha_t \\alpha_{t-1}"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+      <p>
+        The sum of two independent Gaussians <MathBlock
+          formula={"\\mathcal{N}(0, \\sigma_1^2 I) + \\mathcal{N}(0, \\sigma_2^2 I) = \\mathcal{N}(0, (\\sigma_1^2 + \\sigma_2^2) I)"}
+        />. The combined noise variance is:
+      </p>
+      <MathBlock
+        formula={"\\alpha_t \\beta_{t-1} + \\beta_t = \\alpha_t(1 - \\alpha_{t-1}) + (1 - \\alpha_t) = 1 - \\alpha_t \\alpha_{t-1}"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="3"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 4: Induction to Timestep 0</h4>
-      <p>Continuing recursively all the way to <MathBlock formula="x_0" />, the signal coefficient accumulates as <MathBlock formula={"\\prod_{s=1}^{t} \\alpha_s = \\bar{\\alpha}_t"} />, and the noise variance becomes <MathBlock formula={"1 - \\bar{\\alpha}_t"} />. Therefore:</p>
-      <MathBlock formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon, \\quad \\epsilon \\sim \\mathcal{N}(0, I)"} display={true} />
-      <p class="mt-2 text-emerald-700 font-medium">This closed-form expression lets us sample any x_t directly during training, avoiding costly sequential simulation.</p>
+      <p>
+        Continuing recursively all the way to <MathBlock
+          formula="x_0"
+        />, the signal coefficient accumulates as <MathBlock
+          formula={"\\prod_{s=1}^{t} \\alpha_s = \\bar{\\alpha}_t"}
+        />, and the noise variance becomes <MathBlock
+          formula={"1 - \\bar{\\alpha}_t"}
+        />. Therefore:
+      </p>
+      <MathBlock
+        formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon, \\quad \\epsilon \\sim \\mathcal{N}(0, I)"}
+        display={true}
+      />
+      <p class="mt-2 text-emerald-700 font-medium">
+        This closed-form expression lets us sample any x_t
+        directly during training, avoiding costly sequential
+        simulation.
+      </p>
     </div>
   </RevealSection>
 </section>
 
-<Diagram diagramId="forward-process" title="The Forward Diffusion Process" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+<Diagram
+  diagramId="forward-process"
+  title="The Forward Diffusion Process"
+  autoplay={true}
+  animationDuration={5000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+  >
     <div class="flex items-center justify-between gap-2">
-      <div class="flex flex-col items-center" data-animate style="animation-delay: 0.2s">
-        <div class="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg mb-2 flex items-center justify-center text-white text-xs font-bold">x₀</div>
+      <div
+        class="flex flex-col items-center"
+        data-animate
+        style="animation-delay: 0.2s"
+      >
+        <div
+          class="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg mb-2 flex items-center justify-center text-white text-xs font-bold"
+        >
+          x₀
+        </div>
         <div class="text-xs text-slate-600">Clean data</div>
       </div>
 
-      <div class="text-slate-400 text-lg" data-animate style="animation-delay: 0.6s">→</div>
-
-      <div class="flex flex-col items-center" data-animate style="animation-delay: 0.8s">
-        <div class="w-16 h-16 bg-gradient-to-br from-indigo-300 to-purple-300 rounded-lg mb-2 opacity-80 flex items-center justify-center text-white text-xs font-bold">x₁</div>
-        <div class="text-xs text-slate-600">Slightly noisy</div>
+      <div
+        class="text-slate-400 text-lg"
+        data-animate
+        style="animation-delay: 0.6s"
+      >
+        →
       </div>
 
-      <div class="text-slate-400 text-lg" data-animate style="animation-delay: 1.2s">→</div>
-
-      <div class="flex flex-col items-center" data-animate style="animation-delay: 1.4s">
-        <div class="w-16 h-16 bg-gradient-to-br from-slate-300 to-slate-400 rounded-lg mb-2 opacity-70 flex items-center justify-center text-slate-600 text-xs font-bold">...</div>
-        <div class="text-xs text-slate-600">Increasingly noisy</div>
+      <div
+        class="flex flex-col items-center"
+        data-animate
+        style="animation-delay: 0.8s"
+      >
+        <div
+          class="w-16 h-16 bg-gradient-to-br from-indigo-300 to-purple-300 rounded-lg mb-2 opacity-80 flex items-center justify-center text-white text-xs font-bold"
+        >
+          x₁
+        </div>
+        <div class="text-xs text-slate-600">
+          Slightly noisy
+        </div>
       </div>
 
-      <div class="text-slate-400 text-lg" data-animate style="animation-delay: 1.8s">→</div>
-
-      <div class="flex flex-col items-center" data-animate style="animation-delay: 2.0s">
-        <div class="w-16 h-16 bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg mb-2 opacity-60 flex items-center justify-center text-slate-500 text-xs font-bold">x_T-1</div>
-        <div class="text-xs text-slate-600">Mostly noise</div>
+      <div
+        class="text-slate-400 text-lg"
+        data-animate
+        style="animation-delay: 1.2s"
+      >
+        →
       </div>
 
-      <div class="text-slate-400 text-lg" data-animate style="animation-delay: 2.4s">→</div>
+      <div
+        class="flex flex-col items-center"
+        data-animate
+        style="animation-delay: 1.4s"
+      >
+        <div
+          class="w-16 h-16 bg-gradient-to-br from-slate-300 to-slate-400 rounded-lg mb-2 opacity-70 flex items-center justify-center text-slate-600 text-xs font-bold"
+        >
+          ...
+        </div>
+        <div class="text-xs text-slate-600">
+          Increasingly noisy
+        </div>
+      </div>
 
-      <div class="flex flex-col items-center" data-animate style="animation-delay: 2.6s">
-        <div class="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg mb-2 flex items-center justify-center text-slate-400 text-xs font-bold">x_T</div>
+      <div
+        class="text-slate-400 text-lg"
+        data-animate
+        style="animation-delay: 1.8s"
+      >
+        →
+      </div>
+
+      <div
+        class="flex flex-col items-center"
+        data-animate
+        style="animation-delay: 2.0s"
+      >
+        <div
+          class="w-16 h-16 bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg mb-2 opacity-60 flex items-center justify-center text-slate-500 text-xs font-bold"
+        >
+          x_T-1
+        </div>
+        <div class="text-xs text-slate-600">
+          Mostly noise
+        </div>
+      </div>
+
+      <div
+        class="text-slate-400 text-lg"
+        data-animate
+        style="animation-delay: 2.4s"
+      >
+        →
+      </div>
+
+      <div
+        class="flex flex-col items-center"
+        data-animate
+        style="animation-delay: 2.6s"
+      >
+        <div
+          class="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg mb-2 flex items-center justify-center text-slate-400 text-xs font-bold"
+        >
+          x_T
+        </div>
         <div class="text-xs text-slate-600">Pure noise</div>
       </div>
     </div>
 
-    <div class="mt-4 text-center text-sm text-slate-600" data-animate style="animation-delay: 3.5s">
-      Each step adds a small amount of Gaussian noise. After T steps (~1000), the original signal is destroyed.
+    <div
+      class="mt-4 text-center text-sm text-slate-600"
+      data-animate
+      style="animation-delay: 3.5s"
+    >
+      Each step adds a small amount of Gaussian noise. After
+      T steps (~1000), the original signal is destroyed.
     </div>
   </div>
 </Diagram>
@@ -173,38 +395,76 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>The Noise Schedule</h2>
 
   <p>
-    The noise schedule <MathBlock formula={"\\{\\beta_t\\}_{t=1}^T"} /> controls the rate of diffusion and significantly affects both training and generation quality.
+    The noise schedule <MathBlock
+      formula={"\\{\\beta_t\\}_{t=1}^T"}
+    /> controls the rate of diffusion and significantly affects
+    both training and generation quality.
   </p>
 
   <h3>Linear Schedule (DDPM, 2020)</h3>
   <p>
-    The original DDPM used a linear schedule from <MathBlock formula={"\\beta_1 = 10^{-4}"} /> to <MathBlock formula={"\\beta_T = 0.02"} /> over T = 1000 steps. This was chosen empirically, but has a weakness: at high-resolution images, the schedule destroys too much structure in the early steps, wasting model capacity on easy denoising tasks.
+    The original DDPM used a linear schedule from <MathBlock
+      formula={"\\beta_1 = 10^{-4}"}
+    /> to <MathBlock formula={"\\beta_T = 0.02"} /> over T = 1000
+    steps. This was chosen empirically, but has a weakness: at
+    high-resolution images, the schedule destroys too much structure
+    in the early steps, wasting model capacity on easy denoising
+    tasks.
   </p>
 
   <p>
-    This limitation motivated researchers to design smarter schedules that distribute the noise more evenly across the diffusion process.
+    This limitation motivated researchers to design smarter
+    schedules that distribute the noise more evenly across
+    the diffusion process.
   </p>
 
   <h3>Cosine Schedule (Improved DDPM, 2021)</h3>
   <p>
-    Nichol and Dhariwal proposed the <strong>cosine schedule</strong>, defined via <MathBlock formula={"\\bar{\\alpha}_t"} /> directly:
+    Nichol and Dhariwal proposed the <strong
+      >cosine schedule</strong
+    >, defined via <MathBlock
+      formula={"\\bar{\\alpha}_t"}
+    /> directly:
   </p>
 
-  <MathBlock formula={"\\bar{\\alpha}_t = \\frac{f(t)}{f(0)}, \\quad f(t) = \\cos\\left(\\frac{t/T + s}{1 + s} \\cdot \\frac{\\pi}{2}\\right)^2"} display={true} />
+  <MathBlock
+    formula={"\\bar{\\alpha}_t = \\frac{f(t)}{f(0)}, \\quad f(t) = \\cos\\left(\\frac{t/T + s}{1 + s} \\cdot \\frac{\\pi}{2}\\right)^2"}
+    display={true}
+  />
 
   <p>
-    where s = 0.008 is a small offset preventing <MathBlock formula={"\\beta_t"} /> from being too small near t = 0. The cosine schedule produces a more gradual noise level increase, preserving more structure at intermediate timesteps and improving sample quality.
+    where s = 0.008 is a small offset preventing <MathBlock
+      formula={"\\beta_t"}
+    /> from being too small near t = 0. The cosine schedule produces
+    a more gradual noise level increase, preserving more structure
+    at intermediate timesteps and improving sample quality.
   </p>
 
   <h3>Signal-to-Noise Ratio (SNR) Perspective</h3>
   <p>
-    The noise schedule can be analyzed through the <strong>signal-to-noise ratio</strong>:
+    The noise schedule can be analyzed through the <strong
+      >signal-to-noise ratio</strong
+    >:
   </p>
 
-  <MathBlock formula={"\\text{SNR}(t) = \\frac{\\bar{\\alpha}_t}{1 - \\bar{\\alpha}_t}"} display={true} />
+  <MathBlock
+    formula={"\\text{SNR}(t) = \\frac{\\bar{\\alpha}_t}{1 - \\bar{\\alpha}_t}"}
+    display={true}
+  />
 
   <p>
-    A good schedule ensures SNR decreases monotonically from high (clean data) to near-zero (pure noise), with the rate of decrease distributing learning signal evenly across timesteps. A uniform distribution of SNR in log-space matters because the model must learn to denoise at every noise level: if certain SNR ranges are over-represented, the model wastes capacity on those levels while under-learning others. The cosine schedule achieves a more uniform distribution of SNR in log-space compared to the linear schedule, ensuring each denoising difficulty level receives roughly equal training attention.
+    A good schedule ensures SNR decreases monotonically from
+    high (clean data) to near-zero (pure noise), with the
+    rate of decrease distributing learning signal evenly
+    across timesteps. A uniform distribution of SNR in
+    log-space matters because the model must learn to
+    denoise at every noise level: if certain SNR ranges are
+    over-represented, the model wastes capacity on those
+    levels while under-learning others. The cosine schedule
+    achieves a more uniform distribution of SNR in log-space
+    compared to the linear schedule, ensuring each denoising
+    difficulty level receives roughly equal training
+    attention.
   </p>
 </section>
 
@@ -212,62 +472,137 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>The Reverse Process and Training Objective</h2>
 
   <p>
-    The reverse process is where learning happens. We want to learn <MathBlock formula={"p_\\theta(x_{t-1} \\mid x_t)"} /> that reverses the forward corruption. The key theoretical result: if the forward steps are small enough, the reverse transitions are also approximately Gaussian:
+    The reverse process is where learning happens. We want
+    to learn <MathBlock
+      formula={"p_\\theta(x_{t-1} \\mid x_t)"}
+    /> that reverses the forward corruption. The key theoretical
+    result: if the forward steps are small enough, the reverse
+    transitions are also approximately Gaussian:
   </p>
 
-  <MathBlock formula={"p_\\theta(x_{t-1} \\mid x_t) = \\mathcal{N}(x_{t-1};\\; \\mu_\\theta(x_t, t),\\; \\Sigma_\\theta(x_t, t))"} display={true} />
+  <MathBlock
+    formula={"p_\\theta(x_{t-1} \\mid x_t) = \\mathcal{N}(x_{t-1};\\; \\mu_\\theta(x_t, t),\\; \\Sigma_\\theta(x_t, t))"}
+    display={true}
+  />
 
   <p>
-    Each reverse step is a Gaussian with a learned mean <MathBlock formula={"\\mu_\\theta"} /> and covariance <MathBlock formula={"\\Sigma_\\theta"} />, both predicted by a neural network conditioned on the current noisy image and the timestep.
+    Each reverse step is a Gaussian with a learned mean <MathBlock
+      formula={"\\mu_\\theta"}
+    /> and covariance <MathBlock
+      formula={"\\Sigma_\\theta"}
+    />, both predicted by a neural network conditioned on
+    the current noisy image and the timestep.
   </p>
 
   <p>
-    Generation proceeds by sampling <MathBlock formula={"x_T \\sim \\mathcal{N}(0, I)"} /> and iteratively applying the learned reverse transitions:
+    Generation proceeds by sampling <MathBlock
+      formula={"x_T \\sim \\mathcal{N}(0, I)"}
+    /> and iteratively applying the learned reverse transitions:
   </p>
 
-  <MathBlock formula={"p_\\theta(x_{0:T}) = p(x_T) \\prod_{t=1}^{T} p_\\theta(x_{t-1} \\mid x_t)"} display={true} />
+  <MathBlock
+    formula={"p_\\theta(x_{0:T}) = p(x_T) \\prod_{t=1}^{T} p_\\theta(x_{t-1} \\mid x_t)"}
+    display={true}
+  />
 
   <p>
-    In words: start from pure noise and apply the learned denoising step T times. The full generative model is the product of all these individual reverse steps -- a long Markov chain from noise to data.
+    In words: start from pure noise and apply the learned
+    denoising step T times. The full generative model is the
+    product of all these individual reverse steps -- a long
+    Markov chain from noise to data.
   </p>
 
   <h3>Deriving the ELBO</h3>
 
   <p>
-    Our goal is to train the reverse process to maximize the probability that generated data looks like real data -- formally, to maximize the log-likelihood <MathBlock formula={"\\log p_\\theta(x_0)"} />. But computing this directly requires marginalizing over all possible denoising paths from <MathBlock formula="x_T" /> to <MathBlock formula="x_0" /> -- an intractable integral over a T-dimensional space.
+    Our goal is to train the reverse process to maximize the
+    probability that generated data looks like real data --
+    formally, to maximize the log-likelihood <MathBlock
+      formula={"\\log p_\\theta(x_0)"}
+    />. But computing this directly requires marginalizing
+    over all possible denoising paths from <MathBlock
+      formula="x_T"
+    /> to <MathBlock formula="x_0" /> -- an intractable integral
+    over a T-dimensional space.
   </p>
 
   <p>
-    The standard solution in variational inference: derive a tractable lower bound on the log-likelihood that we <em>can</em> optimize. This is the <strong>Evidence Lower Bound (ELBO)</strong>. Maximizing the ELBO pushes up the true log-likelihood, since the ELBO is always less than or equal to it. Let's make this precise:
+    The standard solution in variational inference: derive a
+    tractable lower bound on the log-likelihood that we <em
+      >can</em
+    > optimize. This is the <strong
+      >Evidence Lower Bound (ELBO)</strong
+    >. Maximizing the ELBO pushes up the true
+    log-likelihood, since the ELBO is always less than or
+    equal to it. Let's make this precise:
   </p>
 
-  <MathBlock formula={"\\log p_\\theta(x_0) = \\log \\int p_\\theta(x_{0:T})\\, dx_{1:T}"} display={true} />
+  <MathBlock
+    formula={"\\log p_\\theta(x_0) = \\log \\int p_\\theta(x_{0:T})\\, dx_{1:T}"}
+    display={true}
+  />
 
   <p>
-    This integral is intractable because it sums over all possible denoising trajectories. We introduce the forward process <MathBlock formula={"q(x_{1:T} \\mid x_0)"} /> as a variational distribution and apply Jensen's inequality to move the log inside the expectation:
+    This integral is intractable because it sums over all
+    possible denoising trajectories. We introduce the
+    forward process <MathBlock
+      formula={"q(x_{1:T} \\mid x_0)"}
+    /> as a variational distribution and apply Jensen's inequality
+    to move the log inside the expectation:
   </p>
 
-  <MathBlock formula={"\\log p_\\theta(x_0) \\geq \\mathbb{E}_{q(x_{1:T} \\mid x_0)}\\left[\\log \\frac{p_\\theta(x_{0:T})}{q(x_{1:T} \\mid x_0)}\\right] = \\text{ELBO}"} display={true} />
+  <MathBlock
+    formula={"\\log p_\\theta(x_0) \\geq \\mathbb{E}_{q(x_{1:T} \\mid x_0)}\\left[\\log \\frac{p_\\theta(x_{0:T})}{q(x_{1:T} \\mid x_0)}\\right] = \\text{ELBO}"}
+    display={true}
+  />
 
   <p>
-    In words: the ELBO measures how well the learned reverse process <MathBlock formula={"p_\\theta"} /> matches the forward process <MathBlock formula="q" />, averaged over noising trajectories. It is a lower bound on the true log-likelihood, and any improvement to the ELBO guarantees improvement to the likelihood.
+    In words: the ELBO measures how well the learned reverse
+    process <MathBlock formula={"p_\\theta"} /> matches the forward
+    process <MathBlock formula="q" />, averaged over noising
+    trajectories. It is a lower bound on the true
+    log-likelihood, and any improvement to the ELBO
+    guarantees improvement to the likelihood.
   </p>
 
-  <RevealSection revealId="elbo-decomposition" title="Full ELBO Decomposition">
+  <RevealSection
+    revealId="elbo-decomposition"
+    title="Full ELBO Decomposition"
+  >
     <div data-reveal-step>
       <h4>Step 1: Expand the Joint Distributions</h4>
       <p>Substituting the Markov factorizations:</p>
-      <MathBlock formula={"\\text{ELBO} = \\mathbb{E}_q\\left[\\log \\frac{p(x_T) \\prod_{t=1}^{T} p_\\theta(x_{t-1} \\mid x_t)}{\\prod_{t=1}^{T} q(x_t \\mid x_{t-1})}\\right]"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <MathBlock
+        formula={"\\text{ELBO} = \\mathbb{E}_q\\left[\\log \\frac{p(x_T) \\prod_{t=1}^{T} p_\\theta(x_{t-1} \\mid x_t)}{\\prod_{t=1}^{T} q(x_t \\mid x_{t-1})}\\right]"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 2: Rewrite Forward Posteriors</h4>
-      <p>Using Bayes' rule, rewrite <MathBlock formula={"q(x_t \\mid x_{t-1}) = q(x_t \\mid x_{t-1}, x_0)"} /> and apply the identity <MathBlock formula={"q(x_{t-1} \\mid x_t, x_0) = \\frac{q(x_t \\mid x_{t-1}) q(x_{t-1} \\mid x_0)}{q(x_t \\mid x_0)}"} />. After careful manipulation:</p>
-      <MathBlock formula={"\\text{ELBO} = \\mathbb{E}_q\\Big[\\underbrace{\\log p_\\theta(x_0 \\mid x_1)}_{L_0} - \\underbrace{D_{\\text{KL}}(q(x_T \\mid x_0) \\| p(x_T))}_{L_T} - \\sum_{t=2}^{T} \\underbrace{D_{\\text{KL}}(q(x_{t-1} \\mid x_t, x_0) \\| p_\\theta(x_{t-1} \\mid x_t))}_{L_{t-1}}\\Big]"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+      <p>
+        Using Bayes' rule, rewrite <MathBlock
+          formula={"q(x_t \\mid x_{t-1}) = q(x_t \\mid x_{t-1}, x_0)"}
+        /> and apply the identity <MathBlock
+          formula={"q(x_{t-1} \\mid x_t, x_0) = \\frac{q(x_t \\mid x_{t-1}) q(x_{t-1} \\mid x_0)}{q(x_t \\mid x_0)}"}
+        />. After careful manipulation:
+      </p>
+      <MathBlock
+        formula={"\\text{ELBO} = \\mathbb{E}_q\\Big[\\underbrace{\\log p_\\theta(x_0 \\mid x_1)}_{L_0} - \\underbrace{D_{\\text{KL}}(q(x_T \\mid x_0) \\| p(x_T))}_{L_T} - \\sum_{t=2}^{T} \\underbrace{D_{\\text{KL}}(q(x_{t-1} \\mid x_t, x_0) \\| p_\\theta(x_{t-1} \\mid x_t))}_{L_{t-1}}\\Big]"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="2"
+      >
         Next Step →
       </button>
     </div>
@@ -275,32 +610,76 @@ import RevealSection from '../../components/RevealSection.astro';
     <div data-reveal-step>
       <h4>Step 3: Interpreting Each Term</h4>
       <ul>
-        <li><strong>L_0</strong>: Reconstruction term - how well the model reconstructs x_0 from x_1 (the final denoising step)</li>
-        <li><strong>L_T</strong>: Prior matching - KL divergence between the fully noised data and the Gaussian prior. This is constant (no learnable parameters) and can be ignored.</li>
-        <li><strong>L&#123;t-1&#125;</strong>: Denoising matching - for each intermediate step, match the learned reverse transition to the tractable forward posterior <MathBlock formula={"q(x_{t-1} \\mid x_t, x_0)"} /></li>
+        <li>
+          <strong>L_0</strong>: Reconstruction term - how
+          well the model reconstructs x_0 from x_1 (the
+          final denoising step)
+        </li>
+        <li>
+          <strong>L_T</strong>: Prior matching - KL
+          divergence between the fully noised data and the
+          Gaussian prior. This is constant (no learnable
+          parameters) and can be ignored.
+        </li>
+        <li>
+          <strong>L&#123;t-1&#125;</strong>: Denoising
+          matching - for each intermediate step, match the
+          learned reverse transition to the tractable
+          forward posterior <MathBlock
+            formula={"q(x_{t-1} \\mid x_t, x_0)"}
+          />
+        </li>
       </ul>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="3"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 4: The Tractable Forward Posterior</h4>
-      <p>The key insight: <MathBlock formula={"q(x_{t-1} \\mid x_t, x_0)"} /> is a tractable Gaussian with known mean and variance:</p>
+      <p>
+        The key insight: <MathBlock
+          formula={"q(x_{t-1} \\mid x_t, x_0)"}
+        /> is a tractable Gaussian with known mean and variance:
+      </p>
       <div class="equation-with-label">
-        <MathBlock formula={"q(x_{t-1} \\mid x_t, x_0) = \\mathcal{N}\\left(x_{t-1};\\; \\tilde{\\mu}_t(x_t, x_0),\\; \\tilde{\\beta}_t I\\right)"} display={true} />
-        <p class="text-sm font-medium text-slate-700">Forward Posterior Distribution</p>
+        <MathBlock
+          formula={"q(x_{t-1} \\mid x_t, x_0) = \\mathcal{N}\\left(x_{t-1};\\; \\tilde{\\mu}_t(x_t, x_0),\\; \\tilde{\\beta}_t I\\right)"}
+          display={true}
+        />
+        <p class="text-sm font-medium text-slate-700">
+          Forward Posterior Distribution
+        </p>
       </div>
       <p>where:</p>
       <div class="equation-with-label">
-        <MathBlock formula={"\\tilde{\\mu}_t = \\frac{\\sqrt{\\bar{\\alpha}_{t-1}} \\beta_t}{1 - \\bar{\\alpha}_t} x_0 + \\frac{\\sqrt{\\alpha_t}(1 - \\bar{\\alpha}_{t-1})}{1 - \\bar{\\alpha}_t} x_t"} display={true} />
-        <p class="text-sm font-medium text-slate-700">Mean of Posterior</p>
+        <MathBlock
+          formula={"\\tilde{\\mu}_t = \\frac{\\sqrt{\\bar{\\alpha}_{t-1}} \\beta_t}{1 - \\bar{\\alpha}_t} x_0 + \\frac{\\sqrt{\\alpha_t}(1 - \\bar{\\alpha}_{t-1})}{1 - \\bar{\\alpha}_t} x_t"}
+          display={true}
+        />
+        <p class="text-sm font-medium text-slate-700">
+          Mean of Posterior
+        </p>
       </div>
       <div class="equation-with-label">
-        <MathBlock formula={"\\tilde{\\beta}_t = \\frac{(1 - \\bar{\\alpha}_{t-1})}{(1 - \\bar{\\alpha}_t)} \\beta_t"} display={true} />
-        <p class="text-sm font-medium text-slate-700">Variance of Posterior</p>
+        <MathBlock
+          formula={"\\tilde{\\beta}_t = \\frac{(1 - \\bar{\\alpha}_{t-1})}{(1 - \\bar{\\alpha}_t)} \\beta_t"}
+          display={true}
+        />
+        <p class="text-sm font-medium text-slate-700">
+          Variance of Posterior
+        </p>
       </div>
-      <p class="mt-2 text-emerald-700 font-medium">Since both distributions are Gaussian, the KL divergence has a simple closed-form that reduces to matching means. The variance can be fixed or learned separately.</p>
+      <p class="mt-2 text-emerald-700 font-medium">
+        Since both distributions are Gaussian, the KL
+        divergence has a simple closed-form that reduces to
+        matching means. The variance can be fixed or learned
+        separately.
+      </p>
     </div>
   </RevealSection>
 </section>
@@ -309,55 +688,115 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>DDPM: The Simplified Training Objective</h2>
 
   <p>
-    <strong>DDPM</strong> (Denoising Diffusion Probabilistic Models, Ho et al. 2020) made a pivotal simplification. Instead of predicting the mean <MathBlock formula={"\\mu_\\theta(x_t, t)"} /> directly, the network predicts the noise <MathBlock formula={"\\epsilon_\\theta(x_t, t)"} /> that was added to create <MathBlock formula="x_t" />.
+    <strong>DDPM</strong> (Denoising Diffusion Probabilistic Models,
+    Ho et al. 2020) made a pivotal simplification. Instead of
+    predicting the mean <MathBlock
+      formula={"\\mu_\\theta(x_t, t)"}
+    /> directly, the network predicts the noise <MathBlock
+      formula={"\\epsilon_\\theta(x_t, t)"}
+    /> that was added to create <MathBlock formula="x_t" />.
   </p>
 
   <p>
-    Since <MathBlock formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"} />, we can express the mean as:
+    Since <MathBlock
+      formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"}
+    />, we can express the mean as:
   </p>
 
-  <MathBlock formula={"\\mu_\\theta(x_t, t) = \\frac{1}{\\sqrt{\\alpha_t}} \\left(x_t - \\frac{\\beta_t}{\\sqrt{1 - \\bar{\\alpha}_t}} \\epsilon_\\theta(x_t, t)\\right)"} display={true} />
+  <MathBlock
+    formula={"\\mu_\\theta(x_t, t) = \\frac{1}{\\sqrt{\\alpha_t}} \\left(x_t - \\frac{\\beta_t}{\\sqrt{1 - \\bar{\\alpha}_t}} \\epsilon_\\theta(x_t, t)\\right)"}
+    display={true}
+  />
 
   <p>
-    In words: to compute the denoised mean, take the current noisy input <MathBlock formula="x_t" />, subtract out the predicted noise (scaled by the noise schedule), then rescale. This converts the abstract task of "predict the denoised distribution" into the concrete task of "predict what noise was added."
+    In words: to compute the denoised mean, take the current
+    noisy input <MathBlock formula="x_t" />, subtract out
+    the predicted noise (scaled by the noise schedule), then
+    rescale. This converts the abstract task of "predict the
+    denoised distribution" into the concrete task of
+    "predict what noise was added."
+  </p>
+
+  <p>The full ELBO reduces to a remarkably simple loss:</p>
+
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{simple}} = \\mathbb{E}_{t, x_0, \\epsilon}\\left[\\| \\epsilon - \\epsilon_\\theta(x_t, t) \\|^2\\right]"}
+    display={true}
+  />
+
+  <p>
+    Intuition: sample a random timestep and random noise,
+    create a noisy version of the training image, and train
+    the network to predict the noise that was added. The
+    loss is just mean squared error between the true noise
+    and the predicted noise -- as simple as training a
+    denoiser.
   </p>
 
   <p>
-    The full ELBO reduces to a remarkably simple loss:
-  </p>
-
-  <MathBlock formula={"\\mathcal{L}_{\\text{simple}} = \\mathbb{E}_{t, x_0, \\epsilon}\\left[\\| \\epsilon - \\epsilon_\\theta(x_t, t) \\|^2\\right]"} display={true} />
-
-  <p>
-    In plain English: sample a random timestep and random noise, create a noisy version of the training image, and train the network to predict the noise that was added. The loss is just mean squared error between the true noise and the predicted noise -- as simple as training a denoiser.
-  </p>
-
-  <p>
-    <strong>Training algorithm</strong>: For each training step:
+    <strong>Training algorithm</strong>: For each training
+    step:
   </p>
   <ol>
-    <li>Sample <MathBlock formula="x_0" /> from the dataset</li>
-    <li>Sample timestep <MathBlock formula={"t \\sim \\text{Uniform}(1, T)"} /></li>
-    <li>Sample noise <MathBlock formula={"\\epsilon \\sim \\mathcal{N}(0, I)"} /></li>
-    <li>Compute <MathBlock formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"} /></li>
-    <li>Train <MathBlock formula={"\\epsilon_\\theta"} /> to predict <MathBlock formula={"\\epsilon"} /> from <MathBlock formula="x_t" /> and t via the MSE loss above</li>
+    <li>
+      Sample <MathBlock formula="x_0" /> from the dataset
+    </li>
+    <li>
+      Sample timestep <MathBlock
+        formula={"t \\sim \\text{Uniform}(1, T)"}
+      />
+    </li>
+    <li>
+      Sample noise <MathBlock
+        formula={"\\epsilon \\sim \\mathcal{N}(0, I)"}
+      />
+    </li>
+    <li>
+      Compute <MathBlock
+        formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"}
+      />
+    </li>
+    <li>
+      Train <MathBlock formula={"\\epsilon_\\theta"} /> to predict
+      <MathBlock formula={"\\epsilon"} /> from <MathBlock
+        formula="x_t"
+      /> and t via the MSE loss above
+    </li>
   </ol>
 
   <p>
-    This simplicity is remarkable: diffusion training reduces to supervised denoising. No adversarial training, no posterior collapse, no mode collapse. The training signal is clean and consistent at every step.
+    This simplicity is remarkable: diffusion training
+    reduces to supervised denoising. No adversarial
+    training, no posterior collapse, no mode collapse. The
+    training signal is clean and consistent at every step.
   </p>
 
   <h3>Equivalent Parameterizations</h3>
   <p>
-    Three equivalent ways to parameterize the denoising network, each predicting a different quantity:
+    Three equivalent ways to parameterize the denoising
+    network, each predicting a different quantity:
   </p>
   <ul>
-    <li><strong>Epsilon-prediction</strong>: Predict the noise <MathBlock formula={"\\epsilon_\\theta(x_t, t)"} /> (DDPM default)</li>
-    <li><strong>x_0-prediction</strong>: Predict the clean data <MathBlock formula={"x_{0,\\theta}(x_t, t)"} /> (useful for conditioning)</li>
-    <li><strong>v-prediction</strong>: Predict <MathBlock formula={"v = \\sqrt{\\bar{\\alpha}_t}\\, \\epsilon - \\sqrt{1 - \\bar{\\alpha}_t}\\, x_0"} /> (better numerics for high-resolution)</li>
+    <li>
+      <strong>Epsilon-prediction</strong>: Predict the noise <MathBlock
+        formula={"\\epsilon_\\theta(x_t, t)"}
+      /> (DDPM default)
+    </li>
+    <li>
+      <strong>x_0-prediction</strong>: Predict the clean
+      data <MathBlock formula={"x_{0,\\theta}(x_t, t)"} /> (useful
+      for conditioning)
+    </li>
+    <li>
+      <strong>v-prediction</strong>: Predict <MathBlock
+        formula={"v = \\sqrt{\\bar{\\alpha}_t}\\, \\epsilon - \\sqrt{1 - \\bar{\\alpha}_t}\\, x_0"}
+      /> (better numerics for high-resolution)
+    </li>
   </ul>
   <p>
-    These are mathematically equivalent, connected by simple linear transformations. The choice affects numerical stability at different noise levels.
+    These are mathematically equivalent, connected by simple
+    linear transformations. The choice affects numerical
+    stability at different noise levels.
   </p>
 </section>
 
@@ -365,40 +804,79 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>DDIM: Accelerating Sampling</h2>
 
   <p>
-    DDPM requires T = 1000 sequential denoising steps for generation, which is slow for practical use. <strong>DDIM</strong> (Denoising Diffusion Implicit Models, Song et al. 2020) breaks this bottleneck by deriving a non-Markovian generalization of the forward process.
+    DDPM requires T = 1000 sequential denoising steps for
+    generation, which is slow for practical use. <strong
+      >DDIM</strong
+    > (Denoising Diffusion Implicit Models, Song et al. 2020)
+    breaks this bottleneck by deriving a non-Markovian generalization
+    of the forward process.
   </p>
 
   <h3>The Key Insight</h3>
   <p>
-    DDPM's training objective depends only on the marginals <MathBlock formula={"q(x_t \\mid x_0)"} />, not the full Markov chain. DDIM exploits this: define a different (non-Markovian) forward process that preserves the same marginals but enables faster sampling.
+    DDPM's training objective depends only on the marginals <MathBlock
+      formula={"q(x_t \\mid x_0)"}
+    />, not the full Markov chain. DDIM exploits this:
+    define a different (non-Markovian) forward process that
+    preserves the same marginals but enables faster
+    sampling.
   </p>
 
   <p>
-    The DDIM update rule, for a subsequence of timesteps <MathBlock formula={"\\tau_1, \\tau_2, \\ldots, \\tau_S"} /> where <MathBlock formula={"S \\ll T"} />:
+    The DDIM update rule, for a subsequence of timesteps <MathBlock
+      formula={"\\tau_1, \\tau_2, \\ldots, \\tau_S"}
+    /> where <MathBlock formula={"S \\ll T"} />:
   </p>
 
-  <MathBlock formula={"x_{\\tau_{i-1}} = \\sqrt{\\bar{\\alpha}_{\\tau_{i-1}}} \\underbrace{\\left(\\frac{x_{\\tau_i} - \\sqrt{1 - \\bar{\\alpha}_{\\tau_i}}\\, \\epsilon_\\theta(x_{\\tau_i}, \\tau_i)}{\\sqrt{\\bar{\\alpha}_{\\tau_i}}}\\right)}_{\\text{predicted } x_0} + \\sqrt{1 - \\bar{\\alpha}_{\\tau_{i-1}} - \\sigma^2}\\, \\epsilon_\\theta(x_{\\tau_i}, \\tau_i) + \\sigma\\, \\epsilon"} display={true} />
+  <MathBlock
+    formula={"x_{\\tau_{i-1}} = \\sqrt{\\bar{\\alpha}_{\\tau_{i-1}}} \\underbrace{\\left(\\frac{x_{\\tau_i} - \\sqrt{1 - \\bar{\\alpha}_{\\tau_i}}\\, \\epsilon_\\theta(x_{\\tau_i}, \\tau_i)}{\\sqrt{\\bar{\\alpha}_{\\tau_i}}}\\right)}_{\\text{predicted } x_0} + \\sqrt{1 - \\bar{\\alpha}_{\\tau_{i-1}} - \\sigma^2}\\, \\epsilon_\\theta(x_{\\tau_i}, \\tau_i) + \\sigma\\, \\epsilon"}
+    display={true}
+  />
 
   <p>
-    The structure of this update has three parts: (1) use the noise prediction to estimate the clean image <MathBlock formula="x_0" />, (2) re-noise it to the target noise level for the next step, and (3) optionally add fresh stochastic noise controlled by <MathBlock formula={"\\sigma"} />.
+    The structure of this update has three parts: (1) use
+    the noise prediction to estimate the clean image <MathBlock
+      formula="x_0"
+    />, (2) re-noise it to the target noise level for the
+    next step, and (3) optionally add fresh stochastic noise
+    controlled by <MathBlock formula={"\\sigma"} />.
   </p>
 
   <p>
     where <MathBlock formula={"\\sigma"} /> controls stochasticity:
   </p>
   <ul>
-    <li><MathBlock formula={"\\sigma = 0"} />: Fully deterministic sampling (DDIM). Same noise maps to same image</li>
-    <li><MathBlock formula={"\\sigma = \\sqrt{\\beta_t}"} />: Recovers the original DDPM stochastic sampler</li>
+    <li>
+      <MathBlock formula={"\\sigma = 0"} />: Fully
+      deterministic sampling (DDIM). Same noise maps to same
+      image
+    </li>
+    <li>
+      <MathBlock formula={"\\sigma = \\sqrt{\\beta_t}"} />:
+      Recovers the original DDPM stochastic sampler
+    </li>
   </ul>
 
   <h3>Practical Impact</h3>
   <p>
-    DDIM enables generation in 20-50 steps instead of 1000, with minimal quality loss. The deterministic variant also enables:
+    DDIM enables generation in 20-50 steps instead of 1000,
+    with minimal quality loss. The deterministic variant
+    also enables:
   </p>
   <ul>
-    <li><strong>Meaningful latent space</strong>: Each noise vector deterministically maps to an image, enabling interpolation</li>
-    <li><strong>Image editing</strong>: Invert a real image to its noise representation, edit, and decode</li>
-    <li><strong>Consistency</strong>: Same seed produces same output, aiding debugging and reproducibility</li>
+    <li>
+      <strong>Meaningful latent space</strong>: Each noise
+      vector deterministically maps to an image, enabling
+      interpolation
+    </li>
+    <li>
+      <strong>Image editing</strong>: Invert a real image to
+      its noise representation, edit, and decode
+    </li>
+    <li>
+      <strong>Consistency</strong>: Same seed produces same
+      output, aiding debugging and reproducibility
+    </li>
   </ul>
 </section>
 
@@ -406,41 +884,68 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Score-Based Perspective: Connecting to SDEs</h2>
 
   <p>
-    An alternative but equivalent viewpoint: diffusion models learn the <strong>score function</strong> (gradient of the log-density):
+    An alternative but equivalent viewpoint: diffusion
+    models learn the <strong>score function</strong> (gradient
+    of the log-density):
   </p>
 
-  <MathBlock formula={"s_\\theta(x_t, t) \\approx \\nabla_{x_t} \\log q(x_t)"} display={true} />
+  <MathBlock
+    formula={"s_\\theta(x_t, t) \\approx \\nabla_{x_t} \\log q(x_t)"}
+    display={true}
+  />
 
   <p>
-    In plain English: the score function points in the direction of higher data density. At any noisy point, it answers "which direction should I move to make this look more like real data?" Learning the score is equivalent to learning to denoise.
+    Intuition: the score function points in the direction of
+    higher data density. At any noisy point, it answers
+    "which direction should I move to make this look more
+    like real data?" Learning the score is equivalent to
+    learning to denoise.
   </p>
 
   <p>
-    Song et al. (2021) showed that the forward and reverse processes can be described by continuous-time stochastic differential equations (SDEs):
+    Song et al. (2021) showed that the forward and reverse
+    processes can be described by continuous-time stochastic
+    differential equations (SDEs):
   </p>
 
   <div class="equation-sequence">
-    <MathBlock formula={"\\text{Forward SDE: } dx = f(x, t)\\, dt + g(t)\\, dw"} display={true} />
+    <MathBlock
+      formula={"\\text{Forward SDE: } dx = f(x, t)\\, dt + g(t)\\, dw"}
+      display={true}
+    />
 
     <p>
-      The forward SDE drifts data toward noise. The reverse SDE undoes this by subtracting a term proportional to the score -- the gradient of the log-density at the current noise level:
+      The forward SDE drifts data toward noise. The reverse
+      SDE undoes this by subtracting a term proportional to
+      the score -- the gradient of the log-density at the
+      current noise level:
     </p>
 
-    <MathBlock formula={"\\text{Reverse SDE: } dx = [f(x, t) - g(t)^2 \\nabla_x \\log q_t(x)]\\, dt + g(t)\\, d\\bar{w}"} display={true} />
+    <MathBlock
+      formula={"\\text{Reverse SDE: } dx = [f(x, t) - g(t)^2 \\nabla_x \\log q_t(x)]\\, dt + g(t)\\, d\\bar{w}"}
+      display={true}
+    />
+
+    <p>The connection to noise prediction is direct:</p>
+
+    <MathBlock
+      formula={"\\nabla_{x_t} \\log q(x_t \\mid x_0) = -\\frac{\\epsilon}{\\sqrt{1 - \\bar{\\alpha}_t}} \\approx -\\frac{\\epsilon_\\theta(x_t, t)}{\\sqrt{1 - \\bar{\\alpha}_t}}"}
+      display={true}
+    />
 
     <p>
-      The connection to noise prediction is direct:
-    </p>
-
-    <MathBlock formula={"\\nabla_{x_t} \\log q(x_t \\mid x_0) = -\\frac{\\epsilon}{\\sqrt{1 - \\bar{\\alpha}_t}} \\approx -\\frac{\\epsilon_\\theta(x_t, t)}{\\sqrt{1 - \\bar{\\alpha}_t}}"} display={true} />
-
-    <p>
-      That is, the score is just the predicted noise (negated and rescaled). A network trained to predict noise is implicitly learning the score function.
+      That is, the score is just the predicted noise
+      (negated and rescaled). A network trained to predict
+      noise is implicitly learning the score function.
     </p>
   </div>
 
   <p>
-    This unification is powerful: epsilon-prediction, score matching, and SDE-based generation are all equivalent formulations. It enables using ODE solvers (probability flow ODE) for fast, deterministic sampling. This is a continuous-time generalization of DDIM.
+    This unification is powerful: epsilon-prediction, score
+    matching, and SDE-based generation are all equivalent
+    formulations. It enables using ODE solvers (probability
+    flow ODE) for fast, deterministic sampling. This is a
+    continuous-time generalization of DDIM.
   </p>
 </section>
 
@@ -449,19 +954,57 @@ import RevealSection from '../../components/RevealSection.astro';
 
   <h3>Diffusion vs. GANs</h3>
   <ul>
-    <li><strong>Training stability</strong>: Diffusion models use a simple MSE loss; GANs require adversarial min-max optimization, prone to mode collapse and training instability</li>
-    <li><strong>Sample diversity</strong>: Diffusion models cover the full data distribution; GANs may miss modes</li>
-    <li><strong>Sample quality</strong>: Both achieve excellent quality; GANs were historically better but diffusion has caught up and surpassed in many domains</li>
-    <li><strong>Speed</strong>: GANs generate in one forward pass; diffusion requires many denoising steps (though distillation narrows this gap)</li>
-    <li><strong>Likelihood</strong>: Diffusion provides a lower bound on log-likelihood; GANs have no explicit likelihood</li>
+    <li>
+      <strong>Training stability</strong>: Diffusion models
+      use a simple MSE loss; GANs require adversarial
+      min-max optimization, prone to mode collapse and
+      training instability
+    </li>
+    <li>
+      <strong>Sample diversity</strong>: Diffusion models
+      cover the full data distribution; GANs may miss modes
+    </li>
+    <li>
+      <strong>Sample quality</strong>: Both achieve
+      excellent quality; GANs were historically better but
+      diffusion has caught up and surpassed in many domains
+    </li>
+    <li>
+      <strong>Speed</strong>: GANs generate in one forward
+      pass; diffusion requires many denoising steps (though
+      distillation narrows this gap)
+    </li>
+    <li>
+      <strong>Likelihood</strong>: Diffusion provides a
+      lower bound on log-likelihood; GANs have no explicit
+      likelihood
+    </li>
   </ul>
 
   <h3>Diffusion vs. VAEs</h3>
   <ul>
-    <li><strong>Architecture</strong>: VAEs use an encoder-decoder with a bottleneck; diffusion uses a fixed forward process and learned reverse</li>
-    <li><strong>Sample quality</strong>: Diffusion produces sharper, more detailed samples; VAEs tend to produce blurrier outputs due to the Gaussian decoder assumption</li>
-    <li><strong>Latent space</strong>: VAEs have a compact, structured latent space by design; diffusion's "latent" is the full noise tensor (same dimensionality as data)</li>
-    <li><strong>Training</strong>: Both maximize an ELBO, but diffusion's decomposition into per-step denoising objectives leads to more stable optimization</li>
+    <li>
+      <strong>Architecture</strong>: VAEs use an
+      encoder-decoder with a bottleneck; diffusion uses a
+      fixed forward process and learned reverse
+    </li>
+    <li>
+      <strong>Sample quality</strong>: Diffusion produces
+      sharper, more detailed samples; VAEs tend to produce
+      blurrier outputs due to the Gaussian decoder
+      assumption
+    </li>
+    <li>
+      <strong>Latent space</strong>: VAEs have a compact,
+      structured latent space by design; diffusion's
+      "latent" is the full noise tensor (same dimensionality
+      as data)
+    </li>
+    <li>
+      <strong>Training</strong>: Both maximize an ELBO, but
+      diffusion's decomposition into per-step denoising
+      objectives leads to more stable optimization
+    </li>
   </ul>
 </section>
 
@@ -473,37 +1016,71 @@ import RevealSection from '../../components/RevealSection.astro';
       id: "a",
       text: "Predicting noise is computationally cheaper than predicting data",
       correct: false,
-      explanation: "Both require the same network architecture and computation. The difference is in what the output represents."
+      explanation:
+        "Both require the same network architecture and computation. The difference is in what the output represents.",
     },
     {
       id: "b",
       text: "The noise has simpler structure (standard Gaussian) than the data, making it an easier regression target with uniform difficulty across timesteps",
       correct: true,
-      explanation: "Correct! The noise is always drawn from N(0, I) regardless of timestep, providing a stationary target. Predicting x_0 directly would have varying difficulty: easy at low noise (x_t is close to x_0) but extremely hard at high noise (x_t is nearly random). Epsilon-prediction provides more uniform gradient signal."
+      explanation:
+        "Correct! The noise is always drawn from N(0, I) regardless of timestep, providing a stationary target. Predicting x_0 directly would have varying difficulty: easy at low noise (x_t is close to x_0) but extremely hard at high noise (x_t is nearly random). Epsilon-prediction provides more uniform gradient signal.",
     },
     {
       id: "c",
       text: "It is only possible to derive the ELBO with noise prediction",
       correct: false,
-      explanation: "The ELBO can be derived equivalently with x_0-prediction or v-prediction. The parameterizations are mathematically interchangeable."
+      explanation:
+        "The ELBO can be derived equivalently with x_0-prediction or v-prediction. The parameterizations are mathematically interchangeable.",
     },
     {
       id: "d",
       text: "Predicting noise allows the model to run in fewer steps",
       correct: false,
-      explanation: "The number of sampling steps is independent of the prediction target. DDIM reduces steps through a different mechanism (non-Markovian sampling)."
-    }
+      explanation:
+        "The number of sampling steps is independent of the prediction target. DDIM reduces steps through a different mechanism (non-Markovian sampling).",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Diffusion models</strong> learn to generate data by reversing a gradual noising process: training reduces to simple noise prediction via MSE loss</li>
-    <li><strong>The forward process</strong> has a closed-form: <MathBlock formula={"x_t"} /> can be sampled directly from <MathBlock formula={"x_0"} /> using the reparameterization <MathBlock formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"} /></li>
-    <li><strong>The ELBO decomposes</strong> into per-timestep KL terms between the tractable forward posterior <MathBlock formula={"q(x_{t-1} \\mid x_t, x_0)"} /> and the learned reverse <MathBlock formula={"p_\\theta(x_{t-1} \\mid x_t)"} /></li>
-    <li><strong>The noise schedule</strong> controls training dynamics: cosine schedules outperform linear ones by distributing learning signal more uniformly</li>
-    <li><strong>DDIM</strong> enables 20-50x faster sampling by exploiting a non-Markovian formulation that preserves the same marginals</li>
-    <li><strong>Score matching and SDEs</strong> provide a continuous-time unification, connecting noise prediction, score functions, and probability flow ODEs</li>
+    <li>
+      <strong>Diffusion models</strong> learn to generate data
+      by reversing a gradual noising process: training reduces
+      to simple noise prediction via MSE loss
+    </li>
+    <li>
+      <strong>The forward process</strong> has a closed-form:
+      <MathBlock formula={"x_t"} /> can be sampled directly from
+      <MathBlock formula={"x_0"} /> using the reparameterization
+      <MathBlock
+        formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"}
+      />
+    </li>
+    <li>
+      <strong>The ELBO decomposes</strong> into per-timestep KL
+      terms between the tractable forward posterior <MathBlock
+        formula={"q(x_{t-1} \\mid x_t, x_0)"}
+      /> and the learned reverse <MathBlock
+        formula={"p_\\theta(x_{t-1} \\mid x_t)"}
+      />
+    </li>
+    <li>
+      <strong>The noise schedule</strong> controls training dynamics:
+      cosine schedules outperform linear ones by distributing
+      learning signal more uniformly
+    </li>
+    <li>
+      <strong>DDIM</strong> enables 20-50x faster sampling by
+      exploiting a non-Markovian formulation that preserves the
+      same marginals
+    </li>
+    <li>
+      <strong>Score matching and SDEs</strong> provide a continuous-time
+      unification, connecting noise prediction, score functions,
+      and probability flow ODEs
+    </li>
   </ul>
 </KeyTakeaway>
 

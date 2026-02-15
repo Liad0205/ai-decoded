@@ -67,8 +67,8 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: each output pixel is the weighted sum
-    of a small local patch of input pixels, using the filter
+    Intuition: each output pixel is the weighted sum of a
+    small local patch of input pixels, using the filter
     weights, plus a bias term. The same filter slides across
     every position in the image.
   </p>
@@ -238,7 +238,7 @@ import Quiz from "../../components/Quiz.astro";
   <MathBlock formula={"y = F(x) + x"} display={true} />
 
   <p>
-    In plain English: the output is the input plus a learned
+    Intuition: the output is the input plus a learned
     correction. If the optimal transformation is identity,
     the network just needs to learn F(x) = 0, which is much
     easier than learning H(x) = x from scratch.
@@ -276,9 +276,9 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: center and scale each activation to
-    zero mean and unit variance using batch statistics, then
-    let the network learn an optimal scale and shift via the
+    Intuition: center and scale each activation to zero mean
+    and unit variance using batch statistics, then let the
+    network learn an optimal scale and shift via the
     parameters gamma and beta.
   </p>
 
@@ -311,11 +311,11 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: all three network dimensions (depth,
-    width, resolution) are scaled by the same compound
-    coefficient phi, with fixed ratios alpha, beta, and
-    gamma determining how much each dimension grows relative
-    to the others.
+    Intuition: all three network dimensions (depth, width,
+    resolution) are scaled by the same compound coefficient
+    phi, with fixed ratios alpha, beta, and gamma
+    determining how much each dimension grows relative to
+    the others.
   </p>
 
   <p>
@@ -510,8 +510,8 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: the number of patches (tokens) is
-    simply the image area divided by the patch area.
+    Intuition: the number of patches (tokens) is simply the
+    image area divided by the patch area.
   </p>
 
   <p>
@@ -533,10 +533,10 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: each patch's initial representation is
-    its pixel values linearly projected into D dimensions,
-    plus a position embedding that tells the model where in
-    the image this patch came from.
+    Intuition: each patch's initial representation is its
+    pixel values linearly projected into D dimensions, plus
+    a position embedding that tells the model where in the
+    image this patch came from.
   </p>
 
   <p>
@@ -563,8 +563,8 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: the final class prediction is produced
-    by normalizing the [CLS] token's representation from the
+    Intuition: the final class prediction is produced by
+    normalizing the [CLS] token's representation from the
     last transformer layer and feeding it through a
     classification MLP.
   </p>

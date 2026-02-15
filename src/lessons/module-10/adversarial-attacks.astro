@@ -171,7 +171,7 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: under an L-infinity constraint, the
+    Intuition: under an L-infinity constraint, the
     perturbation that maximizes the linear function is to
     push each dimension to its limit (+epsilon or -epsilon)
     in the direction of the weight's sign.
@@ -193,12 +193,11 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: the loss at a nearby point is
-    approximately the original loss plus the dot product of
-    the gradient with the perturbation. This is just a
-    first-order Taylor expansion, the same linearization you
-    would use to approximate any smooth function near a
-    point.
+    Intuition: the loss at a nearby point is approximately
+    the original loss plus the dot product of the gradient
+    with the perturbation. This is just a first-order Taylor
+    expansion, the same linearization you would use to
+    approximate any smooth function near a point.
   </p>
 
   <p>
@@ -219,7 +218,7 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: take the original input and add a
+    Intuition: take the original input and add a
     perturbation of magnitude epsilon in the direction that
     most increases the loss. The sign function ensures each
     pixel is perturbed by exactly +epsilon or -epsilon,
@@ -302,7 +301,7 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: PGD is iterated FGSM -- take a small
+    Intuition: PGD is iterated FGSM -- take a small
     adversarial step, project back into the allowed
     perturbation ball, and repeat. It is the strongest
     first-order attack and the standard benchmark for
@@ -530,11 +529,11 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: find the smallest perturbation that
-    also makes the attack succeed. The constant c controls
-    the tradeoff between perturbation size and attack
-    confidence -- think of it as a Lagrange multiplier
-    balancing two competing objectives.
+    Intuition: find the smallest perturbation that also
+    makes the attack succeed. The constant c controls the
+    tradeoff between perturbation size and attack confidence
+    -- think of it as a Lagrange multiplier balancing two
+    competing objectives.
   </p>
 
   <p>
@@ -548,11 +547,11 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: g is negative (attack succeeds) when
-    the logit for the true class is lower than the highest
-    logit among all wrong classes, with kappa as a
-    confidence margin ensuring the misclassification is
-    decisive rather than borderline.
+    Intuition: g is negative (attack succeeds) when the
+    logit for the true class is lower than the highest logit
+    among all wrong classes, with kappa as a confidence
+    margin ensuring the misclassification is decisive rather
+    than borderline.
   </p>
 
   <p>

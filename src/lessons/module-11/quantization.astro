@@ -150,12 +150,12 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: to recover the original floating-point
-    value, subtract the zero point (which centers the
-    integer range) and multiply by the scale factor (which
-    maps the integer range back to the original value
-    range). This is a simple affine mapping between the
-    integer grid and floating-point values.
+    Intuition: to recover the original floating-point value,
+    subtract the zero point (which centers the integer
+    range) and multiply by the scale factor (which maps the
+    integer range back to the original value range). This is
+    a simple affine mapping between the integer grid and
+    floating-point values.
   </p>
 
   <p>
@@ -394,13 +394,12 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: during the forward pass, weights are
-    rounded to their quantized values. During the backward
-    pass, the rounding operation is treated as if it were
-    the identity function (the "straight-through
-    estimator"), letting gradients flow through the
-    non-differentiable quantization step so training can
-    proceed normally.
+    Intuition: during the forward pass, weights are rounded
+    to their quantized values. During the backward pass, the
+    rounding operation is treated as if it were the identity
+    function (the "straight-through estimator"), letting
+    gradients flow through the non-differentiable
+    quantization step so training can proceed normally.
   </p>
 
   <ul>
@@ -456,8 +455,8 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: find quantized weights that produce
-    layer outputs as close as possible to the original layer
+    Intuition: find quantized weights that produce layer
+    outputs as close as possible to the original layer
     outputs on calibration data. The optimization is
     per-layer, minimizing the squared difference in the
     layer's actual behavior rather than just minimizing the
@@ -487,7 +486,7 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: when you round one weight, spread the
+    Intuition: when you round one weight, spread the
     rounding error across the remaining unquantized weights
     in a way that minimizes the total output error. The
     inverse Hessian tells you exactly how to distribute this
@@ -587,7 +586,7 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: scale up the important weights before
+    Intuition: scale up the important weights before
     quantization so they occupy more of the quantization
     grid (reducing their relative rounding error), then
     compensate by scaling down the corresponding
@@ -619,10 +618,10 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: search for the per-channel scaling
-    factors that minimize the difference between the
-    quantized layer's output and the original layer's output
-    on calibration data. Since there is only one scalar per
+    Intuition: search for the per-channel scaling factors
+    that minimize the difference between the quantized
+    layer's output and the original layer's output on
+    calibration data. Since there is only one scalar per
     channel, this is a tractable low-dimensional
     optimization.
   </p>
@@ -869,13 +868,12 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    In plain English: insert a diagonal scaling matrix
-    between the activations and weights. This is a
-    mathematically equivalent transformation of the matrix
-    multiply that redistributes the quantization difficulty
-    -- shrinking the outlier activation channels while
-    proportionally enlarging the corresponding weight
-    channels.
+    Intuition: insert a diagonal scaling matrix between the
+    activations and weights. This is a mathematically
+    equivalent transformation of the matrix multiply that
+    redistributes the quantization difficulty -- shrinking
+    the outlier activation channels while proportionally
+    enlarging the corresponding weight channels.
   </p>
 
   <p>

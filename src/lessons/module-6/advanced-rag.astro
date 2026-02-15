@@ -1,138 +1,269 @@
 ---
 // Module 6, Lesson 6.3: Advanced RAG Patterns
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Apply query transformation techniques (decomposition, HyDE, step-back prompting) to improve retrieval</li>
-  <li>Understand Self-RAG and how adaptive retrieval decisions improve answer quality</li>
-  <li>Design Graph RAG systems that leverage knowledge graph structure for complex reasoning</li>
-  <li>Evaluate RAG systems using the RAGAS framework (faithfulness, relevance, recall)</li>
-  <li>Implement corrective and iterative RAG patterns for robust production systems</li>
+  <li>
+    Apply query transformation techniques (decomposition,
+    HyDE, step-back prompting) to improve retrieval
+  </li>
+  <li>
+    Understand Self-RAG and how adaptive retrieval decisions
+    improve answer quality
+  </li>
+  <li>
+    Design Graph RAG systems that leverage knowledge graph
+    structure for complex reasoning
+  </li>
+  <li>
+    Evaluate RAG systems using the RAGAS framework
+    (faithfulness, relevance, recall)
+  </li>
+  <li>
+    Implement corrective and iterative RAG patterns for
+    robust production systems
+  </li>
 </ul>
 
-<h2>Query Transformation: Better Questions, Better Retrieval</h2>
+<h2>
+  Query Transformation: Better Questions, Better Retrieval
+</h2>
 
 <p>
-  A core insight of advanced RAG: the user's query is often a poor search query. Query transformation rewrites, decomposes, or augments the query before retrieval to bridge the gap between how users ask questions and how information is stored.
+  A core insight of advanced RAG: the user's query is often
+  a poor search query. Query transformation rewrites,
+  decomposes, or augments the query before retrieval to
+  bridge the gap between how users ask questions and how
+  information is stored.
 </p>
 
 <h3>Query Decomposition</h3>
 
 <p>
-  Complex questions---multi-hop ("Who founded the company that acquired X?"), comparative ("How does A compare to B on metric Y?"), and aggregation ("What are the main themes across these reports?")---often require information from multiple sources. <strong>Query decomposition</strong> breaks a complex query into simpler sub-queries, retrieves for each independently, then synthesizes:
+  Complex questions---multi-hop ("Who founded the company
+  that acquired X?"), comparative ("How does A compare to B
+  on metric Y?"), and aggregation ("What are the main themes
+  across these reports?")---often require information from
+  multiple sources. <strong>Query decomposition</strong> breaks
+  a complex query into simpler sub-queries, retrieves for each
+  independently, then synthesizes:
 </p>
 
 <p>
-  <strong>Example</strong>: "How does the performance of GPT-4 compare to Claude 3 on code generation and mathematical reasoning?"
+  <strong>Example</strong>: "How does the performance of
+  GPT-4 compare to Claude 3 on code generation and
+  mathematical reasoning?"
 </p>
 
 <p>Decomposes into:</p>
 <ol>
   <li>"GPT-4 performance on code generation benchmarks"</li>
-  <li>"Claude 3 performance on code generation benchmarks"</li>
+  <li>
+    "Claude 3 performance on code generation benchmarks"
+  </li>
   <li>"GPT-4 performance on mathematical reasoning"</li>
   <li>"Claude 3 performance on mathematical reasoning"</li>
 </ol>
 
 <p>
-  Each sub-query retrieves independently, and the LLM synthesizes a comparative answer from all retrieved contexts. This typically improves recall by 10-25% for multi-faceted questions compared to single-query retrieval, with the largest gains on comparative and aggregation queries.
+  Each sub-query retrieves independently, and the LLM
+  synthesizes a comparative answer from all retrieved
+  contexts. This typically improves recall by 10-25% for
+  multi-faceted questions compared to single-query
+  retrieval, with the largest gains on comparative and
+  aggregation queries.
 </p>
 
 <h3>HyDE: Hypothetical Document Embeddings</h3>
 
 <p>
-  <strong>HyDE</strong> addresses the query-document asymmetry problem: queries are short questions, but documents are long passages. Their embeddings may not align well in vector space.
+  <strong>HyDE</strong> addresses the query-document asymmetry
+  problem: queries are short questions, but documents are long
+  passages. Their embeddings may not align well in vector space.
 </p>
 
 <p>The HyDE process:</p>
 <ol>
-  <li>Given a query q, use an LLM to generate a <em>hypothetical</em> answer (without retrieval)</li>
-  <li>Embed the hypothetical answer instead of the original query</li>
-  <li>The hypothetical answer is linguistically closer to actual documents, producing better retrieval</li>
+  <li>
+    Given a query q, use an LLM to generate a <em
+      >hypothetical</em
+    > answer (without retrieval)
+  </li>
+  <li>
+    Embed the hypothetical answer instead of the original
+    query
+  </li>
+  <li>
+    The hypothetical answer is linguistically closer to
+    actual documents, producing better retrieval
+  </li>
 </ol>
 
-<MathBlock formula={"\\hat{d} = \\text{LLM}(q) \\quad \\Rightarrow \\quad \\text{retrieve using } E(\\hat{d}) \\text{ instead of } E(q)"} display={true} />
-
-<p>In plain English: generate a hypothetical answer with the LLM, embed that answer instead of the query, and use it for retrieval. The hypothesis is linguistically closer to actual documents than a short question is.</p>
+<MathBlock
+  formula={"\\hat{d} = \\text{LLM}(q) \\quad \\Rightarrow \\quad \\text{retrieve using } E(\\hat{d}) \\text{ instead of } E(q)"}
+  display={true}
+/>
 
 <p>
-  <strong>When HyDE helps</strong>: Queries that are very different from the document style (e.g., conversational questions vs. technical documentation), and domains where the LLM has reasonable background knowledge to generate plausible hypotheses. <strong>When it hurts</strong>: When the LLM generates a confidently wrong hypothesis, retrieval may be misdirected---this is particularly problematic for highly specialized or proprietary domains where the LLM lacks training data. HyDE also adds latency (one extra LLM call) and can reduce precision when the hypothesis drifts from the user's actual intent. In practice, benchmark before adopting: HyDE improves recall on open-domain QA but can degrade performance on narrow, fact-lookup queries.
+  Intuition: generate a hypothetical answer with the LLM,
+  embed that answer instead of the query, and use it for
+  retrieval. The hypothesis is linguistically closer to
+  actual documents than a short question is.
+</p>
+
+<p>
+  <strong>When HyDE helps</strong>: Queries that are very
+  different from the document style (e.g., conversational
+  questions vs. technical documentation), and domains where
+  the LLM has reasonable background knowledge to generate
+  plausible hypotheses. <strong>When it hurts</strong>: When
+  the LLM generates a confidently wrong hypothesis,
+  retrieval may be misdirected---this is particularly
+  problematic for highly specialized or proprietary domains
+  where the LLM lacks training data. HyDE also adds latency
+  (one extra LLM call) and can reduce precision when the
+  hypothesis drifts from the user's actual intent. In
+  practice, benchmark before adopting: HyDE improves recall
+  on open-domain QA but can degrade performance on narrow,
+  fact-lookup queries.
 </p>
 
 <h3>Step-Back Prompting</h3>
 
 <p>
-  Instead of searching for the specific question, generate a more general "step-back" question that is more likely to match stored knowledge:
+  Instead of searching for the specific question, generate a
+  more general "step-back" question that is more likely to
+  match stored knowledge:
 </p>
 
 <p>
-  <strong>Original query</strong>: "What was the GDP of France in Q3 2024?"
+  <strong>Original query</strong>: "What was the GDP of
+  France in Q3 2024?"
 </p>
 <p>
-  <strong>Step-back query</strong>: "What are the recent economic indicators and GDP figures for France?"
+  <strong>Step-back query</strong>: "What are the recent
+  economic indicators and GDP figures for France?"
 </p>
 
 <p>
-  The step-back query is broader, more likely to match relevant documents, and the specific answer can be extracted from the broader context.
+  The step-back query is broader, more likely to match
+  relevant documents, and the specific answer can be
+  extracted from the broader context.
 </p>
 
 <h3>Multi-Query Retrieval</h3>
 
 <p>
-  Generate multiple alternative phrasings of the same query, retrieve for each, then merge results:
+  Generate multiple alternative phrasings of the same query,
+  retrieve for each, then merge results:
 </p>
 
 <ol>
   <li>Original: "How to prevent SQL injection attacks?"</li>
   <li>Variant 1: "SQL injection prevention techniques"</li>
-  <li>Variant 2: "Protecting database queries from injection vulnerabilities"</li>
-  <li>Variant 3: "Parameterized queries and prepared statements for security"</li>
+  <li>
+    Variant 2: "Protecting database queries from injection
+    vulnerabilities"
+  </li>
+  <li>
+    Variant 3: "Parameterized queries and prepared
+    statements for security"
+  </li>
 </ol>
 
 <p>
-  Union the retrieved results (deduplicate by chunk ID), then rerank. This improves recall by covering different vocabulary and phrasings that might match different parts of the knowledge base.
+  Union the retrieved results (deduplicate by chunk ID),
+  then rerank. This improves recall by covering different
+  vocabulary and phrasings that might match different parts
+  of the knowledge base.
 </p>
 
-<Diagram diagramId="query-transform" title="Query Transformation Strategies" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+<Diagram
+  diagramId="query-transform"
+  title="Query Transformation Strategies"
+  autoplay={true}
+  animationDuration={5000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+  >
     <div class="flex flex-col gap-4">
-      <div class="text-center p-3 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded font-semibold text-sm" data-animate style="animation-delay: 0.3s">
-        User Query: "How does transformer attention compare to RNN gating?"
+      <div
+        class="text-center p-3 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded font-semibold text-sm"
+        data-animate
+        style="animation-delay: 0.3s"
+      >
+        User Query: "How does transformer attention compare
+        to RNN gating?"
       </div>
 
-      <div class="grid grid-cols-3 gap-3" data-animate style="animation-delay: 1.5s">
-        <div class="p-3 bg-blue-50 rounded border border-blue-200">
-          <div class="font-semibold text-xs text-blue-700 mb-1">Decomposition</div>
-          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
-            Q1: "How does transformer attention work?"<br/>
+      <div
+        class="grid grid-cols-3 gap-3"
+        data-animate
+        style="animation-delay: 1.5s"
+      >
+        <div
+          class="p-3 bg-blue-50 rounded border border-blue-200"
+        >
+          <div
+            class="font-semibold text-xs text-blue-700 mb-1"
+          >
+            Decomposition
+          </div>
+          <div
+            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+          >
+            Q1: "How does transformer attention work?"<br />
             Q2: "How does RNN gating work?"
           </div>
         </div>
 
-        <div class="p-3 bg-purple-50 rounded border border-purple-200">
-          <div class="font-semibold text-xs text-purple-700 mb-1">HyDE</div>
-          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
-            Generate hypothetical comparison document, embed that
+        <div
+          class="p-3 bg-purple-50 rounded border border-purple-200"
+        >
+          <div
+            class="font-semibold text-xs text-purple-700 mb-1"
+          >
+            HyDE
+          </div>
+          <div
+            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+          >
+            Generate hypothetical comparison document, embed
+            that
           </div>
         </div>
 
-        <div class="p-3 bg-emerald-50 rounded border border-emerald-200">
-          <div class="font-semibold text-xs text-emerald-700 mb-1">Multi-Query</div>
-          <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
-            "attention vs gating mechanisms"<br/>
+        <div
+          class="p-3 bg-emerald-50 rounded border border-emerald-200"
+        >
+          <div
+            class="font-semibold text-xs text-emerald-700 mb-1"
+          >
+            Multi-Query
+          </div>
+          <div
+            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+          >
+            "attention vs gating mechanisms"<br />
             "self-attention compared to LSTM gates"
           </div>
         </div>
       </div>
 
-      <div class="text-center text-sm text-slate-500" data-animate style="animation-delay: 3s">
-        Each strategy improves retrieval by bridging the query-document gap
+      <div
+        class="text-center text-sm text-slate-500"
+        data-animate
+        style="animation-delay: 3s"
+      >
+        Each strategy improves retrieval by bridging the
+        query-document gap
       </div>
     </div>
   </div>
@@ -141,224 +272,505 @@ import Quiz from '../../components/Quiz.astro';
 <h2>Self-RAG: Adaptive Retrieval and Self-Reflection</h2>
 
 <p>
-  Standard RAG always retrieves, even when unnecessary (e.g., "What is 2+2?"). <strong>Self-RAG</strong> trains the LLM to decide <em>when</em> to retrieve, <em>what</em> to retrieve, and to <em>critique</em> its own outputs.
+  Standard RAG always retrieves, even when unnecessary
+  (e.g., "What is 2+2?"). <strong>Self-RAG</strong> trains the
+  LLM to decide <em>when</em> to retrieve, <em>what</em> to retrieve,
+  and to <em>critique</em> its own outputs.
 </p>
 
 <h3>Self-RAG's Special Tokens</h3>
 
 <p>
-  Self-RAG augments the LLM vocabulary with reflection tokens:
+  Self-RAG augments the LLM vocabulary with reflection
+  tokens:
 </p>
 
 <ul>
-  <li><strong>[Retrieve]</strong>: Should I retrieve? Values: &#123;yes, no, continue&#125;</li>
-  <li><strong>[IsRel]</strong>: Is the retrieved passage relevant to the query? Values: &#123;relevant, irrelevant&#125;</li>
-  <li><strong>[IsSup]</strong>: Is the generated response supported by the passage? Values: &#123;fully supported, partially supported, no support&#125;</li>
-  <li><strong>[IsUse]</strong>: Is the response useful overall? Values: &#123;5, 4, 3, 2, 1&#125;</li>
+  <li>
+    <strong>[Retrieve]</strong>: Should I retrieve? Values:
+    &#123;yes, no, continue&#125;
+  </li>
+  <li>
+    <strong>[IsRel]</strong>: Is the retrieved passage
+    relevant to the query? Values: &#123;relevant,
+    irrelevant&#125;
+  </li>
+  <li>
+    <strong>[IsSup]</strong>: Is the generated response
+    supported by the passage? Values: &#123;fully supported,
+    partially supported, no support&#125;
+  </li>
+  <li>
+    <strong>[IsUse]</strong>: Is the response useful
+    overall? Values: &#123;5, 4, 3, 2, 1&#125;
+  </li>
 </ul>
 
 <p>
   The model generates these tokens inline, enabling it to:
 </p>
 <ol>
-  <li>Decide whether retrieval is needed for the current query</li>
+  <li>
+    Decide whether retrieval is needed for the current query
+  </li>
   <li>Filter out irrelevant retrieved passages</li>
-  <li>Verify that its answer is grounded in the retrieved evidence</li>
+  <li>
+    Verify that its answer is grounded in the retrieved
+    evidence
+  </li>
   <li>Self-assess the overall quality of its response</li>
 </ol>
 
 <h3>Self-RAG Inference</h3>
 
 <p>
-  At inference time, Self-RAG can generate multiple candidate outputs (with and without retrieval, using different passages) and select the best one based on its own critique scores:
+  At inference time, Self-RAG can generate multiple
+  candidate outputs (with and without retrieval, using
+  different passages) and select the best one based on its
+  own critique scores:
 </p>
 
-<MathBlock formula={"y^* = \\underset{y}{\\arg\\max} \\left[ w_{\\text{rel}} \\cdot s_{\\text{rel}} + w_{\\text{sup}} \\cdot s_{\\text{sup}} + w_{\\text{use}} \\cdot s_{\\text{use}} \\right]"} display={true} />
-
-<p>In plain English: select the candidate output that scores highest on a weighted combination of relevance, support (groundedness), and usefulness, allowing runtime control over the quality-creativity tradeoff.</p>
+<MathBlock
+  formula={"y^* = \\underset{y}{\\arg\\max} \\left[ w_{\\text{rel}} \\cdot s_{\\text{rel}} + w_{\\text{sup}} \\cdot s_{\\text{sup}} + w_{\\text{use}} \\cdot s_{\\text{use}} \\right]"}
+  display={true}
+/>
 
 <p>
-  where <MathBlock formula={"s_{\\text{rel}}, s_{\\text{sup}}, s_{\\text{use}}"} /> are the reflection token scores and <MathBlock formula={"w"} /> values are controllable weights. This enables runtime tradeoffs: higher <MathBlock formula={"w_{\\text{sup}}"} /> for factual accuracy, higher <MathBlock formula={"w_{\\text{use}}"} /> for creativity.
+  Intuition: select the candidate output that scores highest
+  on a weighted combination of relevance, support
+  (groundedness), and usefulness, allowing runtime control
+  over the quality-creativity tradeoff.
 </p>
 
 <p>
-  <strong>Self-RAG vs. simpler alternatives</strong>: Before adopting Self-RAG's training overhead, consider whether cross-encoder reranking (which filters irrelevant passages without special training) or a simple relevance threshold on retrieval scores achieves similar gains. Cross-encoder reranking is a drop-in addition to any RAG pipeline and often captures 70-80% of Self-RAG's quality improvement at a fraction of the implementation cost. Self-RAG's advantage is strongest when you need the model to decide <em>whether</em> to retrieve at all, not just <em>what</em> to retrieve.
+  where <MathBlock
+    formula={"s_{\\text{rel}}, s_{\\text{sup}}, s_{\\text{use}}"}
+  /> are the reflection token scores and <MathBlock
+    formula={"w"}
+  /> values are controllable weights. This enables runtime tradeoffs:
+  higher <MathBlock formula={"w_{\\text{sup}}"} /> for factual
+  accuracy, higher <MathBlock formula={"w_{\\text{use}}"} /> for
+  creativity.
+</p>
+
+<p>
+  <strong>Self-RAG vs. simpler alternatives</strong>: Before
+  adopting Self-RAG's training overhead, consider whether
+  cross-encoder reranking (which filters irrelevant passages
+  without special training) or a simple relevance threshold
+  on retrieval scores achieves similar gains. Cross-encoder
+  reranking is a drop-in addition to any RAG pipeline and
+  often captures 70-80% of Self-RAG's quality improvement at
+  a fraction of the implementation cost. Self-RAG's
+  advantage is strongest when you need the model to decide <em
+    >whether</em
+  > to retrieve at all, not just <em>what</em> to retrieve.
 </p>
 
 <h2>Corrective RAG (CRAG)</h2>
 
 <p>
-  <strong>CRAG</strong> adds a lightweight retrieval evaluator that assesses retrieved document quality and triggers corrective actions:
+  <strong>CRAG</strong> adds a lightweight retrieval evaluator
+  that assesses retrieved document quality and triggers corrective
+  actions:
 </p>
 
 <ul>
-  <li><strong>Correct</strong>: Retrieved documents are relevant -> proceed with standard RAG generation</li>
-  <li><strong>Incorrect</strong>: Retrieved documents are irrelevant -> discard them, use web search as fallback</li>
-  <li><strong>Ambiguous</strong>: Mixed relevance -> extract relevant portions, supplement with web search</li>
+  <li>
+    <strong>Correct</strong>: Retrieved documents are
+    relevant -> proceed with standard RAG generation
+  </li>
+  <li>
+    <strong>Incorrect</strong>: Retrieved documents are
+    irrelevant -> discard them, use web search as fallback
+  </li>
+  <li>
+    <strong>Ambiguous</strong>: Mixed relevance -> extract
+    relevant portions, supplement with web search
+  </li>
 </ul>
 
 <p>
-  The evaluator is a lightweight model (fine-tuned T5 or a simple classifier) that scores each retrieved document for relevance. This adds minimal latency (~10ms) but prevents the common failure mode of generating answers from irrelevant context.
+  The evaluator is a lightweight model (fine-tuned T5 or a
+  simple classifier) that scores each retrieved document for
+  relevance. This adds minimal latency (~10ms) but prevents
+  the common failure mode of generating answers from
+  irrelevant context.
 </p>
 
 <h2>Graph RAG: Leveraging Knowledge Structure</h2>
 
 <p>
-  Standard RAG treats documents as flat, independent chunks. <strong>Graph RAG</strong> builds a knowledge graph from the corpus and leverages its structure for retrieval and reasoning.
+  Standard RAG treats documents as flat, independent chunks. <strong
+    >Graph RAG</strong
+  > builds a knowledge graph from the corpus and leverages its
+  structure for retrieval and reasoning.
 </p>
 
 <h3>How Graph RAG Works</h3>
 
 <ol>
-  <li><strong>Entity and relation extraction</strong>: Use an LLM to extract entities (people, organizations, concepts) and relationships from each chunk</li>
-  <li><strong>Graph construction</strong>: Build a knowledge graph where nodes are entities and edges are relationships</li>
-  <li><strong>Community detection</strong>: Apply algorithms (e.g., Leiden) to identify clusters of related entities</li>
-  <li><strong>Community summaries</strong>: Generate LLM summaries of each community's content</li>
-  <li><strong>Query routing</strong>: For a query, identify relevant communities and use their summaries alongside retrieved chunks</li>
+  <li>
+    <strong>Entity and relation extraction</strong>: Use an
+    LLM to extract entities (people, organizations,
+    concepts) and relationships from each chunk
+  </li>
+  <li>
+    <strong>Graph construction</strong>: Build a knowledge
+    graph where nodes are entities and edges are
+    relationships
+  </li>
+  <li>
+    <strong>Community detection</strong>: Apply algorithms
+    (e.g., Leiden) to identify clusters of related entities
+  </li>
+  <li>
+    <strong>Community summaries</strong>: Generate LLM
+    summaries of each community's content
+  </li>
+  <li>
+    <strong>Query routing</strong>: For a query, identify
+    relevant communities and use their summaries alongside
+    retrieved chunks
+  </li>
 </ol>
 
 <h3>When Graph RAG Excels</h3>
 
 <ul>
-  <li><strong>Global questions</strong>: "What are the main themes in this document collection?" (requires aggregation across many documents, not point retrieval)</li>
-  <li><strong>Multi-hop reasoning</strong>: "Who is the CEO of the company that acquired the startup founded by the person mentioned in document X?" (requires following chains of relationships)</li>
-  <li><strong>Entity-centric queries</strong>: Questions about specific entities and their relationships benefit from graph traversal</li>
+  <li>
+    <strong>Global questions</strong>: "What are the main
+    themes in this document collection?" (requires
+    aggregation across many documents, not point retrieval)
+  </li>
+  <li>
+    <strong>Multi-hop reasoning</strong>: "Who is the CEO of
+    the company that acquired the startup founded by the
+    person mentioned in document X?" (requires following
+    chains of relationships)
+  </li>
+  <li>
+    <strong>Entity-centric queries</strong>: Questions about
+    specific entities and their relationships benefit from
+    graph traversal
+  </li>
 </ul>
 
 <h3>Graph RAG Tradeoffs</h3>
 
 <ul>
-  <li><strong>Index cost</strong>: Entity extraction and graph construction require many LLM calls during indexing. Each chunk typically requires 1-3 LLM calls for entity/relation extraction, plus additional calls for community summarization. For a corpus of 10,000 chunks, this can mean 20,000-50,000 LLM calls at indexing time---roughly 10-50x the cost of standard RAG indexing and often the dominant expense in the pipeline</li>
-  <li><strong>Maintenance</strong>: Graph must be updated when documents change; incremental updates are complex</li>
-  <li><strong>Overkill for simple Q&A</strong>: If your queries are mostly point-retrieval ("What is the return policy?"), standard RAG suffices</li>
+  <li>
+    <strong>Index cost</strong>: Entity extraction and graph
+    construction require many LLM calls during indexing.
+    Each chunk typically requires 1-3 LLM calls for
+    entity/relation extraction, plus additional calls for
+    community summarization. For a corpus of 10,000 chunks,
+    this can mean 20,000-50,000 LLM calls at indexing
+    time---roughly 10-50x the cost of standard RAG indexing
+    and often the dominant expense in the pipeline
+  </li>
+  <li>
+    <strong>Maintenance</strong>: Graph must be updated when
+    documents change; incremental updates are complex
+  </li>
+  <li>
+    <strong>Overkill for simple Q&A</strong>: If your
+    queries are mostly point-retrieval ("What is the return
+    policy?"), standard RAG suffices
+  </li>
 </ul>
 
 <h2>Iterative and Agentic RAG</h2>
 
 <p>
-  For complex questions, a single retrieve-and-generate cycle may be insufficient. <strong>Iterative RAG</strong> performs multiple retrieval rounds, each informed by the previous:
+  For complex questions, a single retrieve-and-generate
+  cycle may be insufficient. <strong>Iterative RAG</strong> performs
+  multiple retrieval rounds, each informed by the previous:
 </p>
 
 <h3>Iterative Retrieval-Generation</h3>
 
 <ol>
-  <li><strong>Initial retrieval</strong>: Retrieve based on the original query</li>
-  <li><strong>Generate partial answer</strong>: The LLM generates what it can from initial context</li>
-  <li><strong>Identify gaps</strong>: The LLM determines what additional information is needed</li>
-  <li><strong>Refined retrieval</strong>: Search for the missing information with targeted queries</li>
-  <li><strong>Complete generation</strong>: Generate the final answer with all gathered context</li>
+  <li>
+    <strong>Initial retrieval</strong>: Retrieve based on
+    the original query
+  </li>
+  <li>
+    <strong>Generate partial answer</strong>: The LLM
+    generates what it can from initial context
+  </li>
+  <li>
+    <strong>Identify gaps</strong>: The LLM determines what
+    additional information is needed
+  </li>
+  <li>
+    <strong>Refined retrieval</strong>: Search for the
+    missing information with targeted queries
+  </li>
+  <li>
+    <strong>Complete generation</strong>: Generate the final
+    answer with all gathered context
+  </li>
 </ol>
 
 <h3>Agentic RAG</h3>
 
 <p>
-  Takes iterative RAG further by giving the LLM tool-use capabilities. The LLM acts as an agent that can:
+  Takes iterative RAG further by giving the LLM tool-use
+  capabilities. The LLM acts as an agent that can:
 </p>
 
 <ul>
-  <li><strong>Choose retrieval sources</strong>: Different vector stores for different types of information</li>
-  <li><strong>Formulate search queries</strong>: Dynamically construct queries based on what it has learned so far</li>
-  <li><strong>Decide when to stop</strong>: Continue retrieving until it has sufficient information or hits a limit</li>
-  <li><strong>Route queries</strong>: Direct different sub-questions to specialized retrieval systems (SQL database, API call, vector search)</li>
+  <li>
+    <strong>Choose retrieval sources</strong>: Different
+    vector stores for different types of information
+  </li>
+  <li>
+    <strong>Formulate search queries</strong>: Dynamically
+    construct queries based on what it has learned so far
+  </li>
+  <li>
+    <strong>Decide when to stop</strong>: Continue
+    retrieving until it has sufficient information or hits a
+    limit
+  </li>
+  <li>
+    <strong>Route queries</strong>: Direct different
+    sub-questions to specialized retrieval systems (SQL
+    database, API call, vector search)
+  </li>
 </ul>
 
 <p>
-  Agentic RAG is the most flexible pattern but also the most complex and expensive. It works best for open-ended research questions where the information need is not well-defined upfront.
+  Agentic RAG is the most flexible pattern but also the most
+  complex and expensive. It works best for open-ended
+  research questions where the information need is not
+  well-defined upfront.
 </p>
 
 <h2>RAG Evaluation with RAGAS</h2>
 
 <p>
-  <strong>RAGAS</strong> (Retrieval-Augmented Generation Assessment) provides a principled framework for evaluating RAG systems without requiring ground-truth answers for every query.
+  <strong>RAGAS</strong> (Retrieval-Augmented Generation Assessment)
+  provides a principled framework for evaluating RAG systems without
+  requiring ground-truth answers for every query.
 </p>
 
 <h3>RAGAS Metrics</h3>
 
-<p><strong>Faithfulness</strong>: Does the generated answer accurately reflect the retrieved context?</p>
-
-<MathBlock formula={"\\text{Faithfulness} = \\frac{|\\text{claims in answer supported by context}|}{|\\text{total claims in answer}|}"} display={true} />
-
-<p>In plain English: faithfulness is the fraction of the answer's claims that are backed by the retrieved context. A score of 1.0 means every claim in the answer can be traced to the source material.</p>
-
 <p>
-  Faithfulness is computed in two steps: first, an LLM decomposes the generated answer into atomic claims (e.g., "The revenue was $4.2B" and "This represents a 15% increase"); then, each claim is independently verified against the retrieved context to determine if it is supported. Faithfulness measures hallucination risk: a faithful answer only contains information present in the context.
+  <strong>Faithfulness</strong>: Does the generated answer
+  accurately reflect the retrieved context?
 </p>
 
-<p><strong>Answer Relevance</strong>: Does the answer actually address the question?</p>
-
-<MathBlock formula={"\\text{Answer Relevance} = \\frac{1}{N}\\sum_{i=1}^{N} \\text{sim}(E(q), E(\\hat{q}_i))"} display={true} />
-
-<p>In plain English: generate questions the answer would plausibly address, then measure how similar those questions are to the original query. High similarity means the answer is on-topic.</p>
+<MathBlock
+  formula={"\\text{Faithfulness} = \\frac{|\\text{claims in answer supported by context}|}{|\\text{total claims in answer}|}"}
+  display={true}
+/>
 
 <p>
-  Generate N hypothetical questions that the answer would address. If these questions are similar to the original query, the answer is relevant. This catches cases where the answer is faithful to context but off-topic.
+  Intuition: faithfulness is the fraction of the answer's
+  claims that are backed by the retrieved context. A score
+  of 1.0 means every claim in the answer can be traced to
+  the source material.
 </p>
 
-<p><strong>Context Recall</strong>: Did retrieval find all the relevant information?</p>
-
-<MathBlock formula={"\\text{Context Recall} = \\frac{|\\text{ground truth claims attributable to context}|}{|\\text{total ground truth claims}|}"} display={true} />
-
-<p>In plain English: of all the facts needed to produce the correct answer, what fraction did the retrieval system actually find?</p>
-
 <p>
-  Requires ground-truth answers. Measures whether the retrieval system found the information needed to produce the correct answer.
+  Faithfulness is computed in two steps: first, an LLM
+  decomposes the generated answer into atomic claims (e.g.,
+  "The revenue was $4.2B" and "This represents a 15%
+  increase"); then, each claim is independently verified
+  against the retrieved context to determine if it is
+  supported. Faithfulness measures hallucination risk: a
+  faithful answer only contains information present in the
+  context.
 </p>
 
-<p><strong>Context Precision</strong>: Is the retrieved context relevant or noisy?</p>
+<p>
+  <strong>Answer Relevance</strong>: Does the answer
+  actually address the question?
+</p>
 
-<MathBlock formula={"\\text{Context Precision@k} = \\frac{1}{k}\\sum_{i=1}^{k} \\frac{\\text{relevant items in top-}i}{i}"} display={true} />
-
-<p>In plain English: an average precision score that rewards placing relevant chunks earlier in the ranking. High precision means less noise in the context sent to the LLM.</p>
+<MathBlock
+  formula={"\\text{Answer Relevance} = \\frac{1}{N}\\sum_{i=1}^{N} \\text{sim}(E(q), E(\\hat{q}_i))"}
+  display={true}
+/>
 
 <p>
-  Measures whether retrieved chunks are actually useful for answering the question. High precision means less noise in the context.
+  Intuition: generate questions the answer would plausibly
+  address, then measure how similar those questions are to
+  the original query. High similarity means the answer is
+  on-topic.
+</p>
+
+<p>
+  Generate N hypothetical questions that the answer would
+  address. If these questions are similar to the original
+  query, the answer is relevant. This catches cases where
+  the answer is faithful to context but off-topic.
+</p>
+
+<p>
+  <strong>Context Recall</strong>: Did retrieval find all
+  the relevant information?
+</p>
+
+<MathBlock
+  formula={"\\text{Context Recall} = \\frac{|\\text{ground truth claims attributable to context}|}{|\\text{total ground truth claims}|}"}
+  display={true}
+/>
+
+<p>
+  Intuition: of all the facts needed to produce the correct
+  answer, what fraction did the retrieval system actually
+  find?
+</p>
+
+<p>
+  Requires ground-truth answers. Measures whether the
+  retrieval system found the information needed to produce
+  the correct answer.
+</p>
+
+<p>
+  <strong>Context Precision</strong>: Is the retrieved
+  context relevant or noisy?
+</p>
+
+<MathBlock
+  formula={"\\text{Context Precision@k} = \\frac{1}{k}\\sum_{i=1}^{k} \\frac{\\text{relevant items in top-}i}{i}"}
+  display={true}
+/>
+
+<p>
+  Intuition: an average precision score that rewards placing
+  relevant chunks earlier in the ranking. High precision
+  means less noise in the context sent to the LLM.
+</p>
+
+<p>
+  Measures whether retrieved chunks are actually useful for
+  answering the question. High precision means less noise in
+  the context.
 </p>
 
 <h3>Building an Evaluation Dataset</h3>
 
-<p>
-  Effective RAG evaluation requires a curated test set:
-</p>
+<p>Effective RAG evaluation requires a curated test set:</p>
 
 <ol>
-  <li><strong>Collect real user queries</strong> from logs or interviews</li>
-  <li><strong>Create synthetic queries</strong> using LLMs to generate questions from your documents</li>
-  <li><strong>Annotate ground truth</strong>: For each query, identify the relevant source chunks and write the ideal answer</li>
-  <li><strong>Include edge cases</strong>: Queries with no answer in the corpus, ambiguous queries, multi-hop queries</li>
-  <li><strong>Diversify</strong>: Cover different query types (factual, comparative, procedural, opinion-seeking)</li>
+  <li>
+    <strong>Collect real user queries</strong> from logs or interviews
+  </li>
+  <li>
+    <strong>Create synthetic queries</strong> using LLMs to generate
+    questions from your documents
+  </li>
+  <li>
+    <strong>Annotate ground truth</strong>: For each query,
+    identify the relevant source chunks and write the ideal
+    answer
+  </li>
+  <li>
+    <strong>Include edge cases</strong>: Queries with no
+    answer in the corpus, ambiguous queries, multi-hop
+    queries
+  </li>
+  <li>
+    <strong>Diversify</strong>: Cover different query types
+    (factual, comparative, procedural, opinion-seeking)
+  </li>
 </ol>
 
 <p>
-  A test set of 50-100 well-curated queries is more valuable than 1000 low-quality ones. Prioritize coverage of your key use cases.
+  A test set of 50-100 well-curated queries is more valuable
+  than 1000 low-quality ones. Prioritize coverage of your
+  key use cases.
 </p>
 
 <h2>Putting It All Together: RAG Architecture Patterns</h2>
 
-<Diagram diagramId="rag-patterns" title="RAG Architecture Patterns by Complexity" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+<Diagram
+  diagramId="rag-patterns"
+  title="RAG Architecture Patterns by Complexity"
+  autoplay={true}
+  animationDuration={5000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+  >
     <div class="flex flex-col gap-3">
-      <div class="p-3 bg-emerald-50 rounded border border-emerald-200" data-animate style="animation-delay: 0.3s">
-        <div class="font-semibold text-sm text-emerald-800">Naive RAG</div>
-        <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">Chunk -> Embed -> Retrieve -> Generate. Good starting point.</div>
+      <div
+        class="p-3 bg-emerald-50 rounded border border-emerald-200"
+        data-animate
+        style="animation-delay: 0.3s"
+      >
+        <div class="font-semibold text-sm text-emerald-800">
+          Naive RAG
+        </div>
+        <div
+          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        >
+          Chunk -> Embed -> Retrieve -> Generate. Good
+          starting point.
+        </div>
       </div>
 
-      <div class="p-3 bg-blue-50 rounded border border-blue-200" data-animate style="animation-delay: 1s">
-        <div class="font-semibold text-sm text-blue-800">Advanced RAG</div>
-        <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">+ Query transformation + Hybrid retrieval + Reranking. Production-grade.</div>
+      <div
+        class="p-3 bg-blue-50 rounded border border-blue-200"
+        data-animate
+        style="animation-delay: 1s"
+      >
+        <div class="font-semibold text-sm text-blue-800">
+          Advanced RAG
+        </div>
+        <div
+          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        >
+          + Query transformation + Hybrid retrieval +
+          Reranking. Production-grade.
+        </div>
       </div>
 
-      <div class="p-3 bg-purple-50 rounded border border-purple-200" data-animate style="animation-delay: 2s">
-        <div class="font-semibold text-sm text-purple-800">Self-RAG / Corrective RAG</div>
-        <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">+ Adaptive retrieval + Self-reflection + Fallback mechanisms. Robust systems.</div>
+      <div
+        class="p-3 bg-purple-50 rounded border border-purple-200"
+        data-animate
+        style="animation-delay: 2s"
+      >
+        <div class="font-semibold text-sm text-purple-800">
+          Self-RAG / Corrective RAG
+        </div>
+        <div
+          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        >
+          + Adaptive retrieval + Self-reflection + Fallback
+          mechanisms. Robust systems.
+        </div>
       </div>
 
-      <div class="p-3 bg-amber-50 rounded border border-amber-200" data-animate style="animation-delay: 3s">
-        <div class="font-semibold text-sm text-amber-800">Agentic RAG / Graph RAG</div>
-        <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">+ Multi-step reasoning + Knowledge graphs + Tool use. Complex research tasks.</div>
+      <div
+        class="p-3 bg-amber-50 rounded border border-amber-200"
+        data-animate
+        style="animation-delay: 3s"
+      >
+        <div class="font-semibold text-sm text-amber-800">
+          Agentic RAG / Graph RAG
+        </div>
+        <div
+          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        >
+          + Multi-step reasoning + Knowledge graphs + Tool
+          use. Complex research tasks.
+        </div>
       </div>
 
-      <div class="text-xs text-slate-500 text-center mt-2" data-animate style="animation-delay: 4s">
-        Complexity increases downward. Start simple, add components as needed based on evaluation results.
+      <div
+        class="text-xs text-slate-500 text-center mt-2"
+        data-animate
+        style="animation-delay: 4s"
+      >
+        Complexity increases downward. Start simple, add
+        components as needed based on evaluation results.
       </div>
     </div>
   </div>
@@ -372,37 +784,66 @@ import Quiz from '../../components/Quiz.astro';
       id: "a",
       text: "The LLM is hallucinating information not in the retrieved context",
       correct: false,
-      explanation: "High faithfulness (0.95) means the answer closely reflects the retrieved context---hallucination is not the issue here."
+      explanation:
+        "High faithfulness (0.95) means the answer closely reflects the retrieved context---hallucination is not the issue here.",
     },
     {
       id: "b",
       text: "The retrieval system is returning irrelevant documents, and the LLM faithfully answers based on that irrelevant context",
       correct: true,
-      explanation: "Correct! High faithfulness + low answer relevance means the LLM is accurately reflecting the context, but the context doesn't address the user's question. The retrieval system is the bottleneck. Improvements: better embedding model, query transformation, hybrid search, or reranking."
+      explanation:
+        "Correct! High faithfulness + low answer relevance means the LLM is accurately reflecting the context, but the context doesn't address the user's question. The retrieval system is the bottleneck. Improvements: better embedding model, query transformation, hybrid search, or reranking.",
     },
     {
       id: "c",
       text: "The chunks are too large, causing the LLM to lose important details",
       correct: false,
-      explanation: "Chunk size affects what information is available, but the pattern of high faithfulness + low relevance specifically points to retrieving the wrong documents, not losing details within correct ones."
+      explanation:
+        "Chunk size affects what information is available, but the pattern of high faithfulness + low relevance specifically points to retrieving the wrong documents, not losing details within correct ones.",
     },
     {
       id: "d",
       text: "The LLM's context window is too small to process all retrieved chunks",
       correct: false,
-      explanation: "Context window limitations would cause the LLM to miss some chunks, but would not explain high faithfulness with low relevance. The issue is retrieval quality, not context capacity."
-    }
+      explanation:
+        "Context window limitations would cause the LLM to miss some chunks, but would not explain high faithfulness with low relevance. The issue is retrieval quality, not context capacity.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Query transformation</strong> is often the highest-impact improvement: decomposition for multi-faceted queries, HyDE for bridging query-document asymmetry, multi-query for vocabulary coverage</li>
-    <li><strong>Self-RAG</strong> trains the LLM to decide when to retrieve and to critique its own outputs using special reflection tokens, enabling adaptive retrieval</li>
-    <li><strong>Corrective RAG</strong> adds a retrieval evaluator that detects irrelevant results and triggers fallback mechanisms (e.g., web search)</li>
-    <li><strong>Graph RAG</strong> builds knowledge graphs for global queries and multi-hop reasoning, but at significantly higher indexing cost</li>
-    <li><strong>RAGAS evaluation</strong> provides principled metrics (faithfulness, relevance, recall, precision) that diagnose specific failure modes in the RAG pipeline</li>
-    <li><strong>Start simple</strong>: Begin with naive RAG, measure with RAGAS, then add components that address the specific failure modes you observe</li>
+    <li>
+      <strong>Query transformation</strong> is often the highest-impact
+      improvement: decomposition for multi-faceted queries, HyDE
+      for bridging query-document asymmetry, multi-query for vocabulary
+      coverage
+    </li>
+    <li>
+      <strong>Self-RAG</strong> trains the LLM to decide when
+      to retrieve and to critique its own outputs using special
+      reflection tokens, enabling adaptive retrieval
+    </li>
+    <li>
+      <strong>Corrective RAG</strong> adds a retrieval evaluator
+      that detects irrelevant results and triggers fallback mechanisms
+      (e.g., web search)
+    </li>
+    <li>
+      <strong>Graph RAG</strong> builds knowledge graphs for global
+      queries and multi-hop reasoning, but at significantly higher
+      indexing cost
+    </li>
+    <li>
+      <strong>RAGAS evaluation</strong> provides principled metrics
+      (faithfulness, relevance, recall, precision) that diagnose
+      specific failure modes in the RAG pipeline
+    </li>
+    <li>
+      <strong>Start simple</strong>: Begin with naive RAG,
+      measure with RAGAS, then add components that address
+      the specific failure modes you observe
+    </li>
   </ul>
 </KeyTakeaway>
 

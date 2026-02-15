@@ -1,19 +1,31 @@
 ---
 // Module 1, Lesson 1.2: Neural Network Internals - Beyond the Basics
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Quiz from "../../components/Quiz.astro";
+import RevealSection from "../../components/RevealSection.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
-    <li>Derive backpropagation from first principles using the chain rule and computational graphs</li>
-    <li>Understand why modern activations (GELU, SiLU) outperform ReLU in transformers</li>
-    <li>Analyze loss function choices and their implications for optimization</li>
-    <li>Compare modern optimizers (SGD, Adam, AdamW) and learning rate schedules</li>
+    <li>
+      Derive backpropagation from first principles using the
+      chain rule and computational graphs
+    </li>
+    <li>
+      Understand why modern activations (GELU, SiLU)
+      outperform ReLU in transformers
+    </li>
+    <li>
+      Analyze loss function choices and their implications
+      for optimization
+    </li>
+    <li>
+      Compare modern optimizers (SGD, Adam, AdamW) and
+      learning rate schedules
+    </li>
   </ul>
 </section>
 
@@ -21,103 +33,225 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Forward Pass and Backpropagation</h2>
 
   <p>
-    Neural networks learn by iteratively adjusting weights to minimize a loss function. <strong>Backpropagation</strong>, the algorithm for computing gradients efficiently, is the foundation of all modern deep learning.
+    Neural networks learn by iteratively adjusting weights
+    to minimize a loss function. <strong
+      >Backpropagation</strong
+    >, the algorithm for computing gradients efficiently, is
+    the foundation of all modern deep learning.
   </p>
 
   <h3>The Computational Graph</h3>
   <p>
-    Every neural network can be represented as a <em>computational graph</em>: a directed acyclic graph where nodes are operations and edges carry intermediate values. Consider a simple two-layer network:
+    Every neural network can be represented as a <em
+      >computational graph</em
+    >: a directed acyclic graph where nodes are operations
+    and edges carry intermediate values. Consider a simple
+    two-layer network:
   </p>
 
   <p>
-    The forward pass is a chain of simple operations: linear transform, nonlinearity, repeat, then score and measure error. Each line below feeds into the next, forming a computational graph that backpropagation will later traverse in reverse. Let's make this precise:
+    The forward pass is a chain of simple operations: linear
+    transform, nonlinearity, repeat, then score and measure
+    error. Each line below feeds into the next, forming a
+    computational graph that backpropagation will later
+    traverse in reverse. Let's make this precise:
   </p>
 
   <div class="equation-sequence">
     <MathBlock formula="z_1 = W_1 x + b_1" display={true} />
-    <MathBlock formula={"a_1 = \\sigma(z_1)"} display={true} />
-    <MathBlock formula="z_2 = W_2 a_1 + b_2" display={true} />
-    <MathBlock formula={"\\hat{y} = \\text{softmax}(z_2)"} display={true} />
-    <MathBlock formula={"\\mathcal{L} = -\\sum_i y_i \\log \\hat{y}_i"} display={true} />
+    <MathBlock
+      formula={"a_1 = \\sigma(z_1)"}
+      display={true}
+    />
+    <MathBlock
+      formula="z_2 = W_2 a_1 + b_2"
+      display={true}
+    />
+    <MathBlock
+      formula={"\\hat{y} = \\text{softmax}(z_2)"}
+      display={true}
+    />
+    <MathBlock
+      formula={"\\mathcal{L} = -\\sum_i y_i \\log \\hat{y}_i"}
+      display={true}
+    />
   </div>
 
   <p>
-    In words: multiply the input by weights and add bias, apply an activation function to introduce nonlinearity, repeat for the second layer, convert raw scores to probabilities with softmax, and measure the gap between prediction and truth with cross-entropy loss.
+    In words: multiply the input by weights and add bias,
+    apply an activation function to introduce nonlinearity,
+    repeat for the second layer, convert raw scores to
+    probabilities with softmax, and measure the gap between
+    prediction and truth with cross-entropy loss.
   </p>
 
   <p>
-    The forward pass computes outputs from inputs. The backward pass (backpropagation) computes gradients of the loss with respect to each parameter.
+    The forward pass computes outputs from inputs. The
+    backward pass (backpropagation) computes gradients of
+    the loss with respect to each parameter.
   </p>
 
   <h3>Intuition First: The "Blame Game"</h3>
   <p>
-    Before diving into the calculus, think of backpropagation as a "blame assignment" mechanism. When the network makes a mistake (high loss), who is responsible?
+    Before diving into the calculus, think of
+    backpropagation as a "blame assignment" mechanism. When
+    the network makes a mistake (high loss), who is
+    responsible?
   </p>
   <ul>
-    <li>The output neuron says: "I just output what the last layer gave me!"</li>
-    <li>The last layer says: "I just weighted what the previous layer gave me!"</li>
+    <li>
+      The output neuron says: "I just output what the last
+      layer gave me!"
+    </li>
+    <li>
+      The last layer says: "I just weighted what the
+      previous layer gave me!"
+    </li>
   </ul>
   <p>
-    Backpropagation works backward from the error, assigning a "blame score" (gradient) to each weight. A high positive gradient means "if this weight were lower, the error would have been much lower." We use these scores to nudge every weight in the direction that reduces error.
+    Backpropagation works backward from the error, assigning
+    a "blame score" (gradient) to each weight. A high
+    positive gradient means "if this weight were lower, the
+    error would have been much lower." We use these scores
+    to nudge every weight in the direction that reduces
+    error.
   </p>
 
   <h3>Deriving Backpropagation (Deep Dive)</h3>
   <p>
-    Backpropagation applies the <strong>chain rule</strong> systematically. For a parameter <MathBlock formula="w" /> in layer <MathBlock formula="l" />, we need <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial w}"} />.
+    Backpropagation applies the <strong>chain rule</strong> systematically.
+    For a parameter <MathBlock formula="w" /> in layer <MathBlock
+      formula="l"
+    />, we need <MathBlock
+      formula={"\\frac{\\partial \\mathcal{L}}{\\partial w}"}
+    />.
   </p>
 
   <p>
-    If <MathBlock formula="w" /> affects the loss through intermediate value <MathBlock formula="z" />, the chain rule gives:
+    If <MathBlock formula="w" /> affects the loss through intermediate
+    value <MathBlock formula="z" />, the chain rule gives:
   </p>
 
-  <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial w} = \\frac{\\partial \\mathcal{L}}{\\partial z} \\cdot \\frac{\\partial z}{\\partial w}"} display={true} />
+  <MathBlock
+    formula={"\\frac{\\partial \\mathcal{L}}{\\partial w} = \\frac{\\partial \\mathcal{L}}{\\partial z} \\cdot \\frac{\\partial z}{\\partial w}"}
+    display={true}
+  />
 
   <p>
-    <strong>Key insight</strong>: We can reuse <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial z}"} /> (called the "gradient of the loss with respect to <MathBlock formula="z" />") for all parameters that contribute to <MathBlock formula="z" />. This reuse makes backpropagation efficient - <MathBlock formula="O(n)" /> in the number of parameters, not <MathBlock formula="O(n^2)" />.
+    <strong>Key insight</strong>: We can reuse <MathBlock
+      formula={"\\frac{\\partial \\mathcal{L}}{\\partial z}"}
+    /> (called the "gradient of the loss with respect to <MathBlock
+      formula="z"
+    />") for all parameters that contribute to <MathBlock
+      formula="z"
+    />. This reuse makes backpropagation efficient - <MathBlock
+      formula="O(n)"
+    /> in the number of parameters, not <MathBlock
+      formula="O(n^2)"
+    />.
   </p>
 
-  <RevealSection revealId="backprop-example" title="Step-by-Step Backpropagation Example">
+  <RevealSection
+    revealId="backprop-example"
+    title="Step-by-Step Backpropagation Example"
+  >
     <div data-reveal-step>
       <h4>Step 1: Forward Pass</h4>
-      <p>Given input <MathBlock formula="x = [1, 2]" />, weights <MathBlock formula="W = [[0.5, 0.3], [0.2, 0.4]]" />, bias <MathBlock formula="b = [0.1, 0.1]" />:</p>
-      <MathBlock formula="z = Wx + b = [1.2, 1.1]" display={true} />
-      <MathBlock formula={"a = \\text{ReLU}(z) = [1.2, 1.1]"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <p>
+        Given input <MathBlock formula="x = [1, 2]" />,
+        weights <MathBlock
+          formula="W = [[0.5, 0.3], [0.2, 0.4]]"
+        />, bias <MathBlock formula="b = [0.1, 0.1]" />:
+      </p>
+      <MathBlock
+        formula="z = Wx + b = [1.2, 1.1]"
+        display={true}
+      />
+      <MathBlock
+        formula={"a = \\text{ReLU}(z) = [1.2, 1.1]"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 2: Compute Loss</h4>
-      <p>Suppose the target is <MathBlock formula="y = [1, 0]" /> and we use MSE loss:</p>
-      <MathBlock formula={"\\mathcal{L} = \\frac{1}{2}\\sum (a_i - y_i)^2 = \\frac{1}{2}[(1.2-1)^2 + (1.1-0)^2] = 0.625"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+      <p>
+        Suppose the target is <MathBlock
+          formula="y = [1, 0]"
+        /> and we use MSE loss:
+      </p>
+      <MathBlock
+        formula={"\\mathcal{L} = \\frac{1}{2}\\sum (a_i - y_i)^2 = \\frac{1}{2}[(1.2-1)^2 + (1.1-0)^2] = 0.625"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="2"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 3: Backward Pass - Gradient at Output</h4>
-      <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial a} = [a_1 - y_1, a_2 - y_2] = [0.2, 1.1]"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+      <MathBlock
+        formula={"\\frac{\\partial \\mathcal{L}}{\\partial a} = [a_1 - y_1, a_2 - y_2] = [0.2, 1.1]"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="3"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 4: Gradient Through ReLU</h4>
-      <p>ReLU derivative: <MathBlock formula={"\\frac{\\partial a}{\\partial z} = 1"} /> if <MathBlock formula="z > 0" />, else 0. Since both activations are positive:</p>
-      <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial z} = \\frac{\\partial \\mathcal{L}}{\\partial a} \\odot \\frac{\\partial a}{\\partial z} = [0.2, 1.1]"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">
+      <p>
+        ReLU derivative: <MathBlock
+          formula={"\\frac{\\partial a}{\\partial z} = 1"}
+        /> if <MathBlock formula="z > 0" />, else 0. Since
+        both activations are positive:
+      </p>
+      <MathBlock
+        formula={"\\frac{\\partial \\mathcal{L}}{\\partial z} = \\frac{\\partial \\mathcal{L}}{\\partial a} \\odot \\frac{\\partial a}{\\partial z} = [0.2, 1.1]"}
+        display={true}
+      />
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="4"
+      >
         Next Step →
       </button>
     </div>
 
     <div data-reveal-step>
       <h4>Step 5: Gradient of Weights and Bias</h4>
-      <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial W} = \\frac{\\partial \\mathcal{L}}{\\partial z} \\cdot x^T = [[0.2, 0.4], [1.1, 2.2]]"} display={true} />
-      <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial b} = \\frac{\\partial \\mathcal{L}}{\\partial z} = [0.2, 1.1]"} display={true} />
-      <p class="mt-2 text-emerald-700 dark:text-[hsl(var(--foreground))] font-medium">✓ Backpropagation complete! These gradients can now be used to update parameters.</p>
+      <MathBlock
+        formula={"\\frac{\\partial \\mathcal{L}}{\\partial W} = \\frac{\\partial \\mathcal{L}}{\\partial z} \\cdot x^T = [[0.2, 0.4], [1.1, 2.2]]"}
+        display={true}
+      />
+      <MathBlock
+        formula={"\\frac{\\partial \\mathcal{L}}{\\partial b} = \\frac{\\partial \\mathcal{L}}{\\partial z} = [0.2, 1.1]"}
+        display={true}
+      />
+      <p
+        class="mt-2 text-emerald-700 dark:text-[hsl(var(--foreground))] font-medium"
+      >
+        ✓ Backpropagation complete! These gradients can now
+        be used to update parameters.
+      </p>
     </div>
   </RevealSection>
 </section>
@@ -126,45 +260,93 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Activation Functions: Beyond ReLU</h2>
 
   <p>
-    Activation functions introduce non-linearity, enabling neural networks to approximate complex functions. The choice matters significantly.
+    Activation functions introduce non-linearity, enabling
+    neural networks to approximate complex functions. The
+    choice matters significantly.
   </p>
 
   <h3>ReLU: The Standard Baseline</h3>
   <p>
-    ReLU is the simplest widely-used activation: it passes positive values through unchanged and zeros out negatives. Mathematically:
+    ReLU is the simplest widely-used activation: it passes
+    positive values through unchanged and zeros out
+    negatives. Mathematically:
   </p>
-  <MathBlock formula={"\\text{ReLU}(x) = \\max(0, x)"} display={true} />
+  <MathBlock
+    formula={"\\text{ReLU}(x) = \\max(0, x)"}
+    display={true}
+  />
   <p>
-    ReLU addresses vanishing gradients (saturated sigmoid/tanh derivatives → 0) and is computationally cheap. However, "dying ReLU" occurs when neurons output 0 for all inputs, stopping gradient flow.
+    ReLU addresses vanishing gradients (saturated
+    sigmoid/tanh derivatives → 0) and is computationally
+    cheap. However, "dying ReLU" occurs when neurons output
+    0 for all inputs, stopping gradient flow.
   </p>
 
   <h3>GELU: The Transformer Standard</h3>
   <p>
-    <strong>GELU (Gaussian Error Linear Unit)</strong> has become the default in transformers (BERT, GPT, etc.). It improves on ReLU in several ways:
+    <strong>GELU (Gaussian Error Linear Unit)</strong> has become
+    the default in transformers (BERT, GPT, etc.). It improves
+    on ReLU in several ways:
   </p>
   <ul>
-    <li><strong>Smoothness</strong>: Unlike ReLU's sharp corner at 0, GELU is smooth and differentiable everywhere, leading to better optimization dynamics</li>
-    <li><strong>Stochastic regularization interpretation</strong>: GELU can be viewed as probabilistically dropping inputs based on their magnitude: inputs near 0 have ~50% probability of being "dropped"</li>
-    <li><strong>Non-monotonic</strong>: Small negative inputs get small negative outputs (not hard-zeroed like ReLU), preserving some negative signal</li>
-    <li><strong>Empirical performance</strong>: Consistently outperforms ReLU on large-scale language model pretraining</li>
+    <li>
+      <strong>Smoothness</strong>: Unlike ReLU's sharp
+      corner at 0, GELU is smooth and differentiable
+      everywhere, leading to better optimization dynamics
+    </li>
+    <li>
+      <strong
+        >Stochastic regularization interpretation</strong
+      >: GELU can be viewed as probabilistically dropping
+      inputs based on their magnitude: inputs near 0 have
+      ~50% probability of being "dropped"
+    </li>
+    <li>
+      <strong>Non-monotonic</strong>: Small negative inputs
+      get small negative outputs (not hard-zeroed like
+      ReLU), preserving some negative signal
+    </li>
+    <li>
+      <strong>Empirical performance</strong>: Consistently
+      outperforms ReLU on large-scale language model
+      pretraining
+    </li>
   </ul>
 
   <p>
-    The core idea is to scale each input by the probability that it exceeds other values under a Gaussian distribution. Mathematically:
+    The core idea is to scale each input by the probability
+    that it exceeds other values under a Gaussian
+    distribution. Mathematically:
   </p>
-  <MathBlock formula={"\\text{GELU}(x) = x \\cdot \\Phi(x)"} display={true} />
+  <MathBlock
+    formula={"\\text{GELU}(x) = x \\cdot \\Phi(x)"}
+    display={true}
+  />
   <p>
-    where <MathBlock formula={"\\Phi(x)"} /> is the cumulative distribution function of the standard normal distribution. In practice, this is computed via a tanh approximation:
+    where <MathBlock formula={"\\Phi(x)"} /> is the cumulative
+    distribution function of the standard normal distribution.
+    In practice, this is computed via a tanh approximation:
   </p>
-  <MathBlock formula={"\\text{GELU}(x) \\approx 0.5x\\left(1 + \\tanh\\left[\\sqrt{2/\\pi}(x + 0.044715x^3)\\right]\\right)"} display={true} />
+  <MathBlock
+    formula={"\\text{GELU}(x) \\approx 0.5x\\left(1 + \\tanh\\left[\\sqrt{2/\\pi}(x + 0.044715x^3)\\right]\\right)"}
+    display={true}
+  />
 
   <h3>SiLU/Swish</h3>
   <p>
-    SiLU (also called Swish) uses the sigmoid function as a smooth gate on the input, similar in spirit to GELU but simpler to compute. Mathematically:
+    SiLU (also called Swish) uses the sigmoid function as a
+    smooth gate on the input, similar in spirit to GELU but
+    simpler to compute. Mathematically:
   </p>
-  <MathBlock formula={"\\text{SiLU}(x) = x \\cdot \\sigma(x) = \\frac{x}{1 + e^{-x}}"} display={true} />
+  <MathBlock
+    formula={"\\text{SiLU}(x) = x \\cdot \\sigma(x) = \\frac{x}{1 + e^{-x}}"}
+    display={true}
+  />
   <p>
-    SiLU shares GELU's smoothness properties and is used in some vision models and newer architectures (e.g., LLaMA's feed-forward layers). It's slightly cheaper to compute since it avoids the Gaussian CDF.
+    SiLU shares GELU's smoothness properties and is used in
+    some vision models and newer architectures (e.g.,
+    LLaMA's feed-forward layers). It's slightly cheaper to
+    compute since it avoids the Gaussian CDF.
   </p>
 </section>
 
@@ -173,29 +355,56 @@ import RevealSection from '../../components/RevealSection.astro';
 
   <h3>Cross-Entropy Loss</h3>
   <p>
-    For classification, <strong>cross-entropy</strong> is standard. For a K-class problem with true distribution <MathBlock formula="y" /> and predicted distribution <MathBlock formula={"\\hat{y}"} />:
+    For classification, <strong>cross-entropy</strong> is standard.
+    For a K-class problem with true distribution <MathBlock
+      formula="y"
+    /> and predicted distribution <MathBlock
+      formula={"\\hat{y}"}
+    />:
   </p>
-  <MathBlock formula={"\\mathcal{L}_{\\text{CE}} = -\\sum_{i=1}^K y_i \\log \\hat{y}_i"} display={true} />
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{CE}} = -\\sum_{i=1}^K y_i \\log \\hat{y}_i"}
+    display={true}
+  />
 
   <p>
-    When combined with softmax output <MathBlock formula={"\\hat{y}_i = \\frac{e^{z_i}}{\\sum_j e^{z_j}}"} />, the gradient has a particularly clean form:
+    When combined with softmax output <MathBlock
+      formula={"\\hat{y}_i = \\frac{e^{z_i}}{\\sum_j e^{z_j}}"}
+    />, the gradient has a particularly clean form:
   </p>
-  <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial z_i} = \\hat{y}_i - y_i"} display={true} />
+  <MathBlock
+    formula={"\\frac{\\partial \\mathcal{L}}{\\partial z_i} = \\hat{y}_i - y_i"}
+    display={true}
+  />
 
   <p>
-    This simplicity aids optimization. Cross-entropy naturally penalizes confident wrong predictions more than hesitant ones, a desirable property.
+    This simplicity aids optimization. Cross-entropy
+    naturally penalizes confident wrong predictions more
+    than hesitant ones, a desirable property.
   </p>
 
   <h3>Contrastive Losses</h3>
   <p>
-    Modern representation learning (embeddings, self-supervised learning) relies on <strong>contrastive losses</strong>. The idea: pull similar examples together in embedding space, push dissimilar ones apart.
+    Modern representation learning (embeddings,
+    self-supervised learning) relies on <strong
+      >contrastive losses</strong
+    >. The idea: pull similar examples together in embedding
+    space, push dissimilar ones apart.
   </p>
   <p>
     <strong>InfoNCE loss</strong> (used in CLIP, SimCLR):
   </p>
-  <MathBlock formula={"\\mathcal{L} = -\\log \\frac{\\exp(\\text{sim}(z_i, z_i^+) / \\tau)}{\\sum_{j=1}^N \\exp(\\text{sim}(z_i, z_j) / \\tau)}"} display={true} />
+  <MathBlock
+    formula={"\\mathcal{L} = -\\log \\frac{\\exp(\\text{sim}(z_i, z_i^+) / \\tau)}{\\sum_{j=1}^N \\exp(\\text{sim}(z_i, z_j) / \\tau)}"}
+    display={true}
+  />
   <p>
-    where <MathBlock formula="z_i^+" /> is a positive example (augmented version of <MathBlock formula="z_i" />), <MathBlock formula={"\\{z_j\\}"} /> are negatives, <MathBlock formula={"\\text{sim}"} /> is cosine similarity, and <MathBlock formula={"\\tau"} /> is temperature.
+    where <MathBlock formula="z_i^+" /> is a positive example
+    (augmented version of <MathBlock formula="z_i" />), <MathBlock
+      formula={"\\{z_j\\}"}
+    /> are negatives, <MathBlock formula={"\\text{sim}"} /> is
+    cosine similarity, and <MathBlock formula={"\\tau"} /> is
+    temperature.
   </p>
 </section>
 
@@ -204,43 +413,122 @@ import RevealSection from '../../components/RevealSection.astro';
 
   <h3>SGD with Momentum</h3>
   <p>
-    Vanilla SGD updates weights purely based on the current batch's gradient, which can be noisy and oscillate in ravine-shaped loss landscapes. Momentum fixes this by accumulating a running average of past gradients, like a ball rolling downhill with inertia. Mathematically:
+    Vanilla SGD updates weights purely based on the current
+    batch's gradient, which can be noisy and oscillate in
+    ravine-shaped loss landscapes. Momentum fixes this by
+    accumulating a running average of past gradients, like a
+    ball rolling downhill with inertia. Mathematically:
   </p>
-  <MathBlock formula={"v_t = \\beta v_{t-1} + \\nabla_\\theta \\mathcal{L}"} display={true} />
-  <MathBlock formula={"\\theta_t = \\theta_{t-1} - \\eta v_t"} display={true} />
+  <MathBlock
+    formula={"v_t = \\beta v_{t-1} + \\nabla_\\theta \\mathcal{L}"}
+    display={true}
+  />
+  <MathBlock
+    formula={"\\theta_t = \\theta_{t-1} - \\eta v_t"}
+    display={true}
+  />
   <p>
-    where <MathBlock formula={"v_t"} /> is the velocity (accumulated gradient), <MathBlock formula={"\\beta"} /> is the momentum coefficient (typically ~0.9), <MathBlock formula={"\\eta"} /> is the learning rate, and <MathBlock formula={"\\nabla_\\theta \\mathcal{L}"} /> is the current gradient. Momentum smooths updates, accelerating convergence and reducing oscillation.
+    where <MathBlock formula={"v_t"} /> is the velocity (accumulated
+    gradient), <MathBlock formula={"\\beta"} /> is the momentum
+    coefficient (typically ~0.9), <MathBlock
+      formula={"\\eta"}
+    /> is the learning rate, and <MathBlock
+      formula={"\\nabla_\\theta \\mathcal{L}"}
+    /> is the current gradient. Momentum smooths updates, accelerating
+    convergence and reducing oscillation.
   </p>
 
   <h3>Adam: Adaptive Learning Rates</h3>
   <p>
-    SGD with momentum uses the same learning rate for every parameter, but not all parameters need the same step size. Parameters with consistently large gradients (e.g., bias terms) can tolerate bigger steps, while parameters with noisy or sparse gradients need smaller ones. <strong>Adam</strong> (Adaptive Moment Estimation) combines momentum with adaptive per-parameter learning rates: it tracks both the direction (first moment) and the magnitude (second moment) of each parameter's gradient history. Let's make this precise:
+    SGD with momentum uses the same learning rate for every
+    parameter, but not all parameters need the same step
+    size. Parameters with consistently large gradients
+    (e.g., bias terms) can tolerate bigger steps, while
+    parameters with noisy or sparse gradients need smaller
+    ones. <strong>Adam</strong> (Adaptive Moment Estimation) combines
+    momentum with adaptive per-parameter learning rates: it tracks
+    both the direction (first moment) and the magnitude (second
+    moment) of each parameter's gradient history. Let's make this
+    precise:
   </p>
-  <MathBlock formula={"m_t = \\beta_1 m_{t-1} + (1-\\beta_1) g_t"} display={true} />
-  <MathBlock formula={"v_t = \\beta_2 v_{t-1} + (1-\\beta_2) g_t^2"} display={true} />
-  <MathBlock formula={"\\hat{m}_t = m_t / (1-\\beta_1^t), \\quad \\hat{v}_t = v_t / (1-\\beta_2^t)"} display={true} />
-  <MathBlock formula={"\\theta_t = \\theta_{t-1} - \\eta \\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon}"} display={true} />
+  <MathBlock
+    formula={"m_t = \\beta_1 m_{t-1} + (1-\\beta_1) g_t"}
+    display={true}
+  />
+  <MathBlock
+    formula={"v_t = \\beta_2 v_{t-1} + (1-\\beta_2) g_t^2"}
+    display={true}
+  />
+  <MathBlock
+    formula={"\\hat{m}_t = m_t / (1-\\beta_1^t), \\quad \\hat{v}_t = v_t / (1-\\beta_2^t)"}
+    display={true}
+  />
+  <MathBlock
+    formula={"\\theta_t = \\theta_{t-1} - \\eta \\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon}"}
+    display={true}
+  />
 
   <p>
-    where <MathBlock formula={"g_t"} /> is the gradient at step t, <MathBlock formula={"m_t"} /> is the first moment estimate (exponential moving average of gradients, i.e., momentum), <MathBlock formula={"v_t"} /> is the second moment estimate (exponential moving average of squared gradients, tracking variance), <MathBlock formula={"\\hat{m}_t"} /> and <MathBlock formula={"\\hat{v}_t"} /> are bias-corrected versions that compensate for initialization at zero, <MathBlock formula={"\\eta"} /> is the learning rate, <MathBlock formula={"\\epsilon"} /> is a small constant for numerical stability (typically 1e-8), and <MathBlock formula={"\\beta_1, \\beta_2"} /> are decay rates (defaults: 0.9 and 0.999).
+    where <MathBlock formula={"g_t"} /> is the gradient at step
+    t, <MathBlock formula={"m_t"} /> is the first moment estimate
+    (exponential moving average of gradients, i.e., momentum),
+    <MathBlock formula={"v_t"} /> is the second moment estimate
+    (exponential moving average of squared gradients, tracking
+    variance), <MathBlock formula={"\\hat{m}_t"} /> and <MathBlock
+      formula={"\\hat{v}_t"}
+    /> are bias-corrected versions that compensate for initialization
+    at zero, <MathBlock formula={"\\eta"} /> is the learning rate,
+    <MathBlock formula={"\\epsilon"} /> is a small constant for
+    numerical stability (typically 1e-8), and <MathBlock
+      formula={"\\beta_1, \\beta_2"}
+    /> are decay rates (defaults: 0.9 and 0.999).
   </p>
 
   <p>
-    In plain English: track a running average of gradients and squared gradients, then scale each parameter's update by how noisy its gradient has been. Parameters with stable gradients get larger updates; parameters with volatile gradients get dampened.
+    Intuition: track a running average of gradients and
+    squared gradients, then scale each parameter's update by
+    how noisy its gradient has been. Parameters with stable
+    gradients get larger updates; parameters with volatile
+    gradients get dampened.
   </p>
 
   <p>
-    <strong>Concrete example</strong>: Suppose a parameter has gradient <MathBlock formula={"g_t = 0.1"} /> at step 1, with <MathBlock formula={"\\eta = 0.001"} />, <MathBlock formula={"\\beta_1 = 0.9"} />, <MathBlock formula={"\\beta_2 = 0.999"} />. Then <MathBlock formula={"m_1 = 0.1 \\times 0.1 = 0.01"} />, <MathBlock formula={"v_1 = 0.001 \\times 0.01 = 0.00001"} />. After bias correction: <MathBlock formula={"\\hat{m}_1 = 0.01 / 0.1 = 0.1"} />, <MathBlock formula={"\\hat{v}_1 = 0.00001 / 0.001 = 0.01"} />. The update is <MathBlock formula={"0.001 \\times 0.1 / (\\sqrt{0.01} + 10^{-8}) = 0.001"} />. The bias correction ensures the first few steps aren't artificially small despite the zero-initialized running averages.
+    <strong>Concrete example</strong>: Suppose a parameter
+    has gradient <MathBlock formula={"g_t = 0.1"} /> at step 1,
+    with <MathBlock formula={"\\eta = 0.001"} />, <MathBlock
+      formula={"\\beta_1 = 0.9"}
+    />, <MathBlock formula={"\\beta_2 = 0.999"} />. Then <MathBlock
+      formula={"m_1 = 0.1 \\times 0.1 = 0.01"}
+    />, <MathBlock
+      formula={"v_1 = 0.001 \\times 0.01 = 0.00001"}
+    />. After bias correction: <MathBlock
+      formula={"\\hat{m}_1 = 0.01 / 0.1 = 0.1"}
+    />, <MathBlock
+      formula={"\\hat{v}_1 = 0.00001 / 0.001 = 0.01"}
+    />. The update is <MathBlock
+      formula={"0.001 \\times 0.1 / (\\sqrt{0.01} + 10^{-8}) = 0.001"}
+    />. The bias correction ensures the first few steps
+    aren't artificially small despite the zero-initialized
+    running averages.
   </p>
 
   <h3>AdamW: Decoupled Weight Decay</h3>
   <p>
-    Standard Adam includes weight decay as L2 regularization added to the gradient. <strong>AdamW</strong> decouples weight decay from the gradient computation:
+    Standard Adam includes weight decay as L2 regularization
+    added to the gradient. <strong>AdamW</strong> decouples weight
+    decay from the gradient computation:
   </p>
-  <MathBlock formula={"\\theta_t = \\theta_{t-1} - \\eta \\left(\\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon} + \\lambda \\theta_{t-1}\\right)"} display={true} />
+  <MathBlock
+    formula={"\\theta_t = \\theta_{t-1} - \\eta \\left(\\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon} + \\lambda \\theta_{t-1}\\right)"}
+    display={true}
+  />
 
   <p>
-    <strong>Why this matters</strong>: In Adam, weight decay interacts with adaptive learning rates in unintended ways. AdamW fixes this, leading to better generalization. It's now the default optimizer for transformer training.
+    <strong>Why this matters</strong>: In Adam, weight decay
+    interacts with adaptive learning rates in unintended
+    ways. AdamW fixes this, leading to better
+    generalization. It's now the default optimizer for
+    transformer training.
   </p>
 
   <h3>Learning Rate Schedules</h3>
@@ -248,12 +536,26 @@ import RevealSection from '../../components/RevealSection.astro';
     Fixed learning rates rarely suffice. Common schedules:
   </p>
   <ul>
-    <li><strong>Warmup</strong>: Linear increase from 0 to target LR over the first few thousand steps. Prevents instability early in training when gradients are noisy.</li>
-    <li><strong>Cosine annealing</strong>: <MathBlock formula={"\\eta_t = \\eta_{\\text{min}} + \\frac{1}{2}(\\eta_{\\text{max}} - \\eta_{\\text{min}})(1 + \\cos(\\pi t/T))"} />. Smoothly decays LR to zero, often improving final performance.</li>
-    <li><strong>Step decay</strong>: Reduce LR by a factor (e.g., 0.1) at predetermined milestones.</li>
+    <li>
+      <strong>Warmup</strong>: Linear increase from 0 to
+      target LR over the first few thousand steps. Prevents
+      instability early in training when gradients are
+      noisy.
+    </li>
+    <li>
+      <strong>Cosine annealing</strong>: <MathBlock
+        formula={"\\eta_t = \\eta_{\\text{min}} + \\frac{1}{2}(\\eta_{\\text{max}} - \\eta_{\\text{min}})(1 + \\cos(\\pi t/T))"}
+      />. Smoothly decays LR to zero, often improving final
+      performance.
+    </li>
+    <li>
+      <strong>Step decay</strong>: Reduce LR by a factor
+      (e.g., 0.1) at predetermined milestones.
+    </li>
   </ul>
   <p>
-    Modern LLM training typically uses: warmup + cosine decay with AdamW.
+    Modern LLM training typically uses: warmup + cosine
+    decay with AdamW.
   </p>
 </section>
 
@@ -265,36 +567,59 @@ import RevealSection from '../../components/RevealSection.astro';
       id: "a",
       text: "Softmax normalizes the outputs, canceling terms in the derivative",
       correct: false,
-      explanation: "While softmax does normalize, this isn't the key reason for simplicity."
+      explanation:
+        "While softmax does normalize, this isn't the key reason for simplicity.",
     },
     {
       id: "b",
       text: "The cross-entropy and softmax derivatives combine to give (predicted - actual), a very clean form",
       correct: true,
-      explanation: "Correct! The mathematical structure of cross-entropy and softmax is complementary. When you derive ∂L/∂z through both, the exponentials and logarithms cancel elegantly, leaving just ŷ - y."
+      explanation:
+        "Correct! The mathematical structure of cross-entropy and softmax is complementary. When you derive ∂L/∂z through both, the exponentials and logarithms cancel elegantly, leaving just ŷ - y.",
     },
     {
       id: "c",
       text: "Cross-entropy is a linear function, so its derivative is constant",
       correct: false,
-      explanation: "Cross-entropy involves logarithms and is not linear."
+      explanation:
+        "Cross-entropy involves logarithms and is not linear.",
     },
     {
       id: "d",
       text: "Modern frameworks compute this automatically, so we don't need to understand it",
       correct: false,
-      explanation: "While automatic differentiation handles the computation, understanding the mathematics helps in debugging and designing new architectures."
-    }
+      explanation:
+        "While automatic differentiation handles the computation, understanding the mathematics helps in debugging and designing new architectures.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Backpropagation</strong> is the systematic application of the chain rule to computational graphs, achieving O(n) gradient computation through reuse</li>
-    <li><strong>GELU has replaced ReLU</strong> in transformers due to its smoothness, leading to better optimization dynamics at scale</li>
-    <li><strong>Cross-entropy + softmax</strong> combine mathematically to give clean gradients (ŷ - y), making them the standard for classification</li>
-    <li><strong>AdamW</strong> (not vanilla Adam) is the modern standard optimizer, with decoupled weight decay for better generalization</li>
-    <li><strong>Learning rate schedules</strong> (warmup + cosine decay) are critical for stable training of large models</li>
+    <li>
+      <strong>Backpropagation</strong> is the systematic application
+      of the chain rule to computational graphs, achieving O(n)
+      gradient computation through reuse
+    </li>
+    <li>
+      <strong>GELU has replaced ReLU</strong> in transformers
+      due to its smoothness, leading to better optimization dynamics
+      at scale
+    </li>
+    <li>
+      <strong>Cross-entropy + softmax</strong> combine mathematically
+      to give clean gradients (ŷ - y), making them the standard
+      for classification
+    </li>
+    <li>
+      <strong>AdamW</strong> (not vanilla Adam) is the modern
+      standard optimizer, with decoupled weight decay for better
+      generalization
+    </li>
+    <li>
+      <strong>Learning rate schedules</strong> (warmup + cosine
+      decay) are critical for stable training of large models
+    </li>
   </ul>
 </KeyTakeaway>
 

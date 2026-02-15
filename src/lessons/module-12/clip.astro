@@ -1,21 +1,36 @@
 ---
 // Module 12, Lesson 12.2: CLIP and Contrastive Vision-Language Learning
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
+import RevealSection from "../../components/RevealSection.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
-    <li>Understand the motivation for connecting vision and language in a shared embedding space</li>
-    <li>Explain CLIP's dual-encoder architecture and symmetric contrastive training objective</li>
-    <li>Describe zero-shot classification using natural language descriptions</li>
-    <li>Analyze CLIP's strengths, limitations, and remarkable transfer capabilities</li>
-    <li>Trace the evolution from CLIP to SigLIP and their role in modern multimodal systems</li>
+    <li>
+      Understand the motivation for connecting vision and
+      language in a shared embedding space
+    </li>
+    <li>
+      Explain CLIP's dual-encoder architecture and symmetric
+      contrastive training objective
+    </li>
+    <li>
+      Describe zero-shot classification using natural
+      language descriptions
+    </li>
+    <li>
+      Analyze CLIP's strengths, limitations, and remarkable
+      transfer capabilities
+    </li>
+    <li>
+      Trace the evolution from CLIP to SigLIP and their role
+      in modern multimodal systems
+    </li>
   </ul>
 </section>
 
@@ -23,15 +38,35 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Motivation: Why Connect Vision and Language?</h2>
 
   <p>
-    Traditional computer vision models are trained to classify images into a <em>fixed set of categories</em>. An ImageNet-trained model knows 1,000 classes ("golden retriever," "fire truck," "pizza"), but cannot recognize anything outside this predefined taxonomy. If you need to detect "a person wearing a red hat near a bicycle," you need to collect labeled data, define the class, and retrain.
+    Traditional computer vision models are trained to
+    classify images into a <em>fixed set of categories</em>.
+    An ImageNet-trained model knows 1,000 classes ("golden
+    retriever," "fire truck," "pizza"), but cannot recognize
+    anything outside this predefined taxonomy. If you need
+    to detect "a person wearing a red hat near a bicycle,"
+    you need to collect labeled data, define the class, and
+    retrain.
   </p>
 
   <p>
-    This is fundamentally limiting. Humans don't learn vision this way. We learn to see the world through rich, open-ended descriptions, associating visual experiences with language. A child who has never seen a "pangolin" can still identify one after hearing "it looks like a scaly anteater." Language provides an infinitely flexible interface for describing visual concepts.
+    This is fundamentally limiting. Humans don't learn
+    vision this way. We learn to see the world through rich,
+    open-ended descriptions, associating visual experiences
+    with language. A child who has never seen a "pangolin"
+    can still identify one after hearing "it looks like a
+    scaly anteater." Language provides an infinitely
+    flexible interface for describing visual concepts.
   </p>
 
   <p>
-    <strong>CLIP</strong> (Contrastive Language-Image Pre-training) bridges this gap by learning a shared embedding space where images and text are directly comparable. Instead of learning "image goes to class index 42," CLIP learns "this image embedding is close to the embedding of 'a photo of a golden retriever'." This enables <strong>zero-shot classification</strong>: classifying images into categories never seen during training, using only natural language descriptions.
+    <strong>CLIP</strong> (Contrastive Language-Image Pre-training)
+    bridges this gap by learning a shared embedding space where
+    images and text are directly comparable. Instead of learning
+    "image goes to class index 42," CLIP learns "this image embedding
+    is close to the embedding of 'a photo of a golden retriever'."
+    This enables <strong>zero-shot classification</strong>:
+    classifying images into categories never seen during
+    training, using only natural language descriptions.
   </p>
 
   <PaperReference
@@ -47,113 +82,308 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>CLIP Architecture: The Dual Encoder</h2>
 
   <p>
-    CLIP's architecture is elegant in its simplicity: two separate encoders that map images and text into the same embedding space.
+    CLIP's architecture is elegant in its simplicity: two
+    separate encoders that map images and text into the same
+    embedding space.
   </p>
 
   <h3>Image Encoder</h3>
 
-  <p>
-    CLIP supports two image encoder architectures:
-  </p>
+  <p>CLIP supports two image encoder architectures:</p>
   <ul>
-    <li><strong>ResNet variants</strong>: Modified ResNet-50 or ResNet-101 with anti-aliased pooling and attention pooling at the end</li>
-    <li><strong>Vision Transformer (ViT)</strong>: ViT-B/32, ViT-B/16, or ViT-L/14. The ViT variants generally perform better.</li>
+    <li>
+      <strong>ResNet variants</strong>: Modified ResNet-50
+      or ResNet-101 with anti-aliased pooling and attention
+      pooling at the end
+    </li>
+    <li>
+      <strong>Vision Transformer (ViT)</strong>: ViT-B/32,
+      ViT-B/16, or ViT-L/14. The ViT variants generally
+      perform better.
+    </li>
   </ul>
 
   <p>
-    The image encoder produces a single feature vector <MathBlock formula={"f_{\\text{img}} \\in \\mathbb{R}^D"} /> for each image. For ViT, this is the [CLS] token output; for ResNet, it's the attention-pooled output.
+    The image encoder produces a single feature vector <MathBlock
+      formula={"f_{\\text{img}} \\in \\mathbb{R}^D"}
+    /> for each image. For ViT, this is the [CLS] token output;
+    for ResNet, it's the attention-pooled output.
   </p>
 
   <h3>Text Encoder</h3>
 
   <p>
-    A standard transformer (similar to GPT-2 architecture) processes tokenized text and produces a feature vector <MathBlock formula={"f_{\\text{text}} \\in \\mathbb{R}^D"} />. The representation at the [EOS] (end of sequence) token position is used as the text embedding, analogous to how the [CLS] token works in the image encoder.
+    A standard transformer (similar to GPT-2 architecture)
+    processes tokenized text and produces a feature vector <MathBlock
+      formula={"f_{\\text{text}} \\in \\mathbb{R}^D"}
+    />. The representation at the [EOS] (end of sequence)
+    token position is used as the text embedding, analogous
+    to how the [CLS] token works in the image encoder.
   </p>
 
   <h3>Projection and Normalization</h3>
 
   <p>
-    Both encoders project their outputs into a shared embedding space using linear projection layers:
+    Both encoders project their outputs into a shared
+    embedding space using linear projection layers:
   </p>
 
-  <MathBlock formula={"e_{\\text{img}} = \\frac{W_I \\cdot f_{\\text{img}}}{\\|W_I \\cdot f_{\\text{img}}\\|}, \\quad e_{\\text{text}} = \\frac{W_T \\cdot f_{\\text{text}}}{\\|W_T \\cdot f_{\\text{text}}\\|}"} display={true} />
-
-  <p>In plain English: each encoder's output is linearly projected into the shared embedding space and then L2-normalized, so that comparing any image embedding with any text embedding via dot product gives their cosine similarity directly.</p>
+  <MathBlock
+    formula={"e_{\\text{img}} = \\frac{W_I \\cdot f_{\\text{img}}}{\\|W_I \\cdot f_{\\text{img}}\\|}, \\quad e_{\\text{text}} = \\frac{W_T \\cdot f_{\\text{text}}}{\\|W_T \\cdot f_{\\text{text}}\\|}"}
+    display={true}
+  />
 
   <p>
-    The embeddings are L2-normalized to the unit hypersphere, so the dot product equals the cosine similarity. This normalization is important: it prevents the model from "cheating" by scaling embeddings to increase logits, forcing it to learn meaningful directional relationships.
+    Intuition: each encoder's output is linearly projected
+    into the shared embedding space and then L2-normalized,
+    so that comparing any image embedding with any text
+    embedding via dot product gives their cosine similarity
+    directly.
+  </p>
+
+  <p>
+    The embeddings are L2-normalized to the unit
+    hypersphere, so the dot product equals the cosine
+    similarity. This normalization is important: it prevents
+    the model from "cheating" by scaling embeddings to
+    increase logits, forcing it to learn meaningful
+    directional relationships.
   </p>
 </section>
 
-<Diagram diagramId="clip-architecture" title="CLIP Architecture: Dual Encoder with Contrastive Learning">
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+<Diagram
+  diagramId="clip-architecture"
+  title="CLIP Architecture: Dual Encoder with Contrastive Learning"
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+  >
     <div class="flex flex-col items-center gap-4">
       <!-- Input pair -->
-      <div class="flex items-center gap-16" data-animate style="animation-delay: 0.2s">
+      <div
+        class="flex items-center gap-16"
+        data-animate
+        style="animation-delay: 0.2s"
+      >
         <div class="flex flex-col items-center">
-          <div class="w-16 h-16 bg-gradient-to-br from-sky-300 to-indigo-400 rounded-lg mb-2 flex items-center justify-center text-white text-lg">img</div>
+          <div
+            class="w-16 h-16 bg-gradient-to-br from-sky-300 to-indigo-400 rounded-lg mb-2 flex items-center justify-center text-white text-lg"
+          >
+            img
+          </div>
           <div class="text-xs text-slate-500">Image</div>
         </div>
         <div class="flex flex-col items-center">
-          <div class="w-48 h-10 bg-gradient-to-r from-emerald-200 to-teal-200 rounded-lg mb-2 flex items-center justify-center text-sm text-emerald-800">"a photo of a cat"</div>
+          <div
+            class="w-48 h-10 bg-gradient-to-r from-emerald-200 to-teal-200 rounded-lg mb-2 flex items-center justify-center text-sm text-emerald-800"
+          >
+            "a photo of a cat"
+          </div>
           <div class="text-xs text-slate-500">Text</div>
         </div>
       </div>
 
       <!-- Encoders -->
-      <div class="flex items-center gap-16" data-animate style="animation-delay: 0.6s">
-        <div class="bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3 text-center">
-          <div class="text-sm font-semibold text-indigo-800">Image Encoder</div>
-          <div class="text-xs text-indigo-600">(ViT or ResNet)</div>
+      <div
+        class="flex items-center gap-16"
+        data-animate
+        style="animation-delay: 0.6s"
+      >
+        <div
+          class="bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3 text-center"
+        >
+          <div
+            class="text-sm font-semibold text-indigo-800"
+          >
+            Image Encoder
+          </div>
+          <div class="text-xs text-indigo-600">
+            (ViT or ResNet)
+          </div>
         </div>
-        <div class="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-center">
-          <div class="text-sm font-semibold text-emerald-800">Text Encoder</div>
-          <div class="text-xs text-emerald-600">(Transformer)</div>
+        <div
+          class="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-center"
+        >
+          <div
+            class="text-sm font-semibold text-emerald-800"
+          >
+            Text Encoder
+          </div>
+          <div class="text-xs text-emerald-600">
+            (Transformer)
+          </div>
         </div>
       </div>
 
       <!-- Embeddings -->
-      <div class="flex items-center gap-8" data-animate style="animation-delay: 1.0s">
-        <div class="w-12 h-12 bg-indigo-400 rounded-full flex items-center justify-center text-white text-xs font-bold">e_I</div>
-        <div class="text-slate-400 text-sm font-mono">cosine similarity</div>
-        <div class="w-12 h-12 bg-emerald-400 rounded-full flex items-center justify-center text-white text-xs font-bold">e_T</div>
+      <div
+        class="flex items-center gap-8"
+        data-animate
+        style="animation-delay: 1.0s"
+      >
+        <div
+          class="w-12 h-12 bg-indigo-400 rounded-full flex items-center justify-center text-white text-xs font-bold"
+        >
+          e_I
+        </div>
+        <div class="text-slate-400 text-sm font-mono">
+          cosine similarity
+        </div>
+        <div
+          class="w-12 h-12 bg-emerald-400 rounded-full flex items-center justify-center text-white text-xs font-bold"
+        >
+          e_T
+        </div>
       </div>
 
       <!-- Contrastive matrix -->
-      <div class="mt-2" data-animate style="animation-delay: 1.4s">
-        <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Contrastive Loss Matrix (N x N)</div>
-        <div class="grid grid-cols-5 gap-1 w-52 mx-auto">
-          <div class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">+</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">+</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">+</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">+</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs">-</div>
-          <div class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">+</div>
+      <div
+        class="mt-2"
+        data-animate
+        style="animation-delay: 1.4s"
+      >
+        <div
+          class="text-sm font-semibold text-slate-700 mb-2 text-center"
+        >
+          Contrastive Loss Matrix (N x N)
         </div>
-        <div class="text-xs text-slate-500 text-center mt-2">Diagonal = matching pairs (+), off-diagonal = negatives (-)</div>
+        <div class="grid grid-cols-5 gap-1 w-52 mx-auto">
+          <div
+            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+          >
+            +
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+          >
+            +
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+          >
+            +
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+          >
+            +
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+          >
+            -
+          </div>
+          <div
+            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+          >
+            +
+          </div>
+        </div>
+        <div
+          class="text-xs text-slate-500 text-center mt-2"
+        >
+          Diagonal = matching pairs (+), off-diagonal =
+          negatives (-)
+        </div>
       </div>
     </div>
   </div>
@@ -163,50 +393,115 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Contrastive Pretraining: The InfoNCE Loss</h2>
 
   <p>
-    CLIP is trained on a massive dataset of <strong>400 million image-text pairs</strong> (the WebImageText / WIT dataset) scraped from the internet. The training objective is <strong>symmetric contrastive learning</strong> using InfoNCE loss.
+    CLIP is trained on a massive dataset of <strong
+      >400 million image-text pairs</strong
+    > (the WebImageText / WIT dataset) scraped from the internet.
+    The training objective is <strong
+      >symmetric contrastive learning</strong
+    > using InfoNCE loss.
   </p>
 
   <h3>How Contrastive Learning Works</h3>
 
   <p>
-    Given a batch of <MathBlock formula="N" /> image-text pairs, CLIP computes all <MathBlock formula={"N^2"} /> pairwise similarities. The N matched pairs (image_i, text_i) are <strong>positives</strong>, and the <MathBlock formula={"N^2 - N"} /> mismatched pairs are <strong>negatives</strong>. The model learns to maximize similarity for positive pairs while minimizing similarity for negative pairs.
+    Given a batch of <MathBlock formula="N" /> image-text pairs,
+    CLIP computes all <MathBlock formula={"N^2"} /> pairwise similarities.
+    The N matched pairs (image_i, text_i) are <strong
+      >positives</strong
+    >, and the <MathBlock formula={"N^2 - N"} /> mismatched pairs
+    are <strong>negatives</strong>. The model learns to
+    maximize similarity for positive pairs while minimizing
+    similarity for negative pairs.
   </p>
 
   <h3>The InfoNCE Loss</h3>
 
   <p>
-    The similarity between image <MathBlock formula="i" /> and text <MathBlock formula="j" /> is:
+    The similarity between image <MathBlock formula="i" /> and
+    text <MathBlock formula="j" /> is:
   </p>
 
-  <MathBlock formula={"s_{ij} = \\tau \\cdot e_{\\text{img}}^{(i)} \\cdot e_{\\text{text}}^{(j)}"} display={true} />
-
-  <p>In plain English: the similarity logit between image i and text j is their dot product (cosine similarity, since both are normalized) scaled by a learned temperature.</p>
+  <MathBlock
+    formula={"s_{ij} = \\tau \\cdot e_{\\text{img}}^{(i)} \\cdot e_{\\text{text}}^{(j)}"}
+    display={true}
+  />
 
   <p>
-    where <MathBlock formula={"\\tau"} /> is a learned <strong>temperature parameter</strong> that controls the sharpness of the distribution. The loss is symmetric: computed once treating images as queries (matching each image to its correct text) and once treating text as queries.
+    Intuition: the similarity logit between image i and text
+    j is their dot product (cosine similarity, since both
+    are normalized) scaled by a learned temperature.
   </p>
-
-  <p>CLIP learns to align images and text in a shared embedding space by training on image-caption pairs. The contrastive objective pushes matching image-text pairs together and non-matching pairs apart. Mathematically:</p>
-
-  <MathBlock formula={"\\mathcal{L}_{\\text{img}} = -\\frac{1}{N} \\sum_{i=1}^{N} \\log \\frac{\\exp(s_{ii})}{\\sum_{j=1}^{N} \\exp(s_{ij})}"} display={true} />
-
-  <MathBlock formula={"\\mathcal{L}_{\\text{text}} = -\\frac{1}{N} \\sum_{i=1}^{N} \\log \\frac{\\exp(s_{ii})}{\\sum_{j=1}^{N} \\exp(s_{ji})}"} display={true} />
-
-  <MathBlock formula={"\\mathcal{L}_{\\text{CLIP}} = \\frac{1}{2}(\\mathcal{L}_{\\text{img}} + \\mathcal{L}_{\\text{text}})"} display={true} />
-
-  <p>In words: for each image in the batch, maximize the similarity with its correct caption while minimizing similarity with all other captions (the image loss), and vice versa for each caption (the text loss). The final CLIP loss is the average of both directions.</p>
 
   <p>
-    Each loss term is essentially a softmax cross-entropy loss where the "correct class" is the matching pair. With a batch size of 32,768 (as used by CLIP), each positive pair is contrasted against 32,767 negatives, providing an extraordinarily rich training signal.
+    where <MathBlock formula={"\\tau"} /> is a learned <strong
+      >temperature parameter</strong
+    > that controls the sharpness of the distribution. The loss
+    is symmetric: computed once treating images as queries (matching
+    each image to its correct text) and once treating text as
+    queries.
   </p>
 
-  <RevealSection revealId="infonce-details" title="Why Contrastive Learning Works So Well">
+  <p>
+    CLIP learns to align images and text in a shared
+    embedding space by training on image-caption pairs. The
+    contrastive objective pushes matching image-text pairs
+    together and non-matching pairs apart. Mathematically:
+  </p>
+
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{img}} = -\\frac{1}{N} \\sum_{i=1}^{N} \\log \\frac{\\exp(s_{ii})}{\\sum_{j=1}^{N} \\exp(s_{ij})}"}
+    display={true}
+  />
+
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{text}} = -\\frac{1}{N} \\sum_{i=1}^{N} \\log \\frac{\\exp(s_{ii})}{\\sum_{j=1}^{N} \\exp(s_{ji})}"}
+    display={true}
+  />
+
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{CLIP}} = \\frac{1}{2}(\\mathcal{L}_{\\text{img}} + \\mathcal{L}_{\\text{text}})"}
+    display={true}
+  />
+
+  <p>
+    In words: for each image in the batch, maximize the
+    similarity with its correct caption while minimizing
+    similarity with all other captions (the image loss), and
+    vice versa for each caption (the text loss). The final
+    CLIP loss is the average of both directions.
+  </p>
+
+  <p>
+    Each loss term is essentially a softmax cross-entropy
+    loss where the "correct class" is the matching pair.
+    With a batch size of 32,768 (as used by CLIP), each
+    positive pair is contrasted against 32,767 negatives,
+    providing an extraordinarily rich training signal.
+  </p>
+
+  <RevealSection
+    revealId="infonce-details"
+    title="Why Contrastive Learning Works So Well"
+  >
     <div data-reveal-step>
       <h4>The Role of Negatives</h4>
       <p>
-        Contrastive learning's effectiveness is deeply tied to the <strong>quality and quantity of negatives</strong>. In a batch of 32K pairs, the model must distinguish "a golden retriever playing in a park" from 32,767 other descriptions. Some negatives are easy ("a red sports car") while others are hard ("a labrador playing in a park"). Hard negatives force the model to learn fine-grained visual-semantic distinctions.
+        Contrastive learning's effectiveness is deeply tied
+        to the <strong
+          >quality and quantity of negatives</strong
+        >. In a batch of 32K pairs, the model must
+        distinguish "a golden retriever playing in a park"
+        from 32,767 other descriptions. Some negatives are
+        easy ("a red sports car") while others are hard ("a
+        labrador playing in a park"). Hard negatives force
+        the model to learn fine-grained visual-semantic
+        distinctions.
       </p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1"
+      >
         Next: The Temperature Parameter
       </button>
     </div>
@@ -214,9 +509,24 @@ import RevealSection from '../../components/RevealSection.astro';
     <div data-reveal-step>
       <h4>The Learned Temperature</h4>
       <p>
-        The temperature <MathBlock formula={"\\tau"} /> is critical and is learned during training (initialized to 0.07, equivalent to <MathBlock formula={"\\log(1/0.07) \\approx 2.66"} /> in log-space). A lower temperature sharpens the softmax, making the loss more sensitive to hard negatives. A higher temperature smooths it, treating all negatives more equally. CLIP learns to set this optimally through backpropagation. It typically converges to around 0.01, much sharper than the initialization. This is an empirical observation across multiple training runs, suggesting the model learns to prefer sharp similarity distributions.
+        The temperature <MathBlock formula={"\\tau"} /> is critical
+        and is learned during training (initialized to 0.07, equivalent
+        to <MathBlock
+          formula={"\\log(1/0.07) \\approx 2.66"}
+        /> in log-space). A lower temperature sharpens the softmax,
+        making the loss more sensitive to hard negatives. A higher
+        temperature smooths it, treating all negatives more equally.
+        CLIP learns to set this optimally through backpropagation.
+        It typically converges to around 0.01, much sharper than
+        the initialization. This is an empirical observation across
+        multiple training runs, suggesting the model learns to
+        prefer sharp similarity distributions.
       </p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="2"
+      >
         Next: Why Not Classification?
       </button>
     </div>
@@ -224,16 +534,41 @@ import RevealSection from '../../components/RevealSection.astro';
     <div data-reveal-step>
       <h4>Why Contrastive > Classification</h4>
       <p>
-        Compared to classification (predicting class labels), contrastive pretraining has key advantages:
+        Compared to classification (predicting class
+        labels), contrastive pretraining has key advantages:
       </p>
       <ul>
-        <li><strong>Open vocabulary</strong>: The model learns to associate images with free-form text, not fixed class indices. This naturally enables zero-shot transfer.</li>
-        <li><strong>Richer supervision</strong>: Each text description provides more information than a single class label. "A photo of a golden retriever playing fetch in a sunny park" conveys action, setting, lighting, and breed.</li>
-        <li><strong>Scalable data</strong>: Image-text pairs are abundantly available on the web, unlike manually labeled classification datasets.</li>
-        <li><strong>Efficient batch utilization</strong>: Each pair in the batch serves as a negative for all other pairs, creating <MathBlock formula={"O(N^2)"} /> training signal from <MathBlock formula="N" /> examples.</li>
+        <li>
+          <strong>Open vocabulary</strong>: The model learns
+          to associate images with free-form text, not fixed
+          class indices. This naturally enables zero-shot
+          transfer.
+        </li>
+        <li>
+          <strong>Richer supervision</strong>: Each text
+          description provides more information than a
+          single class label. "A photo of a golden retriever
+          playing fetch in a sunny park" conveys action,
+          setting, lighting, and breed.
+        </li>
+        <li>
+          <strong>Scalable data</strong>: Image-text pairs
+          are abundantly available on the web, unlike
+          manually labeled classification datasets.
+        </li>
+        <li>
+          <strong>Efficient batch utilization</strong>: Each
+          pair in the batch serves as a negative for all
+          other pairs, creating <MathBlock
+            formula={"O(N^2)"}
+          /> training signal from <MathBlock formula="N" /> examples.
+        </li>
       </ul>
       <p class="mt-2 text-emerald-700 font-medium">
-        This scalability is why CLIP can train on 400M pairs effectively. The contrastive objective extracts far more learning signal per example than classification.
+        This scalability is why CLIP can train on 400M pairs
+        effectively. The contrastive objective extracts far
+        more learning signal per example than
+        classification.
       </p>
     </div>
   </RevealSection>
@@ -243,69 +578,161 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Zero-Shot Classification</h2>
 
   <p>
-    CLIP's most remarkable capability is <strong>zero-shot image classification</strong>: classifying images into arbitrary categories without any training examples, using only natural language descriptions.
+    CLIP's most remarkable capability is <strong
+      >zero-shot image classification</strong
+    >: classifying images into arbitrary categories without
+    any training examples, using only natural language
+    descriptions.
   </p>
 
   <h3>How It Works</h3>
 
   <ol>
-    <li><strong>Define classes as text</strong>: For each class, create a text description like "a photo of a &#123;class name&#125;"</li>
-    <li><strong>Encode all class descriptions</strong>: Pass each text through the text encoder to get text embeddings</li>
-    <li><strong>Encode the image</strong>: Pass the image through the image encoder</li>
-    <li><strong>Compare similarities</strong>: Compute cosine similarity between the image embedding and all class text embeddings</li>
-    <li><strong>Predict</strong>: The class with the highest similarity is the prediction</li>
+    <li>
+      <strong>Define classes as text</strong>: For each
+      class, create a text description like "a photo of a
+      &#123;class name&#125;"
+    </li>
+    <li>
+      <strong>Encode all class descriptions</strong>: Pass
+      each text through the text encoder to get text
+      embeddings
+    </li>
+    <li>
+      <strong>Encode the image</strong>: Pass the image
+      through the image encoder
+    </li>
+    <li>
+      <strong>Compare similarities</strong>: Compute cosine
+      similarity between the image embedding and all class
+      text embeddings
+    </li>
+    <li>
+      <strong>Predict</strong>: The class with the highest
+      similarity is the prediction
+    </li>
   </ol>
 
   <h3>Prompt Engineering for Zero-Shot CLIP</h3>
 
   <p>
-    The specific text format matters significantly. CLIP was trained on natural image-text pairs from the web, not simple class labels. Prompt engineering helps:
+    The specific text format matters significantly. CLIP was
+    trained on natural image-text pairs from the web, not
+    simple class labels. Prompt engineering helps:
   </p>
   <ul>
-    <li><strong>Template prompts</strong>: "a photo of a &#123;class&#125;" works better than just "&#123;class&#125;" because it matches the distribution of web captions</li>
-    <li><strong>Ensemble prompts</strong>: Averaging embeddings from multiple templates ("a photo of a big &#123;class&#125;", "a photo of a small &#123;class&#125;", "a good photo of a &#123;class&#125;", etc.) improves accuracy by 3-5%</li>
-    <li><strong>Domain-specific templates</strong>: "a satellite photo of &#123;class&#125;" for satellite imagery, "a microscope image of &#123;class&#125;" for medical imaging</li>
+    <li>
+      <strong>Template prompts</strong>: "a photo of a
+      &#123;class&#125;" works better than just
+      "&#123;class&#125;" because it matches the
+      distribution of web captions
+    </li>
+    <li>
+      <strong>Ensemble prompts</strong>: Averaging
+      embeddings from multiple templates ("a photo of a big
+      &#123;class&#125;", "a photo of a small
+      &#123;class&#125;", "a good photo of a
+      &#123;class&#125;", etc.) improves accuracy by 3-5%
+    </li>
+    <li>
+      <strong>Domain-specific templates</strong>: "a
+      satellite photo of &#123;class&#125;" for satellite
+      imagery, "a microscope image of &#123;class&#125;" for
+      medical imaging
+    </li>
   </ul>
 
   <h3>Zero-Shot Performance</h3>
 
   <p>
-    CLIP achieves remarkable zero-shot transfer on many benchmarks. On ImageNet, CLIP ViT-L/14 achieves 76.2% top-1 accuracy <em>without seeing any ImageNet training images</em>, using carefully engineered prompt templates (e.g., "a photo of a &#123;class&#125;") and leveraging 400M image-text training pairs. This matches the performance of a fully supervised ResNet-50 trained on ImageNet's 1.28M labeled images. On some specialized datasets (e.g., OCR in images, action recognition), CLIP's zero-shot performance even exceeds task-specific supervised models.
+    CLIP achieves remarkable zero-shot transfer on many
+    benchmarks. On ImageNet, CLIP ViT-L/14 achieves 76.2%
+    top-1 accuracy <em
+      >without seeing any ImageNet training images</em
+    >, using carefully engineered prompt templates (e.g., "a
+    photo of a &#123;class&#125;") and leveraging 400M
+    image-text training pairs. This matches the performance
+    of a fully supervised ResNet-50 trained on ImageNet's
+    1.28M labeled images. On some specialized datasets
+    (e.g., OCR in images, action recognition), CLIP's
+    zero-shot performance even exceeds task-specific
+    supervised models.
   </p>
 
   <p>
-    However, CLIP struggles on tasks that require specialized domain knowledge not well-represented in web data: fine-grained classification (distinguishing car models), counting objects, understanding spatial relationships, and abstract/systematic reasoning.
+    However, CLIP struggles on tasks that require
+    specialized domain knowledge not well-represented in web
+    data: fine-grained classification (distinguishing car
+    models), counting objects, understanding spatial
+    relationships, and abstract/systematic reasoning.
   </p>
 </section>
 
 <section>
-  <h2>SigLIP: Scaling Contrastive Learning with Sigmoid Loss</h2>
+  <h2>
+    SigLIP: Scaling Contrastive Learning with Sigmoid Loss
+  </h2>
 
   <p>
-    While CLIP uses a softmax-based InfoNCE loss, <strong>SigLIP</strong> (Sigmoid Loss for Language-Image Pre-training, Zhai et al. 2023) replaces it with a simpler sigmoid loss that operates on individual pairs:
+    While CLIP uses a softmax-based InfoNCE loss, <strong
+      >SigLIP</strong
+    > (Sigmoid Loss for Language-Image Pre-training, Zhai et al.
+    2023) replaces it with a simpler sigmoid loss that operates
+    on individual pairs:
   </p>
 
-  <MathBlock formula={"\\mathcal{L}_{\\text{SigLIP}} = -\\frac{1}{N^2} \\sum_{i=1}^{N} \\sum_{j=1}^{N} \\log \\sigma(y_{ij} \\cdot (\\tau \\cdot e_i \\cdot e_j - b))"} display={true} />
-
-  <p>In plain English: instead of a single softmax over the entire batch, SigLIP applies an independent binary classification (sigmoid) to each image-text pair, asking "do these match or not?" This eliminates the need for global normalization across the batch.</p>
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{SigLIP}} = -\\frac{1}{N^2} \\sum_{i=1}^{N} \\sum_{j=1}^{N} \\log \\sigma(y_{ij} \\cdot (\\tau \\cdot e_i \\cdot e_j - b))"}
+    display={true}
+  />
 
   <p>
-    where <MathBlock formula={"y_{ij} = +1"} /> for matching pairs and <MathBlock formula={"y_{ij} = -1"} /> for non-matching pairs, and <MathBlock formula="b" /> is a learned bias term.
+    Intuition: instead of a single softmax over the entire
+    batch, SigLIP applies an independent binary
+    classification (sigmoid) to each image-text pair, asking
+    "do these match or not?" This eliminates the need for
+    global normalization across the batch.
+  </p>
+
+  <p>
+    where <MathBlock formula={"y_{ij} = +1"} /> for matching pairs
+    and <MathBlock formula={"y_{ij} = -1"} /> for non-matching
+    pairs, and <MathBlock formula="b" /> is a learned bias term.
   </p>
 
   <h3>Why Sigmoid Over Softmax?</h3>
 
   <p>
-    The softmax in InfoNCE requires computing over the <em>entire batch</em>, which creates a communication bottleneck in distributed training. With 1000s of GPUs, gathering all embeddings to compute the full softmax is expensive. The sigmoid loss operates on <em>independent pairs</em>, eliminating this global synchronization:
+    The softmax in InfoNCE requires computing over the <em
+      >entire batch</em
+    >, which creates a communication bottleneck in
+    distributed training. With 1000s of GPUs, gathering all
+    embeddings to compute the full softmax is expensive. The
+    sigmoid loss operates on <em>independent pairs</em>,
+    eliminating this global synchronization:
   </p>
   <ul>
-    <li><strong>No global normalization</strong>: Each pair's loss is independent, enabling more efficient distributed training</li>
-    <li><strong>Better scaling</strong>: Training can use larger effective batch sizes without the communication overhead</li>
-    <li><strong>Simpler implementation</strong>: Binary cross-entropy per pair vs. softmax over the full batch</li>
+    <li>
+      <strong>No global normalization</strong>: Each pair's
+      loss is independent, enabling more efficient
+      distributed training
+    </li>
+    <li>
+      <strong>Better scaling</strong>: Training can use
+      larger effective batch sizes without the communication
+      overhead
+    </li>
+    <li>
+      <strong>Simpler implementation</strong>: Binary
+      cross-entropy per pair vs. softmax over the full batch
+    </li>
   </ul>
 
   <p>
-    SigLIP achieves comparable or better performance than CLIP at the same compute budget, and has become the preferred vision encoder for many modern multimodal models (e.g., PaLI, Gemini).
+    SigLIP achieves comparable or better performance than
+    CLIP at the same compute budget, and has become the
+    preferred vision encoder for many modern multimodal
+    models (e.g., PaLI, Gemini).
   </p>
 
   <PaperReference
@@ -321,26 +748,65 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>OpenCLIP and the Open-Source Ecosystem</h2>
 
   <p>
-    OpenAI released the CLIP model weights but not the training code or data. The <strong>OpenCLIP</strong> project (Ilharco et al.) reproduced CLIP training and open-sourced both the code and trained models. Key contributions:
+    OpenAI released the CLIP model weights but not the
+    training code or data. The <strong>OpenCLIP</strong> project
+    (Ilharco et al.) reproduced CLIP training and open-sourced
+    both the code and trained models. Key contributions:
   </p>
   <ul>
-    <li><strong>LAION datasets</strong>: LAION-400M and LAION-5B provided open image-text datasets comparable to OpenAI's WIT</li>
-    <li><strong>Scaled training</strong>: OpenCLIP trained models up to ViT-G/14 (1.8B parameters), exceeding OpenAI's CLIP performance</li>
-    <li><strong>Reproducibility</strong>: Fully open training pipeline enabling research on contrastive learning at scale</li>
-    <li><strong>Model zoo</strong>: Dozens of pretrained CLIP variants with different architectures, data, and training recipes</li>
+    <li>
+      <strong>LAION datasets</strong>: LAION-400M and
+      LAION-5B provided open image-text datasets comparable
+      to OpenAI's WIT
+    </li>
+    <li>
+      <strong>Scaled training</strong>: OpenCLIP trained
+      models up to ViT-G/14 (1.8B parameters), exceeding
+      OpenAI's CLIP performance
+    </li>
+    <li>
+      <strong>Reproducibility</strong>: Fully open training
+      pipeline enabling research on contrastive learning at
+      scale
+    </li>
+    <li>
+      <strong>Model zoo</strong>: Dozens of pretrained CLIP
+      variants with different architectures, data, and
+      training recipes
+    </li>
   </ul>
 
   <h3>CLIP's Role in the Generative AI Ecosystem</h3>
 
   <p>
-    CLIP's influence extends far beyond classification. It is a foundational component in:
+    CLIP's influence extends far beyond classification. It
+    is a foundational component in:
   </p>
   <ul>
-    <li><strong>Stable Diffusion</strong>: The CLIP text encoder converts text prompts into conditioning embeddings that guide image generation</li>
-    <li><strong>DALL-E 2</strong>: Uses a CLIP image embedding as an intermediate representation between text and generated images</li>
-    <li><strong>Image retrieval</strong>: CLIP embeddings enable natural language search over image databases</li>
-    <li><strong>Multimodal models</strong>: Many vision-language models use CLIP or SigLIP as their vision encoder (LLaVA, GPT-4V, Gemini)</li>
-    <li><strong>CLIP-guided optimization</strong>: Using CLIP similarity as a loss function to guide image editing, 3D generation, and style transfer</li>
+    <li>
+      <strong>Stable Diffusion</strong>: The CLIP text
+      encoder converts text prompts into conditioning
+      embeddings that guide image generation
+    </li>
+    <li>
+      <strong>DALL-E 2</strong>: Uses a CLIP image embedding
+      as an intermediate representation between text and
+      generated images
+    </li>
+    <li>
+      <strong>Image retrieval</strong>: CLIP embeddings
+      enable natural language search over image databases
+    </li>
+    <li>
+      <strong>Multimodal models</strong>: Many
+      vision-language models use CLIP or SigLIP as their
+      vision encoder (LLaVA, GPT-4V, Gemini)
+    </li>
+    <li>
+      <strong>CLIP-guided optimization</strong>: Using CLIP
+      similarity as a loss function to guide image editing,
+      3D generation, and style transfer
+    </li>
   </ul>
 </section>
 
@@ -352,26 +818,30 @@ import RevealSection from '../../components/RevealSection.astro';
       id: "a",
       text: "Larger batches reduce the variance of gradient estimates, leading to faster convergence",
       correct: false,
-      explanation: "While reduced gradient variance is a general benefit of larger batches, this isn't the primary reason CLIP needs large batches. The contrastive learning dynamics are the key factor."
+      explanation:
+        "While reduced gradient variance is a general benefit of larger batches, this isn't the primary reason CLIP needs large batches. The contrastive learning dynamics are the key factor.",
     },
     {
       id: "b",
       text: "Each image-text pair serves as a negative for all other pairs in the batch, so larger batches provide more negatives and a richer contrastive training signal",
       correct: true,
-      explanation: "Correct! In contrastive learning, the quality and quantity of negatives directly determine the quality of the learned representations. With batch size N, each positive pair is contrasted against N-1 negatives. A batch of 32K gives 32,767 negatives per positive. This abundant negative signal forces the model to learn highly discriminative embeddings."
+      explanation:
+        "Correct! In contrastive learning, the quality and quantity of negatives directly determine the quality of the learned representations. With batch size N, each positive pair is contrasted against N-1 negatives. A batch of 32K gives 32,767 negatives per positive. This abundant negative signal forces the model to learn highly discriminative embeddings.",
     },
     {
       id: "c",
       text: "CLIP's transformer architecture requires large batches for batch normalization to work correctly",
       correct: false,
-      explanation: "CLIP's text encoder uses LayerNorm (not BatchNorm), which is batch-size independent. The image encoder may use BatchNorm in ResNet variants, but this isn't the primary reason for large batches."
+      explanation:
+        "CLIP's text encoder uses LayerNorm (not BatchNorm), which is batch-size independent. The image encoder may use BatchNorm in ResNet variants, but this isn't the primary reason for large batches.",
     },
     {
       id: "d",
       text: "Large batches are needed to avoid overfitting on the 400M training examples",
       correct: false,
-      explanation: "Batch size affects the quality of contrastive learning, not overfitting. In fact, CLIP trains for a relatively modest number of epochs (32 epochs over 400M pairs)."
-    }
+      explanation:
+        "Batch size affects the quality of contrastive learning, not overfitting. In fact, CLIP trains for a relatively modest number of epochs (32 epochs over 400M pairs).",
+    },
   ]}
 />
 
@@ -379,32 +849,91 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Limitations and Failure Modes</h2>
 
   <p>
-    Understanding CLIP's limitations is crucial for using it effectively:
+    Understanding CLIP's limitations is crucial for using it
+    effectively:
   </p>
 
   <h3>Systematic Weaknesses</h3>
   <ul>
-    <li><strong>Fine-grained discrimination</strong>: CLIP struggles to distinguish between visually similar categories (e.g., different bird species, car models) without fine-tuning</li>
-    <li><strong>Counting and spatial reasoning</strong>: "Three cats sitting on a table" vs. "Two cats sitting on a table", CLIP often fails to capture numerical and spatial details</li>
-    <li><strong>Compositional understanding</strong>: "A horse riding an astronaut" and "An astronaut riding a horse" may get similar embeddings, because CLIP struggles with relational and compositional structure rather than just identifying individual concepts</li>
-    <li><strong>Abstract and symbolic reasoning</strong>: Tasks requiring understanding of charts, diagrams, or mathematical notation</li>
+    <li>
+      <strong>Fine-grained discrimination</strong>: CLIP
+      struggles to distinguish between visually similar
+      categories (e.g., different bird species, car models)
+      without fine-tuning
+    </li>
+    <li>
+      <strong>Counting and spatial reasoning</strong>:
+      "Three cats sitting on a table" vs. "Two cats sitting
+      on a table", CLIP often fails to capture numerical and
+      spatial details
+    </li>
+    <li>
+      <strong>Compositional understanding</strong>: "A horse
+      riding an astronaut" and "An astronaut riding a horse"
+      may get similar embeddings, because CLIP struggles
+      with relational and compositional structure rather
+      than just identifying individual concepts
+    </li>
+    <li>
+      <strong>Abstract and symbolic reasoning</strong>:
+      Tasks requiring understanding of charts, diagrams, or
+      mathematical notation
+    </li>
   </ul>
 
   <h3>Bias and Safety</h3>
   <p>
-    CLIP inherits biases from its web-scraped training data. Studies have shown demographic biases in zero-shot classification (e.g., associating certain occupations with specific demographics) and cultural biases reflecting the predominantly English, Western training data. These biases propagate to downstream systems built on CLIP, including generative models.
+    CLIP inherits biases from its web-scraped training data.
+    Studies have shown demographic biases in zero-shot
+    classification (e.g., associating certain occupations
+    with specific demographics) and cultural biases
+    reflecting the predominantly English, Western training
+    data. These biases propagate to downstream systems built
+    on CLIP, including generative models.
   </p>
 </section>
 
 <KeyTakeaway>
   <ul>
-    <li><strong>CLIP</strong> learns a shared embedding space for images and text using contrastive learning on 400M web-scraped image-text pairs</li>
-    <li><strong>Dual-encoder architecture</strong>: Separate image (ViT or ResNet) and text (Transformer) encoders project into a shared space where cosine similarity measures semantic alignment</li>
-    <li><strong>The InfoNCE contrastive loss</strong> maximizes similarity for matching image-text pairs while minimizing it for all non-matching pairs in the batch, with a learned temperature parameter</li>
-    <li><strong>Zero-shot classification</strong> works by encoding class descriptions as text and comparing image embeddings against them. CLIP matches supervised ResNet-50 on ImageNet without any labeled training data.</li>
-    <li><strong>SigLIP</strong> replaces softmax with sigmoid loss, enabling more efficient distributed training and better scaling while maintaining performance</li>
-    <li><strong>CLIP is foundational</strong>: It provides the text encoder for Stable Diffusion, the vision encoder for many multimodal models, and enables natural language image search and retrieval</li>
-    <li><strong>Key limitations</strong>: Fine-grained discrimination, counting, spatial reasoning, and compositional understanding remain challenging</li>
+    <li>
+      <strong>CLIP</strong> learns a shared embedding space for
+      images and text using contrastive learning on 400M web-scraped
+      image-text pairs
+    </li>
+    <li>
+      <strong>Dual-encoder architecture</strong>: Separate
+      image (ViT or ResNet) and text (Transformer) encoders
+      project into a shared space where cosine similarity
+      measures semantic alignment
+    </li>
+    <li>
+      <strong>The InfoNCE contrastive loss</strong> maximizes
+      similarity for matching image-text pairs while minimizing
+      it for all non-matching pairs in the batch, with a learned
+      temperature parameter
+    </li>
+    <li>
+      <strong>Zero-shot classification</strong> works by encoding
+      class descriptions as text and comparing image embeddings
+      against them. CLIP matches supervised ResNet-50 on ImageNet
+      without any labeled training data.
+    </li>
+    <li>
+      <strong>SigLIP</strong> replaces softmax with sigmoid loss,
+      enabling more efficient distributed training and better
+      scaling while maintaining performance
+    </li>
+    <li>
+      <strong>CLIP is foundational</strong>: It provides the
+      text encoder for Stable Diffusion, the vision encoder
+      for many multimodal models, and enables natural
+      language image search and retrieval
+    </li>
+    <li>
+      <strong>Key limitations</strong>: Fine-grained
+      discrimination, counting, spatial reasoning, and
+      compositional understanding remain challenging
+    </li>
   </ul>
 </KeyTakeaway>
 

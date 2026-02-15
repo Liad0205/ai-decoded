@@ -1,32 +1,58 @@
 ---
 // Module 3, Lesson 3.2: Supervised Fine-Tuning - From Base Model to Assistant
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import RevealSection from '../../components/RevealSection.astro';
-import Quiz from '../../components/Quiz.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import RevealSection from "../../components/RevealSection.astro";
+import Quiz from "../../components/Quiz.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Understand why base models need supervised fine-tuning (SFT) to become useful assistants</li>
-  <li>Learn how SFT datasets are constructed and what makes high-quality demonstration data</li>
-  <li>Analyze catastrophic forgetting and strategies to mitigate it</li>
-  <li>Compare SFT to instruction tuning and understand their relationship</li>
+  <li>
+    Understand why base models need supervised fine-tuning
+    (SFT) to become useful assistants
+  </li>
+  <li>
+    Learn how SFT datasets are constructed and what makes
+    high-quality demonstration data
+  </li>
+  <li>
+    Analyze catastrophic forgetting and strategies to
+    mitigate it
+  </li>
+  <li>
+    Compare SFT to instruction tuning and understand their
+    relationship
+  </li>
 </ul>
 
-<h2>Why Fine-Tune? The Gap Between Base Models and Assistants</h2>
+<h2>
+  Why Fine-Tune? The Gap Between Base Models and Assistants
+</h2>
 
 <p>
-  A pretrained base model is a powerful text completor. Given "The capital of France is", it will likely complete with "Paris." But it doesn't behave like an assistant. Ask it "What is the capital of France?" and it might generate more questions, continue in a different style, or produce unstructured text.
+  A pretrained base model is a powerful text completor.
+  Given "The capital of France is", it will likely complete
+  with "Paris." But it doesn't behave like an assistant. Ask
+  it "What is the capital of France?" and it might generate
+  more questions, continue in a different style, or produce
+  unstructured text.
 </p>
 
 <p>
-  <strong>The fundamental problem</strong>: The pretraining distribution is internet text, not helpful conversations. The model learns to mimic the statistical patterns of web pages, books, and code rather than following instructions or being helpful.
+  <strong>The fundamental problem</strong>: The pretraining
+  distribution is internet text, not helpful conversations.
+  The model learns to mimic the statistical patterns of web
+  pages, books, and code rather than following instructions
+  or being helpful.
 </p>
 
 <p>
-  Supervised fine-tuning bridges this gap by training the model on curated examples of desired input-output behavior: (instruction, response) pairs that demonstrate how an ideal assistant should respond.
+  Supervised fine-tuning bridges this gap by training the
+  model on curated examples of desired input-output
+  behavior: (instruction, response) pairs that demonstrate
+  how an ideal assistant should respond.
 </p>
 
 <h2>The SFT Process</h2>
@@ -34,141 +60,335 @@ import Quiz from '../../components/Quiz.astro';
 <h3>Training Objective</h3>
 
 <p>
-  SFT uses the same next-token prediction objective as pretraining, but only computes loss on the <strong>response tokens</strong>, not the prompt tokens. Given a prompt-response pair (x, y):
+  SFT uses the same next-token prediction objective as
+  pretraining, but only computes loss on the <strong
+    >response tokens</strong
+  >, not the prompt tokens. Given a prompt-response pair (x,
+  y):
 </p>
 
-<MathBlock formula={"\\mathcal{L}_{\\text{SFT}}(\\theta) = -\\sum_{t=1}^{|y|} \\log P_\\theta(y_t \\mid x, y_{<t})"} display={true} />
-
-<p>In plain English: the loss is the standard next-token prediction objective, but computed only over the response tokens. The prompt tokens provide context but do not contribute to the loss.</p>
+<MathBlock
+  formula={"\\mathcal{L}_{\\text{SFT}}(\\theta) = -\\sum_{t=1}^{|y|} \\log P_\\theta(y_t \\mid x, y_{<t})"}
+  display={true}
+/>
 
 <p>
-  The prompt tokens are fed through the model (providing context), but their loss is masked: we don't want the model to learn to generate prompts, only to generate appropriate responses.
+  Intuition: the loss is the standard next-token prediction
+  objective, but computed only over the response tokens. The
+  prompt tokens provide context but do not contribute to the
+  loss.
+</p>
+
+<p>
+  The prompt tokens are fed through the model (providing
+  context), but their loss is masked: we don't want the
+  model to learn to generate prompts, only to generate
+  appropriate responses.
 </p>
 
 <h3>Practical Training Details</h3>
 <ul>
-  <li><strong>Learning rate</strong>: Typically 1-2 orders of magnitude smaller than pretraining (e.g., 1e-5 to 2e-5 vs. 3e-4 for pretraining).</li>
-  <li><strong>Epochs</strong>: Usually 2-5 epochs over the SFT dataset. Too many epochs causes overfitting to the small SFT dataset.</li>
-  <li><strong>Batch size</strong>: Smaller than pretraining. Fine-tuning is less compute-intensive.</li>
-  <li><strong>Duration</strong>: SFT is fast compared to pretraining, typically hours to days on a few GPUs, versus weeks to months on thousands of GPUs for pretraining.</li>
+  <li>
+    <strong>Learning rate</strong>: Typically 1-2 orders of
+    magnitude smaller than pretraining (e.g., 1e-5 to 2e-5
+    vs. 3e-4 for pretraining).
+  </li>
+  <li>
+    <strong>Epochs</strong>: Usually 2-5 epochs over the SFT
+    dataset. Too many epochs causes overfitting to the small
+    SFT dataset.
+  </li>
+  <li>
+    <strong>Batch size</strong>: Smaller than pretraining.
+    Fine-tuning is less compute-intensive.
+  </li>
+  <li>
+    <strong>Duration</strong>: SFT is fast compared to
+    pretraining, typically hours to days on a few GPUs,
+    versus weeks to months on thousands of GPUs for
+    pretraining.
+  </li>
 </ul>
 
 <h2>Constructing SFT Datasets</h2>
 
 <p>
-  The quality of SFT data matters far more than the quantity. Research consistently shows that a small number of high-quality examples outperforms a large number of low-quality ones.
+  The quality of SFT data matters far more than the
+  quantity. Research consistently shows that a small number
+  of high-quality examples outperforms a large number of
+  low-quality ones.
 </p>
 
 <h3>Data Sources</h3>
 <ul>
-  <li><strong>Human-written demonstrations</strong>: Expert annotators write ideal responses to diverse prompts. This is the gold standard but expensive. InstructGPT used ~13,000 human-written demonstrations.</li>
-  <li><strong>Distillation from stronger models</strong>: Use a frontier model (GPT-4, Claude) to generate responses, then fine-tune a smaller model on these outputs. Alpaca used 52K examples generated by GPT-3.5. This is cheaper but raises concerns about data contamination and ceiling effects.</li>
-  <li><strong>Community-curated datasets</strong>: Open-source efforts like OpenAssistant, Dolly, and ShareGPT collect human conversations. Quality varies significantly.</li>
+  <li>
+    <strong>Human-written demonstrations</strong>: Expert
+    annotators write ideal responses to diverse prompts.
+    This is the gold standard but expensive. InstructGPT
+    used ~13,000 human-written demonstrations.
+  </li>
+  <li>
+    <strong>Distillation from stronger models</strong>: Use
+    a frontier model (GPT-4, Claude) to generate responses,
+    then fine-tune a smaller model on these outputs. Alpaca
+    used 52K examples generated by GPT-3.5. This is cheaper
+    but raises concerns about data contamination and ceiling
+    effects.
+  </li>
+  <li>
+    <strong>Community-curated datasets</strong>: Open-source
+    efforts like OpenAssistant, Dolly, and ShareGPT collect
+    human conversations. Quality varies significantly.
+  </li>
 </ul>
 
 <h3>What Makes Good SFT Data?</h3>
 
-<RevealSection revealId="sft-data-quality" title="Principles of High-Quality SFT Data">
+<RevealSection
+  revealId="sft-data-quality"
+  title="Principles of High-Quality SFT Data"
+>
   <div data-reveal-step>
     <h4>Principle 1: Diversity of Tasks</h4>
-    <p>Cover a wide range of tasks: question answering, summarization, creative writing, code generation, math, reasoning, multilingual tasks. The FLAN collection demonstrated that task diversity during instruction tuning significantly improves generalization to unseen tasks.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Principle</button>
+    <p>
+      Cover a wide range of tasks: question answering,
+      summarization, creative writing, code generation,
+      math, reasoning, multilingual tasks. The FLAN
+      collection demonstrated that task diversity during
+      instruction tuning significantly improves
+      generalization to unseen tasks.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="1">Next Principle</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Principle 2: Response Quality Over Quantity</h4>
-    <p>LIMA ("Less Is More for Alignment") showed that fine-tuning on just 1,000 carefully curated examples can produce a model competitive with models trained on 52K+ examples. Each response should be well-structured, accurate, and complete. Poor-quality responses actively harm the model.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Principle</button>
+    <p>
+      LIMA ("Less Is More for Alignment") showed that
+      fine-tuning on just 1,000 carefully curated examples
+      can produce a model competitive with models trained on
+      52K+ examples. Each response should be
+      well-structured, accurate, and complete. Poor-quality
+      responses actively harm the model.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="2">Next Principle</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Principle 3: Format Consistency</h4>
-    <p>Use a consistent prompt template (chat format) so the model learns when to generate and when to stop. Common templates include ChatML, Llama chat format, and Alpaca format. Inconsistent formatting confuses the model and leads to generation artifacts.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Principle</button>
+    <p>
+      Use a consistent prompt template (chat format) so the
+      model learns when to generate and when to stop. Common
+      templates include ChatML, Llama chat format, and
+      Alpaca format. Inconsistent formatting confuses the
+      model and leads to generation artifacts.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="3">Next Principle</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Principle 4: Difficulty Distribution</h4>
-    <p>Include examples across difficulty levels: simple factual questions, multi-step reasoning, creative tasks, and edge cases. Over-representing easy examples wastes training signal. Over-representing hard examples can destabilize training. A balanced distribution teaches the model to calibrate its effort.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Principle</button>
+    <p>
+      Include examples across difficulty levels: simple
+      factual questions, multi-step reasoning, creative
+      tasks, and edge cases. Over-representing easy examples
+      wastes training signal. Over-representing hard
+      examples can destabilize training. A balanced
+      distribution teaches the model to calibrate its
+      effort.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="4">Next Principle</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Principle 5: Safety Examples</h4>
-    <p>Include examples that demonstrate appropriate refusal of harmful requests, honest acknowledgment of limitations, and avoidance of hallucination. Without explicit safety examples, the model may be overly compliant with harmful instructions.</p>
+    <p>
+      Include examples that demonstrate appropriate refusal
+      of harmful requests, honest acknowledgment of
+      limitations, and avoidance of hallucination. Without
+      explicit safety examples, the model may be overly
+      compliant with harmful instructions.
+    </p>
   </div>
 </RevealSection>
 
 <h3>Dataset Scale: How Much Data?</h3>
 
-<p>
-  The required dataset size depends on the goal:
-</p>
+<p>The required dataset size depends on the goal:</p>
 <ul>
-  <li><strong>Instruction following</strong>: As few as 1,000-10,000 high-quality examples can teach a pretrained model to follow instructions (LIMA result).</li>
-  <li><strong>Broad capability</strong>: 50,000-500,000 examples covering diverse tasks. This is the range used by most production systems.</li>
-  <li><strong>Domain specialization</strong>: For specialized domains (medical, legal, coding), smaller datasets of 5,000-50,000 domain-specific examples on top of general SFT data.</li>
+  <li>
+    <strong>Instruction following</strong>: As few as
+    1,000-10,000 high-quality examples can teach a
+    pretrained model to follow instructions (LIMA result).
+  </li>
+  <li>
+    <strong>Broad capability</strong>: 50,000-500,000
+    examples covering diverse tasks. This is the range used
+    by most production systems.
+  </li>
+  <li>
+    <strong>Domain specialization</strong>: For specialized
+    domains (medical, legal, coding), smaller datasets of
+    5,000-50,000 domain-specific examples on top of general
+    SFT data.
+  </li>
 </ul>
 
 <h2>Instruction Tuning vs. SFT</h2>
 
 <p>
-  These terms are often used interchangeably, but there's a subtle distinction:
+  These terms are often used interchangeably, but there's a
+  subtle distinction:
 </p>
 <ul>
-  <li><strong>Instruction tuning</strong> specifically refers to training on (instruction, response) pairs, often focusing on teaching the model to follow diverse instructions. FLAN and T0 pioneered this approach by converting existing NLP datasets into instruction format.</li>
-  <li><strong>Supervised fine-tuning</strong> is the broader term for any supervised training after pretraining, including single-task fine-tuning (e.g., fine-tuning BERT for sentiment classification).</li>
+  <li>
+    <strong>Instruction tuning</strong> specifically refers to
+    training on (instruction, response) pairs, often focusing
+    on teaching the model to follow diverse instructions. FLAN
+    and T0 pioneered this approach by converting existing NLP
+    datasets into instruction format.
+  </li>
+  <li>
+    <strong>Supervised fine-tuning</strong> is the broader term
+    for any supervised training after pretraining, including single-task
+    fine-tuning (e.g., fine-tuning BERT for sentiment classification).
+  </li>
 </ul>
 
 <p>
-  In the context of LLM alignment, "SFT" typically means multi-task instruction tuning on demonstration data: the first stage of the alignment pipeline, followed by preference optimization (DPO or RLHF/PPO).
+  In the context of LLM alignment, "SFT" typically means
+  multi-task instruction tuning on demonstration data: the
+  first stage of the alignment pipeline, followed by
+  preference optimization (DPO or RLHF/PPO).
 </p>
 
 <h2>Catastrophic Forgetting</h2>
 
 <p>
-  When fine-tuning on a narrow dataset, the model may lose capabilities it acquired during pretraining. This is <strong>catastrophic forgetting</strong>: the model overwrites pretrained representations to fit the fine-tuning distribution.
+  When fine-tuning on a narrow dataset, the model may lose
+  capabilities it acquired during pretraining. This is <strong
+    >catastrophic forgetting</strong
+  >: the model overwrites pretrained representations to fit
+  the fine-tuning distribution.
 </p>
 
 <h3>Why It Happens</h3>
 
 <p>
-  Neural networks learn by adjusting weights to minimize loss on the current training data. Fine-tuning on a small, narrow dataset shifts the weight distribution away from the pretrained optimum. Mathematically, the fine-tuned parameters <MathBlock formula={"\\theta_{\\text{SFT}}"} /> move away from the pretrained parameters <MathBlock formula={"\\theta_{\\text{PT}}"} /> in the direction that minimizes SFT loss, potentially increasing pretraining loss:
+  Neural networks learn by adjusting weights to minimize
+  loss on the current training data. Fine-tuning on a small,
+  narrow dataset shifts the weight distribution away from
+  the pretrained optimum. Mathematically, the fine-tuned
+  parameters <MathBlock formula={"\\theta_{\\text{SFT}}"} /> move
+  away from the pretrained parameters <MathBlock
+    formula={"\\theta_{\\text{PT}}"}
+  /> in the direction that minimizes SFT loss, potentially increasing
+  pretraining loss:
 </p>
 
-<MathBlock formula={"\\theta_{\\text{SFT}} = \\theta_{\\text{PT}} - \\eta \\nabla_\\theta \\mathcal{L}_{\\text{SFT}}(\\theta_{\\text{PT}})"} display={true} />
-
-<p>In plain English: fine-tuning updates the pretrained weights by stepping in the direction that reduces the SFT loss. If this direction conflicts with what was learned during pretraining, some pretrained capabilities may degrade.</p>
+<MathBlock
+  formula={"\\theta_{\\text{SFT}} = \\theta_{\\text{PT}} - \\eta \\nabla_\\theta \\mathcal{L}_{\\text{SFT}}(\\theta_{\\text{PT}})"}
+  display={true}
+/>
 
 <p>
-  If the SFT gradient direction conflicts with preserving pretrained capabilities, those capabilities degrade.
+  Intuition: fine-tuning updates the pretrained weights by
+  stepping in the direction that reduces the SFT loss. If
+  this direction conflicts with what was learned during
+  pretraining, some pretrained capabilities may degrade.
+</p>
+
+<p>
+  If the SFT gradient direction conflicts with preserving
+  pretrained capabilities, those capabilities degrade.
 </p>
 
 <h3>Symptoms of Catastrophic Forgetting</h3>
 <ul>
-  <li>Degraded performance on tasks not covered by SFT data (e.g., coding ability drops after fine-tuning on conversation data)</li>
-  <li>Loss of multilingual capabilities when fine-tuning on English-only data</li>
-  <li>Reduced factual knowledge or increased hallucination</li>
-  <li>Repetitive or formulaic outputs (the model overfits to SFT response patterns)</li>
+  <li>
+    Degraded performance on tasks not covered by SFT data
+    (e.g., coding ability drops after fine-tuning on
+    conversation data)
+  </li>
+  <li>
+    Loss of multilingual capabilities when fine-tuning on
+    English-only data
+  </li>
+  <li>
+    Reduced factual knowledge or increased hallucination
+  </li>
+  <li>
+    Repetitive or formulaic outputs (the model overfits to
+    SFT response patterns)
+  </li>
 </ul>
 
 <h3>Mitigation Strategies</h3>
 
 <ul>
-  <li><strong>Low learning rate</strong>: A small learning rate keeps parameters close to the pretrained optimum, reducing forgetting at the cost of slower adaptation.</li>
-  <li><strong>Data mixing</strong>: Mix SFT data with a fraction of pretraining data during fine-tuning. This regularizes against forgetting by maintaining exposure to the pretrained distribution.</li>
-  <li><strong>Early stopping</strong>: Monitor validation performance on a diverse held-out set. Stop training before the model overfits to the SFT distribution.</li>
-  <li><strong>Parameter-efficient fine-tuning (PEFT)</strong>: Methods like LoRA (covered in Module 4) freeze most pretrained weights and only train small adapter layers. This dramatically reduces forgetting by preserving the majority of pretrained representations.</li>
-  <li><strong>Elastic Weight Consolidation (EWC)</strong>: Add a regularization term that penalizes changes to parameters that were important for pretraining:
+  <li>
+    <strong>Low learning rate</strong>: A small learning
+    rate keeps parameters close to the pretrained optimum,
+    reducing forgetting at the cost of slower adaptation.
+  </li>
+  <li>
+    <strong>Data mixing</strong>: Mix SFT data with a
+    fraction of pretraining data during fine-tuning. This
+    regularizes against forgetting by maintaining exposure
+    to the pretrained distribution.
+  </li>
+  <li>
+    <strong>Early stopping</strong>: Monitor validation
+    performance on a diverse held-out set. Stop training
+    before the model overfits to the SFT distribution.
+  </li>
+  <li>
+    <strong>Parameter-efficient fine-tuning (PEFT)</strong>:
+    Methods like LoRA (covered in Module 4) freeze most
+    pretrained weights and only train small adapter layers.
+    This dramatically reduces forgetting by preserving the
+    majority of pretrained representations.
+  </li>
+  <li>
+    <strong>Elastic Weight Consolidation (EWC)</strong>: Add
+    a regularization term that penalizes changes to
+    parameters that were important for pretraining:
   </li>
 </ul>
 
-<MathBlock formula={"\\mathcal{L}_{\\text{total}} = \\mathcal{L}_{\\text{SFT}} + \\frac{\\lambda}{2} \\sum_i F_i (\\theta_i - \\theta_{\\text{PT},i})^2"} display={true} />
-
-<p>In plain English: add a penalty that discourages changing parameters that were important for pretraining. Parameters with high Fisher information (high impact on pretraining loss) are anchored more strongly to their pretrained values.</p>
+<MathBlock
+  formula={"\\mathcal{L}_{\\text{total}} = \\mathcal{L}_{\\text{SFT}} + \\frac{\\lambda}{2} \\sum_i F_i (\\theta_i - \\theta_{\\text{PT},i})^2"}
+  display={true}
+/>
 
 <p>
-  where <MathBlock formula="F_i" /> is the Fisher information for parameter i, measuring its importance for the pretrained task.
+  Intuition: add a penalty that discourages changing
+  parameters that were important for pretraining. Parameters
+  with high Fisher information (high impact on pretraining
+  loss) are anchored more strongly to their pretrained
+  values.
+</p>
+
+<p>
+  where <MathBlock formula="F_i" /> is the Fisher information
+  for parameter i, measuring its importance for the pretrained
+  task.
 </p>
 
 <Quiz
@@ -179,62 +399,94 @@ import Quiz from '../../components/Quiz.astro';
       id: "a",
       text: "Pretraining is unnecessary: small datasets are sufficient for all tasks",
       correct: false,
-      explanation: "LIMA's result depends entirely on a strong pretrained base model. The 1,000 examples work because the model already has broad knowledge from pretraining. Without pretraining, 1,000 examples would be insufficient."
+      explanation:
+        "LIMA's result depends entirely on a strong pretrained base model. The 1,000 examples work because the model already has broad knowledge from pretraining. Without pretraining, 1,000 examples would be insufficient.",
     },
     {
       id: "b",
       text: "SFT primarily teaches the model a response format/style, not new knowledge; the knowledge comes from pretraining",
       correct: true,
-      explanation: "Correct! LIMA's key insight is the 'Superficial Alignment Hypothesis': alignment is mainly about teaching the model the right output style and format. The actual knowledge and capabilities come from pretraining. This explains why a small number of high-quality demonstrations suffices."
+      explanation:
+        "Correct! LIMA's key insight is the 'Superficial Alignment Hypothesis': alignment is mainly about teaching the model the right output style and format. The actual knowledge and capabilities come from pretraining. This explains why a small number of high-quality demonstrations suffices.",
     },
     {
       id: "c",
       text: "Data quality doesn't matter as long as the dataset is small enough to avoid overfitting",
       correct: false,
-      explanation: "LIMA specifically emphasized quality: the 1,000 examples were meticulously curated by researchers. Random or low-quality examples, even in small quantities, would not achieve the same result."
+      explanation:
+        "LIMA specifically emphasized quality: the 1,000 examples were meticulously curated by researchers. Random or low-quality examples, even in small quantities, would not achieve the same result.",
     },
     {
       id: "d",
       text: "RLHF is unnecessary because SFT alone produces aligned models",
       correct: false,
-      explanation: "While LIMA showed strong SFT-only results, preference optimization (DPO/IPO) provides additional benefits for safety, reducing harmful outputs, and better calibrating model behavior. Most production systems use preference optimization after SFT."
-    }
+      explanation:
+        "While LIMA showed strong SFT-only results, preference optimization (DPO/IPO) provides additional benefits for safety, reducing harmful outputs, and better calibrating model behavior. Most production systems use preference optimization after SFT.",
+    },
   ]}
 />
 
 <h2>Multi-Turn SFT and Chat Formatting</h2>
 
 <p>
-  Production chat models are fine-tuned on multi-turn conversations, not just single-turn (instruction, response) pairs. This teaches the model to:
+  Production chat models are fine-tuned on multi-turn
+  conversations, not just single-turn (instruction,
+  response) pairs. This teaches the model to:
 </p>
 <ul>
   <li>Maintain context across multiple exchanges</li>
   <li>Handle follow-up questions and clarifications</li>
   <li>Refer back to earlier parts of the conversation</li>
-  <li>Distinguish between system instructions, user messages, and assistant responses</li>
+  <li>
+    Distinguish between system instructions, user messages,
+    and assistant responses
+  </li>
 </ul>
 
-<p>
-  A typical training example in ChatML format:
-</p>
+<p>A typical training example in ChatML format:</p>
 
-<pre class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded-lg text-sm overflow-x-auto my-4"><code>&lt;|system|&gt;You are a helpful assistant.&lt;|end|&gt;
+<pre
+  class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded-lg text-sm overflow-x-auto my-4"><code>&lt;|system|&gt;You are a helpful assistant.&lt;|end|&gt;
 &lt;|user|&gt;What is photosynthesis?&lt;|end|&gt;
 &lt;|assistant|&gt;Photosynthesis is the process by which plants...&lt;|end|&gt;
 &lt;|user|&gt;How efficient is it compared to solar panels?&lt;|end|&gt;
 &lt;|assistant|&gt;Natural photosynthesis converts about 1-2% of...&lt;|end|&gt;</code></pre>
 
 <p>
-  Loss is computed only on assistant response tokens. System and user tokens provide context but are not training targets.
+  Loss is computed only on assistant response tokens. System
+  and user tokens provide context but are not training
+  targets.
 </p>
 
 <KeyTakeaway>
   <ul>
-    <li><strong>SFT bridges the gap</strong> between a base model (text completor) and an assistant by training on curated (instruction, response) pairs</li>
-    <li><strong>Loss is computed only on response tokens</strong>, teaching the model to generate appropriate responses, not to reproduce prompts</li>
-    <li><strong>Quality over quantity</strong>: LIMA showed 1,000 high-quality examples can rival 52K+ low-quality ones, supporting the Superficial Alignment Hypothesis</li>
-    <li><strong>Catastrophic forgetting</strong> is the primary risk, mitigated by low learning rates, data mixing, early stopping, and parameter-efficient methods (LoRA)</li>
-    <li><strong>SFT is typically stage 1</strong> of the alignment pipeline, followed by preference optimization (DPO/IPO, which are popular alternatives to RLHF) for further refinement of model behavior</li>
+    <li>
+      <strong>SFT bridges the gap</strong> between a base model
+      (text completor) and an assistant by training on curated
+      (instruction, response) pairs
+    </li>
+    <li>
+      <strong
+        >Loss is computed only on response tokens</strong
+      >, teaching the model to generate appropriate
+      responses, not to reproduce prompts
+    </li>
+    <li>
+      <strong>Quality over quantity</strong>: LIMA showed
+      1,000 high-quality examples can rival 52K+ low-quality
+      ones, supporting the Superficial Alignment Hypothesis
+    </li>
+    <li>
+      <strong>Catastrophic forgetting</strong> is the primary
+      risk, mitigated by low learning rates, data mixing, early
+      stopping, and parameter-efficient methods (LoRA)
+    </li>
+    <li>
+      <strong>SFT is typically stage 1</strong> of the alignment
+      pipeline, followed by preference optimization (DPO/IPO,
+      which are popular alternatives to RLHF) for further refinement
+      of model behavior
+    </li>
   </ul>
 </KeyTakeaway>
 

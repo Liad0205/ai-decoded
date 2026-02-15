@@ -1,139 +1,324 @@
 ---
 // Module 5, Lesson 5.1: Embedding Models Deep Dive
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Understand how contrastive learning produces high-quality embedding spaces</li>
-  <li>Derive the InfoNCE loss function and explain its connection to mutual information</li>
-  <li>Compare modern embedding architectures: E5, BGE, GTE, and CLIP</li>
-  <li>Explain Matryoshka Representation Learning and its practical benefits</li>
+  <li>
+    Understand how contrastive learning produces
+    high-quality embedding spaces
+  </li>
+  <li>
+    Derive the InfoNCE loss function and explain its
+    connection to mutual information
+  </li>
+  <li>
+    Compare modern embedding architectures: E5, BGE, GTE,
+    and CLIP
+  </li>
+  <li>
+    Explain Matryoshka Representation Learning and its
+    practical benefits
+  </li>
   <li>Evaluate embedding models using MTEB benchmarks</li>
 </ul>
 
 <h2>What Are Embeddings and Why Do They Matter?</h2>
 
 <p>
-  An <strong>embedding</strong> is a learned mapping from discrete or high-dimensional data into a continuous vector space where geometric relationships (distance, angle) encode semantic similarity. Unlike hand-crafted features, embeddings capture meaning through training on large-scale data.
+  An <strong>embedding</strong> is a learned mapping from discrete
+  or high-dimensional data into a continuous vector space where
+  geometric relationships (distance, angle) encode semantic similarity.
+  Unlike hand-crafted features, embeddings capture meaning through
+  training on large-scale data.
 </p>
 
 <p>
-  Formally, an embedding function maps inputs to a d-dimensional vector space:
+  Formally, an embedding function maps inputs to a
+  d-dimensional vector space:
 </p>
 
-<MathBlock formula={"f_\\theta : \\mathcal{X} \\rightarrow \\mathbb{R}^d"} display={true} />
-
-<p>In plain English: the embedding function takes any input from the data space and maps it to a d-dimensional real-valued vector.</p>
+<MathBlock
+  formula={"f_\\theta : \\mathcal{X} \\rightarrow \\mathbb{R}^d"}
+  display={true}
+/>
 
 <p>
-  The goal: semantically similar inputs should map to nearby points in the embedding space, while dissimilar inputs should be far apart. This property makes embeddings the foundation of semantic search, recommendation systems, RAG pipelines, and clustering.
+  Intuition: the embedding function takes any input from the
+  data space and maps it to a d-dimensional real-valued
+  vector.
+</p>
+
+<p>
+  The goal: semantically similar inputs should map to nearby
+  points in the embedding space, while dissimilar inputs
+  should be far apart. This property makes embeddings the
+  foundation of semantic search, recommendation systems, RAG
+  pipelines, and clustering.
 </p>
 
 <h2>Contrastive Learning: Learning by Comparison</h2>
 
 <p>
-  <strong>Contrastive learning</strong> trains embeddings by pulling similar examples together and pushing dissimilar examples apart in the embedding space. Rather than predicting labels, the model learns a similarity function.
+  <strong>Contrastive learning</strong> trains embeddings by pulling
+  similar examples together and pushing dissimilar examples apart
+  in the embedding space. Rather than predicting labels, the model
+  learns a similarity function.
 </p>
 
 <h3>The Setup</h3>
 
 <p>
-  Given an anchor example <MathBlock formula={"x"} />, a positive example <MathBlock formula={"x^+"} /> (semantically similar), and negative examples <MathBlock formula={"\\{x_1^-, x_2^-, \\ldots, x_K^-\\}"} /> (semantically dissimilar), the model must learn representations where:
+  Given an anchor example <MathBlock formula={"x"} />, a
+  positive example <MathBlock formula={"x^+"} /> (semantically
+  similar), and negative examples <MathBlock
+    formula={"\\{x_1^-, x_2^-, \\ldots, x_K^-\\}"}
+  /> (semantically dissimilar), the model must learn representations
+  where:
 </p>
 
-<MathBlock formula={"\\text{sim}(f(x), f(x^+)) \\gg \\text{sim}(f(x), f(x_i^-))"} display={true} />
+<MathBlock
+  formula={"\\text{sim}(f(x), f(x^+)) \\gg \\text{sim}(f(x), f(x_i^-))"}
+  display={true}
+/>
 
-<p>In plain English: the similarity between the anchor and its positive example should be much larger than the similarity between the anchor and any negative example.</p>
+<p>
+  Intuition: the similarity between the anchor and its
+  positive example should be much larger than the similarity
+  between the anchor and any negative example.
+</p>
 
 <p>
   Similarity is typically measured by cosine similarity:
 </p>
 
-<MathBlock formula={"\\text{sim}(u, v) = \\frac{u \\cdot v}{\\|u\\| \\|v\\|}"} display={true} />
+<MathBlock
+  formula={"\\text{sim}(u, v) = \\frac{u \\cdot v}{\\|u\\| \\|v\\|}"}
+  display={true}
+/>
 
-<p>Cosine similarity computes the dot product of two vectors normalized by their magnitudes, yielding a value between -1 (opposite) and +1 (identical direction).</p>
+<p>
+  Cosine similarity computes the dot product of two vectors
+  normalized by their magnitudes, yielding a value between
+  -1 (opposite) and +1 (identical direction).
+</p>
 
 <h3>The InfoNCE Loss</h3>
 
 <p>
-  The <strong>InfoNCE loss</strong> (Noise-Contrastive Estimation) is the standard contrastive objective. For a batch of N pairs, with one positive and N-1 in-batch negatives per anchor:
+  The <strong>InfoNCE loss</strong> (Noise-Contrastive Estimation)
+  is the standard contrastive objective. For a batch of N pairs,
+  with one positive and N-1 in-batch negatives per anchor:
 </p>
 
-<MathBlock formula={"\\mathcal{L}_{\\text{InfoNCE}} = -\\log \\frac{\\exp(\\text{sim}(f(x), f(x^+)) / \\tau)}{\\sum_{j=0}^{N-1} \\exp(\\text{sim}(f(x), f(x_j)) / \\tau)}"} display={true} />
-
-<p>In plain English: InfoNCE is a softmax cross-entropy loss that treats matching the correct positive as an N-way classification problem. The numerator measures how similar the anchor is to its positive; the denominator normalizes over all candidates. The loss is minimized when the positive pair's similarity dominates all others.</p>
+<MathBlock
+  formula={"\\mathcal{L}_{\\text{InfoNCE}} = -\\log \\frac{\\exp(\\text{sim}(f(x), f(x^+)) / \\tau)}{\\sum_{j=0}^{N-1} \\exp(\\text{sim}(f(x), f(x_j)) / \\tau)}"}
+  display={true}
+/>
 
 <p>
-  where the temperature parameter <MathBlock formula={"\\tau"} /> controls the sharpness of the similarity distribution. Key properties:
+  Intuition: InfoNCE is a softmax cross-entropy loss that
+  treats matching the correct positive as an N-way
+  classification problem. The numerator measures how similar
+  the anchor is to its positive; the denominator normalizes
+  over all candidates. The loss is minimized when the
+  positive pair's similarity dominates all others.
 </p>
 
-  <li><strong>Information-theoretic connection</strong>: Minimizing InfoNCE maximizes a lower bound on the mutual information <MathBlock formula={"I(x; x^+)"} /> between positive pairs</li>
-</ul>
+<p>
+  where the temperature parameter <MathBlock
+    formula={"\\tau"}
+  /> controls the sharpness of the similarity distribution. Key
+  properties:
+</p>
 
-<div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg my-4">
-  <p class="font-semibold text-indigo-800 dark:text-indigo-200">Analogy: The Police Lineup</p>
+<li>
+  <strong>Information-theoretic connection</strong>:
+  Minimizing InfoNCE maximizes a lower bound on the mutual
+  information <MathBlock formula={"I(x; x^+)"} /> between positive
+  pairs
+</li>
+
+<div
+  class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg my-4"
+>
+  <p
+    class="font-semibold text-indigo-800 dark:text-indigo-200"
+  >
+    Analogy: The Police Lineup
+  </p>
   <p class="text-sm">
-    Imagine the model is a witness trying to identify a suspect (the <strong>positive</strong> example) from a lineup.
+    Imagine the model is a witness trying to identify a
+    suspect (the <strong>positive</strong> example) from a lineup.
   </p>
   <ul class="list-disc list-inside text-sm mt-2 ml-2">
-    <li><strong>The Anchor</strong>: The sketch of the suspect provided by the victim.</li>
-    <li><strong>The Layout</strong>: The lineup includes the true suspect and 99 innocent people (<strong>negatives</strong>).</li>
-    <li><strong>The Goal</strong>: The witness must confidently point to the suspect. If the innocent people look very different (easy negatives), it's easy. If they look like the suspect (hard negatives), the witness must learn very specific features to tell them apart.</li>
-    <li><strong>InfoNCE Loss</strong>: Penalizes the witness if they are unsure or pick the wrong person.</li>
+    <li>
+      <strong>The Anchor</strong>: The sketch of the suspect
+      provided by the victim.
+    </li>
+    <li>
+      <strong>The Layout</strong>: The lineup includes the
+      true suspect and 99 innocent people (<strong
+        >negatives</strong
+      >).
+    </li>
+    <li>
+      <strong>The Goal</strong>: The witness must
+      confidently point to the suspect. If the innocent
+      people look very different (easy negatives), it's
+      easy. If they look like the suspect (hard negatives),
+      the witness must learn very specific features to tell
+      them apart.
+    </li>
+    <li>
+      <strong>InfoNCE Loss</strong>: Penalizes the witness
+      if they are unsure or pick the wrong person.
+    </li>
   </ul>
 </div>
 
 <h3>Why In-Batch Negatives Work</h3>
 
 <p>
-  A crucial optimization: rather than sampling explicit negatives, use other examples in the same mini-batch as negatives. With batch size B, each anchor gets B-1 negatives "for free." This is why contrastive learning benefits enormously from large batch sizes (often 4K-65K).
+  A crucial optimization: rather than sampling explicit
+  negatives, use other examples in the same mini-batch as
+  negatives. With batch size B, each anchor gets B-1
+  negatives "for free." This is why contrastive learning
+  benefits enormously from large batch sizes (often 4K-65K).
 </p>
 
 <p>
-  The probability of false negatives (true positives treated as negatives) is low in large, diverse corpora, though this assumption weakens in specialized domains where semantically similar items are common. In those settings, hard negative mining becomes important.
+  The probability of false negatives (true positives treated
+  as negatives) is low in large, diverse corpora, though
+  this assumption weakens in specialized domains where
+  semantically similar items are common. In those settings,
+  hard negative mining becomes important.
 </p>
 
-<Diagram diagramId="contrastive-learning" title="Contrastive Learning in Embedding Space" autoplay={true} animationDuration={4000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+<Diagram
+  diagramId="contrastive-learning"
+  title="Contrastive Learning in Embedding Space"
+  autoplay={true}
+  animationDuration={4000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+  >
     <div class="grid grid-cols-2 gap-8">
       <!-- Before training -->
       <div data-animate style="animation-delay: 0.3s">
-        <div class="text-center font-semibold text-sm mb-4">Before Training</div>
-        <div class="relative w-full h-48 bg-slate-50 dark:bg-[hsl(var(--muted))] rounded border border-slate-200 dark:border-[hsl(var(--border))]">
-          <div class="absolute top-8 left-6 w-3 h-3 bg-indigo-500 rounded-full" title="anchor"></div>
-          <div class="absolute top-16 right-12 w-3 h-3 bg-emerald-500 rounded-full" title="positive"></div>
-          <div class="absolute bottom-12 left-16 w-3 h-3 bg-rose-400 rounded-full" title="negative"></div>
-          <div class="absolute top-12 left-24 w-3 h-3 bg-rose-400 rounded-full" title="negative"></div>
-          <div class="absolute bottom-8 right-8 w-3 h-3 bg-rose-400 rounded-full" title="negative"></div>
-          <div class="absolute bottom-16 left-8 w-3 h-3 bg-indigo-500 rounded-full opacity-60" title="anchor2"></div>
-          <div class="text-xs text-center mt-2 text-slate-500 dark:text-slate-400">Random positions in space</div>
+        <div class="text-center font-semibold text-sm mb-4">
+          Before Training
+        </div>
+        <div
+          class="relative w-full h-48 bg-slate-50 dark:bg-[hsl(var(--muted))] rounded border border-slate-200 dark:border-[hsl(var(--border))]"
+        >
+          <div
+            class="absolute top-8 left-6 w-3 h-3 bg-indigo-500 rounded-full"
+            title="anchor"
+          >
+          </div>
+          <div
+            class="absolute top-16 right-12 w-3 h-3 bg-emerald-500 rounded-full"
+            title="positive"
+          >
+          </div>
+          <div
+            class="absolute bottom-12 left-16 w-3 h-3 bg-rose-400 rounded-full"
+            title="negative"
+          >
+          </div>
+          <div
+            class="absolute top-12 left-24 w-3 h-3 bg-rose-400 rounded-full"
+            title="negative"
+          >
+          </div>
+          <div
+            class="absolute bottom-8 right-8 w-3 h-3 bg-rose-400 rounded-full"
+            title="negative"
+          >
+          </div>
+          <div
+            class="absolute bottom-16 left-8 w-3 h-3 bg-indigo-500 rounded-full opacity-60"
+            title="anchor2"
+          >
+          </div>
+          <div
+            class="text-xs text-center mt-2 text-slate-500 dark:text-slate-400"
+          >
+            Random positions in space
+          </div>
         </div>
       </div>
 
       <!-- After training -->
       <div data-animate style="animation-delay: 2s">
-        <div class="text-center font-semibold text-sm mb-4">After Training</div>
-        <div class="relative w-full h-48 bg-slate-50 dark:bg-[hsl(var(--muted))] rounded border border-slate-200 dark:border-[hsl(var(--border))]">
-          <div class="absolute top-8 left-8 w-3 h-3 bg-indigo-500 rounded-full" title="anchor"></div>
-          <div class="absolute top-10 left-12 w-3 h-3 bg-emerald-500 rounded-full" title="positive"></div>
-          <div class="absolute bottom-8 right-8 w-3 h-3 bg-rose-400 rounded-full" title="negative"></div>
-          <div class="absolute bottom-12 right-12 w-3 h-3 bg-rose-400 rounded-full" title="negative"></div>
-          <div class="absolute bottom-10 right-16 w-3 h-3 bg-rose-400 rounded-full" title="negative"></div>
-          <div class="absolute top-12 left-10 w-3 h-3 bg-indigo-500 rounded-full opacity-60" title="anchor2"></div>
-          <div class="text-xs text-center mt-2 text-slate-500 dark:text-slate-400">Similar items cluster together</div>
+        <div class="text-center font-semibold text-sm mb-4">
+          After Training
+        </div>
+        <div
+          class="relative w-full h-48 bg-slate-50 dark:bg-[hsl(var(--muted))] rounded border border-slate-200 dark:border-[hsl(var(--border))]"
+        >
+          <div
+            class="absolute top-8 left-8 w-3 h-3 bg-indigo-500 rounded-full"
+            title="anchor"
+          >
+          </div>
+          <div
+            class="absolute top-10 left-12 w-3 h-3 bg-emerald-500 rounded-full"
+            title="positive"
+          >
+          </div>
+          <div
+            class="absolute bottom-8 right-8 w-3 h-3 bg-rose-400 rounded-full"
+            title="negative"
+          >
+          </div>
+          <div
+            class="absolute bottom-12 right-12 w-3 h-3 bg-rose-400 rounded-full"
+            title="negative"
+          >
+          </div>
+          <div
+            class="absolute bottom-10 right-16 w-3 h-3 bg-rose-400 rounded-full"
+            title="negative"
+          >
+          </div>
+          <div
+            class="absolute top-12 left-10 w-3 h-3 bg-indigo-500 rounded-full opacity-60"
+            title="anchor2"
+          >
+          </div>
+          <div
+            class="text-xs text-center mt-2 text-slate-500 dark:text-slate-400"
+          >
+            Similar items cluster together
+          </div>
         </div>
       </div>
     </div>
 
     <div class="flex justify-center gap-6 mt-4 text-xs">
-      <span class="flex items-center gap-1"><span class="w-3 h-3 bg-indigo-500 rounded-full inline-block"></span> Anchor</span>
-      <span class="flex items-center gap-1"><span class="w-3 h-3 bg-emerald-500 rounded-full inline-block"></span> Positive</span>
-      <span class="flex items-center gap-1"><span class="w-3 h-3 bg-rose-400 rounded-full inline-block"></span> Negative</span>
+      <span class="flex items-center gap-1"
+        ><span
+          class="w-3 h-3 bg-indigo-500 rounded-full inline-block"
+        ></span> Anchor</span
+      >
+      <span class="flex items-center gap-1"
+        ><span
+          class="w-3 h-3 bg-emerald-500 rounded-full inline-block"
+        ></span> Positive</span
+      >
+      <span class="flex items-center gap-1"
+        ><span
+          class="w-3 h-3 bg-rose-400 rounded-full inline-block"
+        ></span> Negative</span
+      >
     </div>
   </div>
 </Diagram>
@@ -141,50 +326,91 @@ import Quiz from '../../components/Quiz.astro';
 <h2>Training Embedding Models: A Multi-Stage Pipeline</h2>
 
 <p>
-  Modern text embedding models (E5, BGE, GTE) follow a multi-stage training pipeline that progressively refines representations:
+  Modern text embedding models (E5, BGE, GTE) follow a
+  multi-stage training pipeline that progressively refines
+  representations:
 </p>
 
 <h3>Stage 1: Pre-training (Weakly Supervised)</h3>
 
 <p>
-  Start from a pre-trained language model (typically BERT or a decoder model). Further pre-train on massive weakly-supervised text pairs mined from the web:
+  Start from a pre-trained language model (typically BERT or
+  a decoder model). Further pre-train on massive
+  weakly-supervised text pairs mined from the web:
 </p>
 
 <ul>
-  <li><strong>Title-body pairs</strong>: Web page titles paired with body text</li>
-  <li><strong>Question-answer pairs</strong>: From forums like Stack Overflow, Reddit</li>
-  <li><strong>Parallel text</strong>: Cross-lingual sentence pairs for multilingual models</li>
+  <li>
+    <strong>Title-body pairs</strong>: Web page titles
+    paired with body text
+  </li>
+  <li>
+    <strong>Question-answer pairs</strong>: From forums like
+    Stack Overflow, Reddit
+  </li>
+  <li>
+    <strong>Parallel text</strong>: Cross-lingual sentence
+    pairs for multilingual models
+  </li>
 </ul>
 
 <p>
-  Scale matters enormously: E5 uses ~1B weakly supervised pairs; BGE uses even more. The quality filtering of these pairs significantly impacts downstream performance---deduplication, language identification, and removing near-duplicates via MinHash are standard practices, and aggressive filtering (retaining only the top 10-30% of pairs by a quality classifier) often outperforms using the full noisy dataset.
+  Scale matters enormously: E5 uses ~1B weakly supervised
+  pairs; BGE uses even more. The quality filtering of these
+  pairs significantly impacts downstream
+  performance---deduplication, language identification, and
+  removing near-duplicates via MinHash are standard
+  practices, and aggressive filtering (retaining only the
+  top 10-30% of pairs by a quality classifier) often
+  outperforms using the full noisy dataset.
 </p>
 
 <h3>Stage 2: Fine-tuning (High-Quality Supervision)</h3>
 
 <p>
-  Fine-tune on curated, high-quality datasets with explicit relevance labels:
+  Fine-tune on curated, high-quality datasets with explicit
+  relevance labels:
 </p>
 
 <ul>
-  <li><strong>NLI datasets</strong>: Natural Language Inference (entailment = positive, contradiction = negative)</li>
-  <li><strong>MS MARCO</strong>: Large-scale passage retrieval with human relevance judgments</li>
-  <li><strong>Synthetic data</strong>: LLM-generated query-document pairs (increasingly important)</li>
+  <li>
+    <strong>NLI datasets</strong>: Natural Language
+    Inference (entailment = positive, contradiction =
+    negative)
+  </li>
+  <li>
+    <strong>MS MARCO</strong>: Large-scale passage retrieval
+    with human relevance judgments
+  </li>
+  <li>
+    <strong>Synthetic data</strong>: LLM-generated
+    query-document pairs (increasingly important)
+  </li>
 </ul>
 
 <h3>Stage 3: Hard Negative Mining</h3>
 
 <p>
-  Easy negatives (random documents) provide little learning signal. <strong>Hard negatives</strong>---documents that are superficially similar but not truly relevant---force the model to learn fine-grained distinctions.
+  Easy negatives (random documents) provide little learning
+  signal. <strong>Hard negatives</strong>---documents that
+  are superficially similar but not truly relevant---force
+  the model to learn fine-grained distinctions.
 </p>
 
-<p>
-  Common strategies:
-</p>
+<p>Common strategies:</p>
 <ul>
-  <li><strong>BM25 negatives</strong>: Lexically similar but semantically different documents</li>
-  <li><strong>Cross-encoder negatives</strong>: Use a cross-encoder to identify borderline cases</li>
-  <li><strong>In-batch hard negatives</strong>: The closest non-matching items within the batch</li>
+  <li>
+    <strong>BM25 negatives</strong>: Lexically similar but
+    semantically different documents
+  </li>
+  <li>
+    <strong>Cross-encoder negatives</strong>: Use a
+    cross-encoder to identify borderline cases
+  </li>
+  <li>
+    <strong>In-batch hard negatives</strong>: The closest
+    non-matching items within the batch
+  </li>
 </ul>
 
 <h2>Key Embedding Model Architectures</h2>
@@ -192,28 +418,53 @@ import Quiz from '../../components/Quiz.astro';
 <h3>Bi-Encoder vs. Cross-Encoder</h3>
 
 <p>
-  Two fundamental architectures for measuring text similarity:
+  Two fundamental architectures for measuring text
+  similarity:
 </p>
 
 <ul>
-  <li><strong>Bi-encoder</strong>: Encode query and document independently, compare via cosine similarity. Fast (O(1) per comparison after encoding), but limited interaction between query and document.</li>
-  <li><strong>Cross-encoder</strong>: Concatenate query and document, process jointly through a transformer. More accurate (full cross-attention), but O(N) for N candidates---too slow for retrieval, used for reranking.</li>
+  <li>
+    <strong>Bi-encoder</strong>: Encode query and document
+    independently, compare via cosine similarity. Fast (O(1)
+    per comparison after encoding), but limited interaction
+    between query and document.
+  </li>
+  <li>
+    <strong>Cross-encoder</strong>: Concatenate query and
+    document, process jointly through a transformer. More
+    accurate (full cross-attention), but O(N) for N
+    candidates---too slow for retrieval, used for reranking.
+  </li>
 </ul>
 
 <p>
-  In practice, bi-encoders retrieve candidates, then cross-encoders rerank the top results.
+  In practice, bi-encoders retrieve candidates, then
+  cross-encoders rerank the top results.
 </p>
 
-<h3>E5 (EmbEddings from bidirEctional Encoder rEpresentations)</h3>
+<h3>
+  E5 (EmbEddings from bidirEctional Encoder rEpresentations)
+</h3>
 
 <p>
-  Microsoft's E5 family pioneered the weakly-supervised pre-training approach:
+  Microsoft's E5 family pioneered the weakly-supervised
+  pre-training approach:
 </p>
 <ul>
-  <li>Pre-trained on ~1B text pairs with contrastive learning</li>
+  <li>
+    Pre-trained on ~1B text pairs with contrastive learning
+  </li>
   <li>Fine-tuned on labeled datasets (NLI, MS MARCO)</li>
-  <li>Uses task-specific prefixes: <code>"query: "</code> and <code>"passage: "</code> to distinguish asymmetric retrieval from symmetric similarity</li>
-  <li><strong>E5-Mistral</strong>: Extended to decoder-only architectures, using the last token embedding instead of [CLS]</li>
+  <li>
+    Uses task-specific prefixes: <code>"query: "</code> and <code
+      >"passage: "</code
+    > to distinguish asymmetric retrieval from symmetric similarity
+  </li>
+  <li>
+    <strong>E5-Mistral</strong>: Extended to decoder-only
+    architectures, using the last token embedding instead of
+    [CLS]
+  </li>
 </ul>
 
 <h3>BGE (BAAI General Embedding)</h3>
@@ -222,9 +473,19 @@ import Quiz from '../../components/Quiz.astro';
   BAAI's BGE models added instruction-tuning to embeddings:
 </p>
 <ul>
-  <li>Similar multi-stage pipeline to E5 with additional instruction-following capabilities</li>
-  <li>Supports task-specific instructions prepended to queries (e.g., "Represent this sentence for retrieving relevant passages")</li>
-  <li>BGE-M3 introduced multi-granularity (dense, sparse, and multi-vector) in a single model</li>
+  <li>
+    Similar multi-stage pipeline to E5 with additional
+    instruction-following capabilities
+  </li>
+  <li>
+    Supports task-specific instructions prepended to queries
+    (e.g., "Represent this sentence for retrieving relevant
+    passages")
+  </li>
+  <li>
+    BGE-M3 introduced multi-granularity (dense, sparse, and
+    multi-vector) in a single model
+  </li>
 </ul>
 
 <h3>GTE (General Text Embeddings)</h3>
@@ -233,79 +494,166 @@ import Quiz from '../../components/Quiz.astro';
   Alibaba's GTE models focus on efficient training at scale:
 </p>
 <ul>
-  <li>Multi-stage contrastive learning with carefully curated data mixtures</li>
-  <li>Strong performance across diverse tasks including clustering, classification, and retrieval</li>
-  <li>GTE-Qwen2: Built on the Qwen2 decoder architecture, achieving SOTA on MTEB</li>
+  <li>
+    Multi-stage contrastive learning with carefully curated
+    data mixtures
+  </li>
+  <li>
+    Strong performance across diverse tasks including
+    clustering, classification, and retrieval
+  </li>
+  <li>
+    GTE-Qwen2: Built on the Qwen2 decoder architecture,
+    achieving SOTA on MTEB
+  </li>
 </ul>
 
 <h3>CLIP: Connecting Vision and Language</h3>
 
 <p>
-  OpenAI's <strong>CLIP</strong> (Contrastive Language-Image Pre-training) extends contrastive learning to multimodal embeddings:
+  OpenAI's <strong>CLIP</strong> (Contrastive Language-Image Pre-training)
+  extends contrastive learning to multimodal embeddings:
 </p>
 
 <div class="equation-with-label">
-  <div class="text-sm font-medium text-slate-700 mb-2">CLIP Loss (Symmetric)</div>
-  <MathBlock formula={"\\mathcal{L}_{\\text{CLIP}} = -\\frac{1}{2N}\\sum_{i=1}^{N}\\left[\\log \\frac{\\exp(\\text{sim}(f_{\\text{img}}(x_i), f_{\\text{text}}(t_i))/\\tau)}{\\sum_j \\exp(\\text{sim}(f_{\\text{img}}(x_i), f_{\\text{text}}(t_j))/\\tau)} + \\log \\frac{\\exp(\\text{sim}(f_{\\text{text}}(t_i), f_{\\text{img}}(x_i))/\\tau)}{\\sum_j \\exp(\\text{sim}(f_{\\text{text}}(t_i), f_{\\text{img}}(x_j))/\\tau)}\\right]"} display={true} />
+  <div class="text-sm font-medium text-slate-700 mb-2">
+    CLIP Loss (Symmetric)
+  </div>
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{CLIP}} = -\\frac{1}{2N}\\sum_{i=1}^{N}\\left[\\log \\frac{\\exp(\\text{sim}(f_{\\text{img}}(x_i), f_{\\text{text}}(t_i))/\\tau)}{\\sum_j \\exp(\\text{sim}(f_{\\text{img}}(x_i), f_{\\text{text}}(t_j))/\\tau)} + \\log \\frac{\\exp(\\text{sim}(f_{\\text{text}}(t_i), f_{\\text{img}}(x_i))/\\tau)}{\\sum_j \\exp(\\text{sim}(f_{\\text{text}}(t_i), f_{\\text{img}}(x_j))/\\tau)}\\right]"}
+    display={true}
+  />
 </div>
 
-<p>In plain English: for each image, maximize the similarity with its matching caption while minimizing similarity with all other captions, and vice versa for each caption. The two terms make the loss symmetric across modalities.</p>
+<p>
+  Intuition: for each image, maximize the similarity with
+  its matching caption while minimizing similarity with all
+  other captions, and vice versa for each caption. The two
+  terms make the loss symmetric across modalities.
+</p>
 
 <p>
-  CLIP uses two encoders (image and text) trained on 400M image-text pairs. The symmetric loss aligns both directions: image-to-text and text-to-image. This enables zero-shot image classification, image search by natural language, and multimodal retrieval.
+  CLIP uses two encoders (image and text) trained on 400M
+  image-text pairs. The symmetric loss aligns both
+  directions: image-to-text and text-to-image. This enables
+  zero-shot image classification, image search by natural
+  language, and multimodal retrieval.
 </p>
 
 <h2>Matryoshka Representation Learning (MRL)</h2>
 
 <p>
-  Standard embeddings have a fixed dimensionality (e.g., 768 or 1024). <strong>Matryoshka Representation Learning</strong> trains embeddings where any prefix of the full vector is itself a valid, useful embedding---like nested Russian dolls.
+  Standard embeddings have a fixed dimensionality (e.g., 768
+  or 1024). <strong
+    >Matryoshka Representation Learning</strong
+  > trains embeddings where any prefix of the full vector is itself
+  a valid, useful embedding---like nested Russian dolls.
 </p>
 
 <h3>How It Works</h3>
 
 <p>
-  During training, apply the contrastive loss at multiple dimensionalities simultaneously:
+  During training, apply the contrastive loss at multiple
+  dimensionalities simultaneously:
 </p>
 
 <div class="equation-with-label">
-  <div class="text-sm font-medium text-slate-700 mb-2">Matryoshka Loss</div>
-  <MathBlock formula={"\\mathcal{L}_{\\text{MRL}} = \\sum_{d \\in \\mathcal{D}} \\mathcal{L}_{\\text{InfoNCE}}(f_\\theta(x)_{[:d]}, f_\\theta(x^+)_{[:d]})"} display={true} />
+  <div class="text-sm font-medium text-slate-700 mb-2">
+    Matryoshka Loss
+  </div>
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{MRL}} = \\sum_{d \\in \\mathcal{D}} \\mathcal{L}_{\\text{InfoNCE}}(f_\\theta(x)_{[:d]}, f_\\theta(x^+)_{[:d]})"}
+    display={true}
+  />
 </div>
 
-<p>In plain English: the Matryoshka loss sums the standard InfoNCE contrastive loss computed at multiple truncation points simultaneously, forcing every prefix of the embedding to be independently useful.</p>
+<p>
+  Intuition: the Matryoshka loss sums the standard InfoNCE
+  contrastive loss computed at multiple truncation points
+  simultaneously, forcing every prefix of the embedding to
+  be independently useful.
+</p>
 
 <p>
-  where <MathBlock formula={"\\mathcal{D} = \\{32, 64, 128, 256, 512, 768\\}"} /> represents the set of truncation dimensions, and <MathBlock formula={"f_\\theta(x)_{[:d]}"} /> denotes the first d dimensions of the embedding.
+  where <MathBlock
+    formula={"\\mathcal{D} = \\{32, 64, 128, 256, 512, 768\\}"}
+  /> represents the set of truncation dimensions, and <MathBlock
+    formula={"f_\\theta(x)_{[:d]}"}
+  /> denotes the first d dimensions of the embedding.
 </p>
 
 <h3>Why MRL Matters in Practice</h3>
 
 <ul>
-  <li><strong>Adaptive compute-accuracy tradeoff</strong>: Use 64-dim embeddings for coarse filtering, 768-dim for final ranking</li>
-  <li><strong>Reduced storage</strong>: Store 256-dim instead of 768-dim embeddings with minimal quality loss (often &lt;2% on retrieval metrics)</li>
-  <li><strong>Multi-stage retrieval</strong>: Use shorter embeddings for fast initial retrieval, longer ones for precise reranking</li>
-  <li><strong>Adopted widely</strong>: OpenAI's text-embedding-3 models and Nomic Embed support Matryoshka dimensions</li>
+  <li>
+    <strong>Adaptive compute-accuracy tradeoff</strong>: Use
+    64-dim embeddings for coarse filtering, 768-dim for
+    final ranking
+  </li>
+  <li>
+    <strong>Reduced storage</strong>: Store 256-dim instead
+    of 768-dim embeddings with minimal quality loss (often
+    &lt;2% on retrieval metrics)
+  </li>
+  <li>
+    <strong>Multi-stage retrieval</strong>: Use shorter
+    embeddings for fast initial retrieval, longer ones for
+    precise reranking
+  </li>
+  <li>
+    <strong>Adopted widely</strong>: OpenAI's
+    text-embedding-3 models and Nomic Embed support
+    Matryoshka dimensions
+  </li>
 </ul>
 
 <h2>Evaluation: The MTEB Benchmark</h2>
 
 <p>
-  The <strong>Massive Text Embedding Benchmark (MTEB)</strong> provides standardized evaluation across 8 task categories:
+  The <strong
+    >Massive Text Embedding Benchmark (MTEB)</strong
+  > provides standardized evaluation across 8 task categories:
 </p>
 
 <ul>
-  <li><strong>Retrieval</strong>: Finding relevant passages given a query (nDCG@10)</li>
-  <li><strong>Semantic Textual Similarity (STS)</strong>: Scoring sentence pair similarity (Spearman correlation)</li>
-  <li><strong>Clustering</strong>: Grouping similar texts (V-measure)</li>
-  <li><strong>Classification</strong>: Using embeddings as features for text classification</li>
-  <li><strong>Pair Classification</strong>: Determining if two texts are paraphrases, duplicates, etc.</li>
-  <li><strong>Reranking</strong>: Reordering candidate documents for relevance</li>
-  <li><strong>Summarization</strong>: Evaluating summary quality via embedding similarity</li>
-  <li><strong>BitextMining</strong>: Finding parallel sentences across languages</li>
+  <li>
+    <strong>Retrieval</strong>: Finding relevant passages
+    given a query (nDCG@10)
+  </li>
+  <li>
+    <strong>Semantic Textual Similarity (STS)</strong>:
+    Scoring sentence pair similarity (Spearman correlation)
+  </li>
+  <li>
+    <strong>Clustering</strong>: Grouping similar texts
+    (V-measure)
+  </li>
+  <li>
+    <strong>Classification</strong>: Using embeddings as
+    features for text classification
+  </li>
+  <li>
+    <strong>Pair Classification</strong>: Determining if two
+    texts are paraphrases, duplicates, etc.
+  </li>
+  <li>
+    <strong>Reranking</strong>: Reordering candidate
+    documents for relevance
+  </li>
+  <li>
+    <strong>Summarization</strong>: Evaluating summary
+    quality via embedding similarity
+  </li>
+  <li>
+    <strong>BitextMining</strong>: Finding parallel
+    sentences across languages
+  </li>
 </ul>
 
 <p>
-  MTEB leaderboard scores guide model selection, but always evaluate on your specific domain---general benchmarks may not reflect specialized performance.
+  MTEB leaderboard scores guide model selection, but always
+  evaluate on your specific domain---general benchmarks may
+  not reflect specialized performance.
 </p>
 
 <Quiz
@@ -316,37 +664,63 @@ import Quiz from '../../components/Quiz.astro';
       id: "a",
       text: "Larger batches make gradient descent converge faster in general",
       correct: false,
-      explanation: "While larger batches can help with optimization, the specific benefit for contrastive learning is about the quality of negative examples."
+      explanation:
+        "While larger batches can help with optimization, the specific benefit for contrastive learning is about the quality of negative examples.",
     },
     {
       id: "b",
       text: "More in-batch negatives provide a harder discrimination task and better gradient signal",
       correct: true,
-      explanation: "Correct! With B items in a batch, each anchor gets B-1 negatives. More negatives mean a harder classification task (B-way softmax), which produces stronger gradients and better-calibrated similarity scores. This is why CLIP used batch sizes of 32K."
+      explanation:
+        "Correct! With B items in a batch, each anchor gets B-1 negatives. More negatives mean a harder classification task (B-way softmax), which produces stronger gradients and better-calibrated similarity scores. This is why CLIP used batch sizes of 32K.",
     },
     {
       id: "c",
       text: "Large batches reduce the risk of overfitting to specific examples",
       correct: false,
-      explanation: "Overfitting prevention is a general property of batch size, not specific to contrastive learning's need for large batches."
+      explanation:
+        "Overfitting prevention is a general property of batch size, not specific to contrastive learning's need for large batches.",
     },
     {
       id: "d",
       text: "The temperature parameter requires large batches to be effective",
       correct: false,
-      explanation: "Temperature controls the sharpness of the softmax distribution regardless of batch size. Large batches help because they provide more diverse negatives."
-    }
+      explanation:
+        "Temperature controls the sharpness of the softmax distribution regardless of batch size. Large batches help because they provide more diverse negatives.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Embeddings</strong> map data to vector spaces where geometric proximity encodes semantic similarity---the foundation of search, RAG, and recommendations</li>
-    <li><strong>Contrastive learning with InfoNCE loss</strong> trains embeddings by pulling positives together and pushing negatives apart; temperature controls discrimination sharpness</li>
-    <li><strong>Modern embedding models</strong> (E5, BGE, GTE) use multi-stage pipelines: weakly-supervised pre-training on billions of pairs, then fine-tuning with hard negatives</li>
-    <li><strong>CLIP</strong> extends contrastive learning to multimodal (image-text) embeddings, enabling zero-shot visual understanding</li>
-    <li><strong>Matryoshka embeddings</strong> allow truncating vectors to any prefix length, enabling adaptive accuracy-cost tradeoffs in production</li>
-    <li><strong>Evaluate with MTEB</strong> for general benchmarks, but always validate on your specific domain and task</li>
+    <li>
+      <strong>Embeddings</strong> map data to vector spaces where
+      geometric proximity encodes semantic similarity---the foundation
+      of search, RAG, and recommendations
+    </li>
+    <li>
+      <strong>Contrastive learning with InfoNCE loss</strong
+      > trains embeddings by pulling positives together and pushing
+      negatives apart; temperature controls discrimination sharpness
+    </li>
+    <li>
+      <strong>Modern embedding models</strong> (E5, BGE, GTE)
+      use multi-stage pipelines: weakly-supervised pre-training
+      on billions of pairs, then fine-tuning with hard negatives
+    </li>
+    <li>
+      <strong>CLIP</strong> extends contrastive learning to multimodal
+      (image-text) embeddings, enabling zero-shot visual understanding
+    </li>
+    <li>
+      <strong>Matryoshka embeddings</strong> allow truncating
+      vectors to any prefix length, enabling adaptive accuracy-cost
+      tradeoffs in production
+    </li>
+    <li>
+      <strong>Evaluate with MTEB</strong> for general benchmarks,
+      but always validate on your specific domain and task
+    </li>
   </ul>
 </KeyTakeaway>
 
