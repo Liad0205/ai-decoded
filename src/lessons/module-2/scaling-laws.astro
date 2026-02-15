@@ -6,6 +6,7 @@ import MathBlock from "../../components/MathBlock.astro";
 import Quiz from "../../components/Quiz.astro";
 import Diagram from "../../components/Diagram.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
@@ -23,8 +24,9 @@ import RevealSection from "../../components/RevealSection.astro";
     models
   </li>
   <li>
-    Explain Mixture of Experts (MoE) and how it enables
-    efficient scaling
+    Explain Mixture of Experts (<GlossaryTooltip
+      term="MoE"
+    />) and how it enables efficient scaling
   </li>
 </ul>
 
@@ -104,14 +106,16 @@ import RevealSection from "../../components/RevealSection.astro";
 </p>
 
 <p>
-  <strong>Impact</strong>: GPT-3 (175B params, 300B tokens)
+  <strong>Impact</strong>: <GlossaryTooltip term="GPT" />-3 (175B params, 300B tokens)
   was overparameterized and undertrained. Chinchilla (70B
   params, 1.4T tokens) outperformed it despite being
   smaller, because it was compute-optimal.
 </p>
 
 <p>
-  Modern LLMs (LLaMA 3, Mistral, GPT-4) follow Chinchilla
+  Modern <GlossaryTooltip term="LLM" />s (LLaMA 3, Mistral, <GlossaryTooltip
+    term="GPT"
+  />-4) follow Chinchilla
   guidance: more data, not just more parameters.
 </p>
 
@@ -161,7 +165,7 @@ import RevealSection from "../../components/RevealSection.astro";
 <h3>The Original Claim (Wei et al., 2022)</h3>
 
 <p>
-  GPT-3 exhibited few-shot learning: given a few examples in
+  <GlossaryTooltip term="GPT" />-3 exhibited few-shot learning: given a few examples in
   the prompt, it could generalize to new instances. This
   behavior was not seen in smaller models, suggesting
   qualitative phase transitions with scale.
@@ -219,16 +223,16 @@ import RevealSection from "../../components/RevealSection.astro";
 </ul>
 
 <h2>
-  Mixture of Experts (MoE): Scaling Without Proportional
+  Mixture of Experts (<GlossaryTooltip term="MoE" />): Scaling Without Proportional
   Compute
 </h2>
 
 <p>
   Standard scaling hits a wall: a 1T parameter dense model
-  costs 1T FLOPs per token. MoE offers a solution.
+  costs 1T FLOPs per token. <GlossaryTooltip term="MoE" /> offers a solution.
 </p>
 
-<h3>How MoE Works</h3>
+<h3>How <GlossaryTooltip term="MoE" /> Works</h3>
 
 <p>
   Replace dense feed-forward networks with <em>sparse</em> expert
@@ -288,12 +292,13 @@ import RevealSection from "../../components/RevealSection.astro";
     devices adds latency.
   </li>
   <li>
-    <strong>Training instability</strong>: MoE models are
-    harder to train, requiring careful tuning.
+    <strong>Training instability</strong>: <GlossaryTooltip
+      term="MoE"
+    /> models are harder to train, requiring careful tuning.
   </li>
 </ul>
 
-<h3>Key MoE Models</h3>
+<h3>Key <GlossaryTooltip term="MoE" /> Models</h3>
 <ul>
   <li>
     <strong>Switch Transformer</strong> (Google, 2021): 1.6T params,
@@ -301,7 +306,7 @@ import RevealSection from "../../components/RevealSection.astro";
   </li>
   <li>
     <strong>GLaM</strong> (Google, 2021): 1.2T params, outperforms
-    GPT-3 with 1/3 the compute
+    <GlossaryTooltip term="GPT" />-3 with 1/3 the compute
   </li>
   <li>
     <strong>Mixtral 8x7B</strong> (Mistral, 2023): Open-weight
@@ -473,10 +478,10 @@ import RevealSection from "../../components/RevealSection.astro";
 >
   <div data-reveal-step>
     <p class="font-semibold text-slate-800">
-      Step 1: GPT-3's actual allocation
+      Step 1: <GlossaryTooltip term="GPT" />-3's actual allocation
     </p>
     <p class="text-slate-600">
-      GPT-3 has 175B parameters and was trained on ~300B
+      <GlossaryTooltip term="GPT" />-3 has 175B parameters and was trained on ~300B
       tokens. That's a ratio of roughly 1.7 tokens per
       parameter.
     </p>
@@ -497,9 +502,9 @@ import RevealSection from "../../components/RevealSection.astro";
       Step 3: The verdict
     </p>
     <p class="text-slate-600">
-      GPT-3 was significantly undertrained: it saw roughly
+      <GlossaryTooltip term="GPT" />-3 was significantly undertrained: it saw roughly
       10x fewer tokens than optimal. The Chinchilla model
-      (70B params, 1.4T tokens) matched GPT-3's performance
+      (70B params, 1.4T tokens) matched <GlossaryTooltip term="GPT" />-3's performance
       with less than half the parameters by training on more
       data.
     </p>
@@ -509,7 +514,7 @@ import RevealSection from "../../components/RevealSection.astro";
       Step 4: Impact on the field
     </p>
     <p class="text-slate-600">
-      This insight reshaped LLM training: LLaMA (65B, 1.4T
+      This insight reshaped <GlossaryTooltip term="LLM" /> training: LLaMA (65B, 1.4T
       tokens) and subsequent models adopted
       Chinchilla-optimal ratios, achieving better
       performance per parameter.
@@ -534,9 +539,10 @@ import RevealSection from "../../components/RevealSection.astro";
       minimum scale required for some capabilities
     </li>
     <li>
-      <strong>MoE (Mixture of Experts)</strong> enables scaling
-      to massive parameter counts while keeping per-token compute
-      low
+      <strong><GlossaryTooltip
+        term="MoE"
+      /> (Mixture of Experts)</strong> enables scaling to massive
+      parameter counts while keeping per-token compute low
     </li>
     <li>
       <strong>The future</strong>: data quality and

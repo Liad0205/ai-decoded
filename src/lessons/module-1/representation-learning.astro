@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -41,11 +42,12 @@ import Quiz from "../../components/Quiz.astro";
 
   <h3>The Limitation of Manual Features</h3>
   <p>
-    Traditional ML required domain experts to design
-    features. For images, this meant SIFT (Scale-Invariant
-    Feature Transform), HOG (Histogram of Oriented
-    Gradients), or color histograms. For text, bag-of-words
-    or TF-IDF vectors. For audio, MFCCs.
+    Traditional <GlossaryTooltip term="ML" /> required domain experts to design
+    features. For images, this meant <GlossaryTooltip
+      term="SIFT"
+    /> (Scale-Invariant Feature Transform), HOG (Histogram
+    of Oriented Gradients), or color histograms. For text,
+    bag-of-words or TF-IDF vectors. For audio, MFCCs.
   </p>
 
   <p>
@@ -105,7 +107,7 @@ import Quiz from "../../components/Quiz.astro";
   <h2>Word Embeddings: Capturing Semantic Similarity</h2>
 
   <p>
-    In NLP, words were historically represented as one-hot
+    In <GlossaryTooltip term="NLP" />, words were historically represented as one-hot
     vectors: a vocabulary of 50,000 words yields
     50,000-dimensional vectors, each with a single 1 and
     zeros elsewhere. This encoding has no notion of
@@ -246,10 +248,10 @@ import Quiz from "../../components/Quiz.astro";
     The same word gets different embeddings in different sentences.
   </p>
 
-  <h3>ELMo: Bidirectional LSTMs</h3>
+  <h3>ELMo: Bidirectional <GlossaryTooltip term="LSTM" />s</h3>
   <p>
     ELMo (Embeddings from Language Models, 2018) uses
-    bidirectional LSTMs trained on language modeling. For a
+    bidirectional <GlossaryTooltip term="LSTM" />s trained on language modeling. For a
     sentence, ELMo computes representations at multiple
     layers and combines them.
   </p>
@@ -258,36 +260,43 @@ import Quiz from "../../components/Quiz.astro";
     Unlike Word2Vec, ELMo embeddings depend on the entire
     sentence, capturing nuanced meaning. Replacing static
     embeddings with ELMo immediately improved performance
-    across NLP tasks, a clear signal that representation
+    across <GlossaryTooltip term="NLP" /> tasks, a clear signal that representation
     quality matters more than model architecture for many
     problems.
   </p>
 
-  <h3>BERT and the Transformer Revolution</h3>
+  <h3><GlossaryTooltip term="BERT" /> and the Transformer Revolution</h3>
   <p>
-    <strong>BERT</strong> (2018) uses transformers (not LSTMs)
-    and bidirectional context via masked language modeling: randomly
-    mask 15% of tokens and predict them from surrounding context.
+    <strong><GlossaryTooltip term="BERT" /></strong> (2018) uses transformers (not <GlossaryTooltip
+      term="LSTM"
+    />s) and bidirectional context via masked language modeling:
+    randomly mask 15% of tokens and predict them from surrounding
+    context.
   </p>
 
   <p>
-    BERT's contextualized embeddings are even richer than
+    <GlossaryTooltip term="BERT" />'s contextualized embeddings are even richer than
     ELMo's, and the transformer architecture scales better.
-    BERT representations became the new foundation for NLP,
-    analogous to ImageNet-pretrained CNNs in vision.
+    <GlossaryTooltip term="BERT" /> representations became the new foundation for <GlossaryTooltip
+      term="NLP"
+    />, analogous to ImageNet-pretrained <GlossaryTooltip
+      term="CNN"
+    />s in vision.
   </p>
 
-  <h3>GPT: Unidirectional but Scalable</h3>
+  <h3><GlossaryTooltip term="GPT" />: Unidirectional but Scalable</h3>
   <p>
-    GPT (Generative Pretrained Transformer) uses
+    <GlossaryTooltip term="GPT" /> (Generative Pretrained Transformer) uses
     unidirectional (left-to-right) language modeling instead
     of masked prediction. While this limits bidirectional
     context, it enables autoregressive generation and scales
-    to much larger models (GPT-3: 175B parameters).
+    to much larger models (<GlossaryTooltip
+      term="GPT"
+    />-3: 175B parameters).
   </p>
 
   <p>
-    GPT's representations prove highly effective when
+    <GlossaryTooltip term="GPT" />'s representations prove highly effective when
     fine-tuned or few-shot prompted, demonstrating that
     scale can compensate for training objective differences.
   </p>
@@ -537,8 +546,11 @@ import Quiz from "../../components/Quiz.astro";
   </p>
 
   <p>
-    Surprisingly, modern foundation models (CLIP for vision,
-    GPT for language) often achieve near-SOTA performance
+    Surprisingly, modern foundation models (<GlossaryTooltip
+      term="CLIP"
+    /> for vision, <GlossaryTooltip
+      term="GPT"
+    /> for language) often achieve near-SOTA performance
     with linear probing alone. This suggests:
   </p>
   <ul>
@@ -576,7 +588,7 @@ import Quiz from "../../components/Quiz.astro";
   <p>
     <strong>Transfer learning</strong>, pretraining on a
     large dataset then fine-tuning on a target task, is the
-    dominant paradigm in modern ML. But why does it work?
+    dominant paradigm in modern <GlossaryTooltip term="ML" />. But why does it work?
   </p>
 
   <h3>Initialization Matters</h3>
@@ -624,7 +636,7 @@ import Quiz from "../../components/Quiz.astro";
   <p>
     Quantitatively, transfer learning can reduce the sample
     complexity of a task by 10-100×. This has democratized
-    ML: many problems that previously required massive
+    <GlossaryTooltip term="ML" />: many problems that previously required massive
     labeled datasets can now be solved with thousands, or
     even hundreds, of examples via fine-tuning.
   </p>
@@ -678,9 +690,11 @@ import Quiz from "../../components/Quiz.astro";
       ignoring context
     </li>
     <li>
-      <strong>Contextual embeddings</strong> (ELMo, BERT, GPT)
-      compute word representations dynamically based on surrounding
-      text, capturing polysemy and nuance
+      <strong>Contextual embeddings</strong> (ELMo, <GlossaryTooltip
+        term="BERT"
+      />, <GlossaryTooltip term="GPT" />) compute word representations
+      dynamically based on surrounding text, capturing polysemy
+      and nuance
     </li>
     <li>
       <strong>Representation quality</strong> is often more important

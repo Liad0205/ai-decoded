@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -19,16 +20,18 @@ import Quiz from "../../components/Quiz.astro";
       to EfficientNet
     </li>
     <li>
-      Explain how Vision Transformers (ViT) adapt the
-      transformer architecture for images
+      Explain how Vision Transformers (<GlossaryTooltip
+        term="ViT"
+      />) adapt the transformer architecture for images
     </li>
     <li>
       Compare CNN and ViT tradeoffs in terms of data
       efficiency, inductive biases, and compute
     </li>
     <li>
-      Survey modern object detection (YOLO, DETR) and
-      segmentation (SAM) architectures
+      Survey modern object detection (YOLO, <GlossaryTooltip
+        term="DETR"
+      />) and segmentation (SAM) architectures
     </li>
   </ul>
 </section>
@@ -37,11 +40,12 @@ import Quiz from "../../components/Quiz.astro";
   <h2>CNN Fundamentals Refresher</h2>
 
   <p>
-    Convolutional Neural Networks (CNNs) have been the
-    dominant architecture for computer vision since
-    AlexNet's breakthrough in 2012. Before exploring modern
-    architectures, let's revisit the core operations that
-    make CNNs work.
+    Convolutional Neural Networks (<GlossaryTooltip
+      term="CNN"
+    />s) have been the dominant architecture for computer
+    vision since AlexNet's breakthrough in 2012. Before
+    exploring modern architectures, let's revisit the core
+    operations that make CNNs work.
   </p>
 
   <h3>The Convolution Operation</h3>
@@ -189,7 +193,7 @@ import Quiz from "../../components/Quiz.astro";
   <h3>VGGNet (2014): The Power of Depth</h3>
 
   <p>
-    VGG demonstrated that <strong
+    <GlossaryTooltip term="VGG" /> demonstrated that <strong
       >using small (3x3) filters consistently with greater
       depth</strong
     > outperforms larger filters. Two stacked 3x3 convolutions
@@ -215,7 +219,10 @@ import Quiz from "../../components/Quiz.astro";
     </li>
   </ul>
 
-  <h3>ResNet (2015): Skip Connections and Extreme Depth</h3>
+  <h3>
+    <GlossaryTooltip term="ResNet" /> (2015): Skip Connections
+    and Extreme Depth
+  </h3>
 
   <p>
     He et al. discovered that simply stacking more layers <em
@@ -248,10 +255,12 @@ import Quiz from "../../components/Quiz.astro";
     This is profound: if the optimal transformation is close
     to identity, the network only needs to learn a small
     perturbation. Gradients flow directly through the skip
-    connection, preventing vanishing gradients. ResNet
-    enabled training of networks with 50, 101, and even 152
-    layers, winning ILSVRC 2015 with 3.57% top-5 error,
-    surpassing human-level performance (5.1%).
+    connection, preventing vanishing gradients. <GlossaryTooltip
+      term="ResNet"
+    />
+    enabled training of networks with 50, 101, and even 152 layers,
+    winning ILSVRC 2015 with 3.57% top-5 error, surpassing human-level
+    performance (5.1%).
   </p>
 
   <PaperReference
@@ -485,7 +494,9 @@ import Quiz from "../../components/Quiz.astro";
       >can we apply the transformer architecture directly to
       images, without any convolutions?</em
     > The answer was yes, and the result (the <strong
-      >Vision Transformer (ViT)</strong
+      >Vision Transformer (<GlossaryTooltip
+        term="ViT"
+      />)</strong
     >) launched a paradigm shift in computer vision.
   </p>
 
@@ -550,8 +561,9 @@ import Quiz from "../../components/Quiz.astro";
   <h3>The [CLS] Token and Classification</h3>
 
   <p>
-    Following BERT, ViT prepends a special learnable <strong
-      >[CLS] token</strong
+    Following <GlossaryTooltip term="BERT" />, ViT prepends
+    a special learnable <strong
+      >[<GlossaryTooltip term="CLS" />] token</strong
     > to the sequence. After processing through L transformer
     layers, the final representation of the [CLS] token serves
     as the global image representation for classification:
@@ -954,8 +966,9 @@ import Quiz from "../../components/Quiz.astro";
     instead of BatchNorm, fewer activation functions, GELU
     activation, and inverted bottleneck blocks. The result
     (ConvNeXt) achieved ViT-level accuracy while remaining a
-    pure CNN. This demonstrated that the gap between CNNs
-    and ViTs was partly due to training and architecture
+    pure CNN. This demonstrated that the gap between <GlossaryTooltip
+      term="CNN"
+    />s and ViTs was partly due to training and architecture
     details, not a fundamental advantage of self-attention.
   </p>
 

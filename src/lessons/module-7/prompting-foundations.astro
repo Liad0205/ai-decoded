@@ -5,13 +5,14 @@ import PaperReference from '../../components/PaperReference.astro';
 import Diagram from '../../components/Diagram.astro';
 import Quiz from '../../components/Quiz.astro';
 import MathBlock from '../../components/MathBlock.astro';
+import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <p>After completing this lesson, you will be able to:</p>
   <ul>
-    <li>Explain how LLMs process and respond to prompts at the token level</li>
+    <li>Explain how <GlossaryTooltip term="LLM" />s process and respond to prompts at the token level</li>
     <li>Distinguish between zero-shot, one-shot, and few-shot prompting and select the right approach</li>
     <li>Understand the mechanics of temperature, top-p, and top-k sampling and their effects on output</li>
     <li>Apply structured prompting techniques like role assignment and format specification</li>
@@ -20,15 +21,15 @@ import MathBlock from '../../components/MathBlock.astro';
 </section>
 
 <section>
-  <h2>How LLMs Process Prompts</h2>
+  <h2>How <GlossaryTooltip term="LLM" />s Process Prompts</h2>
 
   <p>
-    To write effective prompts, you need a mental model of what happens inside the LLM when it processes your input. Prompt engineering is not magic -- it is applied understanding of autoregressive language modeling.
+    To write effective prompts, you need a mental model of what happens inside the <GlossaryTooltip term="LLM" /> when it processes your input. Prompt engineering is not magic -- it is applied understanding of autoregressive language modeling.
   </p>
 
   <h3>The Autoregressive Generation Loop</h3>
   <p>
-    An LLM generates text one token at a time. At each step, it takes the <em>entire</em> preceding context (your prompt plus any tokens already generated) and produces a probability distribution over the vocabulary for the next token. This means:
+    An <GlossaryTooltip term="LLM" /> generates text one token at a time. At each step, it takes the <em>entire</em> preceding context (your prompt plus any tokens already generated) and produces a probability distribution over the vocabulary for the next token. This means:
   </p>
 
   <ul>
@@ -39,7 +40,7 @@ import MathBlock from '../../components/MathBlock.astro';
 
   <h3>Tokenization: The Hidden Layer</h3>
   <p>
-    Before the model sees your text, it is converted to tokens via a tokenizer (typically BPE -- Byte Pair Encoding). This has practical consequences:
+    Before the model sees your text, it is converted to tokens via a tokenizer (typically <GlossaryTooltip term="BPE" /> -- Byte Pair Encoding). This has practical consequences:
   </p>
 
   <ul>
@@ -62,7 +63,7 @@ import MathBlock from '../../components/MathBlock.astro';
   <ul>
     <li><strong>Primacy and recency effects</strong>: Information at the very beginning and very end of the context tends to receive more attention. Critical instructions placed in the middle of a long prompt may be "lost" -- a phenomenon documented as the "lost in the middle" effect.</li>
     <li><strong>Explicit structure helps</strong>: Headers, numbered lists, and clear delimiters help the model's attention focus on relevant sections.</li>
-    <li><strong>Context window capacity</strong>: Modern models support context windows from 128K to 1M+ tokens (e.g., GPT-4 Turbo at 128K, Claude 3.5 at 200K, Gemini 1.5 Pro at 1M), though very long contexts increase cost and can degrade performance on information retrieval ("lost in the middle" becomes more pronounced).</li>
+    <li><strong>Context window capacity</strong>: Modern models support context windows from 128K to 1M+ tokens (e.g., <GlossaryTooltip term="GPT" />-4 Turbo at 128K, Claude 3.5 at 200K, Gemini 1.5 Pro at 1M), though very long contexts increase cost and can degrade performance on information retrieval ("lost in the middle" becomes more pronounced).</li>
   </ul>
 </section>
 
@@ -136,7 +137,7 @@ import MathBlock from '../../components/MathBlock.astro';
   <h2>Zero-Shot, One-Shot, and Few-Shot Prompting</h2>
 
   <p>
-    The number of examples you provide in a prompt fundamentally changes how the model approaches the task. This framework was formalized in the GPT-3 paper and remains central to prompt engineering.
+    The number of examples you provide in a prompt fundamentally changes how the model approaches the task. This framework was formalized in the <GlossaryTooltip term="GPT" />-3 paper and remains central to prompt engineering.
   </p>
 
   <h3>Zero-Shot Prompting</h3>
@@ -228,6 +229,7 @@ Sentiment:</code></pre>
 
   <p>
     After the model computes a probability distribution over the next token, <strong>sampling parameters</strong> determine how that distribution is used to select the actual output token. Understanding these parameters is critical for getting consistent, high-quality outputs.
+
   </p>
 
   <h3>Temperature</h3>
@@ -430,7 +432,7 @@ Provide your summary:</code></pre>
 
   <h3>The Sycophancy Trap</h3>
   <p>
-    Models fine-tuned with RLHF tend toward agreeableness. If your prompt implies an answer, the model is likely to confirm it rather than challenge it. Compare:
+    Models fine-tuned with <GlossaryTooltip term="RLHF" /> tend toward agreeableness. If your prompt implies an answer, the model is likely to confirm it rather than challenge it. Compare:
   </p>
   <ul>
     <li><strong>Leading</strong>: "This approach using microservices is better than a monolith, right?"</li>
@@ -450,7 +452,7 @@ Provide your summary:</code></pre>
 
 <KeyTakeaway>
   <ul>
-    <li><strong>LLMs generate tokens autoregressively</strong> -- each token is conditioned on the entire preceding context, with no backtracking. This means prompt structure and order directly affect output quality.</li>
+    <li><strong><GlossaryTooltip term="LLM" />s generate tokens autoregressively</strong> -- each token is conditioned on the entire preceding context, with no backtracking. This means prompt structure and order directly affect output quality.</li>
     <li><strong>Few-shot prompting</strong> enables in-context learning: providing examples teaches the model your desired pattern without any weight updates. Balance examples across classes and keep formatting consistent.</li>
     <li><strong>Temperature controls randomness</strong>: low values (0-0.3) for factual/structured tasks, higher values (0.7-1.0) for creative tasks. Top-p adaptively limits the sampling vocabulary.</li>
     <li><strong>Structure your prompts</strong> with roles, delimiters, format specifications, and explicit constraints. The model cannot read your mind -- clarity in the prompt produces clarity in the output.</li>

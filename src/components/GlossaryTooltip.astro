@@ -1,0 +1,29 @@
+---
+import { glossary } from "../data/glossary";
+
+interface Props {
+  term: string;
+}
+
+const { term } = Astro.props;
+const definition = glossary[term];
+
+// Fallback if term not found in glossary, though ideally we should check existence.
+if (!definition) {
+  console.warn(`Glossary term "${term}" not found.`);
+}
+---
+
+<span
+  class="group relative inline-block cursor-help text-[hsl(var(--primary))] font-medium transition-colors hover:bg-[hsl(var(--primary)/0.1)] rounded px-0.5"
+>
+  {term}
+  <span
+    class="pointer-events-none absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 translate-y-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-3 text-sm text-[hsl(var(--popover-foreground))] opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 z-50 text-center font-normal"
+  >
+    {definition || "Definition not found."}
+    <span
+      class="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-b border-r border-[hsl(var(--border))] bg-[hsl(var(--popover))]"
+    ></span>
+  </span>
+</span>

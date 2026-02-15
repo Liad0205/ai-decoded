@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -15,7 +16,9 @@ import Quiz from "../../components/Quiz.astro";
       attacks (white-box vs. black-box)
     </li>
     <li>
-      Derive FGSM, PGD, and C&W attacks from their
+      Derive <GlossaryTooltip term="FGSM" />, <GlossaryTooltip
+        term="PGD"
+      />, and <GlossaryTooltip term="C&W" /> attacks from their
       optimization objectives
     </li>
     <li>
@@ -148,9 +151,9 @@ import Quiz from "../../components/Quiz.astro";
   <h2>FGSM: Fast Gradient Sign Method</h2>
 
   <p>
-    <strong>FGSM</strong> (Goodfellow et al., 2014) is the simplest
-    and most influential adversarial attack. It generates perturbations
-    in a single gradient step.
+    <strong><GlossaryTooltip term="FGSM" /></strong> (Goodfellow
+    et al., 2014) is the simplest and most influential adversarial
+    attack. It generates perturbations in a single gradient step.
   </p>
 
   <h3>Derivation</h3>
@@ -178,13 +181,12 @@ import Quiz from "../../components/Quiz.astro";
   </p>
 
   <p>
-    FGSM exploits a key insight: neural networks are locally
-    linear. Near any input, the loss function can be
-    approximated by a first-order Taylor expansion. The
-    adversary then takes a single step in the direction that
-    maximizes this linear approximation of the loss.
-    Extending this to neural networks via a linear
-    approximation of the loss around x:
+    <GlossaryTooltip term="FGSM" /> exploits a key insight: neural
+    networks are locally linear. Near any input, the loss function
+    can be approximated by a first-order Taylor expansion. The
+    adversary then takes a single step in the direction that maximizes
+    this linear approximation of the loss. Extending this to neural
+    networks via a linear approximation of the loss around x:
   </p>
 
   <MathBlock
@@ -210,7 +212,9 @@ import Quiz from "../../components/Quiz.astro";
     display={true}
   />
 
-  <p>The full FGSM adversarial example:</p>
+  <p>
+    The full <GlossaryTooltip term="FGSM" /> adversarial example:
+  </p>
 
   <MathBlock
     formula={"x' = x + \\epsilon \\cdot \\text{sign}(\\nabla_x \\mathcal{L}(f(x), y))"}
@@ -225,7 +229,7 @@ import Quiz from "../../components/Quiz.astro";
     maximizing the effect under the L-infinity constraint.
   </p>
 
-  <h3>Why FGSM Matters</h3>
+  <h3>Why <GlossaryTooltip term="FGSM" /> Matters</h3>
   <ul>
     <li>
       <strong>Single gradient step</strong>: Extremely fast
@@ -263,18 +267,20 @@ import Quiz from "../../components/Quiz.astro";
   <h2>PGD: Projected Gradient Descent</h2>
 
   <p>
-    <strong>PGD</strong> (Madry et al., 2017) is the iterative,
-    multi-step extension of FGSM and is considered the strongest
-    first-order adversarial attack. It serves as the standard
-    benchmark for evaluating adversarial robustness.
+    <strong><GlossaryTooltip term="PGD" /></strong> (Madry et
+    al., 2017) is the iterative, multi-step extension of <GlossaryTooltip
+      term="FGSM"
+    /> and is considered the strongest first-order adversarial
+    attack. It serves as the standard benchmark for evaluating
+    adversarial robustness.
   </p>
 
   <h3>Algorithm</h3>
   <p>
-    PGD performs iterative FGSM with a projection step to
-    keep the perturbation within the allowed <MathBlock
-      formula={"\\epsilon"}
-    />-ball:
+    <GlossaryTooltip term="PGD" /> performs iterative <GlossaryTooltip
+      term="FGSM"
+    /> with a projection step to keep the perturbation within
+    the allowed <MathBlock formula={"\\epsilon"} />-ball:
   </p>
 
   <MathBlock
@@ -301,31 +307,33 @@ import Quiz from "../../components/Quiz.astro";
   />
 
   <p>
-    Intuition: PGD is iterated FGSM -- take a small
-    adversarial step, project back into the allowed
-    perturbation ball, and repeat. It is the strongest
-    first-order attack and the standard benchmark for
-    adversarial robustness.
+    Intuition: <GlossaryTooltip term="PGD" /> is iterated <GlossaryTooltip
+      term="FGSM"
+    /> -- take a small adversarial step, project back into the
+    allowed perturbation ball, and repeat. It is the strongest
+    first-order attack and the standard benchmark for adversarial
+    robustness.
   </p>
 
   <h3>Random Restart</h3>
   <p>
-    A critical detail: PGD is initialized from a <strong
-      >random point</strong
-    > within the <MathBlock formula={"\\epsilon"} />-ball,
-    not from x itself. This helps escape local minima and
-    makes the attack stronger. Multiple random restarts
-    further improve attack success.
+    A critical detail: <GlossaryTooltip term="PGD" /> is initialized
+    from a <strong>random point</strong> within the <MathBlock
+      formula={"\\epsilon"}
+    />-ball, not from x itself. This helps escape local
+    minima and makes the attack stronger. Multiple random
+    restarts further improve attack success.
   </p>
 
-  <h3>PGD as a Benchmark</h3>
+  <h3><GlossaryTooltip term="PGD" /> as a Benchmark</h3>
   <p>
-    Madry et al. argued that PGD is the "universal
-    first-order attack": any defense that is robust to PGD
-    should be robust to all first-order (gradient-based)
-    attacks. This claim is empirical, not formally proven,
-    but it has held up in practice: PGD remains the standard
-    adversarial attack for robustness evaluation.
+    Madry et al. argued that <GlossaryTooltip term="PGD" /> is
+    the "universal first-order attack": any defense that is robust
+    to <GlossaryTooltip term="PGD" />
+    should be robust to all first-order (gradient-based) attacks.
+    This claim is empirical, not formally proven, but it has held
+    up in practice: <GlossaryTooltip term="PGD" /> remains the
+    standard adversarial attack for robustness evaluation.
   </p>
 </section>
 
@@ -508,8 +516,9 @@ import Quiz from "../../components/Quiz.astro";
   <h2>C&W Attack: Optimization-Based Precision</h2>
 
   <p>
-    The <strong>Carlini & Wagner (C&W) attack</strong> (2016)
-    formulates adversarial example generation as a constrained
+    The <strong
+      ><GlossaryTooltip term="C&W" /> attack</strong
+    > (2016) formulates adversarial example generation as a constrained
     optimization problem, finding the <em>minimum</em> perturbation
     needed to cause misclassification. It is slower than PGD but
     produces smaller, more targeted perturbations.
@@ -519,8 +528,8 @@ import Quiz from "../../components/Quiz.astro";
   <p>
     Instead of maximizing loss within a fixed <MathBlock
       formula={"\\epsilon"}
-    />-ball, C&W minimizes perturbation size subject to
-    successful misclassification:
+    />-ball, <GlossaryTooltip term="C&W" /> minimizes perturbation
+    size subject to successful misclassification:
   </p>
 
   <MathBlock
@@ -566,14 +575,15 @@ import Quiz from "../../components/Quiz.astro";
     projection.
   </p>
 
-  <h3>Why C&W is Important</h3>
+  <h3>Why <GlossaryTooltip term="C&W" /> is Important</h3>
   <ul>
     <li>
-      <strong>Broke many defenses</strong>: C&W demonstrated
-      that numerous proposed defenses (defensive
-      distillation, input transformations, detection
-      methods) were ineffective, fundamentally changing the
-      field's approach to evaluation
+      <strong>Broke many defenses</strong>: <GlossaryTooltip
+        term="C&W"
+      /> demonstrated that numerous proposed defenses (defensive
+      distillation, input transformations, detection methods)
+      were ineffective, fundamentally changing the field's approach
+      to evaluation
     </li>
     <li>
       <strong>Minimum-norm perturbations</strong>: Finds the
@@ -582,8 +592,8 @@ import Quiz from "../../components/Quiz.astro";
     </li>
     <li>
       <strong>Robust evaluation standard</strong>: Any
-      defense that withstands C&W is considered
-      significantly more credible
+      defense that withstands <GlossaryTooltip term="C&W" /> is
+      considered significantly more credible
     </li>
   </ul>
 </section>
@@ -765,19 +775,21 @@ import Quiz from "../../components/Quiz.astro";
       perturbations cause confident misclassification
     </li>
     <li>
-      <strong>FGSM</strong> generates adversarial examples in
-      one gradient step using the sign of the loss gradient, motivated
-      by the "linear hypothesis" of adversarial vulnerability
+      <strong><GlossaryTooltip term="FGSM" /></strong> generates
+      adversarial examples in one gradient step using the sign
+      of the loss gradient, motivated by the "linear hypothesis"
+      of adversarial vulnerability
     </li>
     <li>
-      <strong>PGD</strong> extends FGSM to multiple steps with
-      projection, serving as the standard benchmark for evaluating
-      adversarial robustness
+      <strong><GlossaryTooltip term="PGD" /></strong> extends
+      <GlossaryTooltip term="FGSM" /> to multiple steps with projection,
+      serving as the standard benchmark for evaluating adversarial
+      robustness
     </li>
     <li>
-      <strong>C&W</strong> finds minimum-norm perturbations through
-      optimization, breaking many proposed defenses and establishing
-      rigorous evaluation standards
+      <strong><GlossaryTooltip term="C&W" /></strong> finds minimum-norm
+      perturbations through optimization, breaking many proposed
+      defenses and establishing rigorous evaluation standards
     </li>
     <li>
       <strong>Transferability</strong> enables practical black-box

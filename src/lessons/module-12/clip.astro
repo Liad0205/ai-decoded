@@ -6,6 +6,7 @@ import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -16,7 +17,7 @@ import RevealSection from "../../components/RevealSection.astro";
       language in a shared embedding space
     </li>
     <li>
-      Explain CLIP's dual-encoder architecture and symmetric
+      Explain <GlossaryTooltip term="CLIP" />'s dual-encoder architecture and symmetric
       contrastive training objective
     </li>
     <li>
@@ -24,11 +25,11 @@ import RevealSection from "../../components/RevealSection.astro";
       language descriptions
     </li>
     <li>
-      Analyze CLIP's strengths, limitations, and remarkable
+      Analyze <GlossaryTooltip term="CLIP" />'s strengths, limitations, and remarkable
       transfer capabilities
     </li>
     <li>
-      Trace the evolution from CLIP to SigLIP and their role
+      Trace the evolution from <GlossaryTooltip term="CLIP" /> to <GlossaryTooltip term="SigLIP" /> and their role
       in modern multimodal systems
     </li>
   </ul>
@@ -59,10 +60,10 @@ import RevealSection from "../../components/RevealSection.astro";
   </p>
 
   <p>
-    <strong>CLIP</strong> (Contrastive Language-Image Pre-training)
+    <strong><GlossaryTooltip term="CLIP" /></strong> (Contrastive Language-Image Pre-training)
     bridges this gap by learning a shared embedding space where
     images and text are directly comparable. Instead of learning
-    "image goes to class index 42," CLIP learns "this image embedding
+    "image goes to class index 42," <GlossaryTooltip term="CLIP" /> learns "this image embedding
     is close to the embedding of 'a photo of a golden retriever'."
     This enables <strong>zero-shot classification</strong>:
     classifying images into categories never seen during
@@ -79,26 +80,26 @@ import RevealSection from "../../components/RevealSection.astro";
 </section>
 
 <section>
-  <h2>CLIP Architecture: The Dual Encoder</h2>
+  <h2><GlossaryTooltip term="CLIP" /> Architecture: The Dual Encoder</h2>
 
   <p>
-    CLIP's architecture is elegant in its simplicity: two
+    <GlossaryTooltip term="CLIP" />'s architecture is elegant in its simplicity: two
     separate encoders that map images and text into the same
     embedding space.
   </p>
 
   <h3>Image Encoder</h3>
 
-  <p>CLIP supports two image encoder architectures:</p>
+  <p><GlossaryTooltip term="CLIP" /> supports two image encoder architectures:</p>
   <ul>
     <li>
-      <strong>ResNet variants</strong>: Modified ResNet-50
-      or ResNet-101 with anti-aliased pooling and attention
+      <strong><GlossaryTooltip term="ResNet" /> variants</strong>: Modified <GlossaryTooltip term="ResNet" />-50
+      or <GlossaryTooltip term="ResNet" />-101 with anti-aliased pooling and attention
       pooling at the end
     </li>
     <li>
-      <strong>Vision Transformer (ViT)</strong>: ViT-B/32,
-      ViT-B/16, or ViT-L/14. The ViT variants generally
+      <strong>Vision Transformer (<GlossaryTooltip term="ViT" />)</strong>: <GlossaryTooltip term="ViT" />-B/32,
+      <GlossaryTooltip term="ViT" />-B/16, or <GlossaryTooltip term="ViT" />-L/14. The <GlossaryTooltip term="ViT" /> variants generally
       perform better.
     </li>
   </ul>
@@ -106,14 +107,14 @@ import RevealSection from "../../components/RevealSection.astro";
   <p>
     The image encoder produces a single feature vector <MathBlock
       formula={"f_{\\text{img}} \\in \\mathbb{R}^D"}
-    /> for each image. For ViT, this is the [CLS] token output;
-    for ResNet, it's the attention-pooled output.
+    /> for each image. For <GlossaryTooltip term="ViT" />, this is the [<GlossaryTooltip term="CLS" />] token output;
+    for <GlossaryTooltip term="ResNet" />, it's the attention-pooled output.
   </p>
 
   <h3>Text Encoder</h3>
 
   <p>
-    A standard transformer (similar to GPT-2 architecture)
+    A standard transformer (similar to <GlossaryTooltip term="GPT" />-2 architecture)
     processes tokenized text and produces a feature vector <MathBlock
       formula={"f_{\\text{text}} \\in \\mathbb{R}^D"}
     />. The representation at the [EOS] (end of sequence)
@@ -393,7 +394,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <h2>Contrastive Pretraining: The InfoNCE Loss</h2>
 
   <p>
-    CLIP is trained on a massive dataset of <strong
+    <GlossaryTooltip term="CLIP" /> is trained on a massive dataset of <strong
       >400 million image-text pairs</strong
     > (the WebImageText / WIT dataset) scraped from the internet.
     The training objective is <strong
@@ -405,7 +406,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     Given a batch of <MathBlock formula="N" /> image-text pairs,
-    CLIP computes all <MathBlock formula={"N^2"} /> pairwise similarities.
+    <GlossaryTooltip term="CLIP" /> computes all <MathBlock formula={"N^2"} /> pairwise similarities.
     The N matched pairs (image_i, text_i) are <strong
       >positives</strong
     >, and the <MathBlock formula={"N^2 - N"} /> mismatched pairs
@@ -442,7 +443,7 @@ import RevealSection from "../../components/RevealSection.astro";
   </p>
 
   <p>
-    CLIP learns to align images and text in a shared
+    <GlossaryTooltip term="CLIP" /> learns to align images and text in a shared
     embedding space by training on image-caption pairs. The
     contrastive objective pushes matching image-text pairs
     together and non-matching pairs apart. Mathematically:
@@ -468,13 +469,13 @@ import RevealSection from "../../components/RevealSection.astro";
     similarity with its correct caption while minimizing
     similarity with all other captions (the image loss), and
     vice versa for each caption (the text loss). The final
-    CLIP loss is the average of both directions.
+    <GlossaryTooltip term="CLIP" /> loss is the average of both directions.
   </p>
 
   <p>
     Each loss term is essentially a softmax cross-entropy
     loss where the "correct class" is the matching pair.
-    With a batch size of 32,768 (as used by CLIP), each
+    With a batch size of 32,768 (as used by <GlossaryTooltip term="CLIP" />), each
     positive pair is contrasted against 32,767 negatives,
     providing an extraordinarily rich training signal.
   </p>
@@ -565,7 +566,7 @@ import RevealSection from "../../components/RevealSection.astro";
         </li>
       </ul>
       <p class="mt-2 text-emerald-700 font-medium">
-        This scalability is why CLIP can train on 400M pairs
+        This scalability is why <GlossaryTooltip term="CLIP" /> can train on 400M pairs
         effectively. The contrastive objective extracts far
         more learning signal per example than
         classification.
@@ -578,7 +579,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <h2>Zero-Shot Classification</h2>
 
   <p>
-    CLIP's most remarkable capability is <strong
+    <GlossaryTooltip term="CLIP" />'s most remarkable capability is <strong
       >zero-shot image classification</strong
     >: classifying images into arbitrary categories without
     any training examples, using only natural language
@@ -613,10 +614,10 @@ import RevealSection from "../../components/RevealSection.astro";
     </li>
   </ol>
 
-  <h3>Prompt Engineering for Zero-Shot CLIP</h3>
+  <h3>Prompt Engineering for Zero-Shot <GlossaryTooltip term="CLIP" /></h3>
 
   <p>
-    The specific text format matters significantly. CLIP was
+    The specific text format matters significantly. <GlossaryTooltip term="CLIP" /> was
     trained on natural image-text pairs from the web, not
     simple class labels. Prompt engineering helps:
   </p>
@@ -645,22 +646,22 @@ import RevealSection from "../../components/RevealSection.astro";
   <h3>Zero-Shot Performance</h3>
 
   <p>
-    CLIP achieves remarkable zero-shot transfer on many
-    benchmarks. On ImageNet, CLIP ViT-L/14 achieves 76.2%
+    <GlossaryTooltip term="CLIP" /> achieves remarkable zero-shot transfer on many
+    benchmarks. On ImageNet, <GlossaryTooltip term="CLIP" /> <GlossaryTooltip term="ViT" />-L/14 achieves 76.2%
     top-1 accuracy <em
       >without seeing any ImageNet training images</em
     >, using carefully engineered prompt templates (e.g., "a
     photo of a &#123;class&#125;") and leveraging 400M
     image-text training pairs. This matches the performance
-    of a fully supervised ResNet-50 trained on ImageNet's
+    of a fully supervised <GlossaryTooltip term="ResNet" />-50 trained on ImageNet's
     1.28M labeled images. On some specialized datasets
-    (e.g., OCR in images, action recognition), CLIP's
+    (e.g., OCR in images, action recognition), <GlossaryTooltip term="CLIP" />'s
     zero-shot performance even exceeds task-specific
     supervised models.
   </p>
 
   <p>
-    However, CLIP struggles on tasks that require
+    However, <GlossaryTooltip term="CLIP" /> struggles on tasks that require
     specialized domain knowledge not well-represented in web
     data: fine-grained classification (distinguishing car
     models), counting objects, understanding spatial
@@ -674,8 +675,8 @@ import RevealSection from "../../components/RevealSection.astro";
   </h2>
 
   <p>
-    While CLIP uses a softmax-based InfoNCE loss, <strong
-      >SigLIP</strong
+    While <GlossaryTooltip term="CLIP" /> uses a softmax-based InfoNCE loss, <strong
+      ><GlossaryTooltip term="SigLIP" /></strong
     > (Sigmoid Loss for Language-Image Pre-training, Zhai et al.
     2023) replaces it with a simpler sigmoid loss that operates
     on individual pairs:
@@ -688,7 +689,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     Intuition: instead of a single softmax over the entire
-    batch, SigLIP applies an independent binary
+    batch, <GlossaryTooltip term="SigLIP" /> applies an independent binary
     classification (sigmoid) to each image-text pair, asking
     "do these match or not?" This eliminates the need for
     global normalization across the batch.
@@ -729,8 +730,8 @@ import RevealSection from "../../components/RevealSection.astro";
   </ul>
 
   <p>
-    SigLIP achieves comparable or better performance than
-    CLIP at the same compute budget, and has become the
+    <GlossaryTooltip term="SigLIP" /> achieves comparable or better performance than
+    <GlossaryTooltip term="CLIP" /> at the same compute budget, and has become the
     preferred vision encoder for many modern multimodal
     models (e.g., PaLI, Gemini).
   </p>
@@ -748,9 +749,9 @@ import RevealSection from "../../components/RevealSection.astro";
   <h2>OpenCLIP and the Open-Source Ecosystem</h2>
 
   <p>
-    OpenAI released the CLIP model weights but not the
+    OpenAI released the <GlossaryTooltip term="CLIP" /> model weights but not the
     training code or data. The <strong>OpenCLIP</strong> project
-    (Ilharco et al.) reproduced CLIP training and open-sourced
+    (Ilharco et al.) reproduced <GlossaryTooltip term="CLIP" /> training and open-sourced
     both the code and trained models. Key contributions:
   </p>
   <ul>
@@ -762,7 +763,7 @@ import RevealSection from "../../components/RevealSection.astro";
     <li>
       <strong>Scaled training</strong>: OpenCLIP trained
       models up to ViT-G/14 (1.8B parameters), exceeding
-      OpenAI's CLIP performance
+      OpenAI's <GlossaryTooltip term="CLIP" /> performance
     </li>
     <li>
       <strong>Reproducibility</strong>: Fully open training
@@ -770,40 +771,40 @@ import RevealSection from "../../components/RevealSection.astro";
       scale
     </li>
     <li>
-      <strong>Model zoo</strong>: Dozens of pretrained CLIP
+      <strong>Model zoo</strong>: Dozens of pretrained <GlossaryTooltip term="CLIP" />
       variants with different architectures, data, and
       training recipes
     </li>
   </ul>
 
-  <h3>CLIP's Role in the Generative AI Ecosystem</h3>
+  <h3><GlossaryTooltip term="CLIP" />'s Role in the Generative AI Ecosystem</h3>
 
   <p>
-    CLIP's influence extends far beyond classification. It
+    <GlossaryTooltip term="CLIP" />'s influence extends far beyond classification. It
     is a foundational component in:
   </p>
   <ul>
     <li>
-      <strong>Stable Diffusion</strong>: The CLIP text
+      <strong>Stable Diffusion</strong>: The <GlossaryTooltip term="CLIP" /> text
       encoder converts text prompts into conditioning
       embeddings that guide image generation
     </li>
     <li>
-      <strong>DALL-E 2</strong>: Uses a CLIP image embedding
+      <strong>DALL-E 2</strong>: Uses a <GlossaryTooltip term="CLIP" /> image embedding
       as an intermediate representation between text and
       generated images
     </li>
     <li>
-      <strong>Image retrieval</strong>: CLIP embeddings
+      <strong>Image retrieval</strong>: <GlossaryTooltip term="CLIP" /> embeddings
       enable natural language search over image databases
     </li>
     <li>
       <strong>Multimodal models</strong>: Many
-      vision-language models use CLIP or SigLIP as their
+      vision-language models use <GlossaryTooltip term="CLIP" /> or <GlossaryTooltip term="SigLIP" /> as their
       vision encoder (LLaVA, GPT-4V, Gemini)
     </li>
     <li>
-      <strong>CLIP-guided optimization</strong>: Using CLIP
+      <strong><GlossaryTooltip term="CLIP" />-guided optimization</strong>: Using <GlossaryTooltip term="CLIP" />
       similarity as a loss function to guide image editing,
       3D generation, and style transfer
     </li>
@@ -849,14 +850,14 @@ import RevealSection from "../../components/RevealSection.astro";
   <h2>Limitations and Failure Modes</h2>
 
   <p>
-    Understanding CLIP's limitations is crucial for using it
+    Understanding <GlossaryTooltip term="CLIP" />'s limitations is crucial for using it
     effectively:
   </p>
 
   <h3>Systematic Weaknesses</h3>
   <ul>
     <li>
-      <strong>Fine-grained discrimination</strong>: CLIP
+      <strong>Fine-grained discrimination</strong>: <GlossaryTooltip term="CLIP" />
       struggles to distinguish between visually similar
       categories (e.g., different bird species, car models)
       without fine-tuning
@@ -864,13 +865,13 @@ import RevealSection from "../../components/RevealSection.astro";
     <li>
       <strong>Counting and spatial reasoning</strong>:
       "Three cats sitting on a table" vs. "Two cats sitting
-      on a table", CLIP often fails to capture numerical and
+      on a table", <GlossaryTooltip term="CLIP" /> often fails to capture numerical and
       spatial details
     </li>
     <li>
       <strong>Compositional understanding</strong>: "A horse
       riding an astronaut" and "An astronaut riding a horse"
-      may get similar embeddings, because CLIP struggles
+      may get similar embeddings, because <GlossaryTooltip term="CLIP" /> struggles
       with relational and compositional structure rather
       than just identifying individual concepts
     </li>
@@ -889,20 +890,20 @@ import RevealSection from "../../components/RevealSection.astro";
     with specific demographics) and cultural biases
     reflecting the predominantly English, Western training
     data. These biases propagate to downstream systems built
-    on CLIP, including generative models.
+    on <GlossaryTooltip term="CLIP" />, including generative models.
   </p>
 </section>
 
 <KeyTakeaway>
   <ul>
     <li>
-      <strong>CLIP</strong> learns a shared embedding space for
+      <strong><GlossaryTooltip term="CLIP" /></strong> learns a shared embedding space for
       images and text using contrastive learning on 400M web-scraped
       image-text pairs
     </li>
     <li>
       <strong>Dual-encoder architecture</strong>: Separate
-      image (ViT or ResNet) and text (Transformer) encoders
+      image (<GlossaryTooltip term="ViT" /> or <GlossaryTooltip term="ResNet" />) and text (Transformer) encoders
       project into a shared space where cosine similarity
       measures semantic alignment
     </li>
@@ -915,16 +916,16 @@ import RevealSection from "../../components/RevealSection.astro";
     <li>
       <strong>Zero-shot classification</strong> works by encoding
       class descriptions as text and comparing image embeddings
-      against them. CLIP matches supervised ResNet-50 on ImageNet
+      against them. <GlossaryTooltip term="CLIP" /> matches supervised <GlossaryTooltip term="ResNet" />-50 on ImageNet
       without any labeled training data.
     </li>
     <li>
-      <strong>SigLIP</strong> replaces softmax with sigmoid loss,
+      <strong><GlossaryTooltip term="SigLIP" /></strong> replaces softmax with sigmoid loss,
       enabling more efficient distributed training and better
       scaling while maintaining performance
     </li>
     <li>
-      <strong>CLIP is foundational</strong>: It provides the
+      <strong><GlossaryTooltip term="CLIP" /> is foundational</strong>: It provides the
       text encoder for Stable Diffusion, the vision encoder
       for many multimodal models, and enables natural
       language image search and retrieval
@@ -949,7 +950,7 @@ import RevealSection from "../../components/RevealSection.astro";
   />
 
   <PaperReference
-    title="Sigmoid Loss for Language Image Pre-Training (SigLIP)"
+    title="Sigmoid Loss for Language Image Pre-Training"
     authors="Zhai et al."
     year="2023"
     url="https://arxiv.org/abs/2303.15343"

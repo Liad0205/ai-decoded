@@ -5,12 +5,15 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import RevealSection from "../../components/RevealSection.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
   <li>
-    Understand major LLM benchmarks: MMLU, HumanEval, GSM8K,
+    Understand major <GlossaryTooltip
+      term="LLM"
+    /> benchmarks: MMLU, HumanEval, GSM8K,
     MATH, HellaSwag, and others
   </li>
   <li>
@@ -18,7 +21,9 @@ import Quiz from "../../components/Quiz.astro";
     strategies to detect it
   </li>
   <li>
-    Evaluate LLM-as-judge approaches and their strengths and
+    Evaluate <GlossaryTooltip
+      term="LLM"
+    />-as-judge approaches and their strengths and
     limitations
   </li>
   <li>
@@ -30,8 +35,10 @@ import Quiz from "../../components/Quiz.astro";
 <h2>Why Evaluation Is Hard</h2>
 
 <p>
-  Evaluating LLMs is fundamentally different from evaluating
-  traditional ML models. There is no single task, no single
+  Evaluating <GlossaryTooltip
+    term="LLM"
+  />s is fundamentally different from evaluating
+  traditional <GlossaryTooltip term="ML" /> models. There is no single task, no single
   metric, and the space of possible inputs is unbounded. A
   model might excel at coding but fail at basic math, or
   perform well on benchmarks but poorly in real
@@ -85,7 +92,9 @@ import Quiz from "../../components/Quiz.astro";
     professional law and medicine.
   </li>
   <li>
-    <strong>Frontier scores</strong>: GPT-4 achieved ~86%,
+    <strong>Frontier scores</strong>: <GlossaryTooltip
+      term="GPT"
+    />-4 achieved ~86%,
     Claude 3 Opus ~86%. Human expert average varies by
     subject but is roughly 89%.
   </li>
@@ -139,7 +148,9 @@ import Quiz from "../../components/Quiz.astro";
     974 crowd-sourced problems as a complementary code benchmark.
   </li>
   <li>
-    <strong>Frontier scores</strong>: GPT-4 achieves ~67%
+    <strong>Frontier scores</strong>: <GlossaryTooltip
+      term="GPT"
+    />-4 achieves ~67%
     pass@1 on HumanEval (zero-shot); code-specialized models
     (Code Llama, DeepSeek Coder) can reach 70%+.
   </li>
@@ -150,7 +161,9 @@ import Quiz from "../../components/Quiz.astro";
 <p>
   8,500 grade-school math word problems requiring multi-step
   arithmetic reasoning. Despite the name, these are
-  non-trivial for LLMs because they require chaining
+  non-trivial for <GlossaryTooltip
+    term="LLM"
+  />s because they require chaining
   multiple reasoning steps.
 </p>
 <ul>
@@ -165,11 +178,17 @@ import Quiz from "../../components/Quiz.astro";
   <li>
     <strong>Key insight</strong>: Performance improves
     substantially with chain-of-thought prompting (e.g.,
-    PaLM 540B jumped from ~56% to ~74% on GSM8K with CoT),
-    demonstrating that explicit reasoning traces help LLMs.
+    PaLM 540B jumped from ~56% to ~74% on GSM8K with <GlossaryTooltip
+      term="CoT"
+    />),
+    demonstrating that explicit reasoning traces help <GlossaryTooltip
+      term="LLM"
+    />s.
   </li>
   <li>
-    <strong>Frontier scores</strong>: GPT-4 ~92%, Claude 3
+    <strong>Frontier scores</strong>: <GlossaryTooltip
+      term="GPT"
+    />-4 ~92%, Claude 3
     Opus ~95%. Many models now approach saturation on this
     benchmark.
   </li>
@@ -192,7 +211,9 @@ import Quiz from "../../components/Quiz.astro";
     answer (often a numerical value or expression).
   </li>
   <li>
-    <strong>Frontier scores</strong>: GPT-4 ~42%, Claude 3
+    <strong>Frontier scores</strong>: <GlossaryTooltip
+      term="GPT"
+    />-4 ~42%, Claude 3
     Opus ~60%. This benchmark is far from saturated and
     reveals significant gaps in mathematical reasoning.
   </li>
@@ -242,7 +263,9 @@ import Quiz from "../../components/Quiz.astro";
   <ul>
     <li>
       <strong>MT-Bench</strong>: 80 multi-turn questions
-      across 8 categories, scored by GPT-4 as judge on a
+      across 8 categories, scored by <GlossaryTooltip
+        term="GPT"
+      />-4 as judge on a
       1-10 scale.
     </li>
     <li>
@@ -321,7 +344,9 @@ import Quiz from "../../components/Quiz.astro";
     <div data-reveal-step>
       <h4>Conversational Quality</h4>
       <p>
-        <strong>MT-Bench</strong> (LLM-judged multi-turn), <strong
+        <strong>MT-Bench</strong> (<GlossaryTooltip
+          term="LLM"
+        />-judged multi-turn), <strong
           >Chatbot Arena</strong
         > (human ELO ratings). Test real-world usefulness in interactive
         settings. Chatbot Arena is widely seen as the gold standard.
@@ -333,7 +358,9 @@ import Quiz from "../../components/Quiz.astro";
 
   <p>
     <strong>Contamination</strong> occurs when benchmark test
-    data appears in the model's pretraining corpus. Since LLMs
+    data appears in the model's pretraining corpus. Since <GlossaryTooltip
+      term="LLM"
+    />s
     train on massive web crawls, benchmark questions (and their
     answers) may have been seen during training. A model that
     memorized benchmark answers would score well without genuinely
@@ -366,7 +393,9 @@ import Quiz from "../../components/Quiz.astro";
     <li>
       <strong>N-gram overlap</strong>: Check for exact or
       near-exact matches between benchmark questions and
-      training data. GPT-4's technical report includes
+      training data. <GlossaryTooltip
+        term="GPT"
+      />-4's technical report includes
       n-gram contamination analysis for major benchmarks.
     </li>
     <li>
@@ -410,19 +439,25 @@ import Quiz from "../../components/Quiz.astro";
     </li>
   </ul>
 
-  <h2>LLM-as-Judge</h2>
+  <h2><GlossaryTooltip term="LLM" />-as-Judge</h2>
 
   <p>
     Human evaluation is the gold standard but is expensive,
     slow, and doesn't scale. An increasingly popular
-    alternative is to use a strong LLM (typically GPT-4) as
+    alternative is to use a strong <GlossaryTooltip
+      term="LLM"
+    /> (typically <GlossaryTooltip
+      term="GPT"
+    />-4) as
     an automated judge.
   </p>
 
   <h3>How It Works</h3>
 
   <p>
-    Given a prompt and two model responses, the judge LLM is
+    Given a prompt and two model responses, the judge <GlossaryTooltip
+      term="LLM"
+    /> is
     asked to evaluate which response is better (pairwise
     comparison) or to assign a score on a rubric (pointwise
     scoring).
@@ -456,7 +491,9 @@ import Quiz from "../../components/Quiz.astro";
       individual human raters (though still noisy).
     </li>
     <li>
-      <strong>Correlation with humans</strong>: Strong LLM
+      <strong>Correlation with humans</strong>: Strong <GlossaryTooltip
+        term="LLM"
+      />
       judges agree with human preferences at rates
       comparable to inter-human agreement (~80% on
       MT-Bench).
@@ -466,7 +503,9 @@ import Quiz from "../../components/Quiz.astro";
   <h3>Limitations and Biases</h3>
   <ul>
     <li>
-      <strong>Position bias</strong>: LLM judges tend to
+      <strong>Position bias</strong>: <GlossaryTooltip
+        term="LLM"
+      /> judges tend to
       prefer the response presented first. Mitigated by
       evaluating each pair twice (swapping positions) and
       averaging.
@@ -479,13 +518,21 @@ import Quiz from "../../components/Quiz.astro";
     <li>
       <strong>Self-preference</strong>: A model used as
       judge may prefer responses from itself or similar
-      models. GPT-4 as judge may favor GPT-4 responses.
+      models. <GlossaryTooltip
+        term="GPT"
+      />-4 as judge may favor <GlossaryTooltip
+        term="GPT"
+      />-4 responses.
     </li>
     <li>
       <strong>Capability ceiling</strong>: A judge cannot
       reliably evaluate responses that exceed its own
-      capabilities. Using GPT-4 to judge mathematical proofs
-      is limited by GPT-4's own math ability.
+      capabilities. Using <GlossaryTooltip
+        term="GPT"
+      />-4 to judge mathematical proofs
+      is limited by <GlossaryTooltip
+        term="GPT"
+      />-4's own math ability.
     </li>
     <li>
       <strong>Gaming</strong>: If models are optimized
@@ -533,7 +580,9 @@ import Quiz from "../../components/Quiz.astro";
   <h2>Beyond Benchmarks: Holistic Evaluation</h2>
 
   <p>
-    No single benchmark captures what makes an LLM useful.
+    No single benchmark captures what makes an <GlossaryTooltip
+      term="LLM"
+    /> useful.
     The field is moving toward more comprehensive evaluation
     frameworks:
   </p>
@@ -603,7 +652,9 @@ import Quiz from "../../components/Quiz.astro";
         rephrased benchmarks, or private held-out sets
       </li>
       <li>
-        <strong>LLM-as-judge</strong> scales evaluation but has
+        <strong><GlossaryTooltip
+          term="LLM"
+        />-as-judge</strong> scales evaluation but has
         systematic biases (position, verbosity, self-preference)
         that must be mitigated
       </li>

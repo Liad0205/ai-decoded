@@ -6,6 +6,7 @@ import MathBlock from "../../components/MathBlock.astro";
 import RevealSection from "../../components/RevealSection.astro";
 import Quiz from "../../components/Quiz.astro";
 import Diagram from "../../components/Diagram.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
@@ -113,8 +114,8 @@ import Diagram from "../../components/Diagram.astro";
 
 <p>
   Intuition: project the input to a wider hidden dimension,
-  apply a nonlinearity (GELU), then project back down. This
-  is a standard two-layer MLP applied independently to each
+  apply a nonlinearity (<GlossaryTooltip term="GELU" />), then project back down. This
+  is a standard two-layer <GlossaryTooltip term="MLP" /> applied independently to each
   token position.
 </p>
 
@@ -318,8 +319,9 @@ import Diagram from "../../components/Diagram.astro";
 <h3>Learned Positional Embeddings</h3>
 <p>
   Learn a separate embedding for each position (up to max
-  length). Used in BERT, GPT. Works well but can't
-  extrapolate beyond training length.
+  length). Used in <GlossaryTooltip term="BERT" />, <GlossaryTooltip
+    term="GPT"
+  />. Works well but can't extrapolate beyond training length.
 </p>
 
 <h3>RoPE (Rotary Position Embedding)</h3>

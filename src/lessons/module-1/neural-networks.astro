@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -15,16 +16,18 @@ import RevealSection from "../../components/RevealSection.astro";
       chain rule and computational graphs
     </li>
     <li>
-      Understand why modern activations (GELU, SiLU)
-      outperform ReLU in transformers
+      Understand why modern activations (<GlossaryTooltip
+        term="GELU"
+      />, SiLU) outperform ReLU in transformers
     </li>
     <li>
       Analyze loss function choices and their implications
       for optimization
     </li>
     <li>
-      Compare modern optimizers (SGD, Adam, AdamW) and
-      learning rate schedules
+      Compare modern optimizers (<GlossaryTooltip
+        term="SGD"
+      />, Adam, AdamW) and learning rate schedules
     </li>
   </ul>
 </section>
@@ -282,22 +285,26 @@ import RevealSection from "../../components/RevealSection.astro";
     0 for all inputs, stopping gradient flow.
   </p>
 
-  <h3>GELU: The Transformer Standard</h3>
+  <h3><GlossaryTooltip term="GELU" />: The Transformer Standard</h3>
   <p>
-    <strong>GELU (Gaussian Error Linear Unit)</strong> has become
-    the default in transformers (BERT, GPT, etc.). It improves
+    <strong><GlossaryTooltip
+      term="GELU"
+    /> (Gaussian Error Linear Unit)</strong> has become
+    the default in transformers (<GlossaryTooltip
+      term="BERT"
+    />, <GlossaryTooltip term="GPT" />, etc.). It improves
     on ReLU in several ways:
   </p>
   <ul>
     <li>
       <strong>Smoothness</strong>: Unlike ReLU's sharp
-      corner at 0, GELU is smooth and differentiable
+      corner at 0, <GlossaryTooltip term="GELU" /> is smooth and differentiable
       everywhere, leading to better optimization dynamics
     </li>
     <li>
       <strong
         >Stochastic regularization interpretation</strong
-      >: GELU can be viewed as probabilistically dropping
+      >: <GlossaryTooltip term="GELU" /> can be viewed as probabilistically dropping
       inputs based on their magnitude: inputs near 0 have
       ~50% probability of being "dropped"
     </li>
@@ -335,7 +342,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <h3>SiLU/Swish</h3>
   <p>
     SiLU (also called Swish) uses the sigmoid function as a
-    smooth gate on the input, similar in spirit to GELU but
+    smooth gate on the input, similar in spirit to <GlossaryTooltip term="GELU" /> but
     simpler to compute. Mathematically:
   </p>
   <MathBlock
@@ -343,7 +350,7 @@ import RevealSection from "../../components/RevealSection.astro";
     display={true}
   />
   <p>
-    SiLU shares GELU's smoothness properties and is used in
+    SiLU shares <GlossaryTooltip term="GELU" />'s smoothness properties and is used in
     some vision models and newer architectures (e.g.,
     LLaMA's feed-forward layers). It's slightly cheaper to
     compute since it avoids the Gaussian CDF.
@@ -392,7 +399,9 @@ import RevealSection from "../../components/RevealSection.astro";
     space, push dissimilar ones apart.
   </p>
   <p>
-    <strong>InfoNCE loss</strong> (used in CLIP, SimCLR):
+    <strong>InfoNCE loss</strong> (used in <GlossaryTooltip
+      term="CLIP"
+    />, SimCLR):
   </p>
   <MathBlock
     formula={"\\mathcal{L} = -\\log \\frac{\\exp(\\text{sim}(z_i, z_i^+) / \\tau)}{\\sum_{j=1}^N \\exp(\\text{sim}(z_i, z_j) / \\tau)}"}
@@ -409,11 +418,11 @@ import RevealSection from "../../components/RevealSection.astro";
 </section>
 
 <section>
-  <h2>Optimization: From SGD to AdamW</h2>
+  <h2>Optimization: From <GlossaryTooltip term="SGD" /> to AdamW</h2>
 
-  <h3>SGD with Momentum</h3>
+  <h3><GlossaryTooltip term="SGD" /> with Momentum</h3>
   <p>
-    Vanilla SGD updates weights purely based on the current
+    Vanilla <GlossaryTooltip term="SGD" /> updates weights purely based on the current
     batch's gradient, which can be noisy and oscillate in
     ravine-shaped loss landscapes. Momentum fixes this by
     accumulating a running average of past gradients, like a
@@ -440,7 +449,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <h3>Adam: Adaptive Learning Rates</h3>
   <p>
-    SGD with momentum uses the same learning rate for every
+    <GlossaryTooltip term="SGD" /> with momentum uses the same learning rate for every
     parameter, but not all parameters need the same step
     size. Parameters with consistently large gradients
     (e.g., bias terms) can tolerate bigger steps, while
@@ -554,7 +563,7 @@ import RevealSection from "../../components/RevealSection.astro";
     </li>
   </ul>
   <p>
-    Modern LLM training typically uses: warmup + cosine
+    Modern <GlossaryTooltip term="LLM" /> training typically uses: warmup + cosine
     decay with AdamW.
   </p>
 </section>
@@ -602,7 +611,7 @@ import RevealSection from "../../components/RevealSection.astro";
       gradient computation through reuse
     </li>
     <li>
-      <strong>GELU has replaced ReLU</strong> in transformers
+      <strong><GlossaryTooltip term="GELU" /> has replaced ReLU</strong> in transformers
       due to its smoothness, leading to better optimization dynamics
       at scale
     </li>

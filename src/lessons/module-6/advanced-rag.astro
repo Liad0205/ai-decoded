@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
@@ -14,20 +15,21 @@ import Quiz from "../../components/Quiz.astro";
     HyDE, step-back prompting) to improve retrieval
   </li>
   <li>
-    Understand Self-RAG and how adaptive retrieval decisions
-    improve answer quality
+    Understand Self-<GlossaryTooltip term="RAG" /> and how
+    adaptive retrieval decisions improve answer quality
   </li>
   <li>
-    Design Graph RAG systems that leverage knowledge graph
-    structure for complex reasoning
+    Design Graph <GlossaryTooltip term="RAG" /> systems that
+    leverage knowledge graph structure for complex reasoning
   </li>
   <li>
-    Evaluate RAG systems using the RAGAS framework
+    Evaluate <GlossaryTooltip term="RAG" /> systems using the RAGAS framework
     (faithfulness, relevance, recall)
   </li>
   <li>
-    Implement corrective and iterative RAG patterns for
-    robust production systems
+    Implement corrective and iterative <GlossaryTooltip
+      term="RAG"
+    /> patterns for robust production systems
   </li>
 </ul>
 
@@ -36,7 +38,7 @@ import Quiz from "../../components/Quiz.astro";
 </h2>
 
 <p>
-  A core insight of advanced RAG: the user's query is often
+  A core insight of advanced <GlossaryTooltip term="RAG" />: the user's query is often
   a poor search query. Query transformation rewrites,
   decomposes, or augments the query before retrieval to
   bridge the gap between how users ask questions and how
@@ -72,8 +74,9 @@ import Quiz from "../../components/Quiz.astro";
 </ol>
 
 <p>
-  Each sub-query retrieves independently, and the LLM
-  synthesizes a comparative answer from all retrieved
+  Each sub-query retrieves independently, and the <GlossaryTooltip
+    term="LLM"
+  /> synthesizes a comparative answer from all retrieved
   contexts. This typically improves recall by 10-25% for
   multi-faceted questions compared to single-query
   retrieval, with the largest gains on comparative and
@@ -91,7 +94,7 @@ import Quiz from "../../components/Quiz.astro";
 <p>The HyDE process:</p>
 <ol>
   <li>
-    Given a query q, use an LLM to generate a <em
+    Given a query q, use an <GlossaryTooltip term="LLM" /> to generate a <em
       >hypothetical</em
     > answer (without retrieval)
   </li>
@@ -111,7 +114,9 @@ import Quiz from "../../components/Quiz.astro";
 />
 
 <p>
-  Intuition: generate a hypothetical answer with the LLM,
+  Intuition: generate a hypothetical answer with the <GlossaryTooltip
+    term="LLM"
+  />,
   embed that answer instead of the query, and use it for
   retrieval. The hypothesis is linguistically closer to
   actual documents than a short question is.
@@ -121,13 +126,15 @@ import Quiz from "../../components/Quiz.astro";
   <strong>When HyDE helps</strong>: Queries that are very
   different from the document style (e.g., conversational
   questions vs. technical documentation), and domains where
-  the LLM has reasonable background knowledge to generate
+  the <GlossaryTooltip term="LLM" /> has reasonable background knowledge to generate
   plausible hypotheses. <strong>When it hurts</strong>: When
-  the LLM generates a confidently wrong hypothesis,
+  the <GlossaryTooltip term="LLM" /> generates a confidently wrong hypothesis,
   retrieval may be misdirected---this is particularly
   problematic for highly specialized or proprietary domains
-  where the LLM lacks training data. HyDE also adds latency
-  (one extra LLM call) and can reduce precision when the
+  where the <GlossaryTooltip term="LLM" /> lacks training
+  data. HyDE also adds latency (one extra <GlossaryTooltip
+    term="LLM"
+  /> call) and can reduce precision when the
   hypothesis drifts from the user's actual intent. In
   practice, benchmark before adopting: HyDE improves recall
   on open-domain QA but can degrade performance on narrow,
@@ -269,19 +276,22 @@ import Quiz from "../../components/Quiz.astro";
   </div>
 </Diagram>
 
-<h2>Self-RAG: Adaptive Retrieval and Self-Reflection</h2>
+<h2>Self-<GlossaryTooltip term="RAG" />: Adaptive Retrieval and Self-Reflection</h2>
 
 <p>
-  Standard RAG always retrieves, even when unnecessary
-  (e.g., "What is 2+2?"). <strong>Self-RAG</strong> trains the
-  LLM to decide <em>when</em> to retrieve, <em>what</em> to retrieve,
+  Standard <GlossaryTooltip term="RAG" /> always retrieves,
+  even when unnecessary (e.g., "What is 2+2?").
+  <strong>Self-<GlossaryTooltip term="RAG" /></strong> trains
+  the <GlossaryTooltip term="LLM" /> to decide <em>when</em> to retrieve, <em>what</em> to retrieve,
   and to <em>critique</em> its own outputs.
 </p>
 
-<h3>Self-RAG's Special Tokens</h3>
+<h3>Self-<GlossaryTooltip term="RAG" />'s Special Tokens</h3>
 
 <p>
-  Self-RAG augments the LLM vocabulary with reflection
+  Self-<GlossaryTooltip term="RAG" /> augments the <GlossaryTooltip
+    term="LLM"
+  /> vocabulary with reflection
   tokens:
 </p>
 
@@ -321,10 +331,10 @@ import Quiz from "../../components/Quiz.astro";
   <li>Self-assess the overall quality of its response</li>
 </ol>
 
-<h3>Self-RAG Inference</h3>
+<h3>Self-<GlossaryTooltip term="RAG" /> Inference</h3>
 
 <p>
-  At inference time, Self-RAG can generate multiple
+  At inference time, Self-<GlossaryTooltip term="RAG" /> can generate multiple
   candidate outputs (with and without retrieval, using
   different passages) and select the best one based on its
   own critique scores:
@@ -354,20 +364,23 @@ import Quiz from "../../components/Quiz.astro";
 </p>
 
 <p>
-  <strong>Self-RAG vs. simpler alternatives</strong>: Before
-  adopting Self-RAG's training overhead, consider whether
-  cross-encoder reranking (which filters irrelevant passages
-  without special training) or a simple relevance threshold
-  on retrieval scores achieves similar gains. Cross-encoder
-  reranking is a drop-in addition to any RAG pipeline and
-  often captures 70-80% of Self-RAG's quality improvement at
-  a fraction of the implementation cost. Self-RAG's
+  <strong>Self-<GlossaryTooltip term="RAG" /> vs. simpler
+  alternatives</strong>: Before adopting
+  Self-<GlossaryTooltip term="RAG" />'s training overhead,
+  consider whether cross-encoder reranking (which filters
+  irrelevant passages without special training) or a simple
+  relevance threshold on retrieval scores achieves similar
+  gains. Cross-encoder reranking is a drop-in addition to any
+  <GlossaryTooltip term="RAG" /> pipeline and often captures
+  70-80% of Self-<GlossaryTooltip term="RAG" />'s quality improvement at
+  a fraction of the implementation cost.
+  Self-<GlossaryTooltip term="RAG" />'s
   advantage is strongest when you need the model to decide <em
     >whether</em
   > to retrieve at all, not just <em>what</em> to retrieve.
 </p>
 
-<h2>Corrective RAG (CRAG)</h2>
+<h2>Corrective <GlossaryTooltip term="RAG" /> (CRAG)</h2>
 
 <p>
   <strong>CRAG</strong> adds a lightweight retrieval evaluator
@@ -378,7 +391,9 @@ import Quiz from "../../components/Quiz.astro";
 <ul>
   <li>
     <strong>Correct</strong>: Retrieved documents are
-    relevant -> proceed with standard RAG generation
+    relevant -> proceed with standard <GlossaryTooltip
+      term="RAG"
+    /> generation
   </li>
   <li>
     <strong>Incorrect</strong>: Retrieved documents are
@@ -391,28 +406,31 @@ import Quiz from "../../components/Quiz.astro";
 </ul>
 
 <p>
-  The evaluator is a lightweight model (fine-tuned T5 or a
+  The evaluator is a lightweight model (fine-tuned <GlossaryTooltip
+    term="T5"
+  /> or a
   simple classifier) that scores each retrieved document for
   relevance. This adds minimal latency (~10ms) but prevents
   the common failure mode of generating answers from
   irrelevant context.
 </p>
 
-<h2>Graph RAG: Leveraging Knowledge Structure</h2>
+<h2>Graph <GlossaryTooltip term="RAG" />: Leveraging Knowledge Structure</h2>
 
 <p>
-  Standard RAG treats documents as flat, independent chunks. <strong
-    >Graph RAG</strong
+  Standard <GlossaryTooltip term="RAG" /> treats documents as
+  flat, independent chunks. <strong
+    >Graph <GlossaryTooltip term="RAG" /></strong
   > builds a knowledge graph from the corpus and leverages its
   structure for retrieval and reasoning.
 </p>
 
-<h3>How Graph RAG Works</h3>
+<h3>How Graph <GlossaryTooltip term="RAG" /> Works</h3>
 
 <ol>
   <li>
     <strong>Entity and relation extraction</strong>: Use an
-    LLM to extract entities (people, organizations,
+    <GlossaryTooltip term="LLM" /> to extract entities (people, organizations,
     concepts) and relationships from each chunk
   </li>
   <li>
@@ -425,8 +443,9 @@ import Quiz from "../../components/Quiz.astro";
     (e.g., Leiden) to identify clusters of related entities
   </li>
   <li>
-    <strong>Community summaries</strong>: Generate LLM
-    summaries of each community's content
+    <strong>Community summaries</strong>: Generate <GlossaryTooltip
+      term="LLM"
+    /> summaries of each community's content
   </li>
   <li>
     <strong>Query routing</strong>: For a query, identify
@@ -435,7 +454,7 @@ import Quiz from "../../components/Quiz.astro";
   </li>
 </ol>
 
-<h3>When Graph RAG Excels</h3>
+<h3>When Graph <GlossaryTooltip term="RAG" /> Excels</h3>
 
 <ul>
   <li>
@@ -456,17 +475,22 @@ import Quiz from "../../components/Quiz.astro";
   </li>
 </ul>
 
-<h3>Graph RAG Tradeoffs</h3>
+<h3>Graph <GlossaryTooltip term="RAG" /> Tradeoffs</h3>
 
 <ul>
   <li>
     <strong>Index cost</strong>: Entity extraction and graph
-    construction require many LLM calls during indexing.
-    Each chunk typically requires 1-3 LLM calls for
+    construction require many <GlossaryTooltip term="LLM" />
+    calls during indexing. Each chunk typically requires 1-3
+    <GlossaryTooltip term="LLM" /> calls for
     entity/relation extraction, plus additional calls for
     community summarization. For a corpus of 10,000 chunks,
-    this can mean 20,000-50,000 LLM calls at indexing
-    time---roughly 10-50x the cost of standard RAG indexing
+    this can mean 20,000-50,000 <GlossaryTooltip
+      term="LLM"
+    /> calls at indexing
+    time---roughly 10-50x the cost of standard <GlossaryTooltip
+      term="RAG"
+    /> indexing
     and often the dominant expense in the pipeline
   </li>
   <li>
@@ -476,15 +500,17 @@ import Quiz from "../../components/Quiz.astro";
   <li>
     <strong>Overkill for simple Q&A</strong>: If your
     queries are mostly point-retrieval ("What is the return
-    policy?"), standard RAG suffices
+    policy?"), standard <GlossaryTooltip term="RAG" /> suffices
   </li>
 </ul>
 
-<h2>Iterative and Agentic RAG</h2>
+<h2>Iterative and Agentic <GlossaryTooltip term="RAG" /></h2>
 
 <p>
   For complex questions, a single retrieve-and-generate
-  cycle may be insufficient. <strong>Iterative RAG</strong> performs
+  cycle may be insufficient. <strong>Iterative <GlossaryTooltip
+    term="RAG"
+  /></strong> performs
   multiple retrieval rounds, each informed by the previous:
 </p>
 
@@ -496,11 +522,14 @@ import Quiz from "../../components/Quiz.astro";
     the original query
   </li>
   <li>
-    <strong>Generate partial answer</strong>: The LLM
-    generates what it can from initial context
+    <strong>Generate partial answer</strong>: The <GlossaryTooltip
+      term="LLM"
+    /> generates what it can from initial context
   </li>
   <li>
-    <strong>Identify gaps</strong>: The LLM determines what
+    <strong>Identify gaps</strong>: The <GlossaryTooltip
+      term="LLM"
+    /> determines what
     additional information is needed
   </li>
   <li>
@@ -516,8 +545,9 @@ import Quiz from "../../components/Quiz.astro";
 <h3>Agentic RAG</h3>
 
 <p>
-  Takes iterative RAG further by giving the LLM tool-use
-  capabilities. The LLM acts as an agent that can:
+  Takes iterative <GlossaryTooltip term="RAG" /> further by
+  giving the <GlossaryTooltip term="LLM" /> tool-use
+  capabilities. The <GlossaryTooltip term="LLM" /> acts as an agent that can:
 </p>
 
 <ul>
@@ -542,17 +572,19 @@ import Quiz from "../../components/Quiz.astro";
 </ul>
 
 <p>
-  Agentic RAG is the most flexible pattern but also the most
+  Agentic <GlossaryTooltip term="RAG" /> is the most flexible pattern but also the most
   complex and expensive. It works best for open-ended
   research questions where the information need is not
   well-defined upfront.
 </p>
 
-<h2>RAG Evaluation with RAGAS</h2>
+<h2><GlossaryTooltip term="RAG" /> Evaluation with RAGAS</h2>
 
 <p>
   <strong>RAGAS</strong> (Retrieval-Augmented Generation Assessment)
-  provides a principled framework for evaluating RAG systems without
+  provides a principled framework for evaluating <GlossaryTooltip
+    term="RAG"
+  /> systems without
   requiring ground-truth answers for every query.
 </p>
 
@@ -576,7 +608,9 @@ import Quiz from "../../components/Quiz.astro";
 </p>
 
 <p>
-  Faithfulness is computed in two steps: first, an LLM
+  Faithfulness is computed in two steps: first, an <GlossaryTooltip
+    term="LLM"
+  />
   decomposes the generated answer into atomic claims (e.g.,
   "The revenue was $4.2B" and "This represents a 15%
   increase"); then, each claim is independently verified
@@ -645,7 +679,9 @@ import Quiz from "../../components/Quiz.astro";
 <p>
   Intuition: an average precision score that rewards placing
   relevant chunks earlier in the ranking. High precision
-  means less noise in the context sent to the LLM.
+  means less noise in the context sent to the <GlossaryTooltip
+    term="LLM"
+  />.
 </p>
 
 <p>
@@ -656,14 +692,16 @@ import Quiz from "../../components/Quiz.astro";
 
 <h3>Building an Evaluation Dataset</h3>
 
-<p>Effective RAG evaluation requires a curated test set:</p>
+<p>Effective <GlossaryTooltip term="RAG" /> evaluation requires a curated test set:</p>
 
 <ol>
   <li>
     <strong>Collect real user queries</strong> from logs or interviews
   </li>
   <li>
-    <strong>Create synthetic queries</strong> using LLMs to generate
+    <strong>Create synthetic queries</strong> using <GlossaryTooltip
+    term="LLM"
+  />s to generate
     questions from your documents
   </li>
   <li>
@@ -688,7 +726,7 @@ import Quiz from "../../components/Quiz.astro";
   key use cases.
 </p>
 
-<h2>Putting It All Together: RAG Architecture Patterns</h2>
+<h2>Putting It All Together: <GlossaryTooltip term="RAG" /> Architecture Patterns</h2>
 
 <Diagram
   diagramId="rag-patterns"
@@ -820,28 +858,32 @@ import Quiz from "../../components/Quiz.astro";
       coverage
     </li>
     <li>
-      <strong>Self-RAG</strong> trains the LLM to decide when
+      <strong>Self-<GlossaryTooltip term="RAG" /></strong> trains
+      the <GlossaryTooltip term="LLM" /> to decide when
       to retrieve and to critique its own outputs using special
       reflection tokens, enabling adaptive retrieval
     </li>
     <li>
-      <strong>Corrective RAG</strong> adds a retrieval evaluator
+      <strong>Corrective <GlossaryTooltip term="RAG" /></strong> adds a retrieval evaluator
       that detects irrelevant results and triggers fallback mechanisms
       (e.g., web search)
     </li>
     <li>
-      <strong>Graph RAG</strong> builds knowledge graphs for global
+      <strong>Graph <GlossaryTooltip term="RAG" /></strong> builds knowledge graphs for global
       queries and multi-hop reasoning, but at significantly higher
       indexing cost
     </li>
     <li>
       <strong>RAGAS evaluation</strong> provides principled metrics
       (faithfulness, relevance, recall, precision) that diagnose
-      specific failure modes in the RAG pipeline
+      specific failure modes in the <GlossaryTooltip
+        term="RAG"
+      /> pipeline
     </li>
     <li>
-      <strong>Start simple</strong>: Begin with naive RAG,
-      measure with RAGAS, then add components that address
+      <strong>Start simple</strong>: Begin with naive <GlossaryTooltip
+        term="RAG"
+      />, measure with RAGAS, then add components that address
       the specific failure modes you observe
     </li>
   </ul>

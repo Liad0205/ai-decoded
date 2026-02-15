@@ -5,6 +5,7 @@ import PaperReference from '../../components/PaperReference.astro';
 import Diagram from '../../components/Diagram.astro';
 import Quiz from '../../components/Quiz.astro';
 import RevealSection from '../../components/RevealSection.astro';
+import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 ---
 
 <section>
@@ -24,14 +25,15 @@ import RevealSection from '../../components/RevealSection.astro';
 
   <p>
     Building agent systems from scratch requires implementing tool orchestration, memory management, error handling, conversation management, and more. Frameworks abstract away this infrastructure, letting you focus on the agent's logic and capabilities.
+
   </p>
 
   <h3>LangChain</h3>
   <p>
-    The most widely adopted LLM application framework. LangChain provides a composable abstraction layer for building LLM-powered applications:
+    The most widely adopted <GlossaryTooltip term="LLM" /> application framework. LangChain provides a composable abstraction layer for building <GlossaryTooltip term="LLM" />-powered applications:
   </p>
   <ul>
-    <li><strong>Core concept</strong>: Chains -- sequences of operations (LLM calls, tool calls, data retrieval) composed together</li>
+    <li><strong>Core concept</strong>: Chains -- sequences of operations (<GlossaryTooltip term="LLM" /> calls, tool calls, data retrieval) composed together</li>
     <li><strong>Strengths</strong>: Massive ecosystem of integrations (100+ tool connectors), extensive documentation, large community</li>
     <li><strong>Weaknesses</strong>: Heavy abstraction can obscure what is happening, rapid API changes have caused migration pain, some abstractions add complexity without proportional value</li>
     <li><strong>Best for</strong>: Rapid prototyping, applications needing many integrations, teams wanting a batteries-included framework</li>
@@ -39,7 +41,7 @@ import RevealSection from '../../components/RevealSection.astro';
 
   <h3>LangGraph</h3>
   <p>
-    Built on top of LangChain, LangGraph models agent workflows as <strong>stateful graphs</strong> -- directed graphs where a shared state object (containing messages, intermediate results, and decisions) is passed between nodes and updated at each step. Each node in the graph is a function (LLM call, tool call, decision logic), and edges define the control flow:
+    Built on top of LangChain, LangGraph models agent workflows as <strong>stateful graphs</strong> -- directed graphs where a shared state object (containing messages, intermediate results, and decisions) is passed between nodes and updated at each step. Each node in the graph is a function (<GlossaryTooltip term="LLM" /> call, tool call, decision logic), and edges define the control flow:
   </p>
   <ul>
     <li><strong>Core concept</strong>: Directed graphs with state that flows between nodes. Supports cycles (loops), conditional branching, and parallel execution.</li>
@@ -80,10 +82,10 @@ const graph = new StateGraph(graphState)
 
   <h3>Autogen</h3>
   <p>
-    Microsoft's <strong>Autogen</strong> framework enables multi-agent conversations where agents exchange messages to collaboratively solve tasks. Agents can be backed by LLMs, tools, humans, or any combination:
+    Microsoft's <strong>Autogen</strong> framework enables multi-agent conversations where agents exchange messages to collaboratively solve tasks. Agents can be backed by <GlossaryTooltip term="LLM" />s, tools, humans, or any combination:
   </p>
   <ul>
-    <li><strong>Core concept</strong>: Conversable agents that interact through message-passing. Agents can be configured with different LLM backends, system prompts, and tool access.</li>
+    <li><strong>Core concept</strong>: Conversable agents that interact through message-passing. Agents can be configured with different <GlossaryTooltip term="LLM" /> backends, system prompts, and tool access.</li>
     <li><strong>Strengths</strong>: Natural conversation-based coordination between agents, flexible agent configuration, built-in support for human participation in agent conversations</li>
     <li><strong>Weaknesses</strong>: Conversation-based coordination can be token-intensive, debugging multi-agent conversations requires careful trace logging</li>
     <li><strong>Best for</strong>: Multi-agent workflows requiring flexible human-agent interaction, tasks where conversational coordination is natural (e.g., collaborative writing, iterative code review)</li>
@@ -91,12 +93,12 @@ const graph = new StateGraph(graphState)
 
   <h3>Direct API / Custom Implementation</h3>
   <p>
-    For many production applications, calling the LLM API directly with custom orchestration code is the most practical approach:
+    For many production applications, calling the <GlossaryTooltip term="LLM" /> API directly with custom orchestration code is the most practical approach:
   </p>
   <ul>
     <li><strong>Strengths</strong>: Full control, no framework dependencies, minimal abstraction overhead, easy to debug</li>
     <li><strong>Weaknesses</strong>: Must implement tool orchestration, memory, streaming, and error handling yourself</li>
-    <li><strong>Best for</strong>: Production systems where you need precise control, simple agent loops, teams comfortable with LLM APIs</li>
+    <li><strong>Best for</strong>: Production systems where you need precise control, simple agent loops, teams comfortable with <GlossaryTooltip term="LLM" /> APIs</li>
   </ul>
 
   <h3>Choosing a Framework</h3>
@@ -151,6 +153,7 @@ const graph = new StateGraph(graphState)
 
   <p>
     Instead of one agent doing everything, <strong>multi-agent systems</strong> divide work among specialized agents that communicate and coordinate. This mirrors how human teams work: specialists collaborate better than generalists for complex tasks.
+
   </p>
 
   <h3>Multi-Agent Architectures</h3>
@@ -196,7 +199,7 @@ const graph = new StateGraph(graphState)
 
   <h3>Multi-Agent Challenges</h3>
   <ul>
-    <li><strong>Communication overhead</strong>: Agents passing messages consume tokens. N agents discussing M steps = N*M LLM calls.</li>
+    <li><strong>Communication overhead</strong>: Agents passing messages consume tokens. N agents discussing M steps = N*M <GlossaryTooltip term="LLM" /> calls.</li>
     <li><strong>Context fragmentation</strong>: Each agent has its own context window. Sharing information between agents requires explicit message passing, and some context is inevitably lost.</li>
     <li><strong>Coordination failures</strong>: Agents can deadlock (each waiting for the other), produce contradictory outputs, or fail to agree on a shared plan.</li>
     <li><strong>Debugging complexity</strong>: Tracing an issue through multiple agent interactions is significantly harder than debugging a single agent loop.</li>
@@ -300,7 +303,7 @@ async function onHumanApproval(decision) &#123;
 
   <h3>Confidence-Based Escalation</h3>
   <p>
-    Let the agent handle cases it is confident about and escalate uncertain ones to a human. Note that LLM "confidence" is typically estimated by prompting the model to self-assess or by examining token probabilities, not by an intrinsic calibrated score:
+    Let the agent handle cases it is confident about and escalate uncertain ones to a human. Note that <GlossaryTooltip term="LLM" /> "confidence" is typically estimated by prompting the model to self-assess or by examining token probabilities, not by an intrinsic calibrated score:
   </p>
   <pre><code>if agent.confidence > 0.9:
     auto_respond(agent.response)
@@ -377,7 +380,7 @@ else:
   <h2>Agent Evaluation</h2>
 
   <p>
-    Evaluating agents is fundamentally harder than evaluating single LLM calls. The agent's behavior emerges from many decisions over many steps, and the same goal can be achieved through different valid paths.
+    Evaluating agents is fundamentally harder than evaluating single <GlossaryTooltip term="LLM" /> calls. The agent's behavior emerges from many decisions over many steps, and the same goal can be achieved through different valid paths.
   </p>
 
   <h3>What to Evaluate</h3>
@@ -397,7 +400,7 @@ else:
     How many steps/tokens/tool calls did the agent need? Fewer is better, all else being equal:
   </p>
   <ul>
-    <li>Number of LLM calls to completion</li>
+    <li>Number of <GlossaryTooltip term="LLM" /> calls to completion</li>
     <li>Total tokens consumed (cost)</li>
     <li>Wall-clock time</li>
     <li>Number of unnecessary or redundant tool calls</li>
@@ -488,7 +491,7 @@ else:
 
   <div data-reveal-step>
     <h4>Step 4: Define Metrics</h4>
-    <p>For each test case, define: success criteria (did it complete correctly?), efficiency bounds (max acceptable tool calls and tokens), and quality criteria (for free-text outputs, use LLM-as-judge).</p>
+    <p>For each test case, define: success criteria (did it complete correctly?), efficiency bounds (max acceptable tool calls and tokens), and quality criteria (for free-text outputs, use <GlossaryTooltip term="LLM" />-as-judge).</p>
     <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step</button>
   </div>
 

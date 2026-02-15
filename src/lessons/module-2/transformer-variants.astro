@@ -5,12 +5,15 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Quiz from "../../components/Quiz.astro";
 import Diagram from "../../components/Diagram.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
   <li>
-    Distinguish BERT-style, GPT-style, and T5-style
+    Distinguish <GlossaryTooltip term="BERT" />-style, <GlossaryTooltip
+      term="GPT"
+    />-style, and <GlossaryTooltip term="T5" />-style
     transformer architectures
   </li>
   <li>
@@ -31,8 +34,17 @@ import Diagram from "../../components/Diagram.astro";
   Modern models specialize into three main variants:
 </p>
 
-<h3>1. Encoder-Only (BERT-Style)</h3>
+<h3>
+  1. Encoder-Only (<GlossaryTooltip term="BERT" />-Style)
+</h3>
 
+<p>
+  Encoder-only models use just the encoder stack
+  (self-attention without causal masking). They see the
+  entire input sequence at once (bidirectional context),
+  making them ideal for understanding tasks like
+  classification and sentiment analysis.
+</p>
 <p>
   <strong>Architecture</strong>: Stack of transformer blocks
   with bidirectional attention. Each token can attend to all
@@ -63,10 +75,22 @@ import Diagram from "../../components/Diagram.astro";
   designed for generation.
 </p>
 
-<p><strong>Key models</strong>: BERT, RoBERTa, ELECTRA</p>
+<p>
+  <strong>Key models</strong>: <GlossaryTooltip
+    term="BERT"
+  />, RoBERTa, ELECTRA
+</p>
 
-<h3>2. Decoder-Only (GPT-Style)</h3>
+<h3>
+  2. Decoder-Only (<GlossaryTooltip term="GPT" />-Style)
+</h3>
 
+<p>
+  Decoder-only models use just the decoder stack (masked
+  self-attention). They process tokens left-to-right,
+  predicting the next token. This causal structure makes
+  them perfect for text generation.
+</p>
 <p>
   <strong>Architecture</strong>: Stack of transformer blocks
   with causal (unidirectional) attention. Token at position
@@ -121,12 +145,22 @@ import Diagram from "../../components/Diagram.astro";
 </ul>
 
 <p>
-  <strong>Key models</strong>: GPT-2, GPT-3, GPT-4, GPT-4o,
-  LLaMA 3, Claude 3.5 Sonnet, Gemini 1.5 Pro
+  <strong>Key models</strong>: GPT-2, <GlossaryTooltip
+    term="GPT"
+  />-3, GPT-4, GPT-4o, Llama 3, Claude 3.5 Sonnet, Gemini
+  1.5 Pro
 </p>
 
-<h3>3. Encoder-Decoder (T5-Style)</h3>
-
+<h3>
+  3. Encoder-Decoder (<GlossaryTooltip term="T5" />-Style)
+</h3>
+<p>
+  These models keep both stacks. The encoder processes the
+  input bidirectionally, and the decoder generates output
+  autoregressively. This is versatile for
+  sequence-to-sequence tasks like translation and
+  summarization.
+</p>
 <p>
   <strong>Architecture</strong>: Encoder (bidirectional)
   processes input; decoder (causal) generates output while

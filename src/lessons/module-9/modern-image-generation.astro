@@ -6,14 +6,16 @@ import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
     <li>
-      Understand Diffusion Transformers (DiT) and why they
-      replace U-Nets in modern systems
+      Understand Diffusion Transformers (<GlossaryTooltip
+        term="DiT"
+      />) and why they replace U-Nets in modern systems
     </li>
     <li>
       Explain ControlNet's architecture for adding spatial
@@ -24,8 +26,8 @@ import RevealSection from "../../components/RevealSection.astro";
       conditioning via decoupled cross-attention
     </li>
     <li>
-      Analyze LoRA as a parameter-efficient method for
-      personalizing diffusion models
+      Analyze <GlossaryTooltip term="LoRA" /> as a parameter-efficient
+      method for personalizing diffusion models
     </li>
     <li>
       Compare these techniques on the axes of control,
@@ -39,8 +41,11 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     The U-Net has been the default backbone for diffusion
-    models since DDPM. However, the <strong
-      >Diffusion Transformer (DiT)</strong
+    models since <GlossaryTooltip term="DDPM" />. However,
+    the <strong
+      >Diffusion Transformer (<GlossaryTooltip
+        term="DiT"
+      />)</strong
     > architecture (Peebles and Xie, 2023) demonstrated that plain
     vision transformers can match or exceed U-Net performance
     and, crucially, they scale more predictably with compute.
@@ -69,16 +74,18 @@ import RevealSection from "../../components/RevealSection.astro";
     </li>
     <li>
       <strong>Proven at scale</strong>: Transformers have
-      been validated at massive scale in language (GPT) and
-      vision (ViT). Leveraging this proven architecture
-      reduces risk.
+      been validated at massive scale in language (<GlossaryTooltip
+        term="GPT"
+      />) and vision (<GlossaryTooltip term="ViT" />).
+      Leveraging this proven architecture reduces risk.
     </li>
   </ul>
 
   <h3>Architecture</h3>
   <p>
-    DiT processes latent patches (from the VAE) through a
-    sequence of transformer blocks:
+    <GlossaryTooltip term="DiT" /> processes latent patches (from
+    the <GlossaryTooltip term="VAE" />) through a sequence
+    of transformer blocks:
   </p>
 
   <ol>
@@ -119,10 +126,10 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     First, the conditioning signals (timestep and
-    class/text) are combined and fed through an MLP to
-    produce per-layer modulation parameters. These
-    parameters then modulate each transformer block's layer
-    normalization:
+    class/text) are combined and fed through an <GlossaryTooltip
+      term="MLP"
+    /> to produce per-layer modulation parameters. These parameters
+    then modulate each transformer block's layer normalization:
   </p>
 
   <MathBlock
@@ -159,8 +166,9 @@ import RevealSection from "../../components/RevealSection.astro";
     (DiT-S → DiT-B → DiT-L → DiT-XL) monotonically improves
     FID scores. DiT-XL/2 (with patch size 2) achieved
     state-of-the-art class-conditional image generation on
-    ImageNet, surpassing prior diffusion models and GANs on
-    this specific benchmark.
+    ImageNet, surpassing prior diffusion models and <GlossaryTooltip
+      term="GAN"
+    />s on this specific benchmark.
   </p>
 
   <p>
@@ -421,7 +429,9 @@ import RevealSection from "../../components/RevealSection.astro";
     The core innovation is <strong
       >decoupled cross-attention</strong
     >: separate cross-attention layers for text and image
-    conditions. The image is encoded using a pretrained CLIP
+    conditions. The image is encoded using a pretrained <GlossaryTooltip
+      term="CLIP"
+    />
     image encoder:
   </p>
 
@@ -490,11 +500,13 @@ import RevealSection from "../../components/RevealSection.astro";
   <h2>LoRA for Diffusion: Efficient Personalization</h2>
 
   <p>
-    <strong>LoRA (Low-Rank Adaptation)</strong>, originally
-    developed for language models (see Module 4), has become
-    the dominant method for personalizing diffusion models.
-    It enables fine-tuning on specific styles, characters,
-    or concepts with minimal compute and storage.
+    <strong
+      ><GlossaryTooltip term="LoRA" /> (Low-Rank Adaptation)</strong
+    >, originally developed for language models (see Module
+    4), has become the dominant method for personalizing
+    diffusion models. It enables fine-tuning on specific
+    styles, characters, or concepts with minimal compute and
+    storage.
   </p>
 
   <h3>Applying LoRA to Diffusion U-Nets</h3>
@@ -697,7 +709,9 @@ import RevealSection from "../../components/RevealSection.astro";
       (SD3, Flux, DALL-E 3) operating in VAE latent space
     </li>
     <li>
-      <strong>Text conditioning</strong>: CLIP and/or T5
+      <strong>Text conditioning</strong>: <GlossaryTooltip
+        term="CLIP"
+      /> and/or <GlossaryTooltip term="T5" />
       text encoders providing semantic guidance
     </li>
     <li>
@@ -713,8 +727,9 @@ import RevealSection from "../../components/RevealSection.astro";
       character/style/concept adaptation
     </li>
     <li>
-      <strong>Fast sampling</strong>: DDIM, DPM-Solver, or
-      distilled models for fewer steps
+      <strong>Fast sampling</strong>: <GlossaryTooltip
+        term="DDIM"
+      />, DPM-Solver, or distilled models for fewer steps
     </li>
   </ol>
 

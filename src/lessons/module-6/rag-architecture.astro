@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
@@ -68,10 +69,14 @@ import Quiz from "../../components/Quiz.astro";
 </ul>
 
 <p>
-  <strong>Retrieval-Augmented Generation (RAG)</strong> addresses
-  these limitations by combining parametric knowledge (the LLM)
-  with non-parametric knowledge (an external retrieval system).
-  Instead of relying solely on what the model "remembers," RAG
+  <strong
+    >Retrieval-Augmented Generation (<GlossaryTooltip
+      term="RAG"
+    />)</strong
+  > addresses these limitations by combining parametric knowledge
+  (the LLM) with non-parametric knowledge (an external retrieval
+  system). Instead of relying solely on what the model "remembers,"
+  <GlossaryTooltip term="RAG" />
   retrieves relevant information at inference time and provides
   it as context.
 </p>
@@ -79,10 +84,10 @@ import Quiz from "../../components/Quiz.astro";
 <h2>The Core RAG Architecture</h2>
 
 <p>
-  RAG decomposes generation into two phases: <strong
-    >retrieve</strong
-  > relevant documents, then <strong>generate</strong> a response
-  conditioned on both the query and retrieved context.
+  <GlossaryTooltip term="RAG" /> decomposes generation into two
+  phases: <strong>retrieve</strong> relevant documents, then <strong
+    >generate</strong
+  > a response conditioned on both the query and retrieved context.
 </p>
 
 <p>Formally, for a query q, RAG computes:</p>
@@ -258,8 +263,8 @@ import Quiz from "../../components/Quiz.astro";
 <h3>Naive RAG</h3>
 
 <p>
-  The simplest RAG implementation follows the pipeline above
-  directly:
+  The simplest <GlossaryTooltip term="RAG" /> implementation follows
+  the pipeline above directly:
 </p>
 
 <ul>
@@ -306,8 +311,8 @@ import Quiz from "../../components/Quiz.astro";
 <h3>Advanced RAG</h3>
 
 <p>
-  Advanced RAG addresses these failures through
-  pre-retrieval, retrieval, and post-retrieval enhancements:
+  Advanced <GlossaryTooltip term="RAG" /> addresses these failures
+  through pre-retrieval, retrieval, and post-retrieval enhancements:
 </p>
 
 <ul>
@@ -327,8 +332,8 @@ import Quiz from "../../components/Quiz.astro";
 
 <p>
   Each component adds complexity but addresses specific
-  failure modes. The art of RAG engineering is choosing the
-  right components for your use case.
+  failure modes. The art of <GlossaryTooltip term="RAG" /> engineering
+  is choosing the right components for your use case.
 </p>
 
 <h2>

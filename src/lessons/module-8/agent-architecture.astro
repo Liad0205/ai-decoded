@@ -5,13 +5,14 @@ import PaperReference from '../../components/PaperReference.astro';
 import Diagram from '../../components/Diagram.astro';
 import Quiz from '../../components/Quiz.astro';
 import RevealSection from '../../components/RevealSection.astro';
+import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <p>After completing this lesson, you will be able to:</p>
   <ul>
-    <li>Define what makes an LLM agent distinct from a simple LLM application</li>
+    <li>Define what makes an <GlossaryTooltip term="LLM" /> agent distinct from a simple <GlossaryTooltip term="LLM" /> application</li>
     <li>Describe the perception-reasoning-action loop that governs agent behavior</li>
     <li>Compare memory architectures: working memory, short-term, and long-term storage</li>
     <li>Explain planning strategies: task decomposition, reflection, and replanning</li>
@@ -23,12 +24,12 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>What Makes an Agent?</h2>
 
   <p>
-    An <strong>LLM agent</strong> is a system that uses a language model as its core reasoning engine to autonomously pursue goals by observing its environment, making decisions, and taking actions. The key distinction from a simple LLM application:
+    An <strong><GlossaryTooltip term="LLM" /> agent</strong> is a system that uses a language model as its core reasoning engine to autonomously pursue goals by observing its environment, making decisions, and taking actions. The key distinction from a simple <GlossaryTooltip term="LLM" /> application:
   </p>
 
   <ul>
-    <li><strong>Simple LLM application</strong>: User sends prompt, model responds, interaction ends. The model is reactive -- it does exactly what is asked in a single turn.</li>
-    <li><strong>LLM agent</strong>: The model operates in a loop, choosing which actions to take, observing results, and deciding next steps autonomously. It can pursue multi-step goals that require multiple tool calls, error recovery, and adaptive planning.</li>
+    <li><strong>Simple <GlossaryTooltip term="LLM" /> application</strong>: User sends prompt, model responds, interaction ends. The model is reactive -- it does exactly what is asked in a single turn.</li>
+    <li><strong><GlossaryTooltip term="LLM" /> agent</strong>: The model operates in a loop, choosing which actions to take, observing results, and deciding next steps autonomously. It can pursue multi-step goals that require multiple tool calls, error recovery, and adaptive planning.</li>
   </ul>
 
   <p>
@@ -37,7 +38,7 @@ import RevealSection from '../../components/RevealSection.astro';
 
   <h3>The Three Pillars of Agency</h3>
   <ol>
-    <li><strong>Autonomy</strong>: The agent decides what to do next, rather than following a rigid script. The LLM acts as the controller, not just a text generator.</li>
+    <li><strong>Autonomy</strong>: The agent decides what to do next, rather than following a rigid script. The <GlossaryTooltip term="LLM" /> acts as the controller, not just a text generator.</li>
     <li><strong>Tool access</strong>: The agent can take actions that affect the world -- searching the web, executing code, calling APIs, modifying files.</li>
     <li><strong>Feedback loops</strong>: The agent observes the results of its actions and adapts its approach. It can recover from errors, try alternative strategies, and refine its plan.</li>
   </ol>
@@ -107,7 +108,7 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Memory Systems</h2>
 
   <p>
-    A vanilla LLM has no persistent memory -- each conversation starts from a blank slate (beyond what is encoded in the model's weights). Agent memory systems address this limitation through explicit storage and retrieval mechanisms.
+    A vanilla <GlossaryTooltip term="LLM" /> has no persistent memory -- each conversation starts from a blank slate (beyond what is encoded in the model's weights). Agent memory systems address this limitation through explicit storage and retrieval mechanisms.
   </p>
 
   <h3>Working Memory (Context Window)</h3>
@@ -128,7 +129,7 @@ import RevealSection from '../../components/RevealSection.astro';
     <li><strong>Full history</strong>: Append every message to the context. Simple but hits context limits quickly.</li>
     <li><strong>Sliding window</strong>: Keep only the last N messages. Loses early context but maintains recency.</li>
     <li><strong>Summarization</strong>: Periodically summarize older messages into a compact summary. Preserves gist but loses details.</li>
-    <li><strong>Selective retention</strong>: Use the LLM to decide which messages are important to retain and which can be dropped.</li>
+    <li><strong>Selective retention</strong>: Use the <GlossaryTooltip term="LLM" /> to decide which messages are important to retain and which can be dropped.</li>
   </ul>
 
   <h3>Long-Term Memory (Persistent Storage)</h3>
@@ -193,7 +194,7 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Planning and Reasoning</h2>
 
   <p>
-    Planning is what transforms an LLM from a tool that responds to individual queries into an agent that can pursue complex, multi-step goals.
+    Planning is what transforms an <GlossaryTooltip term="LLM" /> from a tool that responds to individual queries into an agent that can pursue complex, multi-step goals.
   </p>
 
   <h3>Task Decomposition</h3>
@@ -289,9 +290,9 @@ Decomposition:
     Different architectures trade off between simplicity, autonomy, and reliability.
   </p>
 
-  <h3>Simple Loop (ReAct-Style)</h3>
+  <h3>Simple Loop (<GlossaryTooltip term="ReAct" />-Style)</h3>
   <p>
-    A single LLM in a thought-action-observation loop. The model decides when to act, when to think, and when to produce a final answer. Most agents start here.
+    A single <GlossaryTooltip term="LLM" /> in a thought-action-observation loop. The model decides when to act, when to think, and when to produce a final answer. Most agents start here.
   </p>
   <ul>
     <li><strong>Pros</strong>: Simple to implement, easy to debug, single point of reasoning</li>
@@ -300,7 +301,7 @@ Decomposition:
 
   <h3>Planner + Executor</h3>
   <p>
-    Separate the planning and execution roles. One LLM call creates the plan; separate calls (or a simpler model) execute each step. The planner can be given the full context while executors focus narrowly.
+    Separate the planning and execution roles. One <GlossaryTooltip term="LLM" /> call creates the plan; separate calls (or a simpler model) execute each step. The planner can be given the full context while executors focus narrowly.
   </p>
   <ul>
     <li><strong>Pros</strong>: Better separation of concerns, executor can be a cheaper model</li>
@@ -360,8 +361,8 @@ Decomposition:
 
 <KeyTakeaway>
   <ul>
-    <li><strong>An LLM agent</strong> uses a language model as a controller in a perception-reasoning-action loop, autonomously pursuing multi-step goals through tool use and feedback.</li>
-    <li><strong>Memory systems</strong> extend the LLM beyond its context window: working memory (context window), short-term memory (conversation history with summarization), and long-term memory (persistent vector/structured storage).</li>
+    <li><strong>An <GlossaryTooltip term="LLM" /> agent</strong> uses a language model as a controller in a perception-reasoning-action loop, autonomously pursuing multi-step goals through tool use and feedback.</li>
+    <li><strong>Memory systems</strong> extend the <GlossaryTooltip term="LLM" /> beyond its context window: working memory (context window), short-term memory (conversation history with summarization), and long-term memory (persistent vector/structured storage).</li>
     <li><strong>Planning strategies</strong> range from plan-and-execute (full plan upfront) to iterative replanning (plan a few steps, execute, replan). Hierarchical planning balances global coherence with local adaptability.</li>
     <li><strong>Reflection</strong> enables self-correction: agents that reason about their failures and explicitly generate improvement strategies perform significantly better on complex tasks.</li>
     <li><strong>Architecture choices</strong> (simple loop, planner+executor, router) trade off between simplicity, specialization, and coordination complexity.</li>

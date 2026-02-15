@@ -6,6 +6,7 @@ import MathBlock from "../../components/MathBlock.astro";
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
 import Diagram from "../../components/Diagram.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -24,8 +25,10 @@ import Diagram from "../../components/Diagram.astro";
       Derive the memory savings of double quantization
     </li>
     <li>
-      Calculate the total memory footprint of QLoRA vs. full
-      fine-tuning and standard LoRA
+      Calculate the total memory footprint of <GlossaryTooltip
+        term="QLoRA"
+      /> vs. full
+      fine-tuning and standard <GlossaryTooltip term="LoRA" />
     </li>
   </ul>
 </section>
@@ -296,7 +299,7 @@ import Diagram from "../../components/Diagram.astro";
 
   <p>
     <strong>NormalFloat4 (NF4)</strong>, introduced in the
-    QLoRA paper, exploits this by placing quantization
+    <GlossaryTooltip term="QLoRA" /> paper, exploits this by placing quantization
     levels at the <strong
       >quantiles of the standard normal distribution</strong
     >:
@@ -442,10 +445,10 @@ import Diagram from "../../components/Diagram.astro";
 </section>
 
 <section>
-  <h2>QLoRA: Putting It All Together</h2>
+  <h2><GlossaryTooltip term="QLoRA" />: Putting It All Together</h2>
 
   <p>
-    <strong>QLoRA</strong> combines three innovations to enable
+    <strong><GlossaryTooltip term="QLoRA" /></strong> combines three innovations to enable
     fine-tuning a 65B parameter model on a single 48 GB GPU:
   </p>
 
@@ -459,12 +462,12 @@ import Diagram from "../../components/Diagram.astro";
       constants
     </li>
     <li>
-      <strong>LoRA</strong> adapters trained in BF16 on top of
+      <strong><GlossaryTooltip term="LoRA" /></strong> adapters trained in BF16 on top of
       the quantized base
     </li>
   </ol>
 
-  <p>The forward pass with QLoRA:</p>
+  <p>The forward pass with <GlossaryTooltip term="QLoRA" />:</p>
   <MathBlock
     formula={"h = \\text{dequant}(W_{\\text{NF4}}) \\cdot x + \\frac{\\alpha}{r} BAx"}
     display={true}
@@ -473,10 +476,12 @@ import Diagram from "../../components/Diagram.astro";
   <p>
     The output is the sum of two terms: the base model's
     computation (using dequantized 4-bit weights) plus the
-    LoRA adapter's low-rank correction (in full BF16
+    <GlossaryTooltip term="LoRA" /> adapter's low-rank correction (in full BF16
     precision). During the forward pass, NF4 weights are
     dequantized to BF16 on-the-fly for matrix
-    multiplication. Only the LoRA matrices <MathBlock
+    multiplication. Only the <GlossaryTooltip
+      term="LoRA"
+    /> matrices <MathBlock
       formula="B"
     /> and <MathBlock formula="A" /> receive gradient updates.
     The quantized base weights are never modified.
@@ -484,7 +489,7 @@ import Diagram from "../../components/Diagram.astro";
 
   <h3>Paged Optimizers</h3>
   <p>
-    QLoRA also introduces <strong>paged optimizers</strong>,
+    <GlossaryTooltip term="QLoRA" /> also introduces <strong>paged optimizers</strong>,
     which use NVIDIA unified memory to automatically page
     optimizer states between GPU and CPU memory. When GPU
     memory runs low during a gradient spike (e.g., a
@@ -511,8 +516,12 @@ import Diagram from "../../components/Diagram.astro";
   <p>
     To see the impact in concrete terms: a 7B parameter
     model in FP16 requires 14 GB of GPU memory just to hold
-    the weights. With QLoRA's 4-bit quantization, the base
-    model shrinks to ~3.5 GB, plus ~100 MB for the LoRA
+    the weights. With <GlossaryTooltip
+      term="QLoRA"
+    />'s 4-bit quantization, the base
+    model shrinks to ~3.5 GB, plus ~100 MB for the <GlossaryTooltip
+      term="LoRA"
+    />
     adapters and optimizer -- fitting comfortably on a
     single 8 GB consumer GPU. The following breakdown shows
     exactly where memory goes under each approach.
@@ -560,16 +569,16 @@ import Diagram from "../../components/Diagram.astro";
         class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
         data-reveal-button="1"
       >
-        Next: LoRA →
+        Next: <GlossaryTooltip term="LoRA" /> →
       </button>
     </div>
 
     <div data-reveal-step>
-      <h4>LoRA (FP16 base + FP32 adapter optimizer)</h4>
+      <h4><GlossaryTooltip term="LoRA" /> (FP16 base + FP32 adapter optimizer)</h4>
       <p>
         The base model is frozen in FP16, so no optimizer
         states or gradients are needed for it. Only the tiny
-        LoRA adapters incur optimizer overhead:
+        <GlossaryTooltip term="LoRA" /> adapters incur optimizer overhead:
       </p>
       <MathBlock
         formula={"\\text{Base weights (frozen, FP16): } 6.74\\text{B} \\times 2 = 13.5\\text{ GB}"}
@@ -588,7 +597,7 @@ import Diagram from "../../components/Diagram.astro";
         display={true}
       />
       <p>
-        The 12 bytes per LoRA parameter covers the parameter
+        The 12 bytes per <GlossaryTooltip term="LoRA" /> parameter covers the parameter
         itself (2 bytes BF16), gradients (2 bytes), and Adam
         states (8 bytes FP32). But 8.4M is so small that
         this only adds ~100 MB.
@@ -603,16 +612,18 @@ import Diagram from "../../components/Diagram.astro";
         class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
         data-reveal-button="2"
       >
-        Next: QLoRA →
+        Next: <GlossaryTooltip term="QLoRA" /> →
       </button>
     </div>
 
     <div data-reveal-step>
-      <h4>QLoRA (NF4 base + BF16 adapters)</h4>
+      <h4><GlossaryTooltip term="QLoRA" /> (NF4 base + BF16 adapters)</h4>
       <p>
         The base model is compressed to 4-bit NF4 (with
         double quantization adding ~0.127 bits per weight,
-        so ~0.52 bytes per parameter total). The LoRA
+        so ~0.52 bytes per parameter total). The <GlossaryTooltip
+          term="LoRA"
+        />
         adapters remain in BF16:
       </p>
       <MathBlock
@@ -633,7 +644,7 @@ import Diagram from "../../components/Diagram.astro";
       />
       <p>
         The 4-bit base model is roughly 4x smaller than
-        FP16. Combined with LoRA's minimal adapter overhead,
+        FP16. Combined with <GlossaryTooltip term="LoRA" />'s minimal adapter overhead,
         the total is 18x less than full fine-tuning.
       </p>
       <p
@@ -644,7 +655,7 @@ import Diagram from "../../components/Diagram.astro";
       <p
         class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
       >
-        QLoRA reduces memory by <strong>18x</strong> compared
+        <GlossaryTooltip term="QLoRA" /> reduces memory by <strong>18x</strong> compared
         to full fine-tuning, with less than 1% quality degradation
         on most benchmarks.
       </p>
@@ -656,11 +667,11 @@ import Diagram from "../../components/Diagram.astro";
   <h2>Quality: Does Quantization Hurt?</h2>
 
   <p>
-    The QLoRA paper's key finding: <strong
-      >4-bit QLoRA matches 16-bit full fine-tuning
+    The <GlossaryTooltip term="QLoRA" /> paper's key finding: <strong
+      >4-bit <GlossaryTooltip term="QLoRA" /> matches 16-bit full fine-tuning
       performance</strong
     > on a wide range of benchmarks. The authors fine-tuned LLaMA-65B
-    using QLoRA on the OASST1 dataset and achieved state-of-the-art
+    using <GlossaryTooltip term="QLoRA" /> on the OASST1 dataset and achieved state-of-the-art
     chatbot performance (at the time), surpassing all previous
     models on the Vicuna benchmark.
   </p>
@@ -668,7 +679,7 @@ import Diagram from "../../components/Diagram.astro";
   <p>Why does extreme quantization work? Two reasons:</p>
   <ul>
     <li>
-      <strong>LoRA compensates</strong>: The BF16 LoRA
+      <strong><GlossaryTooltip term="LoRA" /> compensates</strong>: The BF16 <GlossaryTooltip term="LoRA" />
       adapters can learn to correct any errors introduced by
       quantization. The adapters effectively act as a
       "quantization-aware" correction layer.
@@ -735,14 +746,16 @@ import Diagram from "../../components/Diagram.astro";
       from 0.5 to 0.127 bits per weight
     </li>
     <li>
-      <strong>QLoRA</strong> combines NF4 quantization + double
-      quantization + LoRA adapters to fine-tune a 7B model in
+      <strong><GlossaryTooltip term="QLoRA" /></strong> combines NF4 quantization + double
+      quantization + <GlossaryTooltip term="LoRA" /> adapters to fine-tune a 7B model in
       ~6 GB (vs. ~108 GB for full fine-tuning)
     </li>
     <li>
-      <strong>Quality preservation</strong>: 4-bit QLoRA
+      <strong>Quality preservation</strong>: 4-bit <GlossaryTooltip
+        term="QLoRA"
+      />
       matches 16-bit full fine-tuning on most benchmarks,
-      because LoRA adapters compensate for quantization
+      because <GlossaryTooltip term="LoRA" /> adapters compensate for quantization
       error
     </li>
   </ul>

@@ -4,12 +4,13 @@ import KeyTakeaway from "../../components/KeyTakeaway.astro";
 import PaperReference from "../../components/PaperReference.astro";
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
   <li>
-    Understand why ML requires specialized CI/CD pipelines
+    Understand why <GlossaryTooltip term="ML" /> requires specialized CI/CD pipelines
     beyond traditional software automation
   </li>
   <li>
@@ -22,10 +23,10 @@ import RevealSection from "../../components/RevealSection.astro";
   </li>
   <li>
     Implement data versioning for reproducible experiments
-    using DVC
+    using <GlossaryTooltip term="DVC" />
   </li>
   <li>
-    Apply container orchestration patterns for ML model
+    Apply container orchestration patterns for <GlossaryTooltip term="ML" /> model
     serving
   </li>
   <li>
@@ -34,24 +35,24 @@ import RevealSection from "../../components/RevealSection.astro";
   </li>
 </ul>
 
-<h2>ML Pipelines and Orchestration</h2>
+<h2><GlossaryTooltip term="ML" /> Pipelines and Orchestration</h2>
 
 <p>
   Traditional software CI/CD pipelines are triggered by code
   changes: a developer pushes code, tests run, and the
-  artifact is deployed. ML systems are fundamentally
+  artifact is deployed. <GlossaryTooltip term="ML" /> systems are fundamentally
   different because they have two axes of change: code and
   data. A model may need retraining not because the code
   changed, but because new training data arrived, the data
   distribution shifted, or a scheduled retraining trigger
-  fired. This data dependency means ML systems require
+  fired. This data dependency means <GlossaryTooltip term="ML" /> systems require
   specialized pipeline orchestration that understands data
   freshness, training triggers, and model validation gates.
 </p>
 
-<h3>Why ML Needs Specialized Pipelines</h3>
+<h3>Why <GlossaryTooltip term="ML" /> Needs Specialized Pipelines</h3>
 
-<p>The unique requirements of ML pipelines include:</p>
+<p>The unique requirements of <GlossaryTooltip term="ML" /> pipelines include:</p>
 
 <ul>
   <li>
@@ -76,7 +77,7 @@ import RevealSection from "../../components/RevealSection.astro";
     production model.
   </li>
   <li>
-    <strong>Artifact management</strong>: ML pipelines
+    <strong>Artifact management</strong>: <GlossaryTooltip term="ML" /> pipelines
     produce large artifacts (model weights, embeddings,
     feature matrices) that must be stored, versioned, and
     served efficiently.
@@ -122,8 +123,8 @@ import RevealSection from "../../components/RevealSection.astro";
     operational model.
   </li>
   <li>
-    <strong>Limitations for ML</strong>: Airflow was
-    designed for ETL, not ML. It has no native concept of
+    <strong>Limitations for <GlossaryTooltip term="ML" /></strong>: Airflow was
+    designed for ETL, not <GlossaryTooltip term="ML" />. It has no native concept of
     data assets, feature lineage, or model versioning. DAGs
     define execution order, not data flow, making it harder
     to reason about what data each task produces and
@@ -171,18 +172,18 @@ import RevealSection from "../../components/RevealSection.astro";
     not modifying pipeline code.
   </li>
   <li>
-    <strong>Strengths for ML</strong>: The asset-centric
-    model maps naturally to ML concepts (datasets, feature
+    <strong>Strengths for <GlossaryTooltip term="ML" /></strong>: The asset-centric
+    model maps naturally to <GlossaryTooltip term="ML" /> concepts (datasets, feature
     tables, trained models). Built-in data lineage,
     freshness policies, and data quality checks make it a
-    strong fit for ML pipelines.
+    strong fit for <GlossaryTooltip term="ML" /> pipelines.
   </li>
 </ul>
 
 <h3>Kubeflow Pipelines</h3>
 
 <p>
-  Kubeflow Pipelines is a Kubernetes-native ML workflow
+  Kubeflow Pipelines is a Kubernetes-native <GlossaryTooltip term="ML" /> workflow
   platform. Each pipeline step runs in its own container,
   providing complete environment isolation.
 </p>
@@ -198,13 +199,13 @@ import RevealSection from "../../components/RevealSection.astro";
   <li>
     <strong>Pipeline SDK</strong>: Define pipelines in
     Python using the KFP SDK. Components can be reused
-    across pipelines, creating a library of standardized ML
+    across pipelines, creating a library of standardized <GlossaryTooltip term="ML" />
     building blocks.
   </li>
   <li>
     <strong>Metadata and lineage</strong>: Kubeflow
     automatically tracks inputs, outputs, and metadata for
-    each pipeline run. The ML Metadata (MLMD) store records
+    each pipeline run. The <GlossaryTooltip term="ML" /> Metadata (MLMD) store records
     artifact lineage.
   </li>
   <li>
@@ -231,7 +232,7 @@ import RevealSection from "../../components/RevealSection.astro";
 <ul>
   <li>
     <strong>Small team, getting started</strong>: Dagster
-    offers the best developer experience with sensible ML
+    offers the best developer experience with sensible <GlossaryTooltip term="ML" />
     defaults and low operational overhead, though Airflow's
     larger ecosystem and community support make it a
     pragmatic choice for teams with existing orchestration
@@ -239,8 +240,8 @@ import RevealSection from "../../components/RevealSection.astro";
   </li>
   <li>
     <strong>Large organization, existing Airflow</strong>:
-    Extend Airflow with ML-specific operators and use
-    external tools (MLflow, DVC) for ML-specific
+    Extend Airflow with <GlossaryTooltip term="ML" />-specific operators and use
+    external tools (MLflow, <GlossaryTooltip term="DVC" />) for <GlossaryTooltip term="ML" />-specific
     capabilities.
   </li>
   <li>
@@ -261,8 +262,8 @@ import RevealSection from "../../components/RevealSection.astro";
 
 <p>
   A feature store is a centralized repository for storing,
-  managing, and serving ML features. It addresses one of the
-  most common pain points in production ML: the
+  managing, and serving <GlossaryTooltip term="ML" /> features. It addresses one of the
+  most common pain points in production <GlossaryTooltip term="ML" />: the
   training-serving skew, where the feature computation logic
   differs between training and serving, leading to silent
   model degradation.
@@ -273,7 +274,7 @@ import RevealSection from "../../components/RevealSection.astro";
 <p>
   Without a feature store, feature engineering is typically
   ad hoc: data scientists write feature computation code in
-  notebooks for training, and ML engineers re-implement the
+  notebooks for training, and <GlossaryTooltip term="ML" /> engineers re-implement the
   same logic in the serving pipeline (often in a different
   language). This duplication introduces bugs and
   inconsistencies. A feature store solves this by providing:
@@ -412,10 +413,10 @@ import RevealSection from "../../components/RevealSection.astro";
   reproducible experiments and data lineage tracking.
 </p>
 
-<h3>DVC (Data Version Control)</h3>
+<h3><GlossaryTooltip term="DVC" /> (Data Version Control)</h3>
 
 <p>
-  DVC is the most popular data versioning tool, designed to
+  <GlossaryTooltip term="DVC" /> is the most popular data versioning tool, designed to
   complement Git:
 </p>
 
@@ -423,7 +424,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <li>
     <strong>Git-like commands</strong>: <code>dvc add</code
     >, <code>dvc push</code>, <code>dvc pull</code> mirror Git's
-    workflow. DVC stores lightweight pointer files (<code
+    workflow. <GlossaryTooltip term="DVC" /> stores lightweight pointer files (<code
       >.dvc</code
     > files) in Git that reference the actual data stored in remote
     storage (S3, GCS, Azure Blob).
@@ -431,7 +432,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <li>
     <strong>Pipeline tracking</strong>: <code>dvc.yaml</code
     > files define pipeline stages with inputs, outputs, and commands.
-    DVC tracks which stages need re-execution when inputs change.
+    <GlossaryTooltip term="DVC" /> tracks which stages need re-execution when inputs change.
   </li>
   <li>
     <strong>Experiment management</strong>: <code
@@ -440,7 +441,7 @@ import RevealSection from "../../components/RevealSection.astro";
     with different hyperparameters or data versions.
   </li>
   <li>
-    <strong>Deduplication</strong>: DVC uses
+    <strong>Deduplication</strong>: <GlossaryTooltip term="DVC" /> uses
     content-addressable storage. If the same file appears in
     multiple versions, it is stored only once.
   </li>
@@ -578,10 +579,10 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <div data-reveal-step class="hidden">
     <h4>Step 3: Training and Experiment Tracking</h4>
-    <p>The training step is the core of the ML pipeline:</p>
+    <p>The training step is the core of the <GlossaryTooltip term="ML" /> pipeline:</p>
     <ul>
       <li>
-        Pull versioned data (via DVC) and versioned feature
+        Pull versioned data (via <GlossaryTooltip term="DVC" />) and versioned feature
         sets (via feature store).
       </li>
       <li>
@@ -692,19 +693,19 @@ import RevealSection from "../../components/RevealSection.astro";
   </div>
 </RevealSection>
 
-<h2>Container Orchestration for ML</h2>
+<h2>Container Orchestration for <GlossaryTooltip term="ML" /></h2>
 
 <p>
-  Containers are the standard packaging format for ML
+  Containers are the standard packaging format for <GlossaryTooltip term="ML" />
   workloads. They solve the "works on my machine" problem by
   bundling code, dependencies, and configuration into a
   reproducible, portable unit.
 </p>
 
-<h3>Docker for ML Environments</h3>
+<h3>Docker for <GlossaryTooltip term="ML" /> Environments</h3>
 
 <p>
-  ML Docker images have unique requirements compared to
+  <GlossaryTooltip term="ML" /> Docker images have unique requirements compared to
   typical application containers:
 </p>
 
@@ -716,8 +717,8 @@ import RevealSection from "../../components/RevealSection.astro";
     pre-configured GPU support.
   </li>
   <li>
-    <strong>Large image sizes</strong>: ML images are
-    typically 5-15 GB due to ML frameworks (PyTorch,
+    <strong>Large image sizes</strong>: <GlossaryTooltip term="ML" /> images are
+    typically 5-15 GB due to <GlossaryTooltip term="ML" /> frameworks (PyTorch,
     TensorFlow), CUDA libraries, and model weights.
     Multi-stage builds help reduce final image size by
     separating build-time and runtime dependencies.
@@ -731,16 +732,16 @@ import RevealSection from "../../components/RevealSection.astro";
   <li>
     <strong>Layer caching</strong>: Order Dockerfile
     instructions from least-frequently-changed to
-    most-frequently-changed. Install system packages and ML
+    most-frequently-changed. Install system packages and <GlossaryTooltip term="ML" />
     frameworks early (cached across code changes), copy
     application code late (changes often).
   </li>
 </ul>
 
-<h3>Kubernetes for ML</h3>
+<h3>Kubernetes for <GlossaryTooltip term="ML" /></h3>
 
 <p>
-  Kubernetes has become the platform of choice for ML
+  Kubernetes has become the platform of choice for <GlossaryTooltip term="ML" />
   infrastructure, providing:
 </p>
 
@@ -776,7 +777,7 @@ import RevealSection from "../../components/RevealSection.astro";
 <h3>Model Serving on Kubernetes</h3>
 
 <p>
-  Specialized model serving frameworks simplify deploying ML
+  Specialized model serving frameworks simplify deploying <GlossaryTooltip term="ML" />
   models as scalable APIs on Kubernetes:
 </p>
 
@@ -800,7 +801,7 @@ import RevealSection from "../../components/RevealSection.astro";
     high-performance inference server. Supports dynamic
     batching (aggregating multiple requests into a single
     GPU batch for throughput), model ensembles, and
-    concurrent model execution. Supports ONNX, TensorRT,
+    concurrent model execution. Supports <GlossaryTooltip term="ONNX" />, TensorRT,
     PyTorch, TensorFlow, and custom backends.
   </li>
 </ul>
@@ -808,13 +809,13 @@ import RevealSection from "../../components/RevealSection.astro";
 <h2>Cost Management and Resource Optimization</h2>
 
 <p>
-  GPU compute is the largest cost center for ML teams. A
+  GPU compute is the largest cost center for <GlossaryTooltip term="ML" /> teams. A
   single A100 GPU instance costs $3-5/hour on major cloud
   providers, and training runs often use dozens or hundreds
   of GPUs for days. Inference costs scale with traffic and
   can quickly exceed training costs for popular models. Cost
   optimization is not optional. It directly determines
-  whether an ML project is economically viable.
+  whether an <GlossaryTooltip term="ML" /> project is economically viable.
 </p>
 
 <h3>GPU Cost Optimization</h3>
@@ -878,7 +879,7 @@ import RevealSection from "../../components/RevealSection.astro";
     <strong>Model optimization</strong>: Quantization (FP16,
     INT8, INT4) reduces memory and compute requirements by
     2-4x with minimal accuracy loss. Frameworks like
-    TensorRT and ONNX Runtime provide automated
+    TensorRT and <GlossaryTooltip term="ONNX" /> Runtime provide automated
     optimization.
   </li>
   <li>
@@ -946,7 +947,7 @@ import RevealSection from "../../components/RevealSection.astro";
 <h3>Cloud Cost Monitoring and Budgeting</h3>
 
 <p>
-  Without visibility into costs, ML teams often discover
+  Without visibility into costs, <GlossaryTooltip term="ML" /> teams often discover
   budget overruns weeks after they happen. Effective cost
   management requires:
 </p>
@@ -976,7 +977,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <li>
     <strong>Cost dashboards</strong>: Build dashboards
     showing cost trends by team, project, resource type, and
-    environment. Make cost data visible to ML engineers so
+    environment. Make cost data visible to <GlossaryTooltip term="ML" /> engineers so
     they can make informed trade-offs between model quality
     and cost.
   </li>
@@ -1040,7 +1041,7 @@ import RevealSection from "../../components/RevealSection.astro";
     remain.
   </li>
   <li>
-    <strong>Level 1 - ML Pipeline Automation</strong>:
+    <strong>Level 1 - <GlossaryTooltip term="ML" /> Pipeline Automation</strong>:
     Training is automated via pipelines. Continuous training
     triggers retraining when data changes. Feature stores
     and experiment tracking are in place. Deployment is
@@ -1075,7 +1076,7 @@ import RevealSection from "../../components/RevealSection.astro";
 <KeyTakeaway>
   <ul>
     <li>
-      ML pipelines differ from traditional CI/CD because
+      <GlossaryTooltip term="ML" /> pipelines differ from traditional CI/CD because
       they have two axes of change (code and data) and
       require specialized orchestration for long-running GPU
       jobs, data validation, and model promotion gates.
@@ -1087,7 +1088,7 @@ import RevealSection from "../../components/RevealSection.astro";
       enabling feature reuse across teams.
     </li>
     <li>
-      Data versioning (DVC) extends Git-like workflows to
+      Data versioning (<GlossaryTooltip term="DVC" />) extends Git-like workflows to
       large data files, enabling reproducible experiments
       through content-addressed storage and pipeline
       tracking.
@@ -1100,7 +1101,7 @@ import RevealSection from "../../components/RevealSection.astro";
       batching and canary routing.
     </li>
     <li>
-      GPU cost optimization is critical for ML viability:
+      GPU cost optimization is critical for <GlossaryTooltip term="ML" /> viability:
       use spot instances with checkpointing for training,
       right-size GPU types for inference, and implement
       caching, quantization, and cascading inference to

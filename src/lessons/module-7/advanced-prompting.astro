@@ -1,21 +1,37 @@
 ---
 // Module 7, Lesson 7.2: Advanced Prompting Techniques
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
+import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <p>After completing this lesson, you will be able to:</p>
   <ul>
-    <li>Apply Chain-of-Thought (CoT) prompting and understand why it improves reasoning</li>
-    <li>Use self-consistency sampling to improve reliability on reasoning tasks</li>
-    <li>Understand Tree of Thoughts and when it outperforms linear CoT</li>
-    <li>Implement the ReAct pattern for combining reasoning with tool use</li>
-    <li>Design prompts for structured output generation (JSON, XML, function calls)</li>
+    <li>
+      Apply Chain-of-Thought (CoT) prompting and understand
+      why it improves reasoning
+    </li>
+    <li>
+      Use self-consistency sampling to improve reliability
+      on reasoning tasks
+    </li>
+    <li>
+      Understand Tree of Thoughts and when it outperforms
+      linear CoT
+    </li>
+    <li>
+      Implement the ReAct pattern for combining reasoning
+      with tool use
+    </li>
+    <li>
+      Design prompts for structured output generation (JSON,
+      XML, function calls)
+    </li>
   </ul>
 </section>
 
@@ -23,21 +39,54 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Chain-of-Thought Prompting</h2>
 
   <p>
-    <strong>Chain-of-Thought (CoT)</strong> prompting asks the model to show its reasoning step by step before producing a final answer. This simple technique, introduced by Wei et al. (2022), dramatically improves performance on arithmetic, commonsense reasoning, and symbolic manipulation tasks.
+    <strong
+      >Chain-of-Thought (<GlossaryTooltip
+        term="CoT"
+      />)</strong
+    > prompting asks the model to show its reasoning step by step
+    before producing a final answer. This simple technique, introduced
+    by Wei et al. (2022), dramatically improves performance on
+    arithmetic, commonsense reasoning, and symbolic manipulation
+    tasks.
   </p>
 
-  <h3>Why Does CoT Work?</h3>
+  <h3>Why Does <GlossaryTooltip term="CoT" /> Work?</h3>
   <p>
-    The autoregressive nature of LLMs means each token is conditioned on all preceding tokens. Without CoT, the model must compute a complex answer in a single "forward pass" from question to answer. With CoT, intermediate reasoning steps serve as <em>scratchpad computation</em> -- each step produces tokens that inform subsequent steps. Importantly, the model is still performing forward passes with CoT; the benefit is that the intermediate tokens serve as explicit context that the model can attend to, rather than requiring all reasoning to happen implicitly within a single pass.
+    The autoregressive nature of <GlossaryTooltip
+      term="LLM"
+    />s means each token is conditioned on all preceding
+    tokens. Without <GlossaryTooltip term="CoT" />, the
+    model must compute a complex answer in a single "forward
+    pass" from question to answer. With <GlossaryTooltip
+      term="CoT"
+    />, intermediate reasoning steps serve as <em
+      >scratchpad computation</em
+    > -- each step produces tokens that inform subsequent steps.
+    Importantly, the model is still performing forward passes
+    with <GlossaryTooltip term="CoT" />; the benefit is that
+    the intermediate tokens serve as explicit context that
+    the model can attend to, rather than requiring all
+    reasoning to happen implicitly within a single pass.
   </p>
 
   <p>
-    Consider a multi-step math problem. Without CoT, the model must compress the entire reasoning chain into the implicit computation within its forward pass. With CoT, each intermediate result is explicitly written out, making it available via attention for subsequent steps. The model effectively extends its computational capacity by using its own output as working memory.
+    Consider a multi-step math problem. Without <GlossaryTooltip
+      term="CoT"
+    />, the model must compress the entire reasoning chain
+    into the implicit computation within its forward pass.
+    With <GlossaryTooltip term="CoT" />, each intermediate
+    result is explicitly written out, making it available
+    via attention for subsequent steps. The model
+    effectively extends its computational capacity by using
+    its own output as working memory.
   </p>
 
-  <h3>Zero-Shot CoT</h3>
+  <h3>Zero-Shot <GlossaryTooltip term="CoT" /></h3>
   <p>
-    The simplest form: append <em>"Let's think step by step"</em> (or similar) to your prompt. Remarkably effective despite its simplicity:
+    The simplest form: append <em
+      >"Let's think step by step"</em
+    > (or similar) to your prompt. Remarkably effective despite
+    its simplicity:
   </p>
 
   <pre><code>Q: A store has 45 apples. They sell 12 in the morning and receive
@@ -47,12 +96,18 @@ How many apples remain?
 Let's think step by step.</code></pre>
 
   <p>
-    The model will now generate intermediate steps: "Starting with 45, sell 12 leaves 33, add 30 gives 63, sell 18 leaves 45." Without the CoT prompt, models frequently give incorrect answers to such problems.
+    The model will now generate intermediate steps:
+    "Starting with 45, sell 12 leaves 33, add 30 gives 63,
+    sell 18 leaves 45." Without the <GlossaryTooltip
+      term="CoT"
+    /> prompt, models frequently give incorrect answers to such
+    problems.
   </p>
 
-  <h3>Few-Shot CoT</h3>
+  <h3>Few-Shot <GlossaryTooltip term="CoT" /></h3>
   <p>
-    For more complex or domain-specific reasoning, provide examples that include the reasoning chain:
+    For more complex or domain-specific reasoning, provide
+    examples that include the reasoning chain:
   </p>
 
   <pre><code>Q: If a train travels at 60 mph for 2.5 hours, then at 80 mph
@@ -72,61 +127,137 @@ for 6 hours. How many units are produced?
 A:</code></pre>
 
   <p>
-    The model learns not just to show steps, but to adopt the specific reasoning style and granularity demonstrated in the examples.
+    The model learns not just to show steps, but to adopt
+    the specific reasoning style and granularity
+    demonstrated in the examples.
   </p>
 
-  <h3>When CoT Helps (and When It Does Not)</h3>
+  <h3>
+    When <GlossaryTooltip term="CoT" /> Helps (and When It Does
+    Not)
+  </h3>
   <ul>
-    <li><strong>Helps most</strong>: Multi-step reasoning, math, logical deduction, planning, code debugging</li>
-    <li><strong>Helps somewhat</strong>: Complex classification with multiple criteria, multi-hop Q&A</li>
-    <li><strong>Minimal benefit</strong>: Simple factual recall, sentiment analysis, straightforward translation</li>
-    <li><strong>Can hurt</strong>: Very simple tasks where overthinking introduces errors ("the overthinking tax")</li>
+    <li>
+      <strong>Helps most</strong>: Multi-step reasoning,
+      math, logical deduction, planning, code debugging
+    </li>
+    <li>
+      <strong>Helps somewhat</strong>: Complex
+      classification with multiple criteria, multi-hop Q&A
+    </li>
+    <li>
+      <strong>Minimal benefit</strong>: Simple factual
+      recall, sentiment analysis, straightforward
+      translation
+    </li>
+    <li>
+      <strong>Can hurt</strong>: Very simple tasks where
+      overthinking introduces errors ("the overthinking
+      tax")
+    </li>
   </ul>
 </section>
 
-<Diagram diagramId="cot-comparison" title="Standard vs. Chain-of-Thought Prompting" autoplay={true} animationDuration={4000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+<Diagram
+  diagramId="cot-comparison"
+  title="Standard vs. Chain-of-Thought Prompting"
+  autoplay={true}
+  animationDuration={4000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+  >
     <div class="grid grid-cols-2 gap-8">
       <!-- Standard prompting -->
       <div data-animate style="animation-delay: 0.5s">
-        <div class="font-semibold text-sm mb-3 text-center">Standard Prompting</div>
+        <div class="font-semibold text-sm mb-3 text-center">
+          Standard Prompting
+        </div>
         <div class="space-y-2">
-          <div class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs">
-            <strong>Q:</strong> Roger has 5 tennis balls. He buys 2 cans of 3. How many total?
+          <div
+            class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs"
+          >
+            <strong>Q:</strong> Roger has 5 tennis balls. He buys
+            2 cans of 3. How many total?
           </div>
           <div class="flex justify-center">
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            <svg
+              class="w-4 h-4 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
             </svg>
           </div>
-          <div class="px-3 py-2 bg-rose-50 border border-rose-200 rounded text-xs">
-            <strong>A:</strong> The answer is 27. <span class="text-rose-600 font-medium">(Wrong)</span>
+          <div
+            class="px-3 py-2 bg-rose-50 border border-rose-200 rounded text-xs"
+          >
+            <strong>A:</strong> The answer is 27. <span
+              class="text-rose-600 font-medium"
+              >(Wrong)</span
+            >
           </div>
         </div>
       </div>
 
       <!-- CoT prompting -->
       <div data-animate style="animation-delay: 2s">
-        <div class="font-semibold text-sm mb-3 text-center">Chain-of-Thought</div>
+        <div class="font-semibold text-sm mb-3 text-center">
+          Chain-of-Thought
+        </div>
         <div class="space-y-2">
-          <div class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs">
-            <strong>Q:</strong> Roger has 5 tennis balls. He buys 2 cans of 3. How many total?
+          <div
+            class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs"
+          >
+            <strong>Q:</strong> Roger has 5 tennis balls. He buys
+            2 cans of 3. How many total?
           </div>
           <div class="flex justify-center">
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            <svg
+              class="w-4 h-4 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
             </svg>
           </div>
-          <div class="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-xs">
-            <strong>A:</strong> Roger starts with 5 balls. 2 cans of 3 = 6 balls. 5 + 6 = 11.
+          <div
+            class="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-xs"
+          >
+            <strong>A:</strong> Roger starts with 5 balls. 2 cans
+            of 3 = 6 balls. 5 + 6 = 11.
           </div>
           <div class="flex justify-center">
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            <svg
+              class="w-4 h-4 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
             </svg>
           </div>
-          <div class="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-xs">
-            The answer is <strong>11</strong>. <span class="text-emerald-600 font-medium">(Correct)</span>
+          <div
+            class="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-xs"
+          >
+            The answer is <strong>11</strong>. <span
+              class="text-emerald-600 font-medium"
+              >(Correct)</span
+            >
           </div>
         </div>
       </div>
@@ -138,27 +269,57 @@ A:</code></pre>
   <h2>Self-Consistency</h2>
 
   <p>
-    <strong>Self-consistency</strong> (Wang et al., 2022) improves CoT reliability by sampling multiple reasoning paths and taking a majority vote on the final answer. The key insight: even if individual reasoning chains sometimes err, the correct answer appears more frequently across samples.
+    <strong>Self-consistency</strong> (Wang et al., 2022) improves
+    <GlossaryTooltip term="CoT" /> reliability by sampling multiple
+    reasoning paths and taking a majority vote on the final answer.
+    The key insight: even if individual reasoning chains sometimes
+    err, the correct answer appears more frequently across samples.
   </p>
 
   <h3>How It Works</h3>
   <ol>
-    <li>Prompt the model with a CoT-style prompt</li>
-    <li>Sample N responses with temperature > 0 (typically N = 5-20, temperature = 0.7). Temperature must be above 0 because at temperature=0 all samples would be identical (deterministic argmax), defeating the purpose of sampling diverse reasoning paths.</li>
+    <li>
+      Prompt the model with a <GlossaryTooltip
+        term="CoT"
+      />-style prompt
+    </li>
+    <li>
+      Sample N responses with temperature > 0 (typically N =
+      5-20, temperature = 0.7). Temperature must be above 0
+      because at temperature=0 all samples would be
+      identical (deterministic argmax), defeating the
+      purpose of sampling diverse reasoning paths.
+    </li>
     <li>Extract the final answer from each response</li>
     <li>Return the most common answer (majority vote)</li>
   </ol>
 
   <h3>Why It Works</h3>
   <p>
-    Different reasoning paths may make different errors, but correct reasoning paths tend to converge on the same answer. This is analogous to ensemble methods in classical ML -- aggregating diverse weak learners produces a stronger result.
+    Different reasoning paths may make different errors, but
+    correct reasoning paths tend to converge on the same
+    answer. This is analogous to ensemble methods in
+    classical <GlossaryTooltip term="ML" /> -- aggregating diverse
+    weak learners produces a stronger result.
   </p>
 
   <h3>Tradeoffs</h3>
   <ul>
-    <li><strong>Cost</strong>: N times the inference cost of a single response. At N=10, you are paying 10x for improved accuracy.</li>
-    <li><strong>Latency</strong>: Samples can be generated in parallel, but total compute increases linearly.</li>
-    <li><strong>Applicable tasks</strong>: Only works for tasks with a single verifiable answer. Not suitable for open-ended generation (creative writing, summarization).</li>
+    <li>
+      <strong>Cost</strong>: N times the inference cost of a
+      single response. At N=10, you are paying 10x for
+      improved accuracy.
+    </li>
+    <li>
+      <strong>Latency</strong>: Samples can be generated in
+      parallel, but total compute increases linearly.
+    </li>
+    <li>
+      <strong>Applicable tasks</strong>: Only works for
+      tasks with a single verifiable answer. Not suitable
+      for open-ended generation (creative writing,
+      summarization).
+    </li>
   </ul>
 </section>
 
@@ -166,112 +327,258 @@ A:</code></pre>
   <h2>Tree of Thoughts (ToT)</h2>
 
   <p>
-    <strong>Tree of Thoughts</strong> (Yao et al., 2023) generalizes CoT from a single linear chain to a tree of reasoning paths. At each step, the model generates multiple possible "thoughts" (intermediate reasoning steps), evaluates them, and pursues the most promising branches.
+    <strong>Tree of Thoughts</strong> (Yao et al., 2023) generalizes
+    <GlossaryTooltip term="CoT" /> from a single linear chain
+    to a tree of reasoning paths. At each step, the model generates
+    multiple possible "thoughts" (intermediate reasoning steps),
+    evaluates them, and pursues the most promising branches.
   </p>
 
   <h3>The Algorithm</h3>
   <ol>
-    <li><strong>Decompose</strong> the problem into sequential thought steps</li>
-    <li><strong>Generate</strong> multiple candidate thoughts at each step</li>
-    <li><strong>Evaluate</strong> each thought using the LLM itself (or a separate evaluator) -- is this thought likely to lead to a correct solution?</li>
-    <li><strong>Search</strong> using BFS or DFS over the thought tree, pruning unpromising branches</li>
+    <li>
+      <strong>Decompose</strong> the problem into sequential thought
+      steps
+    </li>
+    <li>
+      <strong>Generate</strong> multiple candidate thoughts at
+      each step
+    </li>
+    <li>
+      <strong>Evaluate</strong> each thought using the <GlossaryTooltip
+        term="LLM"
+      /> itself (or a separate evaluator) -- is this thought likely
+      to lead to a correct solution?
+    </li>
+    <li>
+      <strong>Search</strong> using BFS or DFS over the thought
+      tree, pruning unpromising branches
+    </li>
   </ol>
 
   <h3>When to Use ToT</h3>
   <p>
-    ToT significantly outperforms CoT on tasks requiring <em>exploration and backtracking</em>:
+    ToT significantly outperforms <GlossaryTooltip
+      term="CoT"
+    /> on tasks requiring <em
+      >exploration and backtracking</em
+    >:
   </p>
   <ul>
-    <li><strong>Game of 24</strong>: Combine four numbers with arithmetic to make 24. Requires exploring different operator combinations.</li>
-    <li><strong>Creative writing with constraints</strong>: Generate text satisfying multiple constraints simultaneously.</li>
-    <li><strong>Planning problems</strong>: Multi-step plans where early decisions affect feasibility of later steps.</li>
+    <li>
+      <strong>Game of 24</strong>: Combine four numbers with
+      arithmetic to make 24. Requires exploring different
+      operator combinations.
+    </li>
+    <li>
+      <strong>Creative writing with constraints</strong>:
+      Generate text satisfying multiple constraints
+      simultaneously.
+    </li>
+    <li>
+      <strong>Planning problems</strong>: Multi-step plans
+      where early decisions affect feasibility of later
+      steps.
+    </li>
   </ul>
   <p>
-    For straightforward reasoning tasks, ToT's overhead is not justified -- it may require 50-100 LLM calls per query due to branching and evaluation at each step. CoT or self-consistency is usually sufficient.
+    For straightforward reasoning tasks, ToT's overhead is
+    not justified -- it may require 50-100 <GlossaryTooltip
+      term="LLM"
+    /> calls per query due to branching and evaluation at each
+    step. <GlossaryTooltip term="CoT" /> or self-consistency is
+    usually sufficient.
   </p>
 </section>
 
-<Diagram diagramId="reasoning-strategies" title="Comparison of Reasoning Strategies" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+<Diagram
+  diagramId="reasoning-strategies"
+  title="Comparison of Reasoning Strategies"
+  autoplay={true}
+  animationDuration={5000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+  >
     <div class="grid grid-cols-3 gap-6">
       <!-- Standard CoT -->
       <div data-animate style="animation-delay: 0.5s">
-        <div class="font-semibold text-sm mb-3 text-center">Chain-of-Thought</div>
-        <div class="flex flex-col items-center gap-1">
-          <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">Q</div>
-          <div class="w-0.5 h-4 bg-indigo-300"></div>
-          <div class="w-6 h-6 rounded-full bg-indigo-400 flex items-center justify-center text-white text-xs">1</div>
-          <div class="w-0.5 h-4 bg-indigo-300"></div>
-          <div class="w-6 h-6 rounded-full bg-indigo-400 flex items-center justify-center text-white text-xs">2</div>
-          <div class="w-0.5 h-4 bg-indigo-300"></div>
-          <div class="w-6 h-6 rounded-full bg-indigo-400 flex items-center justify-center text-white text-xs">3</div>
-          <div class="w-0.5 h-4 bg-indigo-300"></div>
-          <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">A</div>
+        <div class="font-semibold text-sm mb-3 text-center">
+          Chain-of-Thought
         </div>
-        <div class="text-xs text-slate-500 text-center mt-2">Single path, linear</div>
+        <div class="flex flex-col items-center gap-1">
+          <div
+            class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs"
+          >
+            Q
+          </div>
+          <div class="w-0.5 h-4 bg-indigo-300"></div>
+          <div
+            class="w-6 h-6 rounded-full bg-indigo-400 flex items-center justify-center text-white text-xs"
+          >
+            1
+          </div>
+          <div class="w-0.5 h-4 bg-indigo-300"></div>
+          <div
+            class="w-6 h-6 rounded-full bg-indigo-400 flex items-center justify-center text-white text-xs"
+          >
+            2
+          </div>
+          <div class="w-0.5 h-4 bg-indigo-300"></div>
+          <div
+            class="w-6 h-6 rounded-full bg-indigo-400 flex items-center justify-center text-white text-xs"
+          >
+            3
+          </div>
+          <div class="w-0.5 h-4 bg-indigo-300"></div>
+          <div
+            class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs"
+          >
+            A
+          </div>
+        </div>
+        <div
+          class="text-xs text-slate-500 text-center mt-2"
+        >
+          Single path, linear
+        </div>
       </div>
 
       <!-- Self-Consistency -->
       <div data-animate style="animation-delay: 2s">
-        <div class="font-semibold text-sm mb-3 text-center">Self-Consistency</div>
+        <div class="font-semibold text-sm mb-3 text-center">
+          Self-Consistency
+        </div>
         <div class="flex flex-col items-center gap-1">
-          <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">Q</div>
+          <div
+            class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs"
+          >
+            Q
+          </div>
           <div class="flex gap-4 mt-1">
             <div class="flex flex-col items-center gap-1">
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white">1</div>
+              <div
+                class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white"
+              >
+                1
+              </div>
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-emerald-400 text-xs flex items-center justify-center text-white">7</div>
+              <div
+                class="w-5 h-5 rounded-full bg-emerald-400 text-xs flex items-center justify-center text-white"
+              >
+                7
+              </div>
             </div>
             <div class="flex flex-col items-center gap-1">
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white">2</div>
+              <div
+                class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white"
+              >
+                2
+              </div>
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-emerald-400 text-xs flex items-center justify-center text-white">7</div>
+              <div
+                class="w-5 h-5 rounded-full bg-emerald-400 text-xs flex items-center justify-center text-white"
+              >
+                7
+              </div>
             </div>
             <div class="flex flex-col items-center gap-1">
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white">3</div>
+              <div
+                class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white"
+              >
+                3
+              </div>
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-rose-300 text-xs flex items-center justify-center text-white">9</div>
+              <div
+                class="w-5 h-5 rounded-full bg-rose-300 text-xs flex items-center justify-center text-white"
+              >
+                9
+              </div>
             </div>
           </div>
           <div class="w-0.5 h-3 bg-indigo-300 mt-1"></div>
-          <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">7</div>
+          <div
+            class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs"
+          >
+            7
+          </div>
         </div>
-        <div class="text-xs text-slate-500 text-center mt-2">Multiple paths, vote</div>
+        <div
+          class="text-xs text-slate-500 text-center mt-2"
+        >
+          Multiple paths, vote
+        </div>
       </div>
 
       <!-- Tree of Thoughts -->
       <div data-animate style="animation-delay: 3.5s">
-        <div class="font-semibold text-sm mb-3 text-center">Tree of Thoughts</div>
+        <div class="font-semibold text-sm mb-3 text-center">
+          Tree of Thoughts
+        </div>
         <div class="flex flex-col items-center gap-1">
-          <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">Q</div>
+          <div
+            class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs"
+          >
+            Q
+          </div>
           <div class="flex gap-3 mt-1">
             <div class="flex flex-col items-center gap-1">
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white">a</div>
+              <div
+                class="w-5 h-5 rounded-full bg-indigo-300 text-xs flex items-center justify-center text-white"
+              >
+                a
+              </div>
               <div class="flex gap-2">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="w-0.5 h-3 bg-indigo-200"></div>
-                  <div class="w-4 h-4 rounded-full bg-rose-300"></div>
+                <div
+                  class="flex flex-col items-center gap-1"
+                >
+                  <div class="w-0.5 h-3 bg-indigo-200">
+                  </div>
+                  <div
+                    class="w-4 h-4 rounded-full bg-rose-300"
+                  >
+                  </div>
                 </div>
-                <div class="flex flex-col items-center gap-1">
-                  <div class="w-0.5 h-3 bg-indigo-200"></div>
-                  <div class="w-4 h-4 rounded-full bg-emerald-400"></div>
+                <div
+                  class="flex flex-col items-center gap-1"
+                >
+                  <div class="w-0.5 h-3 bg-indigo-200">
+                  </div>
+                  <div
+                    class="w-4 h-4 rounded-full bg-emerald-400"
+                  >
+                  </div>
                 </div>
               </div>
             </div>
             <div class="flex flex-col items-center gap-1">
               <div class="w-0.5 h-3 bg-indigo-300"></div>
-              <div class="w-5 h-5 rounded-full bg-slate-300 text-xs flex items-center justify-center text-white">b</div>
-              <div class="text-xs text-rose-400">pruned</div>
+              <div
+                class="w-5 h-5 rounded-full bg-slate-300 text-xs flex items-center justify-center text-white"
+              >
+                b
+              </div>
+              <div class="text-xs text-rose-400">
+                pruned
+              </div>
             </div>
           </div>
           <div class="w-0.5 h-3 bg-indigo-300 mt-1"></div>
-          <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">A</div>
+          <div
+            class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs"
+          >
+            A
+          </div>
         </div>
-        <div class="text-xs text-slate-500 text-center mt-2">Branching + evaluation</div>
+        <div
+          class="text-xs text-slate-500 text-center mt-2"
+        >
+          Branching + evaluation
+        </div>
       </div>
     </div>
   </div>
@@ -281,10 +588,15 @@ A:</code></pre>
   <h2>ReAct: Reasoning + Acting</h2>
 
   <p>
-    <strong>ReAct</strong> (Yao et al., 2022) interleaves reasoning traces with actions (tool calls). Where CoT generates reasoning tokens, ReAct alternates between <em>thinking</em> about what to do and <em>acting</em> on the environment (searching, calculating, querying APIs).
+    <strong><GlossaryTooltip term="ReAct" /></strong> (Yao et
+    al., 2022) interleaves reasoning traces with actions (tool
+    calls). Where <GlossaryTooltip term="CoT" /> generates reasoning
+    tokens, <GlossaryTooltip term="ReAct" /> alternates between
+    <em>thinking</em> about what to do and <em>acting</em> on
+    the environment (searching, calculating, querying APIs).
   </p>
 
-  <h3>The ReAct Loop</h3>
+  <h3>The <GlossaryTooltip term="ReAct" /> Loop</h3>
   <pre><code>Question: What is the elevation of the city where the
 first president of Stanford University was born?
 
@@ -303,52 +615,123 @@ Observation 3: Gainesville, NY has an elevation of approximately 1,500 feet.
 Thought 4: I now have all the information needed.
 Answer: The elevation is approximately 1,500 feet (457 meters).</code></pre>
 
-  <h3>Why ReAct Matters</h3>
+  <h3>Why <GlossaryTooltip term="ReAct" /> Matters</h3>
   <ul>
-    <li><strong>Grounds reasoning in facts</strong>: Instead of hallucinating intermediate facts, the model retrieves them from external sources</li>
-    <li><strong>Transparent decision-making</strong>: The thought traces explain <em>why</em> each action is taken, making the system debuggable</li>
-    <li><strong>Foundation for agents</strong>: ReAct is the conceptual basis for modern LLM agents (covered in Module 8)</li>
+    <li>
+      <strong>Grounds reasoning in facts</strong>: Instead
+      of hallucinating intermediate facts, the model
+      retrieves them from external sources
+    </li>
+    <li>
+      <strong>Transparent decision-making</strong>: The
+      thought traces explain <em>why</em> each action is taken,
+      making the system debuggable
+    </li>
+    <li>
+      <strong>Foundation for agents</strong>: <GlossaryTooltip
+        term="ReAct"
+      /> is the conceptual basis for modern <GlossaryTooltip
+        term="LLM"
+      /> agents (covered in Module 8)
+    </li>
   </ul>
 
-  <h3>ReAct vs. Pure CoT</h3>
+  <h3>
+    <GlossaryTooltip term="ReAct" /> vs. Pure <GlossaryTooltip
+      term="CoT"
+    />
+  </h3>
   <p>
-    Pure CoT excels when the model already has the knowledge needed. ReAct is superior when:
+    Pure <GlossaryTooltip term="CoT" /> excels when the model
+    already has the knowledge needed. <GlossaryTooltip
+      term="ReAct"
+    /> is superior when:
   </p>
   <ul>
-    <li>The task requires up-to-date or domain-specific information</li>
-    <li>Multiple pieces of information must be retrieved and combined</li>
-    <li>The model needs to interact with external systems (databases, APIs, calculators)</li>
+    <li>
+      The task requires up-to-date or domain-specific
+      information
+    </li>
+    <li>
+      Multiple pieces of information must be retrieved and
+      combined
+    </li>
+    <li>
+      The model needs to interact with external systems
+      (databases, APIs, calculators)
+    </li>
   </ul>
 </section>
 
-<RevealSection revealId="react-walkthrough" title="ReAct Pattern: Step-by-Step Walkthrough">
+<RevealSection
+  revealId="react-walkthrough"
+  title="ReAct Pattern: Step-by-Step Walkthrough"
+>
   <div data-reveal-step>
     <h4>Step 1: Receive the Question</h4>
-    <p>The user asks a question requiring external information or computation. The system prompt defines available tools (search, calculator, API calls).</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Step</button>
+    <p>
+      The user asks a question requiring external
+      information or computation. The system prompt defines
+      available tools (search, calculator, API calls).
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="1">Next Step</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Step 2: Generate a Thought</h4>
-    <p>The model reasons about what information is needed and which tool to use. This thought is part of the generated text and can be logged for debugging.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Step</button>
+    <p>
+      The model reasons about what information is needed and
+      which tool to use. This thought is part of the
+      generated text and can be logged for debugging.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="2">Next Step</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Step 3: Execute an Action</h4>
-    <p>The model emits a structured action (tool call). The orchestration layer executes the tool and returns the result as an "Observation" appended to the context.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Step</button>
+    <p>
+      The model emits a structured action (tool call). The
+      orchestration layer executes the tool and returns the
+      result as an "Observation" appended to the context.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="3">Next Step</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Step 4: Observe and Reason Again</h4>
-    <p>With new information, the model generates another thought. Does it have enough information to answer? If not, it generates another action. This loop continues until the model produces a final answer.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step</button>
+    <p>
+      With new information, the model generates another
+      thought. Does it have enough information to answer? If
+      not, it generates another action. This loop continues
+      until the model produces a final answer.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="4">Next Step</button
+    >
   </div>
 
   <div data-reveal-step>
     <h4>Step 5: Produce Final Answer</h4>
-    <p>When sufficient information has been gathered, the model synthesizes all observations into a final answer. The complete trace (thoughts + actions + observations) provides full auditability.</p>
+    <p>
+      When sufficient information has been gathered, the
+      model synthesizes all observations into a final
+      answer. The complete trace (thoughts + actions +
+      observations) provides full auditability.
+    </p>
   </div>
 </RevealSection>
 
@@ -356,12 +739,17 @@ Answer: The elevation is approximately 1,500 feet (457 meters).</code></pre>
   <h2>Structured Output Generation</h2>
 
   <p>
-    Many production applications require LLM outputs in structured formats: JSON, XML, SQL, function calls. Getting reliable structured output is one of the most important practical prompting skills.
+    Many production applications require <GlossaryTooltip
+      term="LLM"
+    /> outputs in structured formats: JSON, XML, SQL, function
+    calls. Getting reliable structured output is one of the most
+    important practical prompting skills.
   </p>
 
   <h3>JSON Output</h3>
   <p>
-    The most common structured format. Key techniques for reliable JSON generation:
+    The most common structured format. Key techniques for
+    reliable JSON generation:
   </p>
 
   <pre><code>Extract the following information from the customer message.
@@ -385,30 +773,55 @@ JSON:</code></pre>
 
   <h3>Constrained Decoding</h3>
   <p>
-    Beyond prompting, many inference frameworks support <strong>constrained decoding</strong> -- enforcing that the output conforms to a grammar or schema at the token level. Libraries like Outlines, Guidance, and jsonformer mask out tokens that would produce invalid output:
+    Beyond prompting, many inference frameworks support <strong
+      >constrained decoding</strong
+    > -- enforcing that the output conforms to a grammar or schema
+    at the token level. Libraries like Outlines, Guidance, and
+    jsonformer mask out tokens that would produce invalid output:
   </p>
   <ul>
-    <li>After generating <code>&#123;"intent": "</code>, only tokens that form valid enum values are allowed</li>
-    <li>Ensures syntactically valid JSON every time, eliminating parsing failures</li>
-    <li>API providers (OpenAI, Anthropic) increasingly offer built-in structured output modes</li>
+    <li>
+      After generating <code>&#123;"intent": "</code>, only
+      tokens that form valid enum values are allowed
+    </li>
+    <li>
+      Ensures syntactically valid JSON every time,
+      eliminating parsing failures
+    </li>
+    <li>
+      API providers (OpenAI, Anthropic) increasingly offer
+      built-in structured output modes
+    </li>
   </ul>
-  
-  <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg my-4">
-    <p class="font-semibold text-blue-800 dark:text-blue-200 text-sm">Pro Tip: Use Pydantic</p>
-    <p class="text-sm">
-      In Python production systems, don't just ask for JSON—validate it with <strong>Pydantic</strong>.
+
+  <div
+    class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg my-4"
+  >
+    <p
+      class="font-semibold text-blue-800 dark:text-blue-200 text-sm"
+    >
+      Pro Tip: Use Pydantic
     </p>
-    <pre class="mt-2 text-xs"><code>class UserIntent(BaseModel):
+    <p class="text-sm">
+      In Python production systems, don't just ask for
+      JSON—validate it with <strong>Pydantic</strong>.
+    </p>
+    <pre
+      class="mt-2 text-xs"><code>class UserIntent(BaseModel):
     intent: Literal["refund", "inquiry"]
     confidence: float
 
 # If validation fails, you can even feed the error back
-# to the LLM to auto-correct its own output!</code></pre>
+# to the <GlossaryTooltip term="LLM" /> to auto-correct its own output!</code></pre>
   </div>
 
   <h3>Function Calling</h3>
   <p>
-    Modern LLM APIs support <strong>function calling</strong> natively: you define function signatures (name, description, parameters with types), and the model generates structured calls:
+    Modern <GlossaryTooltip term="LLM" /> APIs support <strong
+      >function calling</strong
+    > natively: you define function signatures (name, description,
+    parameters with types), and the model generates structured
+    calls:
   </p>
 
   <pre><code>// Function definition provided to the API
@@ -427,7 +840,14 @@ JSON:</code></pre>
 &#125;</code></pre>
 
   <p>
-    Function calling is the foundation of tool use in agents (covered in depth in Module 8, Lesson 8.2). The model learns to map user intent to the correct function and extract parameters from natural language. Function calling is preferred over asking the model to output tool calls as text and then parsing them, because the API can enforce valid schemas at the token level, eliminating parsing failures and malformed output.
+    Function calling is the foundation of tool use in agents
+    (covered in depth in Module 8, Lesson 8.2). The model
+    learns to map user intent to the correct function and
+    extract parameters from natural language. Function
+    calling is preferred over asking the model to output
+    tool calls as text and then parsing them, because the
+    API can enforce valid schemas at the token level,
+    eliminating parsing failures and malformed output.
   </p>
 </section>
 
@@ -439,26 +859,30 @@ JSON:</code></pre>
       id: "a",
       text: "Zero-shot Chain-of-Thought ('Let's think step by step')",
       correct: false,
-      explanation: "CoT helps with reasoning, but the model cannot look up current stock prices from its training data. It would need to hallucinate or use outdated data."
+      explanation:
+        "CoT helps with reasoning, but the model cannot look up current stock prices from its training data. It would need to hallucinate or use outdated data.",
     },
     {
       id: "b",
       text: "Self-consistency with 10 samples",
       correct: false,
-      explanation: "Self-consistency improves reasoning accuracy but still cannot access real-time data. All 10 samples would reason over the same (potentially hallucinated) data."
+      explanation:
+        "Self-consistency improves reasoning accuracy but still cannot access real-time data. All 10 samples would reason over the same (potentially hallucinated) data.",
     },
     {
       id: "c",
       text: "ReAct pattern with search and calculator tools",
       correct: true,
-      explanation: "Correct! ReAct combines reasoning (planning which data to retrieve) with actions (searching for current prices, calculating). This grounds the output in real data rather than hallucinated values."
+      explanation:
+        "Correct! ReAct combines reasoning (planning which data to retrieve) with actions (searching for current prices, calculating). This grounds the output in real data rather than hallucinated values.",
     },
     {
       id: "d",
       text: "Tree of Thoughts with evaluation at each step",
       correct: false,
-      explanation: "ToT is overkill for this task and still cannot access external data. The problem is not about exploring alternative reasoning paths but about grounding in real-time information."
-    }
+      explanation:
+        "ToT is overkill for this task and still cannot access external data. The problem is not about exploring alternative reasoning paths but about grounding in real-time information.",
+    },
   ]}
 />
 
@@ -466,37 +890,110 @@ JSON:</code></pre>
   <h2>Combining Techniques</h2>
 
   <p>
-    Advanced prompting strategies are not mutually exclusive. Production systems often layer multiple techniques:
+    Advanced prompting strategies are not mutually
+    exclusive. Production systems often layer multiple
+    techniques:
   </p>
 
   <ul>
-    <li><strong>ReAct + CoT</strong>: The "Thought" steps in ReAct <em>are</em> CoT reasoning. ReAct naturally incorporates chain-of-thought.</li>
-    <li><strong>CoT + Self-Consistency</strong>: Sample multiple CoT reasoning paths and vote on the answer. Works best for math and logic.</li>
-    <li><strong>Few-Shot + CoT</strong>: Provide examples that include reasoning chains. The model learns both the task pattern and the reasoning style.</li>
-    <li><strong>Role + CoT + Structured Output</strong>: "You are a financial analyst. Think step by step about this data, then output your analysis as JSON."</li>
+    <li>
+      <strong
+        ><GlossaryTooltip term="ReAct" /> + <GlossaryTooltip
+          term="CoT"
+        /></strong
+      >: The "Thought" steps in <GlossaryTooltip
+        term="ReAct"
+      />
+      <em>are</em>
+      <GlossaryTooltip term="CoT" /> reasoning. <GlossaryTooltip
+        term="ReAct"
+      /> naturally incorporates chain-of-thought.
+    </li>
+    <li>
+      <strong
+        ><GlossaryTooltip term="CoT" /> + Self-Consistency</strong
+      >: Sample multiple <GlossaryTooltip term="CoT" /> reasoning
+      paths and vote on the answer. Works best for math and logic.
+    </li>
+    <li>
+      <strong
+        >Few-Shot + <GlossaryTooltip term="CoT" /></strong
+      >: Provide examples that include reasoning chains. The
+      model learns both the task pattern and the reasoning
+      style.
+    </li>
+    <li>
+      <strong
+        >Role + <GlossaryTooltip term="CoT" /> + Structured Output</strong
+      >: "You are a financial analyst. Think step by step
+      about this data, then output your analysis as JSON."
+    </li>
   </ul>
 
   <h3>The Prompting Decision Tree</h3>
-  <p>
-    When selecting a prompting strategy:
-  </p>
+  <p>When selecting a prompting strategy:</p>
   <ol>
-    <li><strong>Is the task simple and well-understood?</strong> Use zero-shot with clear instructions.</li>
-    <li><strong>Does it require specific formatting?</strong> Add few-shot examples.</li>
-    <li><strong>Does it require multi-step reasoning?</strong> Add Chain-of-Thought.</li>
-    <li><strong>Is accuracy critical and verifiable?</strong> Add self-consistency sampling.</li>
-    <li><strong>Does it need external information?</strong> Use ReAct with appropriate tools.</li>
-    <li><strong>Does it require exploring alternatives?</strong> Consider Tree of Thoughts.</li>
+    <li>
+      <strong
+        >Is the task simple and well-understood?</strong
+      > Use zero-shot with clear instructions.
+    </li>
+    <li>
+      <strong>Does it require specific formatting?</strong> Add
+      few-shot examples.
+    </li>
+    <li>
+      <strong>Does it require multi-step reasoning?</strong> Add
+      Chain-of-Thought.
+    </li>
+    <li>
+      <strong>Is accuracy critical and verifiable?</strong> Add
+      self-consistency sampling.
+    </li>
+    <li>
+      <strong>Does it need external information?</strong> Use
+      <GlossaryTooltip term="ReAct" /> with appropriate tools.
+    </li>
+    <li>
+      <strong
+        >Does it require exploring alternatives?</strong
+      > Consider Tree of Thoughts.
+    </li>
   </ol>
 </section>
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Chain-of-Thought</strong> prompting dramatically improves reasoning by using generated tokens as scratchpad computation. "Let's think step by step" is a simple but powerful zero-shot trigger.</li>
-    <li><strong>Self-consistency</strong> samples multiple reasoning paths and takes a majority vote, improving reliability at the cost of N times compute. Best for tasks with verifiable answers.</li>
-    <li><strong>Tree of Thoughts</strong> generalizes CoT to a branching search with evaluation, excelling at tasks requiring exploration and backtracking.</li>
-    <li><strong>ReAct</strong> interleaves reasoning with tool use, grounding LLM outputs in real data. It is the conceptual foundation of modern LLM agents.</li>
-    <li><strong>Structured output</strong> can be achieved through prompt engineering (schemas, examples), constrained decoding (grammar enforcement), or native function calling APIs.</li>
+    <li>
+      <strong>Chain-of-Thought</strong> prompting dramatically
+      improves reasoning by using generated tokens as scratchpad
+      computation. "Let's think step by step" is a simple but
+      powerful zero-shot trigger.
+    </li>
+    <li>
+      <strong>Self-consistency</strong> samples multiple reasoning
+      paths and takes a majority vote, improving reliability at
+      the cost of N times compute. Best for tasks with verifiable
+      answers.
+    </li>
+    <li>
+      <strong>Tree of Thoughts</strong> generalizes <GlossaryTooltip
+        term="CoT"
+      /> to a branching search with evaluation, excelling at tasks
+      requiring exploration and backtracking.
+    </li>
+    <li>
+      <strong><GlossaryTooltip term="ReAct" /></strong> interleaves
+      reasoning with tool use, grounding <GlossaryTooltip
+        term="LLM"
+      /> outputs in real data. It is the conceptual foundation
+      of modern <GlossaryTooltip term="LLM" /> agents.
+    </li>
+    <li>
+      <strong>Structured output</strong> can be achieved through
+      prompt engineering (schemas, examples), constrained decoding
+      (grammar enforcement), or native function calling APIs.
+    </li>
   </ul>
 </KeyTakeaway>
 

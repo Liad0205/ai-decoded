@@ -5,13 +5,15 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
   <li>
-    Understand why RNNs and LSTMs became bottlenecks for
-    sequence modeling
+    Understand why <GlossaryTooltip term="RNN" />s and <GlossaryTooltip
+      term="LSTM"
+    />s became bottlenecks for sequence modeling
   </li>
   <li>
     Derive scaled dot-product attention from first
@@ -23,10 +25,12 @@ import Quiz from "../../components/Quiz.astro";
   <li>Implement multi-head attention conceptually</li>
 </ul>
 
-<h2>The Problem with RNNs and LSTMs</h2>
+<h2>The Problem with <GlossaryTooltip term="RNN" />s and <GlossaryTooltip term="LSTM" />s</h2>
 <p>
   Before transformers, sequence modeling relied on recurrent
-  architectures (RNNs, LSTMs, GRUs). While LSTMs solved
+  architectures (<GlossaryTooltip term="RNN" />s, <GlossaryTooltip
+    term="LSTM"
+  />s, GRUs). While <GlossaryTooltip term="LSTM" />s solved
   vanishing gradients via gating mechanisms, they suffered
   from fundamental limitations:
 </p>
@@ -40,7 +44,9 @@ import Quiz from "../../components/Quiz.astro";
   </li>
   <li>
     <strong>Long-range dependencies</strong>: Despite
-    improvements over vanilla RNNs, LSTMs still struggle
+    improvements over vanilla <GlossaryTooltip
+      term="RNN"
+    />s, <GlossaryTooltip term="LSTM" />s still struggle
     with dependencies spanning hundreds of tokens.
     Information must flow through many sequential steps,
     creating an information bottleneck.
@@ -408,9 +414,11 @@ import Quiz from "../../components/Quiz.astro";
 <KeyTakeaway>
   <ul>
     <li>
-      <strong>RNNs and LSTMs</strong> have sequential bottlenecks
-      preventing parallelization and struggle with long-range
-      dependencies despite gating mechanisms
+      <strong><GlossaryTooltip term="RNN" />s and <GlossaryTooltip
+        term="LSTM"
+      />s</strong> have sequential bottlenecks preventing
+      parallelization and struggle with long-range dependencies
+      despite gating mechanisms
     </li>
     <li>
       <strong>Self-attention</strong> allows each position to

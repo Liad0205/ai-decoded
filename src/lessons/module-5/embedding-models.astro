@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
@@ -19,7 +20,7 @@ import Quiz from "../../components/Quiz.astro";
   </li>
   <li>
     Compare modern embedding architectures: E5, BGE, GTE,
-    and CLIP
+    and <GlossaryTooltip term="CLIP" />
   </li>
   <li>
     Explain Matryoshka Representation Learning and its
@@ -58,7 +59,7 @@ import Quiz from "../../components/Quiz.astro";
   The goal: semantically similar inputs should map to nearby
   points in the embedding space, while dissimilar inputs
   should be far apart. This property makes embeddings the
-  foundation of semantic search, recommendation systems, RAG
+  foundation of semantic search, recommendation systems, <GlossaryTooltip term="RAG" />
   pipelines, and clustering.
 </p>
 
@@ -334,7 +335,7 @@ import Quiz from "../../components/Quiz.astro";
 <h3>Stage 1: Pre-training (Weakly Supervised)</h3>
 
 <p>
-  Start from a pre-trained language model (typically BERT or
+  Start from a pre-trained language model (typically <GlossaryTooltip term="BERT" /> or
   a decoder model). Further pre-train on massive
   weakly-supervised text pairs mined from the web:
 </p>
@@ -463,7 +464,7 @@ import Quiz from "../../components/Quiz.astro";
   <li>
     <strong>E5-Mistral</strong>: Extended to decoder-only
     architectures, using the last token embedding instead of
-    [CLS]
+    [<GlossaryTooltip term="CLS" />]
   </li>
 </ul>
 
@@ -508,10 +509,10 @@ import Quiz from "../../components/Quiz.astro";
   </li>
 </ul>
 
-<h3>CLIP: Connecting Vision and Language</h3>
+<h3><GlossaryTooltip term="CLIP" />: Connecting Vision and Language</h3>
 
 <p>
-  OpenAI's <strong>CLIP</strong> (Contrastive Language-Image Pre-training)
+  OpenAI's <strong><GlossaryTooltip term="CLIP" /></strong> (Contrastive Language-Image Pre-training)
   extends contrastive learning to multimodal embeddings:
 </p>
 
@@ -533,7 +534,7 @@ import Quiz from "../../components/Quiz.astro";
 </p>
 
 <p>
-  CLIP uses two encoders (image and text) trained on 400M
+  <GlossaryTooltip term="CLIP" /> uses two encoders (image and text) trained on 400M
   image-text pairs. The symmetric loss aligns both
   directions: image-to-text and text-to-image. This enables
   zero-shot image classification, image search by natural
@@ -696,7 +697,7 @@ import Quiz from "../../components/Quiz.astro";
     <li>
       <strong>Embeddings</strong> map data to vector spaces where
       geometric proximity encodes semantic similarity---the foundation
-      of search, RAG, and recommendations
+      of search, <GlossaryTooltip term="RAG" />, and recommendations
     </li>
     <li>
       <strong>Contrastive learning with InfoNCE loss</strong
@@ -709,7 +710,7 @@ import Quiz from "../../components/Quiz.astro";
       on billions of pairs, then fine-tuning with hard negatives
     </li>
     <li>
-      <strong>CLIP</strong> extends contrastive learning to multimodal
+      <strong><GlossaryTooltip term="CLIP" /></strong> extends contrastive learning to multimodal
       (image-text) embeddings, enabling zero-shot visual understanding
     </li>
     <li>

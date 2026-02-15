@@ -5,21 +5,27 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
   <li>
-    Understand why SFT alone is insufficient and how RLHF
+    Understand why <GlossaryTooltip term="SFT" /> alone is insufficient
+    and how <GlossaryTooltip term="RLHF" />
     addresses its limitations
   </li>
   <li>
-    Explain the full RLHF pipeline: reward modeling, PPO
+    Explain the full <GlossaryTooltip term="RLHF" /> pipeline:
+    reward modeling, <GlossaryTooltip term="PPO" />
     optimization, and KL constraints
   </li>
   <li>
-    Derive and compare Direct Preference Optimization (DPO)
-    as a simpler alternative to PPO
+    Derive and compare Direct Preference Optimization (<GlossaryTooltip
+      term="DPO"
+    />) as a simpler alternative to <GlossaryTooltip
+      term="PPO"
+    />
   </li>
   <li>
     Identify failure modes: reward hacking, mode collapse,
@@ -27,11 +33,14 @@ import Quiz from "../../components/Quiz.astro";
   </li>
 </ul>
 
-<h2>Why RLHF? The Limits of Supervised Learning</h2>
+<h2>
+  Why <GlossaryTooltip term="RLHF" />? The Limits of
+  Supervised Learning
+</h2>
 
 <p>
-  SFT teaches a model to imitate human demonstrations, but
-  imitation has fundamental limitations:
+  <GlossaryTooltip term="SFT" /> teaches a model to imitate human
+  demonstrations, but imitation has fundamental limitations:
 </p>
 <ul>
   <li>
@@ -43,8 +52,9 @@ import Quiz from "../../components/Quiz.astro";
   <li>
     <strong>Ceiling effect</strong>: SFT can only be as good
     as the demonstrations. The model can't surpass the
-    quality of its training data. RLHF can, by optimizing
-    against a learned preference signal.
+    quality of its training data. <GlossaryTooltip
+      term="RLHF"
+    /> can, by optimizing against a learned preference signal.
   </li>
   <li>
     <strong>Subtle quality dimensions</strong>: Helpfulness,
@@ -54,13 +64,13 @@ import Quiz from "../../components/Quiz.astro";
 </ul>
 
 <p>
-  RLHF (Reinforcement Learning from Human Feedback)
-  addresses these limitations by training the model to
-  optimize for human preferences rather than imitating
+  <GlossaryTooltip term="RLHF" /> (Reinforcement Learning from
+  Human Feedback) addresses these limitations by training the
+  model to optimize for human preferences rather than imitating
   demonstrations.
 </p>
 
-<h2>The RLHF Pipeline</h2>
+<h2>The <GlossaryTooltip term="RLHF" /> Pipeline</h2>
 
 <Diagram
   diagramId="rlhf-pipeline"
@@ -79,7 +89,7 @@ import Quiz from "../../components/Quiz.astro";
         style="animation-delay: 0.3s"
       >
         <div class="font-bold text-blue-800 text-sm mb-2">
-          Stage 1: SFT
+          Stage 1: <GlossaryTooltip term="SFT" />
         </div>
         <div class="text-xs text-blue-700">
           <div>Base model</div>
@@ -121,14 +131,15 @@ import Quiz from "../../components/Quiz.astro";
         <div
           class="font-bold text-emerald-800 text-sm mb-2"
         >
-          Stage 3: RL (PPO)
+          Stage 3: RL (<GlossaryTooltip term="PPO" />)
         </div>
         <div class="text-xs text-emerald-700">
           <div>Optimize policy &#960;<sub>&#952;</sub></div>
           <div class="my-1">&#8595;</div>
           <div>
             Maximize R while staying near &#960;<sub
-              >SFT</sub>
+              >SFT</sub
+            >
           </div>
           <div class="my-1">&#8595;</div>
           <div class="font-semibold">
@@ -145,10 +156,10 @@ import Quiz from "../../components/Quiz.astro";
 <p>
   Start with a pretrained model and fine-tune on
   demonstration data (covered in Lesson 3.2). This produces
-  the SFT model <MathBlock
+  the <GlossaryTooltip term="SFT" /> model <MathBlock
     formula={"\\pi_{\\text{SFT}}"}
   />, which serves as the starting point and reference
-  policy for RLHF.
+  policy for <GlossaryTooltip term="RLHF" />.
 </p>
 
 <h3>Stage 2: Reward Modeling</h3>
@@ -162,7 +173,9 @@ import Quiz from "../../components/Quiz.astro";
     Sample prompts from a distribution of user inputs.
   </li>
   <li>
-    Generate 2+ responses per prompt from the SFT model.
+    Generate 2+ responses per prompt from the <GlossaryTooltip
+      term="SFT"
+    /> model.
   </li>
   <li>
     Human annotators rank the responses (e.g., response A >
@@ -236,9 +249,11 @@ import Quiz from "../../components/Quiz.astro";
 
 <p>
   <strong>Architecture</strong>: The reward model is
-  typically initialized from the SFT model, with the
-  language model head replaced by a scalar output head. This
-  gives it strong language understanding from the start.
+  typically initialized from the <GlossaryTooltip
+    term="SFT"
+  /> model, with the language model head replaced by a scalar
+  output head. This gives it strong language understanding from
+  the start.
 </p>
 
 <h4>Reward Model Quality</h4>
@@ -261,12 +276,18 @@ import Quiz from "../../components/Quiz.astro";
   </li>
 </ul>
 
-<h3>Stage 3: RL Optimization with PPO</h3>
+<h3>
+  Stage 3: RL Optimization with <GlossaryTooltip
+    term="PPO"
+  />
+</h3>
 
 <p>
   With a trained reward model, we optimize the language
   model policy <MathBlock formula={"\\pi_\\theta"} /> to maximize
-  expected reward while staying close to the SFT policy. The objective:
+  expected reward while staying close to the <GlossaryTooltip
+    term="SFT"
+  /> policy. The objective:
 </p>
 
 <MathBlock
@@ -278,17 +299,20 @@ import Quiz from "../../components/Quiz.astro";
   The KL divergence penalty <MathBlock
     formula={"\\beta \\cdot D_{\\text{KL}}"}
   /> is critical: it prevents the model from drifting too far
-  from the SFT policy. Without it, the model would exploit the
-  reward model rather than genuinely improving.
+  from the <GlossaryTooltip term="SFT" /> policy. Without it,
+  the model would exploit the reward model rather than genuinely
+  improving.
 </p>
 
-<h4>Why PPO?</h4>
+<h4>Why <GlossaryTooltip term="PPO" />?</h4>
 
 <p>
   Standard policy gradient methods can make catastrophically
   large updates when a single batch happens to produce
   unusually large gradients. <strong
-    >Proximal Policy Optimization (PPO)</strong
+    >Proximal Policy Optimization (<GlossaryTooltip
+      term="PPO"
+    />)</strong
   > prevents this by clipping the probability ratio between the
   new and old policy: if the new policy strays too far from the
   old one on any given action, the gradient is zeroed out, acting
@@ -323,8 +347,8 @@ import Quiz from "../../components/Quiz.astro";
     Intuition: The "Cautious Manager"
   </p>
   <p class="text-sm">
-    Think of PPO as a cautious manager overseeing an
-    employee (the model).
+    Think of <GlossaryTooltip term="PPO" /> as a cautious manager
+    overseeing an employee (the model).
   </p>
   <p class="text-sm mt-2">
     When the employee finds a new strategy that works well
@@ -342,7 +366,7 @@ import Quiz from "../../components/Quiz.astro";
   </p>
 </div>
 
-<p>In the LLM context:</p>
+<p>In the <GlossaryTooltip term="LLM" /> context:</p>
 <ul>
   <li>
     <strong>State</strong>: The prompt + tokens generated so
@@ -363,7 +387,7 @@ import Quiz from "../../components/Quiz.astro";
   </li>
 </ul>
 
-<h4>RLHF Training Loop</h4>
+<h4><GlossaryTooltip term="RLHF" /> Training Loop</h4>
 <ol>
   <li>Sample a batch of prompts from the dataset.</li>
   <li>
@@ -382,32 +406,42 @@ import Quiz from "../../components/Quiz.astro";
     />.
   </li>
   <li>Compute advantages using the value function.</li>
-  <li>Update policy and value networks with PPO.</li>
+  <li>
+    Update policy and value networks with <GlossaryTooltip
+      term="PPO"
+    />.
+  </li>
   <li>Repeat.</li>
 </ol>
 
-<h2>Direct Preference Optimization (DPO)</h2>
+<h2>
+  Direct Preference Optimization (<GlossaryTooltip
+    term="DPO"
+  />)
+</h2>
 
 <p>
-  RLHF with PPO is effective but complex: it requires
-  training a separate reward model, running RL optimization
-  with a critic network, carefully tuning PPO
-  hyperparameters, and managing four models in memory
-  simultaneously (policy, reference, reward, critic).
+  <GlossaryTooltip term="RLHF" /> with <GlossaryTooltip
+    term="PPO"
+  /> is effective but complex: it requires training a separate
+  reward model, running RL optimization with a critic network,
+  carefully tuning <GlossaryTooltip term="PPO" />
+  hyperparameters, and managing four models in memory simultaneously
+  (policy, reference, reward, critic).
 </p>
 
 <p>
-  <strong>DPO</strong> eliminates the reward model and RL entirely
-  by showing that the optimal policy can be derived in closed
-  form from the preference data.
+  <strong><GlossaryTooltip term="DPO" /></strong> eliminates the
+  reward model and RL entirely by showing that the optimal policy
+  can be derived in closed form from the preference data.
 </p>
 
-<h3>The DPO Insight</h3>
+<h3>The <GlossaryTooltip term="DPO" /> Insight</h3>
 
 <p>
-  Starting from the RLHF objective, Rafailov et al. showed
-  that the optimal policy under the KL-constrained reward
-  maximization has a closed-form relationship to the reward
+  Starting from the <GlossaryTooltip term="RLHF" /> objective,
+  Rafailov et al. showed that the optimal policy under the KL-constrained
+  reward maximization has a closed-form relationship to the reward
   function:
 </p>
 
@@ -425,16 +459,18 @@ import Quiz from "../../components/Quiz.astro";
   Substituting this into the Bradley-Terry preference model
   and canceling the partition function <MathBlock
     formula="Z(x)"
-  />, we get the DPO loss. The key intuition: DPO is a
-  classification loss in disguise. It increases the
-  log-probability of preferred responses and decreases the
-  log-probability of dispreferred ones, with the reference
-  model acting as a regularizer to prevent the policy from
-  straying too far. Mathematically:
+  />, we get the <GlossaryTooltip term="DPO" /> loss. The key
+  intuition: <GlossaryTooltip term="DPO" /> is a classification
+  loss in disguise. It increases the log-probability of preferred
+  responses and decreases the log-probability of dispreferred
+  ones, with the reference model acting as a regularizer to prevent
+  the policy from straying too far. Mathematically:
 </p>
 
 <div class="equation-with-label">
-  <p class="equation-label">DPO loss function:</p>
+  <p class="equation-label">
+    <GlossaryTooltip term="DPO" /> loss function:
+  </p>
   <MathBlock
     formula={"\\mathcal{L}_{\\text{DPO}}(\\theta) = -\\mathbb{E}_{(x, y_w, y_l)}\\left[\\log \\sigma\\left(\\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{\\text{ref}}(y_w|x)} - \\beta \\log \\frac{\\pi_\\theta(y_l|x)}{\\pi_{\\text{ref}}(y_l|x)}\\right)\\right]"}
     display={true}
@@ -444,11 +480,13 @@ import Quiz from "../../components/Quiz.astro";
 <p>
   where <MathBlock formula={"\\pi_\\theta"} /> is the policy being
   trained, <MathBlock formula={"\\pi_{\\text{ref}}"} /> is the
-  frozen reference policy (typically the SFT model), <MathBlock
-    formula={"y_w"}
-  /> and <MathBlock formula={"y_l"} /> are the preferred and dispreferred
-  responses, and <MathBlock formula={"\\beta"} /> controls regularization
-  strength. Each log-ratio term <MathBlock
+  frozen reference policy (typically the <GlossaryTooltip
+    term="SFT"
+  /> model), <MathBlock formula={"y_w"} /> and <MathBlock
+    formula={"y_l"}
+  /> are the preferred and dispreferred responses, and <MathBlock
+    formula={"\\beta"}
+  /> controls regularization strength. Each log-ratio term <MathBlock
     formula={"\\log \\frac{\\pi_\\theta(y|x)}{\\pi_{\\text{ref}}(y|x)}"}
   /> measures how much the policy has shifted relative to the
   reference for a given response -- think of it as an "implicit
@@ -464,50 +502,68 @@ import Quiz from "../../components/Quiz.astro";
   preference data.
 </p>
 
-<h3>DPO vs. PPO: Trade-offs</h3>
+<h3>
+  <GlossaryTooltip term="DPO" /> vs. <GlossaryTooltip
+    term="PPO"
+  />: Trade-offs
+</h3>
 
 <ul>
   <li>
-    <strong>Simplicity</strong>: DPO is a single supervised
-    fine-tuning step (no reward model, no critic, no RL
-    loop). Far easier to implement and debug.
+    <strong>Simplicity</strong>: <GlossaryTooltip
+      term="DPO"
+    /> is a single supervised fine-tuning step (no reward model,
+    no critic, no RL loop). Far easier to implement and debug.
   </li>
   <li>
-    <strong>Memory</strong>: DPO requires only two models
-    (policy + reference). PPO requires four (policy +
-    reference + reward + critic).
+    <strong>Memory</strong>: <GlossaryTooltip term="DPO" /> requires
+    only two models (policy + reference). <GlossaryTooltip
+      term="PPO"
+    /> requires four (policy + reference + reward + critic).
   </li>
   <li>
-    <strong>Stability</strong>: DPO avoids the instabilities
-    of RL training (reward hacking, mode collapse during
-    optimization).
+    <strong>Stability</strong>: <GlossaryTooltip
+      term="DPO"
+    /> avoids the instabilities of RL training (reward hacking,
+    mode collapse during optimization).
   </li>
   <li>
-    <strong>Expressiveness</strong>: PPO can explore beyond
-    the training data distribution by generating novel
-    responses. DPO is limited to reweighting responses in
-    the preference dataset.
+    <strong>Expressiveness</strong>: <GlossaryTooltip
+      term="PPO"
+    /> can explore beyond the training data distribution by generating
+    novel responses. <GlossaryTooltip term="DPO" /> is limited
+    to reweighting responses in the preference dataset.
   </li>
   <li>
-    <strong>Online vs. offline</strong>: PPO generates new
-    responses during training (on-policy). DPO trains on a
-    fixed preference dataset (off-policy), which can be
-    suboptimal if the preference data doesn't cover the
+    <strong>Online vs. offline</strong>: <GlossaryTooltip
+      term="PPO"
+    /> generates new responses during training (on-policy). <GlossaryTooltip
+      term="DPO"
+    /> trains on a fixed preference dataset (off-policy), which
+    can be suboptimal if the preference data doesn't cover the
     current policy's output distribution.
   </li>
 </ul>
 
-<h3>DPO in Practice (2025-2026)</h3>
+<h3>
+  <GlossaryTooltip term="DPO" /> in Practice (2025-2026)
+</h3>
 <p>
   By 2025-2026, <strong
-    >DPO has become a widely adopted alternative to RLHF/PPO</strong
+    ><GlossaryTooltip term="DPO" /> has become a widely adopted
+    alternative to <GlossaryTooltip
+      term="RLHF"
+    />/<GlossaryTooltip term="PPO" /></strong
   > for alignment in production systems. The reasons:
 </p>
 <ul>
   <li>
-    <strong>Empirical effectiveness</strong>: DPO achieves
-    comparable or better results than PPO on most alignment
-    benchmarks with dramatically simpler implementation
+    <strong>Empirical effectiveness</strong>: <GlossaryTooltip
+      term="DPO"
+    /> achieves comparable or better results than <GlossaryTooltip
+      term="PPO"
+    /> on most alignment benchmarks with dramatically simpler
+    implementation
   </li>
   <li>
     <strong>Cost efficiency</strong>: Requiring only two
@@ -521,18 +577,27 @@ import Quiz from "../../components/Quiz.astro";
   </li>
   <li>
     <strong>Iteration speed</strong>: Teams can iterate
-    faster on alignment with DPO's simpler debugging and
-    experimentation workflow
+    faster on alignment with <GlossaryTooltip
+      term="DPO"
+    />'s simpler debugging and experimentation workflow
   </li>
 </ul>
 
-<h3>Beyond DPO: Newer Variants (2025-2026)</h3>
-<p>The field continues to evolve beyond vanilla DPO:</p>
+<h3>
+  Beyond <GlossaryTooltip term="DPO" />: Newer Variants
+  (2025-2026)
+</h3>
+<p>
+  The field continues to evolve beyond vanilla <GlossaryTooltip
+    term="DPO"
+  />:
+</p>
 <ul>
   <li>
     <strong>IPO (Identity Preference Optimization)</strong>:
-    Addresses DPO's sensitivity to the reference policy by
-    using an identity mapping, improving robustness
+    Addresses <GlossaryTooltip term="DPO" />'s sensitivity
+    to the reference policy by using an identity mapping,
+    improving robustness
   </li>
   <li>
     <strong>RLTHF (RL from Targeted Human Feedback)</strong
@@ -549,8 +614,9 @@ import Quiz from "../../components/Quiz.astro";
       >GRPO (Group Relative Policy Optimization)</strong
     >: Eliminates the critic/value model by using
     group-based advantage estimation from multiple sampled
-    outputs. More memory-efficient than PPO. Used in
-    DeepSeek-R1 for reasoning (Shao et al. 2024)
+    outputs. More memory-efficient than <GlossaryTooltip
+      term="PPO"
+    />. Used in DeepSeek-R1 for reasoning (Shao et al. 2024)
   </li>
   <li>
     <strong>Agentic self-refinement</strong>: Models
@@ -650,25 +716,27 @@ import Quiz from "../../components/Quiz.astro";
 
 <p>
   The KL penalty mitigates this by keeping the policy close
-  to the diverse SFT distribution, but too-low <MathBlock
-    formula={"\\beta"}
-  /> allows collapse while too-high <MathBlock
-    formula={"\\beta"}
-  /> prevents meaningful improvement.
+  to the diverse <GlossaryTooltip term="SFT" /> distribution,
+  but too-low <MathBlock formula={"\\beta"} /> allows collapse
+  while too-high <MathBlock formula={"\\beta"} /> prevents meaningful
+  improvement.
 </p>
 
 <h3>Alignment Tax</h3>
 
 <p>
-  RLHF can reduce raw capability on some benchmarks. The
-  "alignment tax" reflects the trade-off between helpfulness
-  and safety: a model that refuses harmful requests may also
-  refuse ambiguous-but-benign requests. Research aims to
-  minimize this tax through better reward modeling and
+  <GlossaryTooltip term="RLHF" /> can reduce raw capability on
+  some benchmarks. The "alignment tax" reflects the trade-off
+  between helpfulness and safety: a model that refuses harmful
+  requests may also refuse ambiguous-but-benign requests. Research
+  aims to minimize this tax through better reward modeling and
   training.
 </p>
 
-<h3>Iterative RLHF and Constitutional AI</h3>
+<h3>
+  Iterative <GlossaryTooltip term="RLHF" /> and Constitutional
+  AI
+</h3>
 
 <p>
   Modern alignment approaches iterate: train a model,
@@ -676,7 +744,9 @@ import Quiz from "../../components/Quiz.astro";
     >Constitutional AI (CAI)</strong
   > replaces some human feedback with AI feedback, allowing the
   model to critique its own outputs according to a set of principles
-  (a "constitution") and generate preference pairs for DPO/RLHF
+  (a "constitution") and generate preference pairs for <GlossaryTooltip
+    term="DPO"
+  />/<GlossaryTooltip term="RLHF" />
   training.
 </p>
 
@@ -690,20 +760,29 @@ import Quiz from "../../components/Quiz.astro";
       demo quality
     </li>
     <li>
-      <strong>Historical RLHF stages</strong>: SFT
-      (demonstrations) → Reward Model (comparisons) → PPO
+      <strong
+        >Historical <GlossaryTooltip term="RLHF" /> stages</strong
+      >: <GlossaryTooltip term="SFT" />
+      (demonstrations) → Reward Model (comparisons) → <GlossaryTooltip
+        term="PPO"
+      />
       (optimization with KL constraint)
     </li>
     <li>
-      <strong>DPO has become widely adopted</strong> (2025-2026),
-      deriving a closed-form loss from preference data and eliminating
-      the reward model and RL loop entirely. Its simplicity, stability,
-      and effectiveness make it a popular alternative to RLHF/PPO
+      <strong
+        ><GlossaryTooltip term="DPO" /> has become widely adopted</strong
+      > (2025-2026), deriving a closed-form loss from preference
+      data and eliminating the reward model and RL loop entirely.
+      Its simplicity, stability, and effectiveness make it a popular
+      alternative to <GlossaryTooltip
+        term="RLHF"
+      />/<GlossaryTooltip term="PPO" />
     </li>
     <li>
       <strong>Modern variants</strong>: IPO, RLTHF, and
       verifier-driven approaches continue to improve on
-      vanilla DPO for specific use cases
+      vanilla <GlossaryTooltip term="DPO" /> for specific use
+      cases
     </li>
     <li>
       <strong>Reward hacking</strong> (Goodhart's Law) remains

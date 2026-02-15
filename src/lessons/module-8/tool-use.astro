@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -24,8 +25,9 @@ import RevealSection from "../../components/RevealSection.astro";
       parallel, and nested
     </li>
     <li>
-      Describe the Model Context Protocol (MCP) and its role
-      in standardizing tool use
+      Describe the Model Context Protocol (<GlossaryTooltip
+        term="MCP"
+      />) and its role in standardizing tool use
     </li>
     <li>
       Apply best practices for tool security, error
@@ -39,7 +41,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     <strong>Function calling</strong> (also called "tool use")
-    enables LLMs to interact with external systems by generating
+    enables <GlossaryTooltip term="LLM" />s to interact with external systems by generating
     structured function invocations. Rather than producing free-text
     that you parse, the model outputs structured data (function
     name + arguments) that your code can directly execute.
@@ -494,19 +496,21 @@ Main Agent receives: structured competitive analysis report</code></pre>
 </section>
 
 <section>
-  <h2>The Model Context Protocol (MCP)</h2>
+  <h2>The Model Context Protocol (<GlossaryTooltip term="MCP" />)</h2>
 
   <p>
-    The <strong>Model Context Protocol (MCP)</strong>,
-    introduced by Anthropic, is an open standard for
-    connecting LLMs to external tools and data sources. It
+    The <strong>Model Context Protocol (<GlossaryTooltip
+      term="MCP"
+    />)</strong>, introduced by Anthropic, is an open standard
+    for connecting <GlossaryTooltip term="LLM" />s to external
+    tools and data sources. It
     addresses the fragmentation problem: without a standard,
     every tool integration requires custom code for each
     model provider.
   </p>
 
-  <h3>The Problem MCP Solves</h3>
-  <p>Before MCP, integrating tools with LLMs meant:</p>
+  <h3>The Problem <GlossaryTooltip term="MCP" /> Solves</h3>
+  <p>Before <GlossaryTooltip term="MCP" />, integrating tools with <GlossaryTooltip term="LLM" />s meant:</p>
   <ul>
     <li>
       Writing custom adapter code for each tool-model
@@ -525,18 +529,18 @@ Main Agent receives: structured competitive analysis report</code></pre>
     </li>
   </ul>
 
-  <h3>MCP Architecture</h3>
-  <p>MCP follows a client-server architecture:</p>
+  <h3><GlossaryTooltip term="MCP" /> Architecture</h3>
+  <p><GlossaryTooltip term="MCP" /> follows a client-server architecture:</p>
   <ul>
     <li>
-      <strong>MCP Server</strong>: Exposes tools (and
+      <strong><GlossaryTooltip term="MCP" /> Server</strong>: Exposes tools (and
       optionally resources and prompts) through a
       standardized JSON-RPC interface. A server might wrap a
       database, an API, a file system, or any external
       capability.
     </li>
     <li>
-      <strong>MCP Client</strong>: Built into the LLM
+      <strong><GlossaryTooltip term="MCP" /> Client</strong>: Built into the <GlossaryTooltip term="LLM" />
       application (host). Discovers available servers,
       enumerates their tools, and routes tool calls to the
       appropriate server.
@@ -549,7 +553,7 @@ Main Agent receives: structured competitive analysis report</code></pre>
     </li>
   </ul>
 
-  <h3>What MCP Provides</h3>
+  <h3>What <GlossaryTooltip term="MCP" /> Provides</h3>
   <ul>
     <li>
       <strong>Tools</strong>: Functions the model can call,
@@ -565,17 +569,20 @@ Main Agent receives: structured competitive analysis report</code></pre>
       that can be dynamically inserted
     </li>
     <li>
-      <strong>Sampling</strong>: Enables MCP servers to
-      request LLM completions through the client, creating
+      <strong>Sampling</strong>: Enables <GlossaryTooltip
+        term="MCP"
+      /> servers to request <GlossaryTooltip term="LLM" />
+      completions through the client, creating
       bidirectional interaction
     </li>
   </ul>
 
   <h3>Practical Impact</h3>
   <p>
-    MCP enables a growing ecosystem of pre-built tool
-    servers. Instead of writing custom integration code,
-    developers can connect to existing MCP servers for
+    <GlossaryTooltip term="MCP" /> enables a growing ecosystem
+    of pre-built tool servers. Instead of writing custom
+    integration code, developers can connect to existing
+    <GlossaryTooltip term="MCP" /> servers for
     common services: file systems, databases, GitHub, Slack,
     and more. This dramatically reduces the integration
     burden for building agent applications.
@@ -819,7 +826,9 @@ function deleteUser(args) &#123;
 <KeyTakeaway>
   <ul>
     <li>
-      <strong>Function calling</strong> enables LLMs to interact
+      <strong>Function calling</strong> enables <GlossaryTooltip
+        term="LLM"
+      />s to interact
       with external systems through structured tool invocations.
       The model generates the function name and arguments; your
       code executes them and returns results.
@@ -836,7 +845,7 @@ function deleteUser(args) &#123;
       queries), and nested calls (tools that are themselves agents).
     </li>
     <li>
-      <strong>MCP standardizes tool integration</strong> via a
+      <strong><GlossaryTooltip term="MCP" /> standardizes tool integration</strong> via a
       client-server protocol, enabling a reusable ecosystem of
       tool servers and reducing N*M integration complexity.
     </li>

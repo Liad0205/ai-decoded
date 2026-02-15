@@ -6,13 +6,16 @@ import MathBlock from "../../components/MathBlock.astro";
 
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
     <li>
-      Understand the autoregressive bottleneck and why LLM
+      Understand the autoregressive bottleneck and why <GlossaryTooltip
+        term="LLM"
+      />
       generation is inherently slow
     </li>
     <li>
@@ -28,7 +31,9 @@ import RevealSection from "../../components/RevealSection.astro";
       compression
     </li>
     <li>
-      Evaluate model optimization pipelines including ONNX
+      Evaluate model optimization pipelines including <GlossaryTooltip
+        term="ONNX"
+      />
       runtime and graph optimization
     </li>
   </ul>
@@ -39,12 +44,11 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     As we explored in the previous lesson, the decode phase
-    of LLM inference generates tokens <strong
-      >one at a time</strong
-    >. Each token requires a full forward pass through the
-    model, loading all model weights from GPU memory. For a
-    70B model in FP16, that is 140 GB of memory reads per
-    token.
+    of <GlossaryTooltip term="LLM" /> inference generates tokens
+    <strong>one at a time</strong>. Each token requires a
+    full forward pass through the model, loading all model
+    weights from GPU memory. For a 70B model in FP16, that
+    is 140 GB of memory reads per token.
   </p>
 
   <p>
@@ -494,7 +498,11 @@ import RevealSection from "../../components/RevealSection.astro";
 </section>
 
 <section>
-  <h2>Distillation Techniques for LLMs</h2>
+  <h2>
+    Distillation Techniques for <GlossaryTooltip
+      term="LLM"
+    />s
+  </h2>
 
   <p>
     Distilling large language models presents unique
@@ -586,7 +594,10 @@ import RevealSection from "../../components/RevealSection.astro";
 </section>
 
 <section>
-  <h2>ONNX Runtime and Model Optimization Pipelines</h2>
+  <h2>
+    <GlossaryTooltip term="ONNX" /> Runtime and Model Optimization
+    Pipelines
+  </h2>
 
   <p>
     Beyond quantization and distillation, a complete
@@ -596,27 +607,34 @@ import RevealSection from "../../components/RevealSection.astro";
     execution.
   </p>
 
-  <h3>ONNX (Open Neural Network Exchange)</h3>
+  <h3>
+    <GlossaryTooltip term="ONNX" /> (Open Neural Network Exchange)
+  </h3>
   <p>
-    ONNX is an open format for representing machine learning
-    models. Converting a model to ONNX format enables:
+    <GlossaryTooltip term="ONNX" /> is an open format for representing
+    machine learning models. Converting a model to <GlossaryTooltip
+      term="ONNX"
+    /> format enables:
   </p>
   <ul>
     <li>
       <strong>Framework independence</strong>: Models
-      trained in PyTorch can be served by ONNX Runtime,
-      TensorRT, or other runtimes without PyTorch as a
-      dependency
+      trained in PyTorch can be served by <GlossaryTooltip
+        term="ONNX"
+      /> Runtime, TensorRT, or other runtimes without PyTorch
+      as a dependency
     </li>
     <li>
-      <strong>Graph optimizations</strong>: The ONNX runtime
-      applies operator fusion, constant folding, and memory
-      planning at the graph level
+      <strong>Graph optimizations</strong>: The <GlossaryTooltip
+        term="ONNX"
+      /> runtime applies operator fusion, constant folding, and
+      memory planning at the graph level
     </li>
     <li>
       <strong>Cross-platform deployment</strong>: The same
-      ONNX model can run on CPUs, GPUs, NPUs, and custom
-      accelerators with appropriate execution providers
+      <GlossaryTooltip term="ONNX" /> model can run on CPUs, GPUs,
+      NPUs, and custom accelerators with appropriate execution
+      providers
     </li>
   </ul>
 
@@ -651,7 +669,9 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <h3>TensorRT Compilation</h3>
   <p>
-    NVIDIA's TensorRT compiler goes further than ONNX
+    NVIDIA's TensorRT compiler goes further than <GlossaryTooltip
+      term="ONNX"
+    />
     runtime by generating <strong>hardware-specific</strong> optimized
     kernels. It analyzes the model graph and generates custom
     CUDA kernels optimized for the specific GPU architecture (A100,
@@ -680,9 +700,8 @@ import RevealSection from "../../components/RevealSection.astro";
   <h2>The Full Optimization Pipeline</h2>
 
   <p>
-    In practice, deploying an LLM efficiently involves
-    combining multiple optimization techniques in a
-    pipeline:
+    In practice, deploying an <GlossaryTooltip term="LLM" /> efficiently
+    involves combining multiple optimization techniques in a pipeline:
   </p>
 
   <ol>
@@ -703,9 +722,10 @@ import RevealSection from "../../components/RevealSection.astro";
       quantization to FP8.
     </li>
     <li>
-      <strong>Graph optimization</strong>: Convert to ONNX
-      or TensorRT format for operator fusion and kernel
-      optimization.
+      <strong>Graph optimization</strong>: Convert to <GlossaryTooltip
+        term="ONNX"
+      />
+      or TensorRT format for operator fusion and kernel optimization.
     </li>
     <li>
       <strong>Serving framework</strong>: Deploy with vLLM

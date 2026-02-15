@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
@@ -31,7 +32,7 @@ import Quiz from "../../components/Quiz.astro";
 <h2>The Pretraining Data Pipeline</h2>
 
 <p>
-  Pretraining is where an LLM acquires its broad knowledge
+  Pretraining is where an <GlossaryTooltip term="LLM" /> acquires its broad knowledge
   of language, facts, and reasoning patterns. The quality
   and scale of pretraining data fundamentally determine what
   the model can learn.
@@ -39,7 +40,7 @@ import Quiz from "../../components/Quiz.astro";
 
 <h3>Data Sources</h3>
 <p>
-  Modern LLMs train on trillions of tokens from diverse
+  Modern <GlossaryTooltip term="LLM" />s train on trillions of tokens from diverse
   sources:
 </p>
 <ul>
@@ -119,7 +120,7 @@ import Quiz from "../../components/Quiz.astro";
   </li>
   <li>
     The optimal mix is an active research area. Models like
-    GPT-4 and Claude use proprietary data mixtures that are
+    <GlossaryTooltip term="GPT" />-4 and Claude use proprietary data mixtures that are
     closely guarded.
   </li>
 </ul>
@@ -127,19 +128,21 @@ import Quiz from "../../components/Quiz.astro";
 <h3>Tokenization</h3>
 <p>
   Raw text must be converted into a sequence of discrete
-  tokens. Modern LLMs use subword tokenization:
+  tokens. Modern <GlossaryTooltip term="LLM" />s use subword tokenization:
 </p>
 <ul>
   <li>
-    <strong>Byte Pair Encoding (BPE)</strong>: Iteratively
-    merges the most frequent byte pairs. Used by GPT models.
+    <strong>Byte Pair Encoding (<GlossaryTooltip
+      term="BPE"
+    />)</strong>: Iteratively merges the most frequent byte
+    pairs. Used by <GlossaryTooltip term="GPT" /> models.
     Vocabulary sizes typically range from 32K to 100K+
     tokens.
   </li>
   <li>
     <strong>SentencePiece</strong>: Language-agnostic
     tokenizer that works directly on raw text (no
-    pre-tokenization). Used by LLaMA, T5.
+    pre-tokenization). Used by LLaMA, <GlossaryTooltip term="T5" />.
   </li>
   <li>
     <strong>Tokenizer-free approaches</strong>: Byte-level
@@ -253,7 +256,7 @@ import Quiz from "../../components/Quiz.astro";
   Perplexity has an intuitive interpretation: a perplexity
   of k means the model is, on average, as uncertain as if it
   were choosing uniformly among k options at each step.
-  Lower is better. State-of-the-art LLMs achieve
+  Lower is better. State-of-the-art <GlossaryTooltip term="LLM" />s achieve
   perplexities around 5-10 on typical web text.
 </p>
 
@@ -358,7 +361,7 @@ import Quiz from "../../components/Quiz.astro";
 <h2>Distributed Training</h2>
 
 <p>
-  Training a frontier LLM requires thousands of GPUs working
+  Training a frontier <GlossaryTooltip term="LLM" /> requires thousands of GPUs working
   in concert. A single GPU cannot hold the model parameters,
   optimizer states, gradients, and activations
   simultaneously. Distributed training strategies address
@@ -542,7 +545,7 @@ import Quiz from "../../components/Quiz.astro";
   <li>
     <strong>BF16</strong> (bfloat16): 1 sign, 8 exponent, 7 mantissa
     bits. Same range as FP32 but lower precision. No loss scaling
-    needed. Preferred for LLM training.
+    needed. Preferred for <GlossaryTooltip term="LLM" /> training.
   </li>
 </ul>
 

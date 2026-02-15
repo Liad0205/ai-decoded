@@ -5,13 +5,14 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
     <li>
-      Understand why LLM serving is fundamentally different
+      Understand why <GlossaryTooltip term="LLM" /> serving is fundamentally different
       from traditional model serving
     </li>
     <li>
@@ -34,14 +35,14 @@ import Quiz from "../../components/Quiz.astro";
 </section>
 
 <section>
-  <h2>The Unique Challenge of LLM Serving</h2>
+  <h2>The Unique Challenge of <GlossaryTooltip term="LLM" /> Serving</h2>
 
   <p>
     Serving large language models is fundamentally different
-    from serving traditional ML models (image classifiers,
+    from serving traditional <GlossaryTooltip term="ML" /> models (image classifiers,
     recommendation models, etc.). The core challenge stems
     from the <strong>autoregressive generation</strong> process:
-    LLMs generate tokens one at a time, where each new token depends
+    <GlossaryTooltip term="LLM" />s generate tokens one at a time, where each new token depends
     on all previously generated tokens.
   </p>
 
@@ -56,7 +57,7 @@ import Quiz from "../../components/Quiz.astro";
     >. Modern GPUs have ~2-3 TB/s of memory bandwidth,
     meaning the absolute theoretical maximum is about 15-20
     tokens per second per GPU &mdash; regardless of the
-    GPU's compute capability. LLM generation is
+    GPU's compute capability. <GlossaryTooltip term="LLM" /> generation is
     overwhelmingly <strong>memory-bandwidth bound</strong>,
     not compute-bound.
   </p>
@@ -85,7 +86,7 @@ import Quiz from "../../components/Quiz.astro";
   <h3>Variable Output Length</h3>
   <p>
     Unlike traditional models where every request produces a
-    fixed-size output in one pass, LLM requests have wildly
+    fixed-size output in one pass, <GlossaryTooltip term="LLM" /> requests have wildly
     variable output lengths. A simple question might need 20
     tokens; a code generation request might need 2,000. This
     makes batching strategies designed for fixed-length
@@ -95,7 +96,7 @@ import Quiz from "../../components/Quiz.astro";
   <h3>The KV-Cache Memory Problem</h3>
   <p>
     To avoid recomputing attention over all previous tokens
-    at each step, LLM inference uses a <strong
+    at each step, <GlossaryTooltip term="LLM" /> inference uses a <strong
       >KV-cache</strong
     > that stores the key and value vectors from all previous
     positions. This cache grows linearly with sequence length
@@ -139,10 +140,10 @@ import Quiz from "../../components/Quiz.astro";
 </section>
 
 <section>
-  <h2>Two Phases of LLM Inference</h2>
+  <h2>Two Phases of <GlossaryTooltip term="LLM" /> Inference</h2>
 
   <p>
-    LLM inference has two distinct computational phases with
+    <GlossaryTooltip term="LLM" /> inference has two distinct computational phases with
     very different characteristics. Understanding these is
     essential for optimizing serving performance.
   </p>
@@ -724,7 +725,7 @@ import Quiz from "../../components/Quiz.astro";
 
   <h3>vLLM</h3>
   <p>
-    vLLM is the most widely adopted open-source LLM serving
+    vLLM is the most widely adopted open-source <GlossaryTooltip term="LLM" /> serving
     engine. Its key innovations include PagedAttention and
     an efficient continuous batching scheduler. It supports
     a wide range of models and quantization formats.
@@ -736,11 +737,11 @@ import Quiz from "../../components/Quiz.astro";
       OpenAI-compatible API, active community
     </li>
     <li>
-      <strong>Quantization support</strong>: AWQ, GPTQ, FP8,
+      <strong>Quantization support</strong>: <GlossaryTooltip term="AWQ" />, <GlossaryTooltip term="GPTQ" />, FP8,
       INT8 (SmoothQuant)
     </li>
     <li>
-      <strong>Best for</strong>: General-purpose LLM
+      <strong>Best for</strong>: General-purpose <GlossaryTooltip term="LLM" />
       serving, high-throughput batch processing, multi-model
       serving
     </li>
@@ -794,7 +795,7 @@ import Quiz from "../../components/Quiz.astro";
   <h3>Triton Inference Server</h3>
   <p>
     NVIDIA's general-purpose model serving platform. Unlike
-    the others, Triton is not LLM-specific &mdash; it can
+    the others, Triton is not <GlossaryTooltip term="LLM" />-specific &mdash; it can
     serve any model type. For LLMs, it integrates with
     TensorRT-LLM as a backend.
   </p>
@@ -802,7 +803,7 @@ import Quiz from "../../components/Quiz.astro";
     <li>
       <strong>Strengths</strong>: Multi-model serving, model
       ensembles, dynamic batching, multi-framework support
-      (PyTorch, TensorFlow, ONNX, TensorRT)
+      (PyTorch, TensorFlow, <GlossaryTooltip term="ONNX" />, TensorRT)
     </li>
     <li>
       <strong>Best for</strong>: Organizations serving
@@ -851,7 +852,7 @@ import Quiz from "../../components/Quiz.astro";
     cache size.
   </p>
 
-  <h3>Multi-Query and Grouped-Query Attention</h3>
+  <h3>Multi-Query and Grouped-Query Attention (<GlossaryTooltip term="MQA" /> / <GlossaryTooltip term="GQA" />)</h3>
   <p>
     Architectural choices during training affect KV-cache
     size at inference:
@@ -863,14 +864,14 @@ import Quiz from "../../components/Quiz.astro";
       scales with number of heads.
     </li>
     <li>
-      <strong>Multi-Query Attention (MQA)</strong>: All
+      <strong>Multi-Query Attention (<GlossaryTooltip term="MQA" />)</strong>: All
       heads share a single KV projection, reducing KV-cache
       by the head count factor (e.g., 32x for 32 heads).
     </li>
     <li>
-      <strong>Grouped-Query Attention (GQA)</strong>: Groups
+      <strong>Grouped-Query Attention (<GlossaryTooltip term="GQA" />)</strong>: Groups
       of heads share KV projections. A compromise:
-      Llama-2-70B uses GQA with 8 KV groups for 64 query
+      Llama-2-70B uses <GlossaryTooltip term="GQA" /> with 8 KV groups for 64 query
       heads, reducing KV-cache by 8x.
     </li>
   </ul>
@@ -1058,7 +1059,7 @@ import Quiz from "../../components/Quiz.astro";
 
   <p>
     As a rough guide: a well-optimized serving stack (vLLM +
-    AWQ INT4 + continuous batching + PagedAttention) can
+    <GlossaryTooltip term="AWQ" /> INT4 + continuous batching + PagedAttention) can
     serve a 70B model at ~1,000 output tokens per second per
     A100 GPU. At $3/hr for an A100, that is approximately <strong
       >$0.008 per 1,000 output tokens</strong
@@ -1104,7 +1105,7 @@ import Quiz from "../../components/Quiz.astro";
 <KeyTakeaway>
   <ul>
     <li>
-      <strong>LLM serving is memory-bandwidth bound</strong
+      <strong><GlossaryTooltip term="LLM" /> serving is memory-bandwidth bound</strong
       >: During generation, each token requires loading the
       full model weights, making memory bandwidth (not
       compute) the bottleneck

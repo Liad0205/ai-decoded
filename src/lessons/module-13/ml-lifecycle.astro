@@ -5,21 +5,23 @@ import PaperReference from '../../components/PaperReference.astro';
 import Quiz from '../../components/Quiz.astro';
 import Diagram from '../../components/Diagram.astro';
 import MathBlock from '../../components/MathBlock.astro';
+import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Understand why most ML models never make it to production and the gap between research and deployment</li>
+  <li>Understand why most <GlossaryTooltip term="ML" /> models never make it to production and the gap between research and deployment</li>
   <li>Detect and measure data drift and concept drift using statistical tests</li>
-  <li>Design A/B testing experiments for ML models with proper statistical rigor</li>
+  <li>Design A/B testing experiments for <GlossaryTooltip term="ML" /> models with proper statistical rigor</li>
   <li>Implement experiment tracking for reproducibility using tools like MLflow and Weights &amp; Biases</li>
-  <li>Choose appropriate deployment strategies: canary, blue/green, and shadow deployments</li>
+  <li>Choose appropriate deployment strategies: canary, blue/green, and shadow deployments
+  </li>
 </ul>
 
-<h2>The Gap Between ML Research and Production</h2>
+<h2>The Gap Between <GlossaryTooltip term="ML" /> Research and Production</h2>
 
 <p>
-  Building an ML model that performs well on a held-out test set is only a fraction of the work required to deliver value in production. Google's seminal paper on technical debt in ML systems estimated that the actual ML code in a production system represents perhaps 5% of the total codebase. The remaining 95% is infrastructure: data collection, feature extraction, data verification, configuration management, monitoring, serving, and process management.
+  Building an <GlossaryTooltip term="ML" /> model that performs well on a held-out test set is only a fraction of the work required to deliver value in production. Google's seminal paper on technical debt in <GlossaryTooltip term="ML" /> systems estimated that the actual <GlossaryTooltip term="ML" /> code in a production system represents perhaps 5% of the total codebase. The remaining 95% is infrastructure: data collection, feature extraction, data verification, configuration management, monitoring, serving, and process management.
 </p>
 
 <PaperReference
@@ -31,24 +33,25 @@ import MathBlock from '../../components/MathBlock.astro';
 
 <p>
   The failure modes in production are fundamentally different from those in research. In research, you worry about underfitting and overfitting on a static dataset. In production, the data distribution changes continuously, the infrastructure can fail silently, and the consequences of bad predictions affect real users and real revenue. Organizations frequently cite the following challenges:
+
 </p>
 
 <ul>
   <li><strong>Data distribution shift</strong>: The real-world data your model encounters differs from the training data, and this gap widens over time. For example, a recommendation model trained on holiday shopping data degrades in January when buying patterns normalize.</li>
   <li><strong>Feedback loops</strong>: Your model's predictions influence user behavior, which in turn changes the data the model sees in the future. A content recommendation system that favors clickbait gradually trains itself on increasingly sensationalized user interactions.</li>
-  <li><strong>Silent failures</strong>: Unlike traditional software that crashes on errors, ML models degrade gracefully. They still produce outputs, but those outputs become increasingly wrong.</li>
+  <li><strong>Silent failures</strong>: Unlike traditional software that crashes on errors, <GlossaryTooltip term="ML" /> models degrade gracefully. They still produce outputs, but those outputs become increasingly wrong.</li>
   <li><strong>Reproducibility</strong>: Reproducing a training run requires pinning the exact code version, data version, environment, hyperparameters, and random seeds.</li>
-  <li><strong>Coordination overhead</strong>: Data scientists, ML engineers, platform teams, and product managers must align on model requirements, service-level objectives, and release criteria.</li>
+  <li><strong>Coordination overhead</strong>: Data scientists, <GlossaryTooltip term="ML" /> engineers, platform teams, and product managers must align on model requirements, service-level objectives, and release criteria.</li>
 </ul>
 
 <p>
-  MLOps (Machine Learning Operations) emerged as a discipline to address these challenges systematically, borrowing ideas from DevOps but adapting them to the unique requirements of ML systems.
+  MLOps (Machine Learning Operations) emerged as a discipline to address these challenges systematically, borrowing ideas from DevOps but adapting them to the unique requirements of <GlossaryTooltip term="ML" /> systems.
 </p>
 
 <h2>Model Monitoring Fundamentals</h2>
 
 <p>
-  Monitoring is the first line of defense against production failures. Unlike traditional software where you monitor latency, error rates, and throughput, ML systems require all the traditional monitoring (latency, error rates, throughput) plus additional ML-specific dimensions: input data quality, prediction distributions, and model performance metrics. The key insight is that an ML model can be "up" and serving predictions while silently producing garbage.
+  Monitoring is the first line of defense against production failures. Unlike traditional software where you monitor latency, error rates, and throughput, <GlossaryTooltip term="ML" /> systems require all the traditional monitoring (latency, error rates, throughput) plus additional <GlossaryTooltip term="ML" />-specific dimensions: input data quality, prediction distributions, and model performance metrics. The key insight is that an <GlossaryTooltip term="ML" /> model can be "up" and serving predictions while silently producing garbage.
 </p>
 
 <h3>Data Drift: When Input Distributions Change</h3>
@@ -141,7 +144,7 @@ import MathBlock from '../../components/MathBlock.astro';
   <li><strong>Feature drift tracking</strong>: Monitor PSI or KS statistics for each input feature on a rolling window (hourly, daily). Alert when drift exceeds thresholds.</li>
   <li><strong>Prediction monitoring</strong>: Track prediction distribution statistics (mean, variance, percentiles). Use control charts or z-score-based alerting for anomaly detection.</li>
   <li><strong>Performance metrics</strong>: When ground truth labels are available (even delayed), compute rolling accuracy, AUC, or calibration metrics. Use CUSUM or exponentially weighted moving averages to detect sustained degradation.</li>
-  <li><strong>Infrastructure metrics</strong>: Latency, throughput, error rates, GPU utilization, memory usage. These are standard SRE metrics but are equally critical for ML systems.</li>
+  <li><strong>Infrastructure metrics</strong>: Latency, throughput, error rates, GPU utilization, memory usage. These are standard SRE metrics but are equally critical for <GlossaryTooltip term="ML" /> systems.</li>
 </ul>
 
 <Diagram diagramId="ml-lifecycle-diagram" title="The ML Production Lifecycle">
@@ -189,14 +192,14 @@ import MathBlock from '../../components/MathBlock.astro';
       <text x="250" y="195" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Continuous</text>
       <text x="250" y="212" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Improvement</text>
     </svg>
-    <p class="text-sm text-slate-600 text-center mt-3">The ML lifecycle is circular: models are trained, validated, deployed, monitored, and retrained as data and requirements change.</p>
+    <p class="text-sm text-slate-600 text-center mt-3">The <GlossaryTooltip term="ML" /> lifecycle is circular: models are trained, validated, deployed, monitored, and retrained as data and requirements change.</p>
   </div>
 </Diagram>
 
-<h2>A/B Testing for ML Models</h2>
+<h2>A/B Testing for <GlossaryTooltip term="ML" /> Models</h2>
 
 <p>
-  A/B testing is the gold standard for evaluating whether a new ML model actually improves business outcomes in production. Offline evaluation metrics (accuracy, AUC, BLEU) are necessary but not sufficient. They do not capture the full picture of how a model interacts with users in a live environment.
+  A/B testing is the gold standard for evaluating whether a new <GlossaryTooltip term="ML" /> model actually improves business outcomes in production. Offline evaluation metrics (accuracy, AUC, BLEU) are necessary but not sufficient. They do not capture the full picture of how a model interacts with users in a live environment.
 </p>
 
 <h3>Statistical Foundations</h3>
@@ -250,7 +253,7 @@ import MathBlock from '../../components/MathBlock.astro';
 <h2>Experiment Tracking</h2>
 
 <p>
-  Experiment tracking tools record everything needed to reproduce and compare ML experiments: hyperparameters, metrics, code versions, data versions, and artifacts.
+  Experiment tracking tools record everything needed to reproduce and compare <GlossaryTooltip term="ML" /> experiments: hyperparameters, metrics, code versions, data versions, and artifacts.
 </p>
 
 <h3>Weights &amp; Biases (W&amp;B)</h3>
@@ -270,12 +273,12 @@ import MathBlock from '../../components/MathBlock.astro';
 <h3>MLflow</h3>
 
 <p>
-  MLflow is an open-source platform for the complete ML lifecycle. Its four main components are:
+  MLflow is an open-source platform for the complete <GlossaryTooltip term="ML" /> lifecycle. Its four main components are:
 </p>
 
 <ul>
   <li><strong>MLflow Tracking</strong>: Log parameters, metrics, and artifacts. Similar to W&amp;B but self-hosted. Supports automatic logging for popular frameworks (scikit-learn, PyTorch, TensorFlow).</li>
-  <li><strong>MLflow Models</strong>: A standard format for packaging ML models that supports multiple serving backends (REST API, Apache Spark, AWS SageMaker).</li>
+  <li><strong>MLflow Models</strong>: A standard format for packaging <GlossaryTooltip term="ML" /> models that supports multiple serving backends (REST API, Apache Spark, AWS SageMaker).</li>
   <li><strong>MLflow Model Registry</strong>: A centralized model store with versioning, stage transitions (Staging / Production / Archived), and approval workflows.</li>
   <li><strong>MLflow Projects</strong>: A convention for packaging data science code in a reusable, reproducible format (conda environment + entry points).</li>
 </ul>
@@ -288,7 +291,7 @@ import MathBlock from '../../components/MathBlock.astro';
 
 <ul>
   <li><strong>Code version</strong>: Git commit hash at training time. Some teams also store a full diff for uncommitted changes.</li>
-  <li><strong>Data version</strong>: A hash or version identifier for the exact training, validation, and test datasets used. Tools like DVC or Delta Lake enable this.</li>
+  <li><strong>Data version</strong>: A hash or version identifier for the exact training, validation, and test datasets used. Tools like <GlossaryTooltip term="DVC" /> or Delta Lake enable this.</li>
   <li><strong>Environment</strong>: Python version, package versions, CUDA version, GPU model. Docker images or conda environment files freeze the environment.</li>
   <li><strong>Hyperparameters</strong>: Every configurable parameter, including defaults. Store the complete configuration, not just the parameters you changed.</li>
   <li><strong>Random seeds</strong>: Seeds for Python, NumPy, and PyTorch random number generators. Note that full reproducibility on GPU still requires deterministic algorithms (which may be slower).</li>
@@ -309,7 +312,7 @@ import MathBlock from '../../components/MathBlock.astro';
 <ul>
   <li><strong>Development</strong>: Model is being actively developed and evaluated. Any team member can register a new model version.</li>
   <li><strong>Staging</strong>: Model has passed offline evaluation criteria and is ready for integration testing. This may include shadow deployments, load testing, and fairness audits.</li>
-  <li><strong>Production</strong>: Model is actively serving predictions. Only approved models transition to production, typically requiring sign-off from at least one ML engineer and one domain expert.</li>
+  <li><strong>Production</strong>: Model is actively serving predictions. Only approved models transition to production, typically requiring sign-off from at least one <GlossaryTooltip term="ML" /> engineer and one domain expert.</li>
   <li><strong>Archived</strong>: Previously production models that have been superseded. Retained for rollback capability and audit purposes.</li>
 </ul>
 
@@ -328,7 +331,7 @@ import MathBlock from '../../components/MathBlock.astro';
 <h2>Deployment Strategies</h2>
 
 <p>
-  Deploying a new ML model is inherently risky. Unlike traditional software deployments where a bug typically produces an error, a bad ML model silently produces incorrect predictions. Deployment strategies manage this risk by controlling the exposure of new models to production traffic.
+  Deploying a new <GlossaryTooltip term="ML" /> model is inherently risky. Unlike traditional software deployments where a bug typically produces an error, a bad <GlossaryTooltip term="ML" /> model silently produces incorrect predictions. Deployment strategies manage this risk by controlling the exposure of new models to production traffic.
 </p>
 
 <h3>Canary Deployments</h3>
@@ -345,7 +348,7 @@ import MathBlock from '../../components/MathBlock.astro';
 </ul>
 
 <p>
-  Canary deployments are the most common strategy for ML models because they provide early warning with minimal blast radius. The key challenge is defining automated rollback criteria: what metric thresholds trigger a rollback?
+  Canary deployments are the most common strategy for <GlossaryTooltip term="ML" /> models because they provide early warning with minimal blast radius. The key challenge is defining automated rollback criteria: what metric thresholds trigger a rollback?
 </p>
 
 <h3>Blue/Green Deployments</h3>
@@ -396,7 +399,7 @@ import MathBlock from '../../components/MathBlock.astro';
 <h2>Putting It All Together: The Monitoring Stack</h2>
 
 <p>
-  A production ML monitoring stack typically integrates the following layers:
+  A production <GlossaryTooltip term="ML" /> monitoring stack typically integrates the following layers:
 </p>
 
 <ul>
@@ -416,9 +419,9 @@ import MathBlock from '../../components/MathBlock.astro';
 
 <KeyTakeaway>
   <ul>
-    <li>The ML lifecycle is circular: train, validate, deploy, monitor, retrain. Production ML requires continuous monitoring and iteration, not a one-time deployment.</li>
+    <li>The <GlossaryTooltip term="ML" /> lifecycle is circular: train, validate, deploy, monitor, retrain. Production <GlossaryTooltip term="ML" /> requires continuous monitoring and iteration, not a one-time deployment.</li>
     <li>Data drift (input distribution changes) can be detected with PSI, KS tests, or KL divergence. Concept drift (relationship changes) requires monitoring model performance metrics over time.</li>
-    <li>A/B testing for ML models requires rigorous statistical planning: power analysis, significance thresholds, and multiple comparisons correction. Interleaving experiments offer higher sensitivity for ranking systems.</li>
+    <li>A/B testing for <GlossaryTooltip term="ML" /> models requires rigorous statistical planning: power analysis, significance thresholds, and multiple comparisons correction. Interleaving experiments offer higher sensitivity for ranking systems.</li>
     <li>Experiment tracking must capture five dimensions for reproducibility: code version, data version, environment, hyperparameters, and random seeds.</li>
     <li>Deployment strategies manage risk through controlled exposure: canary deployments offer gradual rollout, blue/green provides instant cutover, and shadow deployments enable risk-free evaluation on real traffic.</li>
     <li>Model registries with staging-to-production promotion workflows provide the governance layer between experimentation and production serving.</li>

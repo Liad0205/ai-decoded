@@ -5,6 +5,7 @@ import PaperReference from "../../components/PaperReference.astro";
 import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -12,7 +13,7 @@ import Quiz from "../../components/Quiz.astro";
   <ul>
     <li>
       Understand why quantization is essential for practical
-      LLM deployment
+      <GlossaryTooltip term="LLM" /> deployment
     </li>
     <li>
       Compare precision formats (FP32, FP16, BF16, INT8,
@@ -23,8 +24,10 @@ import Quiz from "../../components/Quiz.astro";
       Quantization-Aware Training (QAT)
     </li>
     <li>
-      Explain how GPTQ, AWQ, and GGUF quantization methods
-      work and when to use each
+      Explain how <GlossaryTooltip term="GPTQ" />, <GlossaryTooltip
+        term="AWQ"
+      />, and GGUF quantization methods work and when to use
+      each
     </li>
     <li>
       Evaluate quality-speed-memory tradeoffs for different
@@ -64,8 +67,8 @@ import Quiz from "../../components/Quiz.astro";
       <strong>Speed improvement</strong>: Lower precision
       means more values fit in cache lines and SIMD
       registers, and memory bandwidth (the primary
-      bottleneck for LLM inference) is reduced
-      proportionally
+      bottleneck for <GlossaryTooltip term="LLM" /> inference)
+      is reduced proportionally
     </li>
     <li>
       <strong>Cost reduction</strong>: Smaller models run on
@@ -132,7 +135,8 @@ import Quiz from "../../components/Quiz.astro";
     bits vs. 23). This makes it ideal for training and inference
     &mdash; the wide range avoids overflow issues that plague
     FP16, while the reduced precision rarely affects model quality.
-    Most modern LLMs are trained in BF16.
+    Most modern <GlossaryTooltip term="LLM" />s are trained
+    in BF16.
   </p>
 
   <h3>INT8 (8-bit Integer)</h3>
@@ -172,11 +176,13 @@ import Quiz from "../../components/Quiz.astro";
   <h3>INT4 (4-bit Integer)</h3>
   <p>
     Represents values with only 16 distinct levels. This is
-    the sweet spot for LLM inference: <strong
-      >4x memory reduction</strong
-    > from FP16 with surprisingly small quality degradation when
-    combined with modern quantization techniques like GPTQ or
-    AWQ. Most practical LLM quantization targets INT4.
+    the sweet spot for <GlossaryTooltip term="LLM" /> inference:
+    <strong>4x memory reduction</strong> from FP16 with surprisingly
+    small quality degradation when combined with modern quantization
+    techniques like <GlossaryTooltip term="GPTQ" /> or
+    <GlossaryTooltip term="AWQ" />. Most practical <GlossaryTooltip
+      term="LLM"
+    /> quantization targets INT4.
   </p>
 
   <h3>FP8 (8-bit Floating Point)</h3>
@@ -306,7 +312,9 @@ import Quiz from "../../components/Quiz.astro";
         >
           <td
             class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
-            >INT4 (GPTQ/AWQ)</td
+            >INT4 (<GlossaryTooltip
+              term="GPTQ"
+            />/<GlossaryTooltip term="AWQ" />)</td
           >
           <td class="text-center p-3">4</td>
           <td class="text-center p-3">35 GB</td>
@@ -373,7 +381,9 @@ import Quiz from "../../components/Quiz.astro";
       errors
     </li>
     <li>
-      <strong>Methods</strong>: GPTQ, AWQ, Round-to-Nearest
+      <strong>Methods</strong>: <GlossaryTooltip
+        term="GPTQ"
+      />, <GlossaryTooltip term="AWQ" />, Round-to-Nearest
       (RTN), SmoothQuant
     </li>
   </ul>
@@ -414,16 +424,24 @@ import Quiz from "../../components/Quiz.astro";
       needs the training pipeline and data
     </li>
     <li>
-      <strong>Methods</strong>: LLM-QAT, QLoRA (combines QAT
-      with LoRA), BitNet
+      <strong>Methods</strong>: LLM-QAT, <GlossaryTooltip
+        term="QLoRA"
+      /> (combines QAT with <GlossaryTooltip
+        term="LoRA"
+      />), BitNet
     </li>
   </ul>
 
   <p>
-    In practice, <strong>PTQ dominates for LLMs</strong> because
-    the training cost of large models makes QAT impractical. GPTQ
-    and AWQ achieve nearly lossless 4-bit quantization for most
-    models without any training, making PTQ the standard approach.
+    In practice, <strong
+      >PTQ dominates for <GlossaryTooltip
+        term="LLM"
+      />s</strong
+    > because the training cost of large models makes QAT impractical.
+    <GlossaryTooltip term="GPTQ" />
+    and <GlossaryTooltip term="AWQ" /> achieve nearly lossless
+    4-bit quantization for most models without any training, making
+    PTQ the standard approach.
   </p>
 </section>
 
@@ -434,19 +452,19 @@ import Quiz from "../../components/Quiz.astro";
   </h2>
 
   <p>
-    <strong>GPTQ</strong> (Frantar et al., 2022) is a one-shot
-    post-training quantization method that quantizes weights to
-    3 or 4 bits with minimal quality loss. It is based on the
-    Optimal Brain Quantization (OBQ) framework but scales to billion-parameter
-    models.
+    <strong><GlossaryTooltip term="GPTQ" /></strong> (Frantar
+    et al., 2022) is a one-shot post-training quantization method
+    that quantizes weights to 3 or 4 bits with minimal quality
+    loss. It is based on the Optimal Brain Quantization (OBQ)
+    framework but scales to billion-parameter models.
   </p>
 
   <h3>Core Idea</h3>
   <p>
-    GPTQ frames quantization as a layer-wise optimization
-    problem. For each layer, it seeks quantized weights <MathBlock
-      formula={"\\hat{W}"}
-    /> that minimize the squared error in the layer's output:
+    <GlossaryTooltip term="GPTQ" /> frames quantization as a layer-wise
+    optimization problem. For each layer, it seeks quantized weights
+    <MathBlock formula={"\\hat{W}"} /> that minimize the squared
+    error in the layer's output:
   </p>
 
   <MathBlock
@@ -467,9 +485,10 @@ import Quiz from "../../components/Quiz.astro";
     where <MathBlock formula="W" /> are the original FP16 weights
     and <MathBlock formula="X" /> is a calibration input matrix.
     Rather than quantizing each weight independently (round-to-nearest),
-    GPTQ quantizes weights <strong>sequentially</strong> and updates
-    the remaining unquantized weights to compensate for the error
-    introduced by each quantization step.
+    <GlossaryTooltip term="GPTQ" /> quantizes weights <strong
+      >sequentially</strong
+    > and updates the remaining unquantized weights to compensate
+    for the error introduced by each quantization step.
   </p>
 
   <h3>The Hessian-Based Update</h3>
@@ -506,10 +525,10 @@ import Quiz from "../../components/Quiz.astro";
   <h3>Key Engineering Innovations</h3>
   <ul>
     <li>
-      <strong>Column ordering</strong>: GPTQ processes
-      columns in a fixed order (with lazy batch updates),
-      avoiding the quadratic cost of OBQ's greedy column
-      selection
+      <strong>Column ordering</strong>: <GlossaryTooltip
+        term="GPTQ"
+      /> processes columns in a fixed order (with lazy batch updates),
+      avoiding the quadratic cost of OBQ's greedy column selection
     </li>
     <li>
       <strong>Cholesky-based Hessian inverse</strong>: Uses
@@ -531,28 +550,35 @@ import Quiz from "../../components/Quiz.astro";
   </ul>
 
   <p>
-    GPTQ can quantize a 175B parameter model in
-    approximately 4 GPU-hours, making it practical for
+    <GlossaryTooltip term="GPTQ" /> can quantize a 175B parameter
+    model in approximately 4 GPU-hours, making it practical for
     one-shot deployment preparation.
   </p>
 </section>
 
 <section>
-  <h2>AWQ: Activation-Aware Weight Quantization</h2>
+  <h2>
+    <GlossaryTooltip term="AWQ" />: Activation-Aware Weight
+    Quantization
+  </h2>
 
   <p>
-    <strong>AWQ</strong> (Lin et al., 2023) takes a different
-    approach from GPTQ. Instead of compensating for quantization
-    errors via Hessian-based updates, AWQ identifies and protects
+    <strong><GlossaryTooltip term="AWQ" /></strong> (Lin et al.,
+    2023) takes a different approach from <GlossaryTooltip
+      term="GPTQ"
+    />. Instead of compensating for quantization errors via
+    Hessian-based updates, <GlossaryTooltip term="AWQ" /> identifies
+    and protects
     <strong>salient weights</strong> &mdash; the small fraction
     of weights that matter most for model quality.
   </p>
 
   <h3>Key Insight: Not All Weights Are Equal</h3>
   <p>
-    AWQ observes that weight importance is strongly
-    correlated with <strong>activation magnitude</strong>.
-    Weights connected to channels with large activations
+    <GlossaryTooltip term="AWQ" /> observes that weight importance
+    is strongly correlated with <strong
+      >activation magnitude</strong
+    >. Weights connected to channels with large activations
     have a disproportionate effect on the output. Quantizing
     these "salient" weights carelessly causes significant
     quality degradation.
@@ -575,9 +601,10 @@ import Quiz from "../../components/Quiz.astro";
   <h3>Per-Channel Scaling</h3>
   <p>
     Rather than keeping salient weights in higher precision
-    (which complicates hardware execution), AWQ applies a <strong
-      >per-channel scaling factor</strong
-    > before quantization:
+    (which complicates hardware execution), <GlossaryTooltip
+      term="AWQ"
+    /> applies a <strong>per-channel scaling factor</strong> before
+    quantization:
   </p>
 
   <MathBlock
@@ -607,9 +634,9 @@ import Quiz from "../../components/Quiz.astro";
 
   <h3>Optimal Scale Search</h3>
   <p>
-    AWQ searches for the optimal scaling factor per channel
-    by minimizing the quantization error on a small
-    calibration set:
+    <GlossaryTooltip term="AWQ" /> searches for the optimal scaling
+    factor per channel by minimizing the quantization error on
+    a small calibration set:
   </p>
 
   <MathBlock
@@ -626,27 +653,34 @@ import Quiz from "../../components/Quiz.astro";
     optimization.
   </p>
 
-  <h3>AWQ vs. GPTQ</h3>
+  <h3>
+    <GlossaryTooltip term="AWQ" /> vs. <GlossaryTooltip
+      term="GPTQ"
+    />
+  </h3>
   <ul>
     <li>
-      <strong>Quality</strong>: AWQ and GPTQ produce
-      comparable quality at 4-bit; AWQ tends to be slightly
-      better on some benchmarks
+      <strong>Quality</strong>: <GlossaryTooltip
+        term="AWQ"
+      /> and <GlossaryTooltip term="GPTQ" /> produce comparable
+      quality at 4-bit; <GlossaryTooltip term="AWQ" /> tends to
+      be slightly better on some benchmarks
     </li>
     <li>
-      <strong>Speed</strong>: AWQ quantization is faster
-      (simpler optimization); runtime inference speed is
-      similar
+      <strong>Speed</strong>: <GlossaryTooltip term="AWQ" /> quantization
+      is faster (simpler optimization); runtime inference speed
+      is similar
     </li>
     <li>
-      <strong>Robustness</strong>: AWQ is more robust to the
-      choice of calibration data because it relies on
-      activation statistics rather than Hessian computation
+      <strong>Robustness</strong>: <GlossaryTooltip
+        term="AWQ"
+      /> is more robust to the choice of calibration data because
+      it relies on activation statistics rather than Hessian computation
     </li>
     <li>
       <strong>Kernel support</strong>: Both have efficient
-      GPU kernels; AWQ kernels from the autoawq library are
-      widely used
+      GPU kernels; <GlossaryTooltip term="AWQ" /> kernels from
+      the autoawq library are widely used
     </li>
   </ul>
 </section>
@@ -655,12 +689,14 @@ import Quiz from "../../components/Quiz.astro";
   <h2>GGUF and llama.cpp: CPU and Edge Inference</h2>
 
   <p>
-    While GPTQ and AWQ target GPU inference, <strong
-      >GGUF</strong
-    > (GPT-Generated Unified Format) is the file format used by
+    While <GlossaryTooltip term="GPTQ" /> and <GlossaryTooltip
+      term="AWQ"
+    /> target GPU inference, <strong>GGUF</strong> (GPT-Generated
+    Unified Format) is the file format used by
     <strong>llama.cpp</strong> for CPU-first inference. It has
-    become the de facto standard for running LLMs on consumer
-    hardware without GPUs.
+    become the de facto standard for running <GlossaryTooltip
+      term="LLM"
+    />s on consumer hardware without GPUs.
   </p>
 
   <h3>How GGUF Quantization Works</h3>

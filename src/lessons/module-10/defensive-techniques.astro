@@ -6,6 +6,7 @@ import MathBlock from "../../components/MathBlock.astro";
 import Diagram from "../../components/Diagram.astro";
 import Quiz from "../../components/Quiz.astro";
 import RevealSection from "../../components/RevealSection.astro";
+import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <section>
@@ -16,7 +17,7 @@ import RevealSection from "../../components/RevealSection.astro";
       optimization and its robustness-accuracy tradeoff
     </li>
     <li>
-      Design layered guardrail systems for LLM applications
+      Design layered guardrail systems for <GlossaryTooltip term="LLM" /> applications
     </li>
     <li>
       Apply prompt hardening techniques to reduce injection
@@ -27,7 +28,9 @@ import RevealSection from "../../components/RevealSection.astro";
       safety evaluation
     </li>
     <li>
-      Understand Constitutional AI and RLHF-based alignment
+      Understand Constitutional AI and <GlossaryTooltip
+        term="RLHF"
+      />-based alignment
       as defensive techniques
     </li>
     <li>
@@ -61,7 +64,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     The inner maximization finds the worst-case adversarial
-    perturbation for each example (typically using PGD). The
+    perturbation for each example (typically using <GlossaryTooltip term="PGD" />). The
     outer minimization trains the model to correctly
     classify even these worst-case inputs.
   </p>
@@ -70,7 +73,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <p>For each training batch:</p>
   <ol>
     <li>
-      <strong>Inner loop</strong>: Run K steps of PGD to
+      <strong>Inner loop</strong>: Run K steps of <GlossaryTooltip term="PGD" /> to
       generate adversarial examples for each clean example
       in the batch
     </li>
@@ -83,7 +86,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <p>
     This is roughly K times more expensive than standard
-    training (K PGD steps per training step), making
+    training (K <GlossaryTooltip term="PGD" /> steps per training step), making
     adversarial training computationally demanding.
   </p>
 
@@ -95,7 +98,7 @@ import RevealSection from "../../components/RevealSection.astro";
     >. As demonstrated by Tsipras et al. (2019), a standard
     model might achieve 95% accuracy; the adversarially
     trained version might achieve 87% clean accuracy but 50%
-    robust accuracy (under PGD attack), while the standard
+    robust accuracy (under <GlossaryTooltip term="PGD" /> attack), while the standard
     model has 0% robust accuracy.
   </p>
 
@@ -170,15 +173,15 @@ import RevealSection from "../../components/RevealSection.astro";
   <h2>Guardrails for LLM Applications</h2>
 
   <p>
-    For production LLM applications, <strong
+    For production <GlossaryTooltip term="LLM" /> applications, <strong
       >guardrails</strong
     > are the primary defense layer. Guardrails are auxiliary
-    systems that monitor, filter, and constrain LLM inputs and
+    systems that monitor, filter, and constrain <GlossaryTooltip term="LLM" /> inputs and
     outputs to prevent unsafe behavior.
   </p>
 
   <h3>Input Guardrails</h3>
-  <p>Applied before the LLM processes the input:</p>
+  <p>Applied before the <GlossaryTooltip term="LLM" /> processes the input:</p>
   <ul>
     <li>
       <strong>Topic classification</strong>: Detect and
@@ -208,7 +211,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <h3>Output Guardrails</h3>
   <p>
-    Applied after the LLM generates a response, before the
+    Applied after the <GlossaryTooltip term="LLM" /> generates a response, before the
     user sees it:
   </p>
   <ul>
@@ -242,7 +245,7 @@ import RevealSection from "../../components/RevealSection.astro";
   <ul>
     <li>
       <strong>Principle of least privilege</strong>: Only
-      give the LLM access to tools and data it needs for the
+      give the <GlossaryTooltip term="LLM" /> access to tools and data it needs for the
       specific task
     </li>
     <li>
@@ -642,9 +645,9 @@ import RevealSection from "../../components/RevealSection.astro";
     approaches:
   </p>
 
-  <h3>RLHF (Reinforcement Learning from Human Feedback)</h3>
+  <h3><GlossaryTooltip term="RLHF" /> (Reinforcement Learning from Human Feedback)</h3>
   <p>
-    RLHF trains the model to produce outputs that human
+    <GlossaryTooltip term="RLHF" /> trains the model to produce outputs that human
     evaluators prefer, including preferring safe over unsafe
     outputs:
   </p>
@@ -679,7 +682,7 @@ import RevealSection from "../../components/RevealSection.astro";
   </ol>
 
   <p>
-    RLHF is effective but has limitations: it's expensive
+    <GlossaryTooltip term="RLHF" /> is effective but has limitations: it's expensive
     (requires continuous human annotation), can be gamed by
     the model (reward hacking), and the reward model may not
     generalize to novel attack patterns.
@@ -843,7 +846,7 @@ import RevealSection from "../../components/RevealSection.astro";
 
   <h3>Tool-Level Permissions</h3>
   <p>
-    Rather than trusting the LLM to decide when to use
+    Rather than trusting the <GlossaryTooltip term="LLM" /> to decide when to use
     tools, implement fine-grained permission systems:
   </p>
   <ul>
@@ -857,7 +860,7 @@ import RevealSection from "../../components/RevealSection.astro";
     </li>
     <li>
       Tool outputs are sanitized before being returned to
-      the LLM context
+      the <GlossaryTooltip term="LLM" /> context
     </li>
   </ul>
 
@@ -923,7 +926,7 @@ import RevealSection from "../../components/RevealSection.astro";
     </li>
     <li>
       <strong>Guardrails</strong> add input/output filtering and
-      structural constraints around the LLM: essential for production
+      structural constraints around the <GlossaryTooltip term="LLM" />: essential for production
       but not a complete solution alone
     </li>
     <li>
