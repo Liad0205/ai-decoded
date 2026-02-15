@@ -200,9 +200,20 @@ import Quiz from '../../components/Quiz.astro';
   <li>Represent each subvector by its nearest centroid index (1 byte)</li>
 </ol>
 
-<p>
   A 768-dim float32 vector (3072 bytes) compressed to m = 96 subvectors requires only 96 bytes --- a <strong>32x compression</strong>.
 </p>
+
+<div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg my-4">
+  <p class="font-semibold text-teal-800 dark:text-teal-200">Analogy: The Color Palette (GIFs)</p>
+  <p class="text-sm">
+    Think of how a GIF compresses an image.
+  </p>
+  <ul class="list-disc list-inside text-sm mt-2 ml-2">
+    <li><strong>Raw Image (Full Vector)</strong>: Every pixel can be any one of 16 million colors (24-bit). Huge file size.</li>
+    <li><strong>Palette (Codebook)</strong>: We pick the 256 most common colors in the image and number them 0-255.</li>
+    <li><strong>Compressed Image (PQ Vector)</strong>: Instead of storing the full color for each pixel, we just store the index number (0-255). We get massive space savings, but the colors are slightly approximated.</li>
+  </ul>
+</div>
 
 <MathBlock formula={"\\text{dist}_{\\text{PQ}}(q, v) \\approx \\sum_{i=1}^{m} \\|q_i - c_{k_i}^{(i)}\\|^2"} display={true} />
 

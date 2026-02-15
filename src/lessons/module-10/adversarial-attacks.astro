@@ -1,21 +1,35 @@
 ---
 // Module 10, Lesson 10.1: Adversarial Attacks on ML Systems
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
-    <li>Understand the threat model framework for adversarial attacks (white-box vs. black-box)</li>
-    <li>Derive FGSM, PGD, and C&W attacks from their optimization objectives</li>
-    <li>Explain why adversarial examples transfer between models and what this implies</li>
-    <li>Analyze physical-world adversarial examples and their implications for deployed systems</li>
-    <li>Distinguish between targeted and untargeted attacks and their practical relevance</li>
+    <li>
+      Understand the threat model framework for adversarial
+      attacks (white-box vs. black-box)
+    </li>
+    <li>
+      Derive FGSM, PGD, and C&W attacks from their
+      optimization objectives
+    </li>
+    <li>
+      Explain why adversarial examples transfer between
+      models and what this implies
+    </li>
+    <li>
+      Analyze physical-world adversarial examples and their
+      implications for deployed systems
+    </li>
+    <li>
+      Distinguish between targeted and untargeted attacks
+      and their practical relevance
+    </li>
   </ul>
 </section>
 
@@ -23,21 +37,47 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>The Adversarial Example Phenomenon</h2>
 
   <p>
-    In 2013, Szegedy et al. made a disturbing discovery: neural networks that achieve superhuman accuracy on image classification can be fooled by <strong>imperceptible perturbations</strong>. Adding carefully crafted noise, invisible to the human eye, can cause a model to confidently misclassify an image.
+    In 2013, Szegedy et al. made a disturbing discovery:
+    neural networks that achieve superhuman accuracy on
+    image classification can be fooled by <strong
+      >imperceptible perturbations</strong
+    >. Adding carefully crafted noise, invisible to the
+    human eye, can cause a model to confidently misclassify
+    an image.
   </p>
 
   <p>
-    This is not a minor curiosity. It reveals a fundamental gap between how neural networks and humans process information, and it has serious implications for any safety-critical deployment of ML systems.
+    This is not a minor curiosity. It reveals a fundamental
+    gap between how neural networks and humans process
+    information, and it has serious implications for any
+    safety-critical deployment of ML systems.
   </p>
 
   <p>
-    Formally, the attacker's perturbation must stay within a small budget <MathBlock formula={"\\epsilon"} /> &mdash; any change beyond this budget would be perceptible to a human observer:
+    Formally, the attacker's perturbation must stay within a
+    small budget <MathBlock formula={"\\epsilon"} /> &mdash; any
+    change beyond this budget would be perceptible to a human
+    observer:
   </p>
 
-  <MathBlock formula={"x' = x + \\delta, \\quad \\|\\delta\\|_p \\leq \\epsilon, \\quad f(x') \\neq f(x)"} display={true} />
+  <MathBlock
+    formula={"x' = x + \\delta, \\quad \\|\\delta\\|_p \\leq \\epsilon, \\quad f(x') \\neq f(x)"}
+    display={true}
+  />
 
   <p>
-    where <MathBlock formula="x" /> is the original input, <MathBlock formula={"\\delta"} /> is the adversarial perturbation bounded by <MathBlock formula={"\\epsilon"} /> in some norm, and <MathBlock formula="f" /> is the classifier. The constraint <MathBlock formula={"\\|\\delta\\|_p \\leq \\epsilon"} /> ensures the perturbation is imperceptible (small in <MathBlock formula={"L_\\infty"} />, <MathBlock formula="L_2" />, or <MathBlock formula="L_0" /> norm).
+    where <MathBlock formula="x" /> is the original input, <MathBlock
+      formula={"\\delta"}
+    /> is the adversarial perturbation bounded by <MathBlock
+      formula={"\\epsilon"}
+    /> in some norm, and <MathBlock formula="f" /> is the classifier.
+    The constraint <MathBlock
+      formula={"\\|\\delta\\|_p \\leq \\epsilon"}
+    /> ensures the perturbation is imperceptible (small in <MathBlock
+      formula={"L_\\infty"}
+    />, <MathBlock formula="L_2" />, or <MathBlock
+      formula="L_0"
+    /> norm).
   </p>
 </section>
 
@@ -45,35 +85,62 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Threat Models</h2>
 
   <p>
-    Understanding adversarial attacks requires a precise specification of the attacker's capabilities.
+    Understanding adversarial attacks requires a precise
+    specification of the attacker's capabilities.
   </p>
 
   <h3>White-Box Attacks</h3>
   <p>
-    The attacker has <strong>full access</strong> to the model: architecture, weights, gradients, and training data. This is the strongest threat model and enables the most powerful attacks. White-box access is realistic in scenarios like open-source models or insider threats.
+    The attacker has <strong>full access</strong> to the model:
+    architecture, weights, gradients, and training data. This
+    is the strongest threat model and enables the most powerful
+    attacks. White-box access is realistic in scenarios like open-source
+    models or insider threats.
   </p>
 
   <h3>Black-Box Attacks</h3>
   <p>
-    The attacker can only <strong>query the model</strong> and observe outputs (predicted labels or probabilities). Two sub-categories:
+    The attacker can only <strong>query the model</strong> and
+    observe outputs (predicted labels or probabilities). Two sub-categories:
   </p>
   <ul>
-    <li><strong>Score-based</strong>: Attacker observes confidence scores / probability distributions</li>
-    <li><strong>Decision-based</strong>: Attacker only observes the final predicted label (hardest setting)</li>
+    <li>
+      <strong>Score-based</strong>: Attacker observes
+      confidence scores / probability distributions
+    </li>
+    <li>
+      <strong>Decision-based</strong>: Attacker only
+      observes the final predicted label (hardest setting)
+    </li>
   </ul>
 
   <h3>Transfer Attacks</h3>
   <p>
-    The attacker has no access to the target model but trains a <strong>surrogate model</strong> and generates adversarial examples on it, hoping they transfer. Surprisingly, this works remarkably well - a critical finding we will explore in depth.
+    The attacker has no access to the target model but
+    trains a <strong>surrogate model</strong> and generates adversarial
+    examples on it, hoping they transfer. Surprisingly, this works
+    remarkably well - a critical finding we will explore in depth.
   </p>
 
   <h3>Targeted vs. Untargeted</h3>
   <ul>
-    <li><strong>Untargeted</strong>: Cause any misclassification (<MathBlock formula={"f(x') \\neq f(x)"} />)</li>
-    <li><strong>Targeted</strong>: Force a specific wrong class (<MathBlock formula={"f(x') = y_{\\text{target}}"} />)</li>
+    <li>
+      <strong>Untargeted</strong>: Cause any
+      misclassification (<MathBlock
+        formula={"f(x') \\neq f(x)"}
+      />)
+    </li>
+    <li>
+      <strong>Targeted</strong>: Force a specific wrong
+      class (<MathBlock
+        formula={"f(x') = y_{\\text{target}}"}
+      />)
+    </li>
   </ul>
   <p>
-    Targeted attacks are harder but more dangerous in practice: for example, causing a self-driving car to misclassify a stop sign as a speed limit sign.
+    Targeted attacks are harder but more dangerous in
+    practice: for example, causing a self-driving car to
+    misclassify a stop sign as a speed limit sign.
   </p>
 </section>
 
@@ -81,55 +148,115 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>FGSM: Fast Gradient Sign Method</h2>
 
   <p>
-    <strong>FGSM</strong> (Goodfellow et al., 2014) is the simplest and most influential adversarial attack. It generates perturbations in a single gradient step.
+    <strong>FGSM</strong> (Goodfellow et al., 2014) is the simplest
+    and most influential adversarial attack. It generates perturbations
+    in a single gradient step.
   </p>
 
   <h3>Derivation</h3>
   <p>
-    The attacker seeks to maximize the loss <MathBlock formula={"\\mathcal{L}(f(x + \\delta), y)"} /> subject to <MathBlock formula={"\\|\\delta\\|_\\infty \\leq \\epsilon"} />. For a linear model <MathBlock formula="f(x) = w^T x" />, the perturbation maximizing the loss is in the direction of the gradient:
+    The attacker seeks to maximize the loss <MathBlock
+      formula={"\\mathcal{L}(f(x + \\delta), y)"}
+    /> subject to <MathBlock
+      formula={"\\|\\delta\\|_\\infty \\leq \\epsilon"}
+    />. For a linear model <MathBlock
+      formula="f(x) = w^T x"
+    />, the perturbation maximizing the loss is in the
+    direction of the gradient:
   </p>
 
-  <MathBlock formula={"\\max_{\\|\\delta\\|_\\infty \\leq \\epsilon} w^T \\delta = \\epsilon \\cdot \\text{sign}(w)"} display={true} />
+  <MathBlock
+    formula={"\\max_{\\|\\delta\\|_\\infty \\leq \\epsilon} w^T \\delta = \\epsilon \\cdot \\text{sign}(w)"}
+    display={true}
+  />
 
   <p>
-    In plain English: under an L-infinity constraint, the perturbation that maximizes the linear function is to push each dimension to its limit (+epsilon or -epsilon) in the direction of the weight's sign.
+    In plain English: under an L-infinity constraint, the
+    perturbation that maximizes the linear function is to
+    push each dimension to its limit (+epsilon or -epsilon)
+    in the direction of the weight's sign.
   </p>
 
   <p>
-    FGSM exploits a key insight: neural networks are locally linear. Near any input, the loss function can be approximated by a first-order Taylor expansion. The adversary then takes a single step in the direction that maximizes this linear approximation of the loss. Extending this to neural networks via a linear approximation of the loss around x:
+    FGSM exploits a key insight: neural networks are locally
+    linear. Near any input, the loss function can be
+    approximated by a first-order Taylor expansion. The
+    adversary then takes a single step in the direction that
+    maximizes this linear approximation of the loss.
+    Extending this to neural networks via a linear
+    approximation of the loss around x:
   </p>
 
-  <MathBlock formula={"\\mathcal{L}(x + \\delta) \\approx \\mathcal{L}(x) + \\nabla_x \\mathcal{L}(x)^T \\delta"} display={true} />
+  <MathBlock
+    formula={"\\mathcal{L}(x + \\delta) \\approx \\mathcal{L}(x) + \\nabla_x \\mathcal{L}(x)^T \\delta"}
+    display={true}
+  />
 
   <p>
-    In plain English: the loss at a nearby point is approximately the original loss plus the dot product of the gradient with the perturbation. This is just a first-order Taylor expansion, the same linearization you would use to approximate any smooth function near a point.
+    In plain English: the loss at a nearby point is
+    approximately the original loss plus the dot product of
+    the gradient with the perturbation. This is just a
+    first-order Taylor expansion, the same linearization you
+    would use to approximate any smooth function near a
+    point.
   </p>
 
   <p>
-    The optimal <MathBlock formula={"L_\\infty"} />-bounded perturbation is:
+    The optimal <MathBlock formula={"L_\\infty"} />-bounded
+    perturbation is:
   </p>
 
-  <MathBlock formula={"\\delta = \\epsilon \\cdot \\text{sign}(\\nabla_x \\mathcal{L}(f(x), y))"} display={true} />
+  <MathBlock
+    formula={"\\delta = \\epsilon \\cdot \\text{sign}(\\nabla_x \\mathcal{L}(f(x), y))"}
+    display={true}
+  />
+
+  <p>The full FGSM adversarial example:</p>
+
+  <MathBlock
+    formula={"x' = x + \\epsilon \\cdot \\text{sign}(\\nabla_x \\mathcal{L}(f(x), y))"}
+    display={true}
+  />
 
   <p>
-    The full FGSM adversarial example:
-  </p>
-
-  <MathBlock formula={"x' = x + \\epsilon \\cdot \\text{sign}(\\nabla_x \\mathcal{L}(f(x), y))"} display={true} />
-
-  <p>
-    In plain English: take the original input and add a perturbation of magnitude epsilon in the direction that most increases the loss. The sign function ensures each pixel is perturbed by exactly +epsilon or -epsilon, maximizing the effect under the L-infinity constraint.
+    In plain English: take the original input and add a
+    perturbation of magnitude epsilon in the direction that
+    most increases the loss. The sign function ensures each
+    pixel is perturbed by exactly +epsilon or -epsilon,
+    maximizing the effect under the L-infinity constraint.
   </p>
 
   <h3>Why FGSM Matters</h3>
   <ul>
-    <li><strong>Single gradient step</strong>: Extremely fast (one forward + one backward pass)</li>
-    <li><strong>Surprisingly effective</strong>: Despite its simplicity, often achieves high attack success rates</li>
-    <li><strong>Theoretical insight</strong>: The "linear hypothesis" - adversarial vulnerability is caused by models being too linear in high-dimensional spaces, not by overfitting or nonlinearity</li>
+    <li>
+      <strong>Single gradient step</strong>: Extremely fast
+      (one forward + one backward pass)
+    </li>
+    <li>
+      <strong>Surprisingly effective</strong>: Despite its
+      simplicity, often achieves high attack success rates
+    </li>
+    <li>
+      <strong>Theoretical insight</strong>: The "linear
+      hypothesis" - adversarial vulnerability is caused by
+      models being too linear in high-dimensional spaces,
+      not by overfitting or nonlinearity
+    </li>
   </ul>
 
   <p>
-    The linear hypothesis is counterintuitive: we often think of neural networks as highly nonlinear. But in high dimensions, even small per-dimension perturbations accumulate. For a d-dimensional input with each dimension perturbed by <MathBlock formula={"\\epsilon"} />, the dot product <MathBlock formula={"w^T \\delta"} /> can change by <MathBlock formula={"O(\\epsilon \\cdot d)"} /> - this becomes enormous when d is large (e.g., d = 784 for MNIST, d = 150,528 for ImageNet).
+    The linear hypothesis is counterintuitive: we often
+    think of neural networks as highly nonlinear. But in
+    high dimensions, even small per-dimension perturbations
+    accumulate. For a d-dimensional input with each
+    dimension perturbed by <MathBlock
+      formula={"\\epsilon"}
+    />, the dot product <MathBlock
+      formula={"w^T \\delta"}
+    /> can change by <MathBlock
+      formula={"O(\\epsilon \\cdot d)"}
+    /> - this becomes enormous when d is large (e.g., d = 784
+    for MNIST, d = 150,528 for ImageNet).
   </p>
 </section>
 
@@ -137,75 +264,244 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>PGD: Projected Gradient Descent</h2>
 
   <p>
-    <strong>PGD</strong> (Madry et al., 2017) is the iterative, multi-step extension of FGSM and is considered the strongest first-order adversarial attack. It serves as the standard benchmark for evaluating adversarial robustness.
+    <strong>PGD</strong> (Madry et al., 2017) is the iterative,
+    multi-step extension of FGSM and is considered the strongest
+    first-order adversarial attack. It serves as the standard
+    benchmark for evaluating adversarial robustness.
   </p>
 
   <h3>Algorithm</h3>
   <p>
-    PGD performs iterative FGSM with a projection step to keep the perturbation within the allowed <MathBlock formula={"\\epsilon"} />-ball:
+    PGD performs iterative FGSM with a projection step to
+    keep the perturbation within the allowed <MathBlock
+      formula={"\\epsilon"}
+    />-ball:
   </p>
 
-  <MathBlock formula={"x^{(0)} = x + \\text{Uniform}(-\\epsilon, \\epsilon)"} display={true} />
-  <MathBlock formula={"x^{(k+1)} = \\Pi_{B_\\epsilon(x)} \\left[ x^{(k)} + \\alpha \\cdot \\text{sign}(\\nabla_{x^{(k)}} \\mathcal{L}(f(x^{(k)}), y)) \\right]"} display={true} />
+  <MathBlock
+    formula={"x^{(0)} = x + \\text{Uniform}(-\\epsilon, \\epsilon)"}
+    display={true}
+  />
+  <MathBlock
+    formula={"x^{(k+1)} = \\Pi_{B_\\epsilon(x)} \\left[ x^{(k)} + \\alpha \\cdot \\text{sign}(\\nabla_{x^{(k)}} \\mathcal{L}(f(x^{(k)}), y)) \\right]"}
+    display={true}
+  />
 
   <p>
-    where <MathBlock formula={"\\alpha"} /> is the step size (typically <MathBlock formula={"\\alpha = \\epsilon / \\text{num\\_steps} \\cdot 2.5"} />), and <MathBlock formula={"\\Pi_{B_\\epsilon(x)}"} /> projects back onto the <MathBlock formula={"\\epsilon"} />-ball around x:
+    where <MathBlock formula={"\\alpha"} /> is the step size (typically
+    <MathBlock
+      formula={"\\alpha = \\epsilon / \\text{num\\_steps} \\cdot 2.5"}
+    />), and <MathBlock formula={"\\Pi_{B_\\epsilon(x)}"} /> projects
+    back onto the <MathBlock formula={"\\epsilon"} />-ball
+    around x:
   </p>
 
-  <MathBlock formula={"\\Pi_{B_\\epsilon(x)}[x'] = \\text{clip}(x', x - \\epsilon, x + \\epsilon)"} display={true} />
+  <MathBlock
+    formula={"\\Pi_{B_\\epsilon(x)}[x'] = \\text{clip}(x', x - \\epsilon, x + \\epsilon)"}
+    display={true}
+  />
 
   <p>
-    In plain English: PGD is iterated FGSM -- take a small adversarial step, project back into the allowed perturbation ball, and repeat. It is the strongest first-order attack and the standard benchmark for adversarial robustness.
+    In plain English: PGD is iterated FGSM -- take a small
+    adversarial step, project back into the allowed
+    perturbation ball, and repeat. It is the strongest
+    first-order attack and the standard benchmark for
+    adversarial robustness.
   </p>
 
   <h3>Random Restart</h3>
   <p>
-    A critical detail: PGD is initialized from a <strong>random point</strong> within the <MathBlock formula={"\\epsilon"} />-ball, not from x itself. This helps escape local minima and makes the attack stronger. Multiple random restarts further improve attack success.
+    A critical detail: PGD is initialized from a <strong
+      >random point</strong
+    > within the <MathBlock formula={"\\epsilon"} />-ball,
+    not from x itself. This helps escape local minima and
+    makes the attack stronger. Multiple random restarts
+    further improve attack success.
   </p>
 
   <h3>PGD as a Benchmark</h3>
   <p>
-    Madry et al. argued that PGD is the "universal first-order attack": any defense that is robust to PGD should be robust to all first-order (gradient-based) attacks. This claim is empirical, not formally proven, but it has held up in practice: PGD remains the standard adversarial attack for robustness evaluation.
+    Madry et al. argued that PGD is the "universal
+    first-order attack": any defense that is robust to PGD
+    should be robust to all first-order (gradient-based)
+    attacks. This claim is empirical, not formally proven,
+    but it has held up in practice: PGD remains the standard
+    adversarial attack for robustness evaluation.
   </p>
 </section>
 
-<Diagram diagramId="pgd-attack" title="PGD Attack: Iterative Optimization in the Epsilon Ball" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+<Diagram
+  diagramId="pgd-attack"
+  title="PGD Attack: Iterative Optimization in the Epsilon Ball"
+  autoplay={true}
+  animationDuration={5000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+  >
     <svg viewBox="0 0 400 300" class="w-full h-64">
       <!-- Epsilon ball -->
-      <circle cx="200" cy="150" r="100" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5" data-animate style="animation-delay: 0.2s" />
-      <text x="310" y="155" class="text-xs fill-slate-400" data-animate style="animation-delay: 0.2s">epsilon-ball</text>
+      <circle
+        cx="200"
+        cy="150"
+        r="100"
+        fill="none"
+        stroke="#e2e8f0"
+        stroke-width="2"
+        stroke-dasharray="5,5"
+        data-animate
+        style="animation-delay: 0.2s"></circle>
+      <text
+        x="310"
+        y="155"
+        class="text-xs fill-slate-400"
+        data-animate
+        style="animation-delay: 0.2s">epsilon-ball</text
+      >
 
       <!-- Original point -->
-      <circle cx="200" cy="150" r="6" fill="#6366f1" data-animate style="animation-delay: 0.4s" />
-      <text x="210" y="145" class="text-xs fill-indigo-600 font-semibold" data-animate style="animation-delay: 0.4s">x (original)</text>
+      <circle
+        cx="200"
+        cy="150"
+        r="6"
+        fill="#6366f1"
+        data-animate
+        style="animation-delay: 0.4s"></circle>
+      <text
+        x="210"
+        y="145"
+        class="text-xs fill-indigo-600 font-semibold"
+        data-animate
+        style="animation-delay: 0.4s">x (original)</text
+      >
 
       <!-- Random init -->
-      <circle cx="230" cy="120" r="4" fill="#f59e0b" data-animate style="animation-delay: 1s" />
-      <text x="240" y="118" class="text-xs fill-amber-600" data-animate style="animation-delay: 1s">random init</text>
+      <circle
+        cx="230"
+        cy="120"
+        r="4"
+        fill="#f59e0b"
+        data-animate
+        style="animation-delay: 1s"></circle>
+      <text
+        x="240"
+        y="118"
+        class="text-xs fill-amber-600"
+        data-animate
+        style="animation-delay: 1s">random init</text
+      >
 
       <!-- PGD steps -->
-      <line x1="230" y1="120" x2="255" y2="100" stroke="#ef4444" stroke-width="2" data-animate style="animation-delay: 1.5s" />
-      <circle cx="255" cy="100" r="3" fill="#ef4444" data-animate style="animation-delay: 1.5s" />
+      <line
+        x1="230"
+        y1="120"
+        x2="255"
+        y2="100"
+        stroke="#ef4444"
+        stroke-width="2"
+        data-animate
+        style="animation-delay: 1.5s"></line>
+      <circle
+        cx="255"
+        cy="100"
+        r="3"
+        fill="#ef4444"
+        data-animate
+        style="animation-delay: 1.5s"></circle>
 
-      <line x1="255" y1="100" x2="270" y2="85" stroke="#ef4444" stroke-width="2" data-animate style="animation-delay: 2s" />
-      <circle cx="270" cy="85" r="3" fill="#ef4444" data-animate style="animation-delay: 2s" />
+      <line
+        x1="255"
+        y1="100"
+        x2="270"
+        y2="85"
+        stroke="#ef4444"
+        stroke-width="2"
+        data-animate
+        style="animation-delay: 2s"></line>
+      <circle
+        cx="270"
+        cy="85"
+        r="3"
+        fill="#ef4444"
+        data-animate
+        style="animation-delay: 2s"></circle>
 
-      <line x1="270" y1="85" x2="280" y2="75" stroke="#ef4444" stroke-width="2" data-animate style="animation-delay: 2.5s" />
+      <line
+        x1="270"
+        y1="85"
+        x2="280"
+        y2="75"
+        stroke="#ef4444"
+        stroke-width="2"
+        data-animate
+        style="animation-delay: 2.5s"></line>
       <!-- Project back -->
-      <line x1="280" y1="75" x2="275" y2="80" stroke="#10b981" stroke-width="2" stroke-dasharray="3,3" data-animate style="animation-delay: 3s" />
-      <circle cx="275" cy="80" r="5" fill="#ef4444" data-animate style="animation-delay: 3s" />
-      <text x="280" y="78" class="text-xs fill-red-600 font-semibold" data-animate style="animation-delay: 3s">x' (adversarial)</text>
+      <line
+        x1="280"
+        y1="75"
+        x2="275"
+        y2="80"
+        stroke="#10b981"
+        stroke-width="2"
+        stroke-dasharray="3,3"
+        data-animate
+        style="animation-delay: 3s"></line>
+      <circle
+        cx="275"
+        cy="80"
+        r="5"
+        fill="#ef4444"
+        data-animate
+        style="animation-delay: 3s"></circle>
+      <text
+        x="280"
+        y="78"
+        class="text-xs fill-red-600 font-semibold"
+        data-animate
+        style="animation-delay: 3s">x' (adversarial)</text
+      >
 
       <!-- Decision boundary -->
-      <line x1="50" y1="220" x2="350" y2="50" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="8,4" data-animate style="animation-delay: 0.6s" />
-      <text x="60" y="240" class="text-xs fill-purple-500" data-animate style="animation-delay: 0.6s">decision boundary</text>
+      <line
+        x1="50"
+        y1="220"
+        x2="350"
+        y2="50"
+        stroke="#8b5cf6"
+        stroke-width="1"
+        stroke-dasharray="8,4"
+        data-animate
+        style="animation-delay: 0.6s"></line>
+      <text
+        x="60"
+        y="240"
+        class="text-xs fill-purple-500"
+        data-animate
+        style="animation-delay: 0.6s"
+        >decision boundary</text
+      >
 
       <!-- Labels -->
-      <text x="100" y="280" class="text-xs fill-slate-500" data-animate style="animation-delay: 3.5s">Class A (correct)</text>
-      <text x="280" y="40" class="text-xs fill-slate-500" data-animate style="animation-delay: 3.5s">Class B (wrong)</text>
+      <text
+        x="100"
+        y="280"
+        class="text-xs fill-slate-500"
+        data-animate
+        style="animation-delay: 3.5s"
+        >Class A (correct)</text
+      >
+      <text
+        x="280"
+        y="40"
+        class="text-xs fill-slate-500"
+        data-animate
+        style="animation-delay: 3.5s">Class B (wrong)</text
+      >
     </svg>
-    <p class="text-sm text-slate-600 text-center">PGD iteratively steps toward the decision boundary, projecting back into the epsilon-ball after each step.</p>
+    <p class="text-sm text-slate-600 text-center">
+      PGD iteratively steps toward the decision boundary,
+      projecting back into the epsilon-ball after each step.
+    </p>
   </div>
 </Diagram>
 
@@ -213,39 +509,83 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>C&W Attack: Optimization-Based Precision</h2>
 
   <p>
-    The <strong>Carlini & Wagner (C&W) attack</strong> (2016) formulates adversarial example generation as a constrained optimization problem, finding the <em>minimum</em> perturbation needed to cause misclassification. It is slower than PGD but produces smaller, more targeted perturbations.
+    The <strong>Carlini & Wagner (C&W) attack</strong> (2016)
+    formulates adversarial example generation as a constrained
+    optimization problem, finding the <em>minimum</em> perturbation
+    needed to cause misclassification. It is slower than PGD but
+    produces smaller, more targeted perturbations.
   </p>
 
   <h3>Formulation</h3>
   <p>
-    Instead of maximizing loss within a fixed <MathBlock formula={"\\epsilon"} />-ball, C&W minimizes perturbation size subject to successful misclassification:
+    Instead of maximizing loss within a fixed <MathBlock
+      formula={"\\epsilon"}
+    />-ball, C&W minimizes perturbation size subject to
+    successful misclassification:
   </p>
 
-  <MathBlock formula={"\\min_\\delta \\|\\delta\\|_2^2 + c \\cdot g(x + \\delta)"} display={true} />
+  <MathBlock
+    formula={"\\min_\\delta \\|\\delta\\|_2^2 + c \\cdot g(x + \\delta)"}
+    display={true}
+  />
 
   <p>
-    In plain English: find the smallest perturbation that also makes the attack succeed. The constant c controls the tradeoff between perturbation size and attack confidence -- think of it as a Lagrange multiplier balancing two competing objectives.
+    In plain English: find the smallest perturbation that
+    also makes the attack succeed. The constant c controls
+    the tradeoff between perturbation size and attack
+    confidence -- think of it as a Lagrange multiplier
+    balancing two competing objectives.
   </p>
 
   <p>
-    where g is a loss function that is negative when the attack succeeds:
+    where g is a loss function that is negative when the
+    attack succeeds:
   </p>
 
-  <MathBlock formula={"g(x') = \\max(Z(x')_{y_{\\text{true}}} - \\max_{j \\neq y_{\\text{true}}} Z(x')_j, -\\kappa)"} display={true} />
+  <MathBlock
+    formula={"g(x') = \\max(Z(x')_{y_{\\text{true}}} - \\max_{j \\neq y_{\\text{true}}} Z(x')_j, -\\kappa)"}
+    display={true}
+  />
 
   <p>
-    In plain English: g is negative (attack succeeds) when the logit for the true class is lower than the highest logit among all wrong classes, with kappa as a confidence margin ensuring the misclassification is decisive rather than borderline.
+    In plain English: g is negative (attack succeeds) when
+    the logit for the true class is lower than the highest
+    logit among all wrong classes, with kappa as a
+    confidence margin ensuring the misclassification is
+    decisive rather than borderline.
   </p>
 
   <p>
-    Here <MathBlock formula="Z(x')" /> are the logits (pre-softmax outputs), and <MathBlock formula={"\\kappa"} /> is a confidence margin. The attack uses the <strong>change of variables</strong> <MathBlock formula={"\\delta = \\frac{1}{2}(\\tanh(w) + 1) - x"} /> to enforce box constraints (valid pixel range) without projection.
+    Here <MathBlock formula="Z(x')" /> are the logits (pre-softmax
+    outputs), and <MathBlock formula={"\\kappa"} /> is a confidence
+    margin. The attack uses the <strong
+      >change of variables</strong
+    >
+    <MathBlock
+      formula={"\\delta = \\frac{1}{2}(\\tanh(w) + 1) - x"}
+    /> to enforce box constraints (valid pixel range) without
+    projection.
   </p>
 
   <h3>Why C&W is Important</h3>
   <ul>
-    <li><strong>Broke many defenses</strong>: C&W demonstrated that numerous proposed defenses (defensive distillation, input transformations, detection methods) were ineffective, fundamentally changing the field's approach to evaluation</li>
-    <li><strong>Minimum-norm perturbations</strong>: Finds the smallest possible perturbation, providing a true measure of a model's adversarial vulnerability</li>
-    <li><strong>Robust evaluation standard</strong>: Any defense that withstands C&W is considered significantly more credible</li>
+    <li>
+      <strong>Broke many defenses</strong>: C&W demonstrated
+      that numerous proposed defenses (defensive
+      distillation, input transformations, detection
+      methods) were ineffective, fundamentally changing the
+      field's approach to evaluation
+    </li>
+    <li>
+      <strong>Minimum-norm perturbations</strong>: Finds the
+      smallest possible perturbation, providing a true
+      measure of a model's adversarial vulnerability
+    </li>
+    <li>
+      <strong>Robust evaluation standard</strong>: Any
+      defense that withstands C&W is considered
+      significantly more credible
+    </li>
   </ul>
 </section>
 
@@ -253,26 +593,52 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Transferability: The Most Concerning Property</h2>
 
   <p>
-    Perhaps the most alarming property of adversarial examples is <strong>transferability</strong>: adversarial examples crafted for one model often fool completely different models, even with different architectures, training data, and training procedures.
+    Perhaps the most alarming property of adversarial
+    examples is <strong>transferability</strong>:
+    adversarial examples crafted for one model often fool
+    completely different models, even with different
+    architectures, training data, and training procedures.
   </p>
 
   <h3>Why Transfer Works</h3>
-  <p>
-    Several theories explain transferability:
-  </p>
+  <p>Several theories explain transferability:</p>
   <ul>
-    <li><strong>Shared features</strong>: Different models learn similar (non-robust) features from similar data distributions. Adversarial perturbations corrupt these shared features.</li>
-    <li><strong>Linear regions overlap</strong>: Neural networks partition the input space into approximately linear regions. Different models have overlapping linear regions near natural data points.</li>
-    <li><strong>Non-robust features</strong>: Ilyas et al. (2019) showed that models rely on "non-robust features" - patterns that are predictive but imperceptible to humans. These features are consistent across models.</li>
+    <li>
+      <strong>Shared features</strong>: Different models
+      learn similar (non-robust) features from similar data
+      distributions. Adversarial perturbations corrupt these
+      shared features.
+    </li>
+    <li>
+      <strong>Linear regions overlap</strong>: Neural
+      networks partition the input space into approximately
+      linear regions. Different models have overlapping
+      linear regions near natural data points.
+    </li>
+    <li>
+      <strong>Non-robust features</strong>: Ilyas et al.
+      (2019) showed that models rely on "non-robust
+      features" - patterns that are predictive but
+      imperceptible to humans. These features are consistent
+      across models.
+    </li>
   </ul>
 
   <h3>Implications for Security</h3>
   <p>
-    Transferability makes adversarial attacks practical in the real world:
+    Transferability makes adversarial attacks practical in
+    the real world:
   </p>
   <ul>
-    <li>Attackers don't need white-box access; they can craft attacks on a public surrogate model</li>
-    <li>Ensemble-based attacks (crafting adversarial examples on multiple surrogate models) increase transfer success rates significantly</li>
+    <li>
+      Attackers don't need white-box access; they can craft
+      attacks on a public surrogate model
+    </li>
+    <li>
+      Ensemble-based attacks (crafting adversarial examples
+      on multiple surrogate models) increase transfer
+      success rates significantly
+    </li>
     <li>Model secrecy alone is not a sufficient defense</li>
   </ul>
 </section>
@@ -281,36 +647,79 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Physical Adversarial Examples</h2>
 
   <p>
-    Adversarial examples are not limited to digital perturbations. Researchers have demonstrated attacks that work in the <strong>physical world</strong>, surviving changes in viewpoint, lighting, and camera noise.
+    Adversarial examples are not limited to digital
+    perturbations. Researchers have demonstrated attacks
+    that work in the <strong>physical world</strong>,
+    surviving changes in viewpoint, lighting, and camera
+    noise.
   </p>
 
   <h3>Notable Examples</h3>
   <ul>
-    <li><strong>Stop sign attacks</strong> (Eykholt et al., 2018): Small stickers placed on stop signs cause misclassification as speed limit signs by object detection models under varying conditions</li>
-    <li><strong>Adversarial patches</strong> (Brown et al., 2017): A printed patch that causes any object behind it to be classified as a toaster. Unlike pixel perturbations, patches are image-agnostic.</li>
-    <li><strong>Adversarial T-shirts</strong> (Xu et al., 2020): Patterns printed on clothing that evade person detection systems, even with body movement and deformation</li>
-    <li><strong>Adversarial glasses</strong> (Sharif et al., 2016): Specially designed eyeglass frames that cause face recognition systems to misidentify the wearer</li>
+    <li>
+      <strong>Stop sign attacks</strong> (Eykholt et al., 2018):
+      Small stickers placed on stop signs cause misclassification
+      as speed limit signs by object detection models under varying
+      conditions
+    </li>
+    <li>
+      <strong>Adversarial patches</strong> (Brown et al., 2017):
+      A printed patch that causes any object behind it to be classified
+      as a toaster. Unlike pixel perturbations, patches are image-agnostic.
+    </li>
+    <li>
+      <strong>Adversarial T-shirts</strong> (Xu et al., 2020):
+      Patterns printed on clothing that evade person detection
+      systems, even with body movement and deformation
+    </li>
+    <li>
+      <strong>Adversarial glasses</strong> (Sharif et al., 2016):
+      Specially designed eyeglass frames that cause face recognition
+      systems to misidentify the wearer
+    </li>
   </ul>
 
   <h3>Challenges in Physical Attacks</h3>
-  <p>
-    Physical adversarial examples must be robust to:
-  </p>
+  <p>Physical adversarial examples must be robust to:</p>
   <ul>
-    <li><strong>Viewing angle variation</strong>: The camera may see the object from any angle</li>
-    <li><strong>Lighting changes</strong>: Color and contrast shift with ambient lighting</li>
-    <li><strong>Camera noise</strong>: Sensor noise, compression artifacts, and resolution differences</li>
-    <li><strong>Printing fidelity</strong>: Printers can't reproduce arbitrary pixel values exactly</li>
+    <li>
+      <strong>Viewing angle variation</strong>: The camera
+      may see the object from any angle
+    </li>
+    <li>
+      <strong>Lighting changes</strong>: Color and contrast
+      shift with ambient lighting
+    </li>
+    <li>
+      <strong>Camera noise</strong>: Sensor noise,
+      compression artifacts, and resolution differences
+    </li>
+    <li>
+      <strong>Printing fidelity</strong>: Printers can't
+      reproduce arbitrary pixel values exactly
+    </li>
   </ul>
 
   <p>
-    Attackers address these by optimizing over distributions of transformations (called <strong>Expectation over Transformation, or EoT</strong>). Let <MathBlock formula="T" /> denote a distribution of physical transformations (rotations, brightness changes, noise, etc.), and let <MathBlock formula={"t \\sim T"} /> be a specific transformation sampled from it. The attacker optimizes:
+    Attackers address these by optimizing over distributions
+    of transformations (called <strong
+      >Expectation over Transformation, or EoT</strong
+    >). Let <MathBlock formula="T" /> denote a distribution of
+    physical transformations (rotations, brightness changes, noise,
+    etc.), and let <MathBlock formula={"t \\sim T"} /> be a specific
+    transformation sampled from it. The attacker optimizes:
   </p>
 
-  <MathBlock formula={"\\delta^* = \\arg\\max_\\delta \\mathbb{E}_{t \\sim T}[\\mathcal{L}(f(t(x + \\delta)), y)]"} display={true} />
+  <MathBlock
+    formula={"\\delta^* = \\arg\\max_\\delta \\mathbb{E}_{t \\sim T}[\\mathcal{L}(f(t(x + \\delta)), y)]"}
+    display={true}
+  />
 
   <p>
-    This produces perturbations that are robust across conditions, because the expectation forces the perturbation to work under many different physical transforms simultaneously.
+    This produces perturbations that are robust across
+    conditions, because the expectation forces the
+    perturbation to work under many different physical
+    transforms simultaneously.
   </p>
 </section>
 
@@ -322,37 +731,65 @@ import RevealSection from '../../components/RevealSection.astro';
       id: "a",
       text: "It means you need more training data to prevent attacks",
       correct: false,
-      explanation: "Adversarial vulnerability is not primarily caused by insufficient training data. Models trained on massive datasets are equally vulnerable."
+      explanation:
+        "Adversarial vulnerability is not primarily caused by insufficient training data. Models trained on massive datasets are equally vulnerable.",
     },
     {
       id: "b",
       text: "It enables black-box attacks: adversarial examples crafted on public surrogate models can fool proprietary models the attacker has never seen",
       correct: true,
-      explanation: "Correct! Transferability means an attacker can train their own model, generate adversarial examples on it, and use those to attack a completely different deployed model. This eliminates the need for white-box access, making attacks practical against real-world API-based or embedded systems."
+      explanation:
+        "Correct! Transferability means an attacker can train their own model, generate adversarial examples on it, and use those to attack a completely different deployed model. This eliminates the need for white-box access, making attacks practical against real-world API-based or embedded systems.",
     },
     {
       id: "c",
       text: "It proves that all neural networks are fundamentally the same architecture",
       correct: false,
-      explanation: "Transfer works between different architectures (CNN to Transformer, etc.). It suggests shared feature vulnerabilities, not architectural identity."
+      explanation:
+        "Transfer works between different architectures (CNN to Transformer, etc.). It suggests shared feature vulnerabilities, not architectural identity.",
     },
     {
       id: "d",
       text: "It only affects image classification, not other ML tasks",
       correct: false,
-      explanation: "Adversarial transferability has been demonstrated across modalities: text classifiers, speech recognition, object detection, and more."
-    }
+      explanation:
+        "Adversarial transferability has been demonstrated across modalities: text classifiers, speech recognition, object detection, and more.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Adversarial examples</strong> reveal a fundamental gap between human and neural network perception: imperceptible perturbations cause confident misclassification</li>
-    <li><strong>FGSM</strong> generates adversarial examples in one gradient step using the sign of the loss gradient, motivated by the "linear hypothesis" of adversarial vulnerability</li>
-    <li><strong>PGD</strong> extends FGSM to multiple steps with projection, serving as the standard benchmark for evaluating adversarial robustness</li>
-    <li><strong>C&W</strong> finds minimum-norm perturbations through optimization, breaking many proposed defenses and establishing rigorous evaluation standards</li>
-    <li><strong>Transferability</strong> enables practical black-box attacks: adversarial examples from surrogate models fool unseen target models because models share non-robust features</li>
-    <li><strong>Physical adversarial examples</strong> survive real-world conditions (viewpoint, lighting, printing), demonstrating that this is not merely a theoretical concern</li>
+    <li>
+      <strong>Adversarial examples</strong> reveal a fundamental
+      gap between human and neural network perception: imperceptible
+      perturbations cause confident misclassification
+    </li>
+    <li>
+      <strong>FGSM</strong> generates adversarial examples in
+      one gradient step using the sign of the loss gradient, motivated
+      by the "linear hypothesis" of adversarial vulnerability
+    </li>
+    <li>
+      <strong>PGD</strong> extends FGSM to multiple steps with
+      projection, serving as the standard benchmark for evaluating
+      adversarial robustness
+    </li>
+    <li>
+      <strong>C&W</strong> finds minimum-norm perturbations through
+      optimization, breaking many proposed defenses and establishing
+      rigorous evaluation standards
+    </li>
+    <li>
+      <strong>Transferability</strong> enables practical black-box
+      attacks: adversarial examples from surrogate models fool
+      unseen target models because models share non-robust features
+    </li>
+    <li>
+      <strong>Physical adversarial examples</strong> survive real-world
+      conditions (viewpoint, lighting, printing), demonstrating
+      that this is not merely a theoretical concern
+    </li>
   </ul>
 </KeyTakeaway>
 

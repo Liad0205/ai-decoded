@@ -315,6 +315,47 @@ Decomposition:
     <li><strong>Pros</strong>: Specialized prompts for each domain, fast routing decisions</li>
     <li><strong>Cons</strong>: Misclassification sends tasks to wrong specialist, cross-domain tasks are hard to handle</li>
   </ul>
+  
+  <div class="bg-slate-50 dark:bg-slate-900/20 p-4 rounded-lg my-4 flex flex-col items-center">
+      <div class="font-semibold text-slate-700 dark:text-slate-300 mb-4">Router Pattern</div>
+      <div class="flex flex-col items-center w-full max-w-md">
+          <!-- Input -->
+          <div class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 rounded-lg text-sm mb-2">User Query</div>
+          <div class="text-slate-400 mb-2">⬇️</div>
+          <!-- Router -->
+          <div class="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/40 border border-indigo-300 rounded-lg font-mono text-sm font-bold text-indigo-700 dark:text-indigo-300">Router (Classifier)</div>
+          
+          <!-- Arrows splitting -->
+          <div class="flex justify-between w-full text-slate-400 mt-2 px-8">
+              <div>↙️</div>
+              <div>⬇️</div>
+              <div>↘️</div>
+          </div>
+          
+          <!-- Specialists -->
+          <div class="flex justify-between w-full gap-2 mt-2">
+              <div class="flex-1 p-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 rounded text-center text-xs">
+                  <strong>Billing<br/>Agent</strong>
+              </div>
+              <div class="flex-1 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 rounded text-center text-xs">
+                  <strong>Tech<br/>Support</strong>
+              </div>
+              <div class="flex-1 p-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 rounded text-center text-xs">
+                  <strong>Sales<br/>Agent</strong>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <h3>Orchestrator-Workers (Swarm)</h3>
+  <p>
+    An evolution of the Router pattern where a central "Orchestrator" maintains the global state and plan, delegating specific sub-tasks to "Worker" agents. Workers report back to the Orchestrator, which then updates the plan.
+  </p>
+  <ul>
+    <li><strong>Pros</strong>: Highly scalable, handles complex dependencies, workers can be smaller/cheaper models.</li>
+    <li><strong>Cons</strong>: Complex state management, potential for communication bottlenecks.</li>
+    <li><strong>Example</strong>: A software engineering agent where the Orchestrator plans the feature, one worker writes code, another writes tests, and a third updates documentation.</li>
+  </ul>
 </section>
 
 <KeyTakeaway>

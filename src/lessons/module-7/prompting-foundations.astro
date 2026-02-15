@@ -44,7 +44,13 @@ import MathBlock from '../../components/MathBlock.astro';
 
   <ul>
     <li><strong>Words are not tokens</strong>: Common words like "the" are single tokens, but uncommon words may be split. "Anthropic" might become ["Anthrop", "ic"]. Code identifiers, non-English text, and numbers are often split unpredictably.</li>
-    <li><strong>Arithmetic is tokenization-dependent</strong>: The number "12345" might be tokenized as ["123", "45"] or ["1", "2345"], making digit-level reasoning unreliable. This partly explains why LLMs struggle with arithmetic.</li>
+    <li>
+        <strong>Arithmetic is tokenization-dependent</strong>: The number "12345" might be tokenized as ["123", "45"] or ["1", "2345"], making digit-level reasoning unreliable. This partly explains why LLMs struggle with arithmetic.
+        <div class="mt-2 bg-slate-100 dark:bg-[hsl(var(--muted))] p-2 rounded text-xs font-mono">
+          Input: 9999 (1 token) vs. 10000 (2 tokens: "10", "000")<br/>
+          To the model, "10000" looks like two separate concepts, confusing arithmetic operations.
+        </div>
+    </li>
     <li><strong>Whitespace and formatting matter</strong>: Leading spaces, newlines, and punctuation affect tokenization, which can subtly change model behavior.</li>
   </ul>
 

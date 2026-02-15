@@ -185,6 +185,20 @@ import Quiz from '../../components/Quiz.astro';
   ZeRO enables data-parallel training of much larger models by eliminating the requirement that each GPU hold a full copy of everything.
 </p>
 
+<div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg my-4">
+  <p class="font-semibold text-indigo-800 dark:text-indigo-200">The "Pizza Party" Analogy</p>
+  <p class="text-sm">
+    Imagine a group of chefs (GPUs) trying to bake a massive pizza (train a model).
+  </p>
+  <ul class="list-disc list-inside text-sm mt-2 ml-2">
+    <li><strong>Standard Data Parallelism</strong>: Every chef must memorize the <em>entire</em> 1,000-page recipe book. This is redundant and wastes brainpower (memory).</li>
+    <li><strong>ZeRO</strong>: We split the recipe book. Chef A holds pages 1-100, Chef B holds 101-200, etc. When Chef A needs to check step 150, they ask Chef B for that page, use it, and return it.</li>
+  </ul>
+  <p class="text-sm mt-2">
+    By sharing the recipe (parameters/optimizer states) instead of duplicating it, we can bake much bigger pizzas.
+  </p>
+</div>
+
 <h3>Tensor Parallelism (TP)</h3>
 
 <p>

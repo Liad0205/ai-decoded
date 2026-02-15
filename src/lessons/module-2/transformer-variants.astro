@@ -1,55 +1,116 @@
 ---
 // Module 2, Lesson 2.3: Encoder-only, Decoder-only, and Encoder-Decoder
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Quiz from '../../components/Quiz.astro';
-import Diagram from '../../components/Diagram.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Quiz from "../../components/Quiz.astro";
+import Diagram from "../../components/Diagram.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Distinguish BERT-style, GPT-style, and T5-style transformer architectures</li>
-  <li>Understand causal masking and its role in autoregressive generation</li>
-  <li>Explain the KV-cache optimization and its memory implications</li>
+  <li>
+    Distinguish BERT-style, GPT-style, and T5-style
+    transformer architectures
+  </li>
+  <li>
+    Understand causal masking and its role in autoregressive
+    generation
+  </li>
+  <li>
+    Explain the KV-cache optimization and its memory
+    implications
+  </li>
   <li>Compare approaches to the context window problem</li>
 </ul>
 
 <h2>Three Transformer Architectures</h2>
 
-<p>The original transformer had an encoder-decoder structure. Modern models specialize into three main variants:</p>
+<p>
+  The original transformer had an encoder-decoder structure.
+  Modern models specialize into three main variants:
+</p>
 
 <h3>1. Encoder-Only (BERT-Style)</h3>
 
-<p><strong>Architecture</strong>: Stack of transformer blocks with bidirectional attention. Each token can attend to all other tokens (past and future).</p>
+<p>
+  <strong>Architecture</strong>: Stack of transformer blocks
+  with bidirectional attention. Each token can attend to all
+  other tokens (past and future).
+</p>
 
-<p><strong>Training</strong>: Masked Language Modeling (MLM). Randomly mask 15% of tokens, predict them from bidirectional context:</p>
+<p>
+  <strong>Training</strong>: Masked Language Modeling (MLM).
+  Randomly mask 15% of tokens, predict them from
+  bidirectional context:
+</p>
 
-<MathBlock formula={"p(x_i \\mid x_{<i}, x_{>i}) = \\text{softmax}(W_{\\text{vocab}} \\cdot h_i)"} display={true} />
+<MathBlock
+  formula={"p(x_i \\mid x_{<i}, x_{>i}) = \\text{softmax}(W_{\\text{vocab}} \\cdot h_i)"}
+  display={true}
+/>
 
-<p><strong>The [CLS] token</strong>: A special token prepended to sequences. Its final representation aggregates sequence-level information, used for classification tasks.</p>
+<p>
+  <strong>The [CLS] token</strong>: A special token
+  prepended to sequences. Its final representation
+  aggregates sequence-level information, used for
+  classification tasks.
+</p>
 
-<p><strong>Use cases</strong>: Sentence classification, named entity recognition, question answering (extractive). Not designed for generation.</p>
+<p>
+  <strong>Use cases</strong>: Sentence classification, named
+  entity recognition, question answering (extractive). Not
+  designed for generation.
+</p>
 
 <p><strong>Key models</strong>: BERT, RoBERTa, ELECTRA</p>
 
 <h3>2. Decoder-Only (GPT-Style)</h3>
 
-<p><strong>Architecture</strong>: Stack of transformer blocks with causal (unidirectional) attention. Token at position i can only attend to positions ≤ i.</p>
+<p>
+  <strong>Architecture</strong>: Stack of transformer blocks
+  with causal (unidirectional) attention. Token at position
+  i can only attend to positions ≤ i.
+</p>
 
-<p><strong>Causal masking</strong> is implemented by adding a mask to attention scores before softmax:</p>
+<p>
+  <strong>Causal masking</strong> is implemented by adding a mask
+  to attention scores before softmax:
+</p>
 
-<MathBlock formula={"\\text{mask}_{ij} = \\begin{cases} 0 & \\text{if } i \\geq j \\\\ -\\infty & \\text{if } i < j \\end{cases}"} display={true} />
+<MathBlock
+  formula={"\\text{mask}_{ij} = \\begin{cases} 0 & \\text{if } i \\geq j \\\\ -\\infty & \\text{if } i < j \\end{cases}"}
+  display={true}
+/>
 
-<p>The mask is 0 for positions the token is allowed to see (current and past) and negative infinity for future positions. Adding this to the attention scores before softmax gives:</p>
+<p>
+  The mask is 0 for positions the token is allowed to see
+  (current and past) and negative infinity for future
+  positions. Adding this to the attention scores before
+  softmax gives:
+</p>
 
-<MathBlock formula={"\\alpha_{ij} = \\text{softmax}(\\frac{q_i^T k_j}{\\sqrt{d_k}} + \\text{mask}_{ij})"} display={true} />
+<MathBlock
+  formula={"\\alpha_{ij} = \\text{softmax}(\\frac{q_i^T k_j}{\\sqrt{d_k}} + \\text{mask}_{ij})"}
+  display={true}
+/>
 
-<p>The -∞ makes softmax output 0 for future tokens (preventing information leakage).</p>
+<p>
+  The -∞ makes softmax output 0 for future tokens
+  (preventing information leakage).
+</p>
 
-<p><strong>Training</strong>: Next-token prediction (language modeling). Given prefix x<sub>1:t</sub>, predict x<sub>t+1</sub>:</p>
+<p>
+  <strong>Training</strong>: Next-token prediction (language
+  modeling). Given prefix x<sub>1:t</sub>, predict x<sub
+    >t+1</sub
+  >:
+</p>
 
-<MathBlock formula={"\\mathcal{L} = -\\sum_t \\log p(x_t \\mid x_{<t})"} display={true} />
+<MathBlock
+  formula={"\\mathcal{L} = -\\sum_t \\log p(x_t \\mid x_{<t})"}
+  display={true}
+/>
 
 <p><strong>Why GPT-style won for LLMs</strong>:</p>
 <ul>
@@ -59,93 +120,202 @@ import Diagram from '../../components/Diagram.astro';
   <li>Enables autoregressive sampling for generation</li>
 </ul>
 
-<p><strong>Key models</strong>: GPT-2, GPT-3, GPT-4, GPT-4o, LLaMA 3, Claude 3.5 Sonnet, Gemini 1.5 Pro</p>
+<p>
+  <strong>Key models</strong>: GPT-2, GPT-3, GPT-4, GPT-4o,
+  LLaMA 3, Claude 3.5 Sonnet, Gemini 1.5 Pro
+</p>
 
 <h3>3. Encoder-Decoder (T5-Style)</h3>
 
-<p><strong>Architecture</strong>: Encoder (bidirectional) processes input; decoder (causal) generates output while cross-attending to encoder states.</p>
+<p>
+  <strong>Architecture</strong>: Encoder (bidirectional)
+  processes input; decoder (causal) generates output while
+  cross-attending to encoder states.
+</p>
 
-<p><strong>Cross-attention</strong>: Decoder queries attend to encoder keys/values:</p>
+<p>
+  <strong>Cross-attention</strong>: Decoder queries attend
+  to encoder keys/values:
+</p>
 
-<MathBlock formula={"\\text{CrossAttn} = \\text{Attention}(Q_{\\text{decoder}}, K_{\\text{encoder}}, V_{\\text{encoder}})"} display={true} />
+<MathBlock
+  formula={"\\text{CrossAttn} = \\text{Attention}(Q_{\\text{decoder}}, K_{\\text{encoder}}, V_{\\text{encoder}})"}
+  display={true}
+/>
 
-<p><strong>Use cases</strong>: Tasks with distinct input/output (translation, summarization). Encoder-decoder architectures shine when input ≠ output modality or structure.</p>
+<p>
+  <strong>Use cases</strong>: Tasks with distinct
+  input/output (translation, summarization). Encoder-decoder
+  architectures shine when input ≠ output modality or
+  structure.
+</p>
 
 <p><strong>Key models</strong>: T5, BART, mT5</p>
 
-<Diagram diagramId="arch-comparison" title="Attention Pattern Comparison" autoplay={false}>
-  <div class="grid grid-cols-3 gap-4 p-4 bg-white dark:bg-[hsl(var(--card))] rounded">
+<Diagram
+  diagramId="arch-comparison"
+  title="Attention Pattern Comparison"
+  autoplay={false}
+>
+  <div
+    class="grid grid-cols-3 gap-4 p-4 bg-white dark:bg-[hsl(var(--card))] rounded"
+  >
     <div class="text-center">
-      <div class="font-semibold mb-2">Encoder-Only (BERT)</div>
-      <div class="grid grid-cols-4 gap-1">
-        {[...Array(16)].map((_, i) => {
-          const row = Math.floor(i / 4);
-          const col = i % 4;
-          return <div class="w-8 h-8 bg-indigo-500 rounded"></div>;
-        })}
+      <div class="font-semibold mb-2">
+        Encoder-Only (BERT)
       </div>
-      <div class="text-xs mt-2 text-slate-600">Bidirectional: all positions attend to all</div>
+      <div class="grid grid-cols-4 gap-1">
+        {
+          [...Array(16)].map(() => {
+            return (
+              <div class="w-8 h-8 bg-indigo-500 rounded" />
+            );
+          })
+        }
+      </div>
+      <div class="text-xs mt-2 text-slate-600">
+        Bidirectional: all positions attend to all
+      </div>
     </div>
 
     <div class="text-center">
-      <div class="font-semibold mb-2">Decoder-Only (GPT)</div>
-      <div class="grid grid-cols-4 gap-1">
-        {[...Array(16)].map((_, i) => {
-          const row = Math.floor(i / 4);
-          const col = i % 4;
-          const masked = col > row;
-          return <div class={`w-8 h-8 rounded ${masked ? 'bg-slate-200' : 'bg-green-500'}`}></div>;
-        })}
+      <div class="font-semibold mb-2">
+        Decoder-Only (GPT)
       </div>
-      <div class="text-xs mt-2 text-slate-600">Causal: can't attend to future</div>
+      <div class="grid grid-cols-4 gap-1">
+        {
+          [...Array(16)].map((_, i) => {
+            const row = Math.floor(i / 4);
+            const col = i % 4;
+            const masked = col > row;
+            return (
+              <div
+                class={`w-8 h-8 rounded ${masked ? "bg-slate-200" : "bg-green-500"}`}
+              />
+            );
+          })
+        }
+      </div>
+      <div class="text-xs mt-2 text-slate-600">
+        Causal: can't attend to future
+      </div>
     </div>
 
     <div class="text-center">
       <div class="font-semibold mb-2">Encoder-Decoder</div>
-      <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]">Encoder: bidirectional</div>
-      <div class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1">Decoder: causal + cross-attn</div>
-      <div class="text-xs mt-2 italic">Hybrid of both patterns</div>
+      <div
+        class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+      >
+        Encoder: bidirectional
+      </div>
+      <div
+        class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1"
+      >
+        Decoder: causal + cross-attn
+      </div>
+      <div class="text-xs mt-2 italic">
+        Hybrid of both patterns
+      </div>
     </div>
   </div>
 </Diagram>
 
 <h2>KV-Cache: Making Generation Fast</h2>
 
-<p>Autoregressive generation is sequential: generate token t, append to context, generate token t+1, etc. Naively, this requires recomputing attention for all previous tokens at each step: O(n²) operations.</p>
+<p>
+  Autoregressive generation is sequential: generate token t,
+  append to context, generate token t+1, etc. Naively, this
+  requires recomputing attention for all previous tokens at
+  each step: O(n²) operations.
+</p>
 
-<p><strong>KV-cache optimization</strong>: Cache the key and value vectors for all previous tokens. At step t, only compute Q<sub>t</sub>, then reuse cached K<sub>1:t-1</sub>, V<sub>1:t-1</sub>:</p>
+<p>
+  <strong>KV-cache optimization</strong>: Cache the key and
+  value vectors for all previous tokens. At step t, only
+  compute Q<sub>t</sub>, then reuse cached K<sub>1:t-1</sub
+  >, V<sub>1:t-1</sub>:
+</p>
 
-<MathBlock formula={"\\text{Attention}_t(Q_t, [K_{1:t-1}; K_t], [V_{1:t-1}; V_t])"} display={true} />
+<MathBlock
+  formula={"\\text{Attention}_t(Q_t, [K_{1:t-1}; K_t], [V_{1:t-1}; V_t])"}
+  display={true}
+/>
 
-<p>This reduces per-token generation from O(n²) to O(n), making real-time generation feasible.</p>
+<p>
+  This reduces per-token generation from O(n²) to O(n),
+  making real-time generation feasible.
+</p>
 
 <h3>Memory Implications</h3>
 
-<p>For a model with h heads, d<sub>k</sub> = d/h, and L layers, storing KV-cache for n tokens requires:</p>
+<p>
+  For a model with h heads, d<sub>k</sub> = d/h, and L layers,
+  storing KV-cache for n tokens requires:
+</p>
 
-<MathBlock formula={"2 \\times L \\times n \\times d \\times \\text{bytes\\_per\\_param}"} display={true} />
+<MathBlock
+  formula={"2 \\times L \\times n \\times d \\times \\text{bytes\\_per\\_param}"}
+  display={true}
+/>
 
-<p>For GPT-3 (96 layers, d=12288, float16), caching 2048 tokens ≈ 4.7 GB. This limits batch size during generation.</p>
+<p>
+  For GPT-3 (96 layers, d=12288, float16), caching 2048
+  tokens ≈ 4.7 GB. This limits batch size during generation.
+</p>
 
 <h2>The Context Window Problem (and Solutions)</h2>
 
-<p>Self-attention is O(n²) in sequence length. Early models trained on 2k-8k tokens, but by 2026, context windows have expanded dramatically through architectural innovations.</p>
+<p>
+  Self-attention is O(n²) in sequence length. Early models
+  trained on 2k-8k tokens, but by 2026, context windows have
+  expanded dramatically through architectural innovations.
+</p>
 
 <h3>Modern Context Windows (2026)</h3>
-<p>Current frontier models support context windows of <strong>up to 1-2M tokens</strong> (Gemini 1.5 Pro at 1M, Claude 3.5 Sonnet at 200K) with context lengths continuing to grow. This was achieved through:</p>
+<p>
+  Current frontier models support context windows of <strong
+    >up to 1-2M tokens</strong
+  > (Gemini 1.5 Pro at 1M, Claude 3.5 Sonnet at 200K) with context
+  lengths continuing to grow. This was achieved through:
+</p>
 <ul>
-  <li><strong>FlashAttention-2</strong>: Memory-efficient attention achieving 230 TFLOPs/s on A100 GPUs</li>
-  <li><strong>Sub-quadratic alternatives</strong>: State-space models (Mamba, RWKV) achieve O(n) complexity, offering an alternative to full attention for long sequences</li>
-  <li><strong>Improved positional encodings</strong>: RoPE (Rotary Position Embedding) and ALiBi enable better length generalization</li>
+  <li>
+    <strong>FlashAttention-2</strong>: Memory-efficient
+    attention achieving 230 TFLOPs/s on A100 GPUs
+  </li>
+  <li>
+    <strong>Sub-quadratic alternatives</strong>: State-space
+    models (Mamba, RWKV) achieve O(n) complexity, offering
+    an alternative to full attention for long sequences
+  </li>
+  <li>
+    <strong>Improved positional encodings</strong>: RoPE
+    (Rotary Position Embedding) and ALiBi enable better
+    length generalization
+  </li>
 </ul>
 
 <h3>Earlier Approaches (Historical)</h3>
-<p><strong>Sparse Attention</strong>: Longformer and BigBird restricted attention to local windows or predefined patterns, reducing complexity to O(n) but losing full attention flexibility.</p>
+<p>
+  <strong>Sparse Attention</strong>: Longformer and BigBird
+  restricted attention to local windows or predefined
+  patterns, reducing complexity to O(n) but losing full
+  attention flexibility.
+</p>
 
-<p><strong>Sliding Window Attention</strong>: Each token attends only to a fixed window (e.g., 512 tokens before/after). Used in models like MPT, CodeGen.</p>
+<p>
+  <strong>Sliding Window Attention</strong>: Each token
+  attends only to a fixed window (e.g., 512 tokens
+  before/after). Used in models like MPT, CodeGen.
+</p>
 
 <h3>Alternatives: Retrieval-Augmented Generation</h3>
-<p>Instead of extending context windows indefinitely, retrieve relevant chunks from a database and pass them as context. Still valuable for knowledge-intensive tasks even with 1M+ token windows (covered in RAG module).</p>
+<p>
+  Instead of extending context windows indefinitely,
+  retrieve relevant chunks from a database and pass them as
+  context. Still valuable for knowledge-intensive tasks even
+  with 1M+ token windows (covered in RAG module).
+</p>
 
 <Quiz
   question="Why did decoder-only (GPT-style) become dominant for LLMs, despite encoder-only (BERT-style) achieving state-of-the-art on many NLU benchmarks?"
@@ -155,36 +325,59 @@ import Diagram from '../../components/Diagram.astro';
       id: "a",
       text: "Decoder-only models are faster to train",
       correct: false,
-      explanation: "Training speed is similar. The key difference is in the training objective and generation capabilities."
+      explanation:
+        "Training speed is similar. The key difference is in the training objective and generation capabilities.",
     },
     {
       id: "b",
       text: "Decoder-only unifies pretraining (next-token prediction) with generation, and scales better with compute",
       correct: true,
-      explanation: "Correct! Decoder-only models use the same objective for pretraining and generation (next-token prediction). This simplifies the pipeline and scales naturally. As models grew larger, generation capabilities became more valuable than bidirectional encoding."
+      explanation:
+        "Correct! Decoder-only models use the same objective for pretraining and generation (next-token prediction). This simplifies the pipeline and scales naturally. As models grew larger, generation capabilities became more valuable than bidirectional encoding.",
     },
     {
       id: "c",
       text: "BERT-style models can't be fine-tuned for downstream tasks",
       correct: false,
-      explanation: "BERT-style models fine-tune very well for classification and extraction tasks."
+      explanation:
+        "BERT-style models fine-tune very well for classification and extraction tasks.",
     },
     {
       id: "d",
       text: "Causal attention is mathematically superior to bidirectional attention",
       correct: false,
-      explanation: "Bidirectional attention can capture richer context. The advantage of causal attention is enabling generation."
-    }
+      explanation:
+        "Bidirectional attention can capture richer context. The advantage of causal attention is enabling generation.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>BERT (encoder-only)</strong> uses bidirectional attention and MLM training; excellent for understanding tasks but not generation</li>
-    <li><strong>GPT (decoder-only)</strong> uses causal attention and next-token prediction; unified pretraining/generation objective that scales well</li>
-    <li><strong>T5 (encoder-decoder)</strong> combines both; best for tasks with distinct input/output like translation</li>
-    <li><strong>KV-cache</strong> caches key/value vectors to reduce generation from O(n²) to O(n) per token, critical for real-time inference</li>
-    <li><strong>Context window limits</strong> arise from O(n²) attention; solutions include sparse attention, sliding windows, and retrieval augmentation</li>
+    <li>
+      <strong>BERT (encoder-only)</strong> uses bidirectional
+      attention and MLM training; excellent for understanding
+      tasks but not generation
+    </li>
+    <li>
+      <strong>GPT (decoder-only)</strong> uses causal attention
+      and next-token prediction; unified pretraining/generation
+      objective that scales well
+    </li>
+    <li>
+      <strong>T5 (encoder-decoder)</strong> combines both; best
+      for tasks with distinct input/output like translation
+    </li>
+    <li>
+      <strong>KV-cache</strong> caches key/value vectors to reduce
+      generation from O(n²) to O(n) per token, critical for real-time
+      inference
+    </li>
+    <li>
+      <strong>Context window limits</strong> arise from O(n²)
+      attention; solutions include sparse attention, sliding windows,
+      and retrieval augmentation
+    </li>
   </ul>
 </KeyTakeaway>
 

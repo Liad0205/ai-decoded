@@ -109,6 +109,18 @@ import Quiz from '../../components/Quiz.astro';
   Scaling by <MathBlock formula={"1/\\sqrt{d_k}"} /> keeps variance at 1 regardless of <MathBlock formula="d_k" />, stabilizing gradients.
 </p>
 
+<div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg my-4">
+  <p class="font-semibold text-blue-800 dark:text-blue-200">Concrete Example:</p>
+  <p class="text-sm">
+    Imagine <MathBlock formula="d_k = 64" />. Then <MathBlock formula="\\sqrt{d_k} = 8" />.
+    Without scaling, if the dot product of a query and key is <strong>16</strong>, the softmax would see <MathBlock formula="e^{16} \\approx 8,886,110" />.
+    With scaling, it sees <MathBlock formula="e^{16/8} = e^2 \\approx 7.39" />.
+  </p>
+  <p class="text-sm mt-2">
+    The unscaled value pushes the softmax into a region where one value is huge and others are near zero, causing <strong>vanishing gradients</strong> (learning stops). Scaling keeps the values in a range where the model can still learn.
+  </p>
+</div>
+
 <Diagram diagramId="attention-viz" title="Attention Mechanism Visualization" autoplay={true} animationDuration={4000}>
   <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
     <div class="grid grid-cols-3 gap-8 items-center justify-center">

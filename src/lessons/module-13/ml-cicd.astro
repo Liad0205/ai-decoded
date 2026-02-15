@@ -1,366 +1,985 @@
 ---
 // Module 13, Lesson 13.2: CI/CD for ML and Infrastructure
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
-import MathBlock from '../../components/MathBlock.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import Quiz from "../../components/Quiz.astro";
+import RevealSection from "../../components/RevealSection.astro";
 ---
 
 <h2>Learning Objectives</h2>
 <ul>
-  <li>Understand why ML requires specialized CI/CD pipelines beyond traditional software automation</li>
-  <li>Compare pipeline orchestration tools: Airflow, Dagster, and Kubeflow Pipelines</li>
-  <li>Explain the role of feature stores in bridging training and serving</li>
-  <li>Implement data versioning for reproducible experiments using DVC</li>
-  <li>Apply container orchestration patterns for ML model serving</li>
-  <li>Optimize GPU costs through spot instances, right-sizing, and inference optimization</li>
+  <li>
+    Understand why ML requires specialized CI/CD pipelines
+    beyond traditional software automation
+  </li>
+  <li>
+    Compare pipeline orchestration tools: Airflow, Dagster,
+    and Kubeflow Pipelines
+  </li>
+  <li>
+    Explain the role of feature stores in bridging training
+    and serving
+  </li>
+  <li>
+    Implement data versioning for reproducible experiments
+    using DVC
+  </li>
+  <li>
+    Apply container orchestration patterns for ML model
+    serving
+  </li>
+  <li>
+    Optimize GPU costs through spot instances, right-sizing,
+    and inference optimization
+  </li>
 </ul>
 
 <h2>ML Pipelines and Orchestration</h2>
 
 <p>
-  Traditional software CI/CD pipelines are triggered by code changes: a developer pushes code, tests run, and the artifact is deployed. ML systems are fundamentally different because they have two axes of change: code and data. A model may need retraining not because the code changed, but because new training data arrived, the data distribution shifted, or a scheduled retraining trigger fired. This data dependency means ML systems require specialized pipeline orchestration that understands data freshness, training triggers, and model validation gates.
+  Traditional software CI/CD pipelines are triggered by code
+  changes: a developer pushes code, tests run, and the
+  artifact is deployed. ML systems are fundamentally
+  different because they have two axes of change: code and
+  data. A model may need retraining not because the code
+  changed, but because new training data arrived, the data
+  distribution shifted, or a scheduled retraining trigger
+  fired. This data dependency means ML systems require
+  specialized pipeline orchestration that understands data
+  freshness, training triggers, and model validation gates.
 </p>
 
 <h3>Why ML Needs Specialized Pipelines</h3>
 
-<p>
-  The unique requirements of ML pipelines include:
-</p>
+<p>The unique requirements of ML pipelines include:</p>
 
 <ul>
-  <li><strong>Data-dependent triggers</strong>: Pipelines must run when new data arrives or when data quality checks detect issues, not just when code changes. A fraud detection model may need retraining not because code changed, but because fraudster tactics evolved -- a trigger that traditional CI/CD does not handle.</li>
-  <li><strong>Long-running steps</strong>: Training a model can take hours or days, unlike software builds that complete in minutes. Pipelines must handle checkpointing, resumption, and GPU scheduling.</li>
-  <li><strong>Validation gates</strong>: Between training and deployment, a model must pass multiple validation checks: performance benchmarks, fairness audits, latency requirements, and regression tests against the current production model.</li>
-  <li><strong>Artifact management</strong>: ML pipelines produce large artifacts (model weights, embeddings, feature matrices) that must be stored, versioned, and served efficiently.</li>
-  <li><strong>Experiment lineage</strong>: Each pipeline run must record exactly what data, code, and configuration produced each artifact, enabling reproducibility and debugging.</li>
+  <li>
+    <strong>Data-dependent triggers</strong>: Pipelines must
+    run when new data arrives or when data quality checks
+    detect issues, not just when code changes. A fraud
+    detection model may need retraining not because code
+    changed, but because fraudster tactics evolved -- a
+    trigger that traditional CI/CD does not handle.
+  </li>
+  <li>
+    <strong>Long-running steps</strong>: Training a model
+    can take hours or days, unlike software builds that
+    complete in minutes. Pipelines must handle
+    checkpointing, resumption, and GPU scheduling.
+  </li>
+  <li>
+    <strong>Validation gates</strong>: Between training and
+    deployment, a model must pass multiple validation
+    checks: performance benchmarks, fairness audits, latency
+    requirements, and regression tests against the current
+    production model.
+  </li>
+  <li>
+    <strong>Artifact management</strong>: ML pipelines
+    produce large artifacts (model weights, embeddings,
+    feature matrices) that must be stored, versioned, and
+    served efficiently.
+  </li>
+  <li>
+    <strong>Experiment lineage</strong>: Each pipeline run
+    must record exactly what data, code, and configuration
+    produced each artifact, enabling reproducibility and
+    debugging.
+  </li>
 </ul>
 
 <h3>Apache Airflow</h3>
 
 <p>
-  Airflow is the most widely adopted workflow orchestrator, originally developed at Airbnb. It models workflows as Directed Acyclic Graphs (DAGs) of tasks.
+  Airflow is the most widely adopted workflow orchestrator,
+  originally developed at Airbnb. It models workflows as
+  Directed Acyclic Graphs (DAGs) of tasks.
 </p>
 
 <ul>
-  <li><strong>DAGs</strong>: Each node is a task (a Python function, Bash command, or operator), and edges define dependencies. Airflow's scheduler ensures tasks run in dependency order.</li>
-  <li><strong>Operators</strong>: Pre-built integrations for common operations: BashOperator, PythonOperator, SparkSubmitOperator, KubernetesPodOperator, and many more.</li>
-  <li><strong>Scheduling</strong>: DAGs can be triggered on cron schedules, by external events, or manually. Airflow supports backfilling (running historical dates) and catch-up (running missed schedules).</li>
-  <li><strong>Strengths</strong>: Mature ecosystem, extensive operator library, large community, well-understood operational model.</li>
-  <li><strong>Limitations for ML</strong>: Airflow was designed for ETL, not ML. It has no native concept of data assets, feature lineage, or model versioning. DAGs define execution order, not data flow, making it harder to reason about what data each task produces and consumes (though the TaskFlow API has improved data flow representation in recent versions). Dynamic DAG generation (e.g., parameterized by the number of hyperparameter trials) can be awkward.</li>
+  <li>
+    <strong>DAGs</strong>: Each node is a task (a Python
+    function, Bash command, or operator), and edges define
+    dependencies. Airflow's scheduler ensures tasks run in
+    dependency order.
+  </li>
+  <li>
+    <strong>Operators</strong>: Pre-built integrations for
+    common operations: BashOperator, PythonOperator,
+    SparkSubmitOperator, KubernetesPodOperator, and many
+    more.
+  </li>
+  <li>
+    <strong>Scheduling</strong>: DAGs can be triggered on
+    cron schedules, by external events, or manually. Airflow
+    supports backfilling (running historical dates) and
+    catch-up (running missed schedules).
+  </li>
+  <li>
+    <strong>Strengths</strong>: Mature ecosystem, extensive
+    operator library, large community, well-understood
+    operational model.
+  </li>
+  <li>
+    <strong>Limitations for ML</strong>: Airflow was
+    designed for ETL, not ML. It has no native concept of
+    data assets, feature lineage, or model versioning. DAGs
+    define execution order, not data flow, making it harder
+    to reason about what data each task produces and
+    consumes (though the TaskFlow API has improved data flow
+    representation in recent versions). Dynamic DAG
+    generation (e.g., parameterized by the number of
+    hyperparameter trials) can be awkward.
+  </li>
 </ul>
 
 <h3>Dagster</h3>
 
 <p>
-  Dagster takes a fundamentally different approach: it is asset-centric rather than task-centric. Instead of defining "run task A, then task B," you define the data assets your system produces and the computations that produce them.
+  Dagster takes a fundamentally different approach: it is
+  asset-centric rather than task-centric. Instead of
+  defining "run task A, then task B," you define the data
+  assets your system produces and the computations that
+  produce them.
 </p>
 
 <ul>
-  <li><strong>Software-defined assets</strong>: Each asset is a Python function decorated with <code>@asset</code>. Dependencies are inferred from function parameters. If asset B's function takes asset A as an argument, Dagster knows B depends on A.</li>
-  <li><strong>Type system</strong>: Assets have types, enabling runtime validation. You can define expectations (assertions) about the data each asset produces.</li>
-  <li><strong>Partitions</strong>: Native support for partitioned data (e.g., daily partitions). Dagster tracks which partitions are materialized and can selectively rematerialize stale partitions.</li>
-  <li><strong>IO managers</strong>: Abstractions for reading and writing assets to different storage systems (local filesystem, S3, BigQuery, Snowflake). Swapping storage backends requires changing a single configuration line, not modifying pipeline code.</li>
-  <li><strong>Strengths for ML</strong>: The asset-centric model maps naturally to ML concepts (datasets, feature tables, trained models). Built-in data lineage, freshness policies, and data quality checks make it a strong fit for ML pipelines.</li>
+  <li>
+    <strong>Software-defined assets</strong>: Each asset is
+    a Python function decorated with <code>@asset</code>.
+    Dependencies are inferred from function parameters. If
+    asset B's function takes asset A as an argument, Dagster
+    knows B depends on A.
+  </li>
+  <li>
+    <strong>Type system</strong>: Assets have types,
+    enabling runtime validation. You can define expectations
+    (assertions) about the data each asset produces.
+  </li>
+  <li>
+    <strong>Partitions</strong>: Native support for
+    partitioned data (e.g., daily partitions). Dagster
+    tracks which partitions are materialized and can
+    selectively rematerialize stale partitions.
+  </li>
+  <li>
+    <strong>IO managers</strong>: Abstractions for reading
+    and writing assets to different storage systems (local
+    filesystem, S3, BigQuery, Snowflake). Swapping storage
+    backends requires changing a single configuration line,
+    not modifying pipeline code.
+  </li>
+  <li>
+    <strong>Strengths for ML</strong>: The asset-centric
+    model maps naturally to ML concepts (datasets, feature
+    tables, trained models). Built-in data lineage,
+    freshness policies, and data quality checks make it a
+    strong fit for ML pipelines.
+  </li>
 </ul>
 
 <h3>Kubeflow Pipelines</h3>
 
 <p>
-  Kubeflow Pipelines is a Kubernetes-native ML workflow platform. Each pipeline step runs in its own container, providing complete environment isolation.
+  Kubeflow Pipelines is a Kubernetes-native ML workflow
+  platform. Each pipeline step runs in its own container,
+  providing complete environment isolation.
 </p>
 
 <ul>
-  <li><strong>Containerized steps</strong>: Each component runs in a Docker container with its own dependencies. This eliminates "works on my machine" issues and enables heterogeneous environments (one step uses TensorFlow, another uses PyTorch).</li>
-  <li><strong>Pipeline SDK</strong>: Define pipelines in Python using the KFP SDK. Components can be reused across pipelines, creating a library of standardized ML building blocks.</li>
-  <li><strong>Metadata and lineage</strong>: Kubeflow automatically tracks inputs, outputs, and metadata for each pipeline run. The ML Metadata (MLMD) store records artifact lineage.</li>
-  <li><strong>GPU scheduling</strong>: Native Kubernetes GPU scheduling ensures training steps get the GPU resources they need, with resource limits preventing runaway jobs.</li>
-  <li><strong>Trade-offs</strong>: Requires Kubernetes expertise. Higher operational overhead than Airflow or Dagster. Best suited for organizations that already run Kubernetes and need strong isolation between pipeline steps.</li>
+  <li>
+    <strong>Containerized steps</strong>: Each component
+    runs in a Docker container with its own dependencies.
+    This eliminates "works on my machine" issues and enables
+    heterogeneous environments (one step uses TensorFlow,
+    another uses PyTorch).
+  </li>
+  <li>
+    <strong>Pipeline SDK</strong>: Define pipelines in
+    Python using the KFP SDK. Components can be reused
+    across pipelines, creating a library of standardized ML
+    building blocks.
+  </li>
+  <li>
+    <strong>Metadata and lineage</strong>: Kubeflow
+    automatically tracks inputs, outputs, and metadata for
+    each pipeline run. The ML Metadata (MLMD) store records
+    artifact lineage.
+  </li>
+  <li>
+    <strong>GPU scheduling</strong>: Native Kubernetes GPU
+    scheduling ensures training steps get the GPU resources
+    they need, with resource limits preventing runaway jobs.
+  </li>
+  <li>
+    <strong>Trade-offs</strong>: Requires Kubernetes
+    expertise. Higher operational overhead than Airflow or
+    Dagster. Best suited for organizations that already run
+    Kubernetes and need strong isolation between pipeline
+    steps.
+  </li>
 </ul>
 
 <h3>Comparison of Orchestration Tools</h3>
 
 <p>
-  Choosing the right tool depends on your team's expertise and requirements:
+  Choosing the right tool depends on your team's expertise
+  and requirements:
 </p>
 
 <ul>
-  <li><strong>Small team, getting started</strong>: Dagster offers the best developer experience with sensible ML defaults and low operational overhead, though Airflow's larger ecosystem and community support make it a pragmatic choice for teams with existing orchestration experience.</li>
-  <li><strong>Large organization, existing Airflow</strong>: Extend Airflow with ML-specific operators and use external tools (MLflow, DVC) for ML-specific capabilities.</li>
-  <li><strong>Kubernetes-native, strong isolation needs</strong>: Kubeflow Pipelines provides the strongest container isolation and GPU scheduling, at the cost of complexity.</li>
-  <li><strong>Hybrid approach</strong>: Many teams use Airflow or Dagster for orchestration and call out to Kubeflow, SageMaker Pipelines, or Vertex AI for GPU-intensive training steps.</li>
+  <li>
+    <strong>Small team, getting started</strong>: Dagster
+    offers the best developer experience with sensible ML
+    defaults and low operational overhead, though Airflow's
+    larger ecosystem and community support make it a
+    pragmatic choice for teams with existing orchestration
+    experience.
+  </li>
+  <li>
+    <strong>Large organization, existing Airflow</strong>:
+    Extend Airflow with ML-specific operators and use
+    external tools (MLflow, DVC) for ML-specific
+    capabilities.
+  </li>
+  <li>
+    <strong
+      >Kubernetes-native, strong isolation needs</strong
+    >: Kubeflow Pipelines provides the strongest container
+    isolation and GPU scheduling, at the cost of complexity.
+  </li>
+  <li>
+    <strong>Hybrid approach</strong>: Many teams use Airflow
+    or Dagster for orchestration and call out to Kubeflow,
+    SageMaker Pipelines, or Vertex AI for GPU-intensive
+    training steps.
+  </li>
 </ul>
 
 <h2>Feature Stores</h2>
 
 <p>
-  A feature store is a centralized repository for storing, managing, and serving ML features. It addresses one of the most common pain points in production ML: the training-serving skew, where the feature computation logic differs between training and serving, leading to silent model degradation.
+  A feature store is a centralized repository for storing,
+  managing, and serving ML features. It addresses one of the
+  most common pain points in production ML: the
+  training-serving skew, where the feature computation logic
+  differs between training and serving, leading to silent
+  model degradation.
 </p>
 
 <h3>The Feature Store Concept</h3>
 
 <p>
-  Without a feature store, feature engineering is typically ad hoc: data scientists write feature computation code in notebooks for training, and ML engineers re-implement the same logic in the serving pipeline (often in a different language). This duplication introduces bugs and inconsistencies. A feature store solves this by providing:
+  Without a feature store, feature engineering is typically
+  ad hoc: data scientists write feature computation code in
+  notebooks for training, and ML engineers re-implement the
+  same logic in the serving pipeline (often in a different
+  language). This duplication introduces bugs and
+  inconsistencies. A feature store solves this by providing:
 </p>
 
 <ul>
-  <li><strong>Single source of truth</strong>: Feature definitions are written once and used for both training and serving. Instead of reimplementing "user's 7-day transaction count" in both training and serving code, define it once in the feature store and serve it consistently everywhere.</li>
-  <li><strong>Feature discovery</strong>: Teams can browse available features, reducing duplicate effort. If another team has already computed a useful feature, you can reuse it.</li>
-  <li><strong>Point-in-time correctness</strong>: For training, features must be computed as they were at prediction time to avoid data leakage. Feature stores handle temporal joins correctly, ensuring that training data uses only features that would have been available at the time of each prediction.</li>
-  <li><strong>Feature monitoring</strong>: Centralized features enable centralized monitoring for data quality, drift, and freshness.</li>
+  <li>
+    <strong>Single source of truth</strong>: Feature
+    definitions are written once and used for both training
+    and serving. Instead of reimplementing "user's 7-day
+    transaction count" in both training and serving code,
+    define it once in the feature store and serve it
+    consistently everywhere.
+  </li>
+  <li>
+    <strong>Feature discovery</strong>: Teams can browse
+    available features, reducing duplicate effort. If
+    another team has already computed a useful feature, you
+    can reuse it.
+  </li>
+  <li>
+    <strong>Point-in-time correctness</strong>: For
+    training, features must be computed as they were at
+    prediction time to avoid data leakage. Feature stores
+    handle temporal joins correctly, ensuring that training
+    data uses only features that would have been available
+    at the time of each prediction.
+  </li>
+  <li>
+    <strong>Feature monitoring</strong>: Centralized
+    features enable centralized monitoring for data quality,
+    drift, and freshness.
+  </li>
 </ul>
 
 <h3>Online vs. Offline Feature Stores</h3>
 
 <p>
-  Feature stores typically have two storage layers optimized for different access patterns:
+  Feature stores typically have two storage layers optimized
+  for different access patterns:
 </p>
 
 <ul>
-  <li><strong>Offline store</strong>: Stores historical feature values for training. Backed by data warehouses (BigQuery, Snowflake) or data lakes (S3 + Parquet/Delta Lake). Optimized for batch reads of large feature matrices. Latency is seconds to minutes.</li>
-  <li><strong>Online store</strong>: Stores the latest feature values for real-time serving. Backed by low-latency key-value stores (Redis, DynamoDB, Bigtable). Optimized for point lookups by entity ID (e.g., "get features for user 12345"). Latency must be single-digit milliseconds.</li>
-  <li><strong>Materialization</strong>: A process that syncs features from the offline store to the online store, typically running on a schedule or triggered by data arrival.</li>
+  <li>
+    <strong>Offline store</strong>: Stores historical
+    feature values for training. Backed by data warehouses
+    (BigQuery, Snowflake) or data lakes (S3 + Parquet/Delta
+    Lake). Optimized for batch reads of large feature
+    matrices. Latency is seconds to minutes.
+  </li>
+  <li>
+    <strong>Online store</strong>: Stores the latest feature
+    values for real-time serving. Backed by low-latency
+    key-value stores (Redis, DynamoDB, Bigtable). Optimized
+    for point lookups by entity ID (e.g., "get features for
+    user 12345"). Latency must be single-digit milliseconds.
+  </li>
+  <li>
+    <strong>Materialization</strong>: A process that syncs
+    features from the offline store to the online store,
+    typically running on a schedule or triggered by data
+    arrival.
+  </li>
 </ul>
 
 <h3>Feast: Open-Source Feature Store</h3>
 
 <p>
-  Feast (Feature Store) is the most widely adopted open-source feature store. Originally developed at Gojek and later incubated by Tecton, Feast provides:
+  Feast (Feature Store) is the most widely adopted
+  open-source feature store. Originally developed at Gojek
+  and later incubated by Tecton, Feast provides:
 </p>
 
 <ul>
-  <li><strong>Feature definitions</strong>: Define features in Python, specifying entities, feature values, data sources, and timestamps.</li>
-  <li><strong>Offline retrieval</strong>: Generate point-in-time-correct training datasets by joining features with labels.</li>
-  <li><strong>Online serving</strong>: Materialize features to an online store (Redis, DynamoDB, SQLite) for low-latency serving.</li>
-  <li><strong>Registry</strong>: A metadata store tracking feature definitions, data sources, and version history.</li>
+  <li>
+    <strong>Feature definitions</strong>: Define features in
+    Python, specifying entities, feature values, data
+    sources, and timestamps.
+  </li>
+  <li>
+    <strong>Offline retrieval</strong>: Generate
+    point-in-time-correct training datasets by joining
+    features with labels.
+  </li>
+  <li>
+    <strong>Online serving</strong>: Materialize features to
+    an online store (Redis, DynamoDB, SQLite) for
+    low-latency serving.
+  </li>
+  <li>
+    <strong>Registry</strong>: A metadata store tracking
+    feature definitions, data sources, and version history.
+  </li>
 </ul>
 
 <h3>Feature Computation Patterns</h3>
 
 <p>
-  Features are computed through different patterns depending on latency requirements:
+  Features are computed through different patterns depending
+  on latency requirements:
 </p>
 
 <ul>
-  <li><strong>Batch features</strong>: Computed on a schedule (hourly, daily) from data warehouses. Examples: user's 30-day purchase count, average session duration. Most features fall into this category. Batch features suit hour-scale freshness requirements, such as daily aggregates.</li>
-  <li><strong>Streaming features</strong>: Computed from real-time event streams (Kafka, Kinesis). Examples: number of transactions in the last 5 minutes, current session page count. Requires a stream processing framework (Flink, Spark Streaming). Streaming features suit minute-scale freshness, such as rolling counts.</li>
-  <li><strong>On-demand features</strong>: Computed at request time from the raw input. Examples: text length, time since last login. These are computed in the serving path and are often the simplest features. On-demand features suit second-scale freshness, such as real-time calculations at request time.</li>
+  <li>
+    <strong>Batch features</strong>: Computed on a schedule
+    (hourly, daily) from data warehouses. Examples: user's
+    30-day purchase count, average session duration. Most
+    features fall into this category. Batch features suit
+    hour-scale freshness requirements, such as daily
+    aggregates.
+  </li>
+  <li>
+    <strong>Streaming features</strong>: Computed from
+    real-time event streams (Kafka, Kinesis). Examples:
+    number of transactions in the last 5 minutes, current
+    session page count. Requires a stream processing
+    framework (Flink, Spark Streaming). Streaming features
+    suit minute-scale freshness, such as rolling counts.
+  </li>
+  <li>
+    <strong>On-demand features</strong>: Computed at request
+    time from the raw input. Examples: text length, time
+    since last login. These are computed in the serving path
+    and are often the simplest features. On-demand features
+    suit second-scale freshness, such as real-time
+    calculations at request time.
+  </li>
 </ul>
 
 <h2>Data Versioning</h2>
 
 <p>
-  Git excels at versioning code but is unsuitable for large data files (datasets, model weights). Data versioning tools extend Git-like workflows to data assets, enabling reproducible experiments and data lineage tracking.
+  Git excels at versioning code but is unsuitable for large
+  data files (datasets, model weights). Data versioning
+  tools extend Git-like workflows to data assets, enabling
+  reproducible experiments and data lineage tracking.
 </p>
 
 <h3>DVC (Data Version Control)</h3>
 
 <p>
-  DVC is the most popular data versioning tool, designed to complement Git:
+  DVC is the most popular data versioning tool, designed to
+  complement Git:
 </p>
 
 <ul>
-  <li><strong>Git-like commands</strong>: <code>dvc add</code>, <code>dvc push</code>, <code>dvc pull</code> mirror Git's workflow. DVC stores lightweight pointer files (<code>.dvc</code> files) in Git that reference the actual data stored in remote storage (S3, GCS, Azure Blob).</li>
-  <li><strong>Pipeline tracking</strong>: <code>dvc.yaml</code> files define pipeline stages with inputs, outputs, and commands. DVC tracks which stages need re-execution when inputs change.</li>
-  <li><strong>Experiment management</strong>: <code>dvc exp</code> commands enable running, comparing, and sharing experiments with different hyperparameters or data versions.</li>
-  <li><strong>Deduplication</strong>: DVC uses content-addressable storage. If the same file appears in multiple versions, it is stored only once.</li>
+  <li>
+    <strong>Git-like commands</strong>: <code>dvc add</code
+    >, <code>dvc push</code>, <code>dvc pull</code> mirror Git's
+    workflow. DVC stores lightweight pointer files (<code
+      >.dvc</code
+    > files) in Git that reference the actual data stored in remote
+    storage (S3, GCS, Azure Blob).
+  </li>
+  <li>
+    <strong>Pipeline tracking</strong>: <code>dvc.yaml</code
+    > files define pipeline stages with inputs, outputs, and commands.
+    DVC tracks which stages need re-execution when inputs change.
+  </li>
+  <li>
+    <strong>Experiment management</strong>: <code
+      >dvc exp</code
+    > commands enable running, comparing, and sharing experiments
+    with different hyperparameters or data versions.
+  </li>
+  <li>
+    <strong>Deduplication</strong>: DVC uses
+    content-addressable storage. If the same file appears in
+    multiple versions, it is stored only once.
+  </li>
 </ul>
 
 <h3>Dataset Lineage and Reproducibility</h3>
 
 <p>
-  Reproducibility requires knowing exactly which version of data was used for each experiment. Best practices include:
+  Reproducibility requires knowing exactly which version of
+  data was used for each experiment. Best practices include:
 </p>
 
 <ul>
-  <li><strong>Immutable datasets</strong>: Never modify datasets in place. Create new versions instead. This ensures that any experiment can be re-run with its original data.</li>
-  <li><strong>Content hashing</strong>: Reference datasets by their content hash, not by path or name. This guarantees that "dataset v3" always refers to the same bytes.</li>
-  <li><strong>Schema versioning</strong>: Track the schema (column names, types, constraints) alongside the data. Schema changes can silently break downstream pipelines.</li>
+  <li>
+    <strong>Immutable datasets</strong>: Never modify
+    datasets in place. Create new versions instead. This
+    ensures that any experiment can be re-run with its
+    original data.
+  </li>
+  <li>
+    <strong>Content hashing</strong>: Reference datasets by
+    their content hash, not by path or name. This guarantees
+    that "dataset v3" always refers to the same bytes.
+  </li>
+  <li>
+    <strong>Schema versioning</strong>: Track the schema
+    (column names, types, constraints) alongside the data.
+    Schema changes can silently break downstream pipelines.
+  </li>
 </ul>
 
 <h3>Data Validation</h3>
 
 <p>
-  Data validation catches quality issues before they poison model training or corrupt predictions:
+  Data validation catches quality issues before they poison
+  model training or corrupt predictions:
 </p>
 
 <ul>
-  <li><strong>Great Expectations</strong>: Define "expectations" (assertions) about your data: column types, value ranges, uniqueness constraints, distribution properties. Run these expectations as tests in your pipeline. Failed expectations halt the pipeline before bad data reaches the model.</li>
-  <li><strong>Schema enforcement</strong>: Validate that incoming data matches the expected schema. Catch new categories in categorical features, missing columns, and type changes.</li>
-  <li><strong>Statistical tests</strong>: Use the drift detection techniques from Lesson 13.1 (PSI, KS test) as data validation gates in your pipeline. Reject data batches that exhibit significant drift from the reference distribution.</li>
+  <li>
+    <strong>Great Expectations</strong>: Define
+    "expectations" (assertions) about your data: column
+    types, value ranges, uniqueness constraints,
+    distribution properties. Run these expectations as tests
+    in your pipeline. Failed expectations halt the pipeline
+    before bad data reaches the model.
+  </li>
+  <li>
+    <strong>Schema enforcement</strong>: Validate that
+    incoming data matches the expected schema. Catch new
+    categories in categorical features, missing columns, and
+    type changes.
+  </li>
+  <li>
+    <strong>Statistical tests</strong>: Use the drift
+    detection techniques from Lesson 13.1 (PSI, KS test) as
+    data validation gates in your pipeline. Reject data
+    batches that exhibit significant drift from the
+    reference distribution.
+  </li>
 </ul>
 
-<RevealSection revealId="ml-cicd-pipeline" title="Building an ML CI/CD Pipeline: Step by Step">
+<RevealSection
+  revealId="ml-cicd-pipeline"
+  title="Building an ML CI/CD Pipeline: Step by Step"
+>
   <div data-reveal-step>
     <h4>Step 1: Code Quality Gates</h4>
-    <p>Just like traditional CI/CD, start with code quality checks:</p>
+    <p>
+      Just like traditional CI/CD, start with code quality
+      checks:
+    </p>
     <ul>
-      <li>Lint Python code with ruff or flake8. Type-check with mypy.</li>
-      <li>Run unit tests for feature engineering functions, data transformations, and utility code.</li>
-      <li>Validate pipeline DAG definitions (ensure no cycles, all dependencies exist).</li>
-      <li>Check configuration files for valid hyperparameters and paths.</li>
+      <li>
+        Lint Python code with ruff or flake8. Type-check
+        with mypy.
+      </li>
+      <li>
+        Run unit tests for feature engineering functions,
+        data transformations, and utility code.
+      </li>
+      <li>
+        Validate pipeline DAG definitions (ensure no cycles,
+        all dependencies exist).
+      </li>
+      <li>
+        Check configuration files for valid hyperparameters
+        and paths.
+      </li>
     </ul>
-    <p>These gates run on every code push and complete in seconds.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Step</button>
+    <p>
+      These gates run on every code push and complete in
+      seconds.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="1">Next Step</button
+    >
   </div>
 
   <div data-reveal-step class="hidden">
     <h4>Step 2: Data Validation</h4>
     <p>Before training, validate the training data:</p>
     <ul>
-      <li>Run Great Expectations or Pandera suites against the training dataset.</li>
-      <li>Check for schema compatibility with the model's expected input format.</li>
-      <li>Compute drift statistics against the reference distribution. Alert if significant drift is detected.</li>
-      <li>Verify data freshness: ensure the training data includes recent examples.</li>
+      <li>
+        Run Great Expectations or Pandera suites against the
+        training dataset.
+      </li>
+      <li>
+        Check for schema compatibility with the model's
+        expected input format.
+      </li>
+      <li>
+        Compute drift statistics against the reference
+        distribution. Alert if significant drift is
+        detected.
+      </li>
+      <li>
+        Verify data freshness: ensure the training data
+        includes recent examples.
+      </li>
     </ul>
-    <p>If validation fails, the pipeline halts and notifies the team. Training on bad data is worse than not training at all.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Step</button>
+    <p>
+      If validation fails, the pipeline halts and notifies
+      the team. Training on bad data is worse than not
+      training at all.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="2">Next Step</button
+    >
   </div>
 
   <div data-reveal-step class="hidden">
     <h4>Step 3: Training and Experiment Tracking</h4>
     <p>The training step is the core of the ML pipeline:</p>
     <ul>
-      <li>Pull versioned data (via DVC) and versioned feature sets (via feature store).</li>
-      <li>Train the model with full experiment tracking (MLflow or W&amp;B): log all hyperparameters, metrics, and artifacts.</li>
-      <li>Save model checkpoints and final weights to artifact storage.</li>
-      <li>Record the Git commit hash, data version, and environment hash for reproducibility.</li>
+      <li>
+        Pull versioned data (via DVC) and versioned feature
+        sets (via feature store).
+      </li>
+      <li>
+        Train the model with full experiment tracking
+        (MLflow or W&amp;B): log all hyperparameters,
+        metrics, and artifacts.
+      </li>
+      <li>
+        Save model checkpoints and final weights to artifact
+        storage.
+      </li>
+      <li>
+        Record the Git commit hash, data version, and
+        environment hash for reproducibility.
+      </li>
     </ul>
-    <p>Training may take minutes to hours depending on model complexity and data volume.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Step</button>
+    <p>
+      Training may take minutes to hours depending on model
+      complexity and data volume.
+    </p>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="3">Next Step</button
+    >
   </div>
 
   <div data-reveal-step class="hidden">
     <h4>Step 4: Model Validation Gates</h4>
-    <p>After training, the model must pass multiple validation checks before it can be deployed:</p>
+    <p>
+      After training, the model must pass multiple
+      validation checks before it can be deployed:
+    </p>
     <ul>
-      <li><strong>Performance benchmarks</strong>: Compare against the current production model on a held-out test set. The new model must meet or exceed minimum performance thresholds.</li>
-      <li><strong>Regression tests</strong>: Run the model against a curated set of "golden" examples with known correct outputs. Any regressions on these critical cases block deployment.</li>
-      <li><strong>Fairness checks</strong>: Evaluate performance across demographic groups. Ensure the model does not introduce or amplify bias.</li>
-      <li><strong>Latency profiling</strong>: Measure inference latency on representative hardware. Verify the model meets serving SLAs.</li>
-      <li><strong>Model size check</strong>: Ensure model artifacts fit within serving infrastructure constraints.</li>
+      <li>
+        <strong>Performance benchmarks</strong>: Compare
+        against the current production model on a held-out
+        test set. The new model must meet or exceed minimum
+        performance thresholds.
+      </li>
+      <li>
+        <strong>Regression tests</strong>: Run the model
+        against a curated set of "golden" examples with
+        known correct outputs. Any regressions on these
+        critical cases block deployment.
+      </li>
+      <li>
+        <strong>Fairness checks</strong>: Evaluate
+        performance across demographic groups. Ensure the
+        model does not introduce or amplify bias.
+      </li>
+      <li>
+        <strong>Latency profiling</strong>: Measure
+        inference latency on representative hardware. Verify
+        the model meets serving SLAs.
+      </li>
+      <li>
+        <strong>Model size check</strong>: Ensure model
+        artifacts fit within serving infrastructure
+        constraints.
+      </li>
     </ul>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step</button>
+    <button
+      type="button"
+      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      data-reveal-button="4">Next Step</button
+    >
   </div>
 
   <div data-reveal-step class="hidden">
     <h4>Step 5: Deployment and Monitoring</h4>
-    <p>If all validation gates pass, the model proceeds to deployment:</p>
+    <p>
+      If all validation gates pass, the model proceeds to
+      deployment:
+    </p>
     <ul>
-      <li>Register the model in the model registry with metadata and validation results.</li>
-      <li>Promote to staging for shadow deployment: the new model receives production traffic but predictions are logged, not served.</li>
-      <li>After shadow validation passes, begin canary deployment: route 1-5% of traffic to the new model.</li>
-      <li>Monitor canary metrics against automated rollback criteria.</li>
-      <li>Gradually increase traffic to 100% if all metrics remain healthy.</li>
-      <li>Archive the previous production model (retain for rollback).</li>
+      <li>
+        Register the model in the model registry with
+        metadata and validation results.
+      </li>
+      <li>
+        Promote to staging for shadow deployment: the new
+        model receives production traffic but predictions
+        are logged, not served.
+      </li>
+      <li>
+        After shadow validation passes, begin canary
+        deployment: route 1-5% of traffic to the new model.
+      </li>
+      <li>
+        Monitor canary metrics against automated rollback
+        criteria.
+      </li>
+      <li>
+        Gradually increase traffic to 100% if all metrics
+        remain healthy.
+      </li>
+      <li>
+        Archive the previous production model (retain for
+        rollback).
+      </li>
     </ul>
-    <p>The full pipeline from code push to 100% deployment may take hours to days, with human approval gates at critical transitions.</p>
+    <p>
+      The full pipeline from code push to 100% deployment
+      may take hours to days, with human approval gates at
+      critical transitions.
+    </p>
   </div>
 </RevealSection>
 
 <h2>Container Orchestration for ML</h2>
 
 <p>
-  Containers are the standard packaging format for ML workloads. They solve the "works on my machine" problem by bundling code, dependencies, and configuration into a reproducible, portable unit.
+  Containers are the standard packaging format for ML
+  workloads. They solve the "works on my machine" problem by
+  bundling code, dependencies, and configuration into a
+  reproducible, portable unit.
 </p>
 
 <h3>Docker for ML Environments</h3>
 
 <p>
-  ML Docker images have unique requirements compared to typical application containers:
+  ML Docker images have unique requirements compared to
+  typical application containers:
 </p>
 
 <ul>
-  <li><strong>GPU drivers</strong>: Base images must include CUDA, cuDNN, and GPU drivers. NVIDIA provides official base images (<code>nvidia/cuda</code>) with pre-configured GPU support.</li>
-  <li><strong>Large image sizes</strong>: ML images are typically 5-15 GB due to ML frameworks (PyTorch, TensorFlow), CUDA libraries, and model weights. Multi-stage builds help reduce final image size by separating build-time and runtime dependencies.</li>
-  <li><strong>Reproducibility</strong>: Pin exact package versions. Use pip freeze or conda lock files. Pin the base image to a specific digest, not just a tag (tags can be overwritten).</li>
-  <li><strong>Layer caching</strong>: Order Dockerfile instructions from least-frequently-changed to most-frequently-changed. Install system packages and ML frameworks early (cached across code changes), copy application code late (changes often).</li>
+  <li>
+    <strong>GPU drivers</strong>: Base images must include
+    CUDA, cuDNN, and GPU drivers. NVIDIA provides official
+    base images (<code>nvidia/cuda</code>) with
+    pre-configured GPU support.
+  </li>
+  <li>
+    <strong>Large image sizes</strong>: ML images are
+    typically 5-15 GB due to ML frameworks (PyTorch,
+    TensorFlow), CUDA libraries, and model weights.
+    Multi-stage builds help reduce final image size by
+    separating build-time and runtime dependencies.
+  </li>
+  <li>
+    <strong>Reproducibility</strong>: Pin exact package
+    versions. Use pip freeze or conda lock files. Pin the
+    base image to a specific digest, not just a tag (tags
+    can be overwritten).
+  </li>
+  <li>
+    <strong>Layer caching</strong>: Order Dockerfile
+    instructions from least-frequently-changed to
+    most-frequently-changed. Install system packages and ML
+    frameworks early (cached across code changes), copy
+    application code late (changes often).
+  </li>
 </ul>
 
 <h3>Kubernetes for ML</h3>
 
 <p>
-  Kubernetes has become the platform of choice for ML infrastructure, providing:
+  Kubernetes has become the platform of choice for ML
+  infrastructure, providing:
 </p>
 
 <ul>
-  <li><strong>GPU scheduling</strong>: The NVIDIA device plugin for Kubernetes enables GPU resource requests. Pods can request specific GPU types (A100, H100) and quantities. The scheduler ensures pods are placed on nodes with available GPU resources.</li>
-  <li><strong>Resource management</strong>: Resource requests and limits prevent individual jobs from monopolizing cluster resources. Priority classes ensure training jobs do not preempt serving workloads (or vice versa, depending on policy).</li>
-  <li><strong>Auto-scaling</strong>: Horizontal Pod Autoscaler (HPA) scales serving replicas based on request rate, latency, or custom metrics (e.g., GPU utilization). Cluster Autoscaler adds or removes nodes based on pending pod demand, including GPU nodes.</li>
-  <li><strong>Job management</strong>: Kubernetes Jobs and CronJobs handle batch training workloads with retry policies, parallelism, and completion tracking.</li>
+  <li>
+    <strong>GPU scheduling</strong>: The NVIDIA device
+    plugin for Kubernetes enables GPU resource requests.
+    Pods can request specific GPU types (A100, H100) and
+    quantities. The scheduler ensures pods are placed on
+    nodes with available GPU resources.
+  </li>
+  <li>
+    <strong>Resource management</strong>: Resource requests
+    and limits prevent individual jobs from monopolizing
+    cluster resources. Priority classes ensure training jobs
+    do not preempt serving workloads (or vice versa,
+    depending on policy).
+  </li>
+  <li>
+    <strong>Auto-scaling</strong>: Horizontal Pod Autoscaler
+    (HPA) scales serving replicas based on request rate,
+    latency, or custom metrics (e.g., GPU utilization).
+    Cluster Autoscaler adds or removes nodes based on
+    pending pod demand, including GPU nodes.
+  </li>
+  <li>
+    <strong>Job management</strong>: Kubernetes Jobs and
+    CronJobs handle batch training workloads with retry
+    policies, parallelism, and completion tracking.
+  </li>
 </ul>
 
 <h3>Model Serving on Kubernetes</h3>
 
 <p>
-  Specialized model serving frameworks simplify deploying ML models as scalable APIs on Kubernetes:
+  Specialized model serving frameworks simplify deploying ML
+  models as scalable APIs on Kubernetes:
 </p>
 
 <ul>
-  <li><strong>Seldon Core</strong>: Wraps models in standardized inference graphs. Supports A/B testing, canary deployments, and multi-armed bandit routing natively. Provides pre-built servers for scikit-learn, XGBoost, TensorFlow, and PyTorch models.</li>
-  <li><strong>KServe</strong> (formerly KFServing): A Kubernetes-native model serving framework that provides serverless inference with scale-to-zero. Supports the V2 Inference Protocol for standardized request/response formats across frameworks. Integrates with Knative for auto-scaling.</li>
-  <li><strong>Triton Inference Server</strong>: NVIDIA's high-performance inference server. Supports dynamic batching (aggregating multiple requests into a single GPU batch for throughput), model ensembles, and concurrent model execution. Supports ONNX, TensorRT, PyTorch, TensorFlow, and custom backends.</li>
+  <li>
+    <strong>Seldon Core</strong>: Wraps models in
+    standardized inference graphs. Supports A/B testing,
+    canary deployments, and multi-armed bandit routing
+    natively. Provides pre-built servers for scikit-learn,
+    XGBoost, TensorFlow, and PyTorch models.
+  </li>
+  <li>
+    <strong>KServe</strong> (formerly KFServing): A Kubernetes-native
+    model serving framework that provides serverless inference
+    with scale-to-zero. Supports the V2 Inference Protocol for
+    standardized request/response formats across frameworks. Integrates
+    with Knative for auto-scaling.
+  </li>
+  <li>
+    <strong>Triton Inference Server</strong>: NVIDIA's
+    high-performance inference server. Supports dynamic
+    batching (aggregating multiple requests into a single
+    GPU batch for throughput), model ensembles, and
+    concurrent model execution. Supports ONNX, TensorRT,
+    PyTorch, TensorFlow, and custom backends.
+  </li>
 </ul>
 
 <h2>Cost Management and Resource Optimization</h2>
 
 <p>
-  GPU compute is the largest cost center for ML teams. A single A100 GPU instance costs $3-5/hour on major cloud providers, and training runs often use dozens or hundreds of GPUs for days. Inference costs scale with traffic and can quickly exceed training costs for popular models. Cost optimization is not optional. It directly determines whether an ML project is economically viable.
+  GPU compute is the largest cost center for ML teams. A
+  single A100 GPU instance costs $3-5/hour on major cloud
+  providers, and training runs often use dozens or hundreds
+  of GPUs for days. Inference costs scale with traffic and
+  can quickly exceed training costs for popular models. Cost
+  optimization is not optional. It directly determines
+  whether an ML project is economically viable.
 </p>
 
 <h3>GPU Cost Optimization</h3>
 
 <ul>
-  <li><strong>Spot/preemptible instances</strong>: Cloud providers offer 60-90% discounts on surplus GPU capacity. The trade-off is that instances can be reclaimed with short notice (30 seconds to 2 minutes). Mitigate this with:
+  <li>
+    <strong>Spot/preemptible instances</strong>: Cloud
+    providers offer 60-90% discounts on surplus GPU
+    capacity. The trade-off is that instances can be
+    reclaimed with short notice (30 seconds to 2 minutes).
+    Mitigate this with:
     <ul>
-      <li>Regular checkpointing (save model state every N steps).</li>
-      <li>Automatic resumption: use orchestrators that detect preemption and restart jobs from the latest checkpoint.</li>
-      <li>Fault-tolerant distributed training: frameworks like PyTorch Elastic allow training to continue even when workers are removed.</li>
+      <li>
+        Regular checkpointing (save model state every N
+        steps).
+      </li>
+      <li>
+        Automatic resumption: use orchestrators that detect
+        preemption and restart jobs from the latest
+        checkpoint.
+      </li>
+      <li>
+        Fault-tolerant distributed training: frameworks like
+        PyTorch Elastic allow training to continue even when
+        workers are removed.
+      </li>
     </ul>
   </li>
-  <li><strong>Time-sharing</strong>: NVIDIA Multi-Instance GPU (MIG) partitions a single A100 into up to 7 independent GPU instances. This is ideal for inference workloads that do not fully utilize GPU compute, allowing multiple small models to share a single physical GPU.</li>
-  <li><strong>Right-sizing</strong>: Match GPU type to workload requirements. Not every job needs an A100. Inference of small models may run efficiently on T4 GPUs (10x cheaper). Use GPU utilization monitoring to identify over-provisioned workloads.</li>
-  <li><strong>Reserved instances</strong>: For predictable baseline workloads (always-on inference endpoints), reserved instances provide 30-60% savings over on-demand pricing. Combine reserved instances for baseline load with spot instances for burst capacity.</li>
+  <li>
+    <strong>Time-sharing</strong>: NVIDIA Multi-Instance GPU
+    (MIG) partitions a single A100 into up to 7 independent
+    GPU instances. This is ideal for inference workloads
+    that do not fully utilize GPU compute, allowing multiple
+    small models to share a single physical GPU.
+  </li>
+  <li>
+    <strong>Right-sizing</strong>: Match GPU type to
+    workload requirements. Not every job needs an A100.
+    Inference of small models may run efficiently on T4 GPUs
+    (10x cheaper). Use GPU utilization monitoring to
+    identify over-provisioned workloads.
+  </li>
+  <li>
+    <strong>Reserved instances</strong>: For predictable
+    baseline workloads (always-on inference endpoints),
+    reserved instances provide 30-60% savings over on-demand
+    pricing. Combine reserved instances for baseline load
+    with spot instances for burst capacity.
+  </li>
 </ul>
 
 <h3>Inference Cost Reduction</h3>
 
 <p>
-  Inference costs dominate for models serving high traffic. Reduction techniques include:
+  Inference costs dominate for models serving high traffic.
+  Reduction techniques include:
 </p>
 
 <ul>
-  <li><strong>Model optimization</strong>: Quantization (FP16, INT8, INT4) reduces memory and compute requirements by 2-4x with minimal accuracy loss. Frameworks like TensorRT and ONNX Runtime provide automated optimization.</li>
-  <li><strong>Dynamic batching</strong>: Accumulate individual requests into batches before GPU inference. Triton Inference Server and TorchServe support configurable batching windows. Throughput increases nearly linearly with batch size up to GPU memory limits.</li>
-  <li><strong>Caching</strong>: Cache predictions for frequently seen inputs. This is particularly effective for recommendation systems where a small fraction of items receive the majority of requests.</li>
-  <li><strong>Model distillation</strong>: Train a smaller student model to mimic a larger teacher model. The student serves production traffic at a fraction of the cost, while the teacher is used for offline evaluation and retraining.</li>
-  <li><strong>Cascading inference</strong>: Route simple requests to a cheap model and only escalate to an expensive model when the cheap model is uncertain. For example, classify 80% of requests with a lightweight model, and only use the large model for the remaining 20%.</li>
+  <li>
+    <strong>Model optimization</strong>: Quantization (FP16,
+    INT8, INT4) reduces memory and compute requirements by
+    2-4x with minimal accuracy loss. Frameworks like
+    TensorRT and ONNX Runtime provide automated
+    optimization.
+  </li>
+  <li>
+    <strong>Dynamic batching</strong>: Accumulate individual
+    requests into batches before GPU inference. Triton
+    Inference Server and TorchServe support configurable
+    batching windows. Throughput increases nearly linearly
+    with batch size up to GPU memory limits.
+  </li>
+  <li>
+    <strong>Caching</strong>: Cache predictions for
+    frequently seen inputs. This is particularly effective
+    for recommendation systems where a small fraction of
+    items receive the majority of requests.
+  </li>
+  <li>
+    <strong>Model distillation</strong>: Train a smaller
+    student model to mimic a larger teacher model. The
+    student serves production traffic at a fraction of the
+    cost, while the teacher is used for offline evaluation
+    and retraining.
+  </li>
+  <li>
+    <strong>Cascading inference</strong>: Route simple
+    requests to a cheap model and only escalate to an
+    expensive model when the cheap model is uncertain. For
+    example, classify 80% of requests with a lightweight
+    model, and only use the large model for the remaining
+    20%.
+  </li>
 </ul>
 
 <h3>When to Use CPU vs. GPU for Inference</h3>
 
-<p>
-  GPUs are not always the best choice for inference:
-</p>
+<p>GPUs are not always the best choice for inference:</p>
 
 <ul>
-  <li><strong>CPU inference is often better for</strong>: Small models (logistic regression, small random forests, small neural networks), low-throughput applications (&lt;10 requests/second), workloads with variable input sizes that make batching inefficient, and scenarios where latency requirements are relaxed (seconds, not milliseconds).</li>
-  <li><strong>GPU inference is typically needed for</strong>: Large neural networks (transformers, large CNNs), high-throughput applications requiring batched inference, models that use operations highly optimized for GPU (matrix multiplications, convolutions), and real-time applications requiring sub-100ms latency with large models.</li>
-  <li><strong>The economics</strong>: CPU instances cost 5-20x less than GPU instances. If your model runs within latency requirements on CPU, the cost savings are substantial. Always benchmark both options before committing to GPU inference.</li>
+  <li>
+    <strong>CPU inference is often better for</strong>:
+    Small models (logistic regression, small random forests,
+    small neural networks), low-throughput applications
+    (&lt;10 requests/second), workloads with variable input
+    sizes that make batching inefficient, and scenarios
+    where latency requirements are relaxed (seconds, not
+    milliseconds).
+  </li>
+  <li>
+    <strong>GPU inference is typically needed for</strong>:
+    Large neural networks (transformers, large CNNs),
+    high-throughput applications requiring batched
+    inference, models that use operations highly optimized
+    for GPU (matrix multiplications, convolutions), and
+    real-time applications requiring sub-100ms latency with
+    large models.
+  </li>
+  <li>
+    <strong>The economics</strong>: CPU instances cost 5-20x
+    less than GPU instances. If your model runs within
+    latency requirements on CPU, the cost savings are
+    substantial. Always benchmark both options before
+    committing to GPU inference.
+  </li>
 </ul>
 
 <h3>Cloud Cost Monitoring and Budgeting</h3>
 
 <p>
-  Without visibility into costs, ML teams often discover budget overruns weeks after they happen. Effective cost management requires:
+  Without visibility into costs, ML teams often discover
+  budget overruns weeks after they happen. Effective cost
+  management requires:
 </p>
 
 <ul>
-  <li><strong>Tagging and attribution</strong>: Tag all cloud resources with team, project, and environment labels. This enables cost allocation. Knowing that "project X's inference costs $5,000/month" is more actionable than "our total GPU bill is $50,000/month."</li>
-  <li><strong>Budget alerts</strong>: Set daily and monthly budget thresholds for each team and project. Cloud providers (AWS Budgets, GCP Budget Alerts) and third-party tools (Kubecost for Kubernetes) provide automated alerting.</li>
-  <li><strong>Idle resource detection</strong>: Identify GPUs with sustained low utilization (&lt;20%), orphaned instances from completed experiments, and over-provisioned development environments. Automated cleanup policies can save 20-40% of GPU costs.</li>
-  <li><strong>Cost dashboards</strong>: Build dashboards showing cost trends by team, project, resource type, and environment. Make cost data visible to ML engineers so they can make informed trade-offs between model quality and cost.</li>
+  <li>
+    <strong>Tagging and attribution</strong>: Tag all cloud
+    resources with team, project, and environment labels.
+    This enables cost allocation. Knowing that "project X's
+    inference costs $5,000/month" is more actionable than
+    "our total GPU bill is $50,000/month."
+  </li>
+  <li>
+    <strong>Budget alerts</strong>: Set daily and monthly
+    budget thresholds for each team and project. Cloud
+    providers (AWS Budgets, GCP Budget Alerts) and
+    third-party tools (Kubecost for Kubernetes) provide
+    automated alerting.
+  </li>
+  <li>
+    <strong>Idle resource detection</strong>: Identify GPUs
+    with sustained low utilization (&lt;20%), orphaned
+    instances from completed experiments, and
+    over-provisioned development environments. Automated
+    cleanup policies can save 20-40% of GPU costs.
+  </li>
+  <li>
+    <strong>Cost dashboards</strong>: Build dashboards
+    showing cost trends by team, project, resource type, and
+    environment. Make cost data visible to ML engineers so
+    they can make informed trade-offs between model quality
+    and cost.
+  </li>
 </ul>
 
 <PaperReference
@@ -374,27 +993,76 @@ import MathBlock from '../../components/MathBlock.astro';
   quizId="mlops-pipeline-quiz"
   question="Your ML team currently uses Apache Airflow for ETL pipelines and is evaluating orchestration tools for their new ML pipeline. The pipeline needs to handle daily data ingestion, feature computation with point-in-time correctness, model training with GPU resources, and automated validation gates. Which consideration is MOST important when choosing between extending Airflow vs. adopting Dagster?"
   options={[
-    { id: "a", text: "Dagster is newer and therefore better than Airflow for all use cases", correct: false, explanation: "Newer does not mean better for all cases. Tool selection should be based on specific requirements, team expertise, and existing infrastructure." },
-    { id: "b", text: "Airflow cannot run Python code, while Dagster is Python-native", correct: false, explanation: "Airflow has full Python support through PythonOperator and TaskFlow API. Both tools are Python-native." },
-    { id: "c", text: "Dagster's asset-centric model natively tracks data lineage and freshness, while Airflow requires external tools for these ML-specific capabilities", correct: true, explanation: "The key difference is Dagster's asset-centric model vs Airflow's task-centric model. Dagster natively understands data assets, lineage, and freshness, which maps well to ML workflows. Airflow can achieve similar capabilities but requires additional tools (MLflow, DVC) for data lineage and versioning. For teams starting fresh, Dagster's native ML capabilities reduce integration complexity." },
-    { id: "d", text: "Airflow cannot schedule recurring jobs, making it unsuitable for daily retraining", correct: false, explanation: "Scheduling is one of Airflow's core strengths. It supports cron schedules, timetables, and data-driven triggers." }
+    {
+      id: "a",
+      text: "Dagster is newer and therefore better than Airflow for all use cases",
+      correct: false,
+      explanation:
+        "Newer does not mean better for all cases. Tool selection should be based on specific requirements, team expertise, and existing infrastructure.",
+    },
+    {
+      id: "b",
+      text: "Airflow cannot run Python code, while Dagster is Python-native",
+      correct: false,
+      explanation:
+        "Airflow has full Python support through PythonOperator and TaskFlow API. Both tools are Python-native.",
+    },
+    {
+      id: "c",
+      text: "Dagster's asset-centric model natively tracks data lineage and freshness, while Airflow requires external tools for these ML-specific capabilities",
+      correct: true,
+      explanation:
+        "The key difference is Dagster's asset-centric model vs Airflow's task-centric model. Dagster natively understands data assets, lineage, and freshness, which maps well to ML workflows. Airflow can achieve similar capabilities but requires additional tools (MLflow, DVC) for data lineage and versioning. For teams starting fresh, Dagster's native ML capabilities reduce integration complexity.",
+    },
+    {
+      id: "d",
+      text: "Airflow cannot schedule recurring jobs, making it unsuitable for daily retraining",
+      correct: false,
+      explanation:
+        "Scheduling is one of Airflow's core strengths. It supports cron schedules, timetables, and data-driven triggers.",
+    },
   ]}
 />
 
 <h2>Putting It All Together: The MLOps Maturity Model</h2>
 
 <p>
-  Google's MLOps maturity framework defines three levels that organizations progress through:
+  Google's MLOps maturity framework defines three levels
+  that organizations progress through:
 </p>
 
 <ul>
-  <li><strong>Level 0 - Manual Process</strong>: Data scientists train models in notebooks. Deployment is manual and infrequent. No monitoring, no automation. This is where most organizations start and where many remain.</li>
-  <li><strong>Level 1 - ML Pipeline Automation</strong>: Training is automated via pipelines. Continuous training triggers retraining when data changes. Feature stores and experiment tracking are in place. Deployment is semi-automated with manual approval gates.</li>
-  <li><strong>Level 2 - CI/CD Pipeline Automation</strong>: Full CI/CD for both code and data. Automated testing (unit tests, integration tests, model validation). Automated deployment with canary rollouts and monitoring-based rollback. Feature monitoring and drift detection trigger retraining automatically.</li>
+  <li>
+    <strong>Level 0 - Manual Process</strong>: Data
+    scientists train models in notebooks. Deployment is
+    manual and infrequent. No monitoring, no automation.
+    This is where most organizations start and where many
+    remain.
+  </li>
+  <li>
+    <strong>Level 1 - ML Pipeline Automation</strong>:
+    Training is automated via pipelines. Continuous training
+    triggers retraining when data changes. Feature stores
+    and experiment tracking are in place. Deployment is
+    semi-automated with manual approval gates.
+  </li>
+  <li>
+    <strong>Level 2 - CI/CD Pipeline Automation</strong>:
+    Full CI/CD for both code and data. Automated testing
+    (unit tests, integration tests, model validation).
+    Automated deployment with canary rollouts and
+    monitoring-based rollback. Feature monitoring and drift
+    detection trigger retraining automatically.
+  </li>
 </ul>
 
 <p>
-  Most teams should aim for Level 1 before attempting Level 2. The jump from manual processes (Level 0) directly to full automation (Level 2) is almost always too ambitious. Start with automating the training pipeline, add monitoring, and then progressively automate the deployment and retraining loop.
+  Most teams should aim for Level 1 before attempting Level
+  2. The jump from manual processes (Level 0) directly to
+  full automation (Level 2) is almost always too ambitious.
+  Start with automating the training pipeline, add
+  monitoring, and then progressively automate the deployment
+  and retraining loop.
 </p>
 
 <PaperReference
@@ -406,11 +1074,42 @@ import MathBlock from '../../components/MathBlock.astro';
 
 <KeyTakeaway>
   <ul>
-    <li>ML pipelines differ from traditional CI/CD because they have two axes of change (code and data) and require specialized orchestration for long-running GPU jobs, data validation, and model promotion gates.</li>
-    <li>Feature stores bridge the training-serving gap by providing a single source of truth for feature computation, eliminating training-serving skew and enabling feature reuse across teams.</li>
-    <li>Data versioning (DVC) extends Git-like workflows to large data files, enabling reproducible experiments through content-addressed storage and pipeline tracking.</li>
-    <li>Container orchestration with Kubernetes provides GPU scheduling, auto-scaling, and resource management. Specialized serving frameworks (Seldon Core, KServe, Triton) simplify model deployment with dynamic batching and canary routing.</li>
-    <li>GPU cost optimization is critical for ML viability: use spot instances with checkpointing for training, right-size GPU types for inference, and implement caching, quantization, and cascading inference to reduce serving costs.</li>
-    <li>Progress through MLOps maturity levels incrementally: start with pipeline automation (Level 1) before attempting full CI/CD automation (Level 2).</li>
+    <li>
+      ML pipelines differ from traditional CI/CD because
+      they have two axes of change (code and data) and
+      require specialized orchestration for long-running GPU
+      jobs, data validation, and model promotion gates.
+    </li>
+    <li>
+      Feature stores bridge the training-serving gap by
+      providing a single source of truth for feature
+      computation, eliminating training-serving skew and
+      enabling feature reuse across teams.
+    </li>
+    <li>
+      Data versioning (DVC) extends Git-like workflows to
+      large data files, enabling reproducible experiments
+      through content-addressed storage and pipeline
+      tracking.
+    </li>
+    <li>
+      Container orchestration with Kubernetes provides GPU
+      scheduling, auto-scaling, and resource management.
+      Specialized serving frameworks (Seldon Core, KServe,
+      Triton) simplify model deployment with dynamic
+      batching and canary routing.
+    </li>
+    <li>
+      GPU cost optimization is critical for ML viability:
+      use spot instances with checkpointing for training,
+      right-size GPU types for inference, and implement
+      caching, quantization, and cascading inference to
+      reduce serving costs.
+    </li>
+    <li>
+      Progress through MLOps maturity levels incrementally:
+      start with pipeline automation (Level 1) before
+      attempting full CI/CD automation (Level 2).
+    </li>
   </ul>
 </KeyTakeaway>

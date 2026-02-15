@@ -49,7 +49,19 @@ import RevealSection from '../../components/RevealSection.astro';
     The forward pass computes outputs from inputs. The backward pass (backpropagation) computes gradients of the loss with respect to each parameter.
   </p>
 
-  <h3>Deriving Backpropagation</h3>
+  <h3>Intuition First: The "Blame Game"</h3>
+  <p>
+    Before diving into the calculus, think of backpropagation as a "blame assignment" mechanism. When the network makes a mistake (high loss), who is responsible?
+  </p>
+  <ul>
+    <li>The output neuron says: "I just output what the last layer gave me!"</li>
+    <li>The last layer says: "I just weighted what the previous layer gave me!"</li>
+  </ul>
+  <p>
+    Backpropagation works backward from the error, assigning a "blame score" (gradient) to each weight. A high positive gradient means "if this weight were lower, the error would have been much lower." We use these scores to nudge every weight in the direction that reduces error.
+  </p>
+
+  <h3>Deriving Backpropagation (Deep Dive)</h3>
   <p>
     Backpropagation applies the <strong>chain rule</strong> systematically. For a parameter <MathBlock formula="w" /> in layer <MathBlock formula="l" />, we need <MathBlock formula={"\\frac{\\partial \\mathcal{L}}{\\partial w}"} />.
   </p>

@@ -392,6 +392,19 @@ JSON:</code></pre>
     <li>Ensures syntactically valid JSON every time, eliminating parsing failures</li>
     <li>API providers (OpenAI, Anthropic) increasingly offer built-in structured output modes</li>
   </ul>
+  
+  <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg my-4">
+    <p class="font-semibold text-blue-800 dark:text-blue-200 text-sm">Pro Tip: Use Pydantic</p>
+    <p class="text-sm">
+      In Python production systems, don't just ask for JSON—validate it with <strong>Pydantic</strong>.
+    </p>
+    <pre class="mt-2 text-xs"><code>class UserIntent(BaseModel):
+    intent: Literal["refund", "inquiry"]
+    confidence: float
+
+# If validation fails, you can even feed the error back
+# to the LLM to auto-correct its own output!</code></pre>
+  </div>
 
   <h3>Function Calling</h3>
   <p>

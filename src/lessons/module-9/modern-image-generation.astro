@@ -1,21 +1,36 @@
 ---
 // Module 9, Lesson 9.3: Modern Image Generation: DiT, ControlNet, and Adaptation
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
+import RevealSection from "../../components/RevealSection.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
-    <li>Understand Diffusion Transformers (DiT) and why they replace U-Nets in modern systems</li>
-    <li>Explain ControlNet's architecture for adding spatial conditioning to pretrained models</li>
-    <li>Understand IP-Adapter's approach to image-based conditioning via decoupled cross-attention</li>
-    <li>Analyze LoRA as a parameter-efficient method for personalizing diffusion models</li>
-    <li>Compare these techniques on the axes of control, efficiency, and composability</li>
+    <li>
+      Understand Diffusion Transformers (DiT) and why they
+      replace U-Nets in modern systems
+    </li>
+    <li>
+      Explain ControlNet's architecture for adding spatial
+      conditioning to pretrained models
+    </li>
+    <li>
+      Understand IP-Adapter's approach to image-based
+      conditioning via decoupled cross-attention
+    </li>
+    <li>
+      Analyze LoRA as a parameter-efficient method for
+      personalizing diffusion models
+    </li>
+    <li>
+      Compare these techniques on the axes of control,
+      efficiency, and composability
+    </li>
   </ul>
 </section>
 
@@ -23,92 +38,255 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Diffusion Transformers (DiT): Replacing the U-Net</h2>
 
   <p>
-    The U-Net has been the default backbone for diffusion models since DDPM. However, the <strong>Diffusion Transformer (DiT)</strong> architecture (Peebles and Xie, 2023) demonstrated that plain vision transformers can match or exceed U-Net performance and, crucially, they scale more predictably with compute.
+    The U-Net has been the default backbone for diffusion
+    models since DDPM. However, the <strong
+      >Diffusion Transformer (DiT)</strong
+    > architecture (Peebles and Xie, 2023) demonstrated that plain
+    vision transformers can match or exceed U-Net performance
+    and, crucially, they scale more predictably with compute.
   </p>
 
   <h3>Motivation: Why Move Beyond U-Nets?</h3>
   <ul>
-    <li><strong>Scaling laws</strong>: Transformers exhibit clean power-law scaling (loss vs. compute/parameters), meaning performance can be reliably predicted before expensive training runs. U-Nets have less predictable scaling due to their asymmetric encoder-decoder structure, making it harder to decide how to allocate compute.</li>
-    <li><strong>Architectural simplicity</strong>: DiT uses a homogeneous stack of transformer blocks. No encoder/decoder asymmetry, no skip connections between stages. This makes the architecture simpler to implement, analyze, and scale, since increasing model size just means adding more identical blocks rather than deciding how to distribute capacity across asymmetric components.</li>
-    <li><strong>Proven at scale</strong>: Transformers have been validated at massive scale in language (GPT) and vision (ViT). Leveraging this proven architecture reduces risk.</li>
+    <li>
+      <strong>Scaling laws</strong>: Transformers exhibit
+      clean power-law scaling (loss vs. compute/parameters),
+      meaning performance can be reliably predicted before
+      expensive training runs. U-Nets have less predictable
+      scaling due to their asymmetric encoder-decoder
+      structure, making it harder to decide how to allocate
+      compute.
+    </li>
+    <li>
+      <strong>Architectural simplicity</strong>: DiT uses a
+      homogeneous stack of transformer blocks. No
+      encoder/decoder asymmetry, no skip connections between
+      stages. This makes the architecture simpler to
+      implement, analyze, and scale, since increasing model
+      size just means adding more identical blocks rather
+      than deciding how to distribute capacity across
+      asymmetric components.
+    </li>
+    <li>
+      <strong>Proven at scale</strong>: Transformers have
+      been validated at massive scale in language (GPT) and
+      vision (ViT). Leveraging this proven architecture
+      reduces risk.
+    </li>
   </ul>
 
   <h3>Architecture</h3>
   <p>
-    DiT processes latent patches (from the VAE) through a sequence of transformer blocks:
+    DiT processes latent patches (from the VAE) through a
+    sequence of transformer blocks:
   </p>
 
   <ol>
-    <li><strong>Patchify</strong>: Divide the latent <MathBlock formula={"z \\in \\mathbb{R}^{h \\times w \\times c}"} /> into non-overlapping patches of size p x p, flatten each to a token. For a 64x64x4 latent with p=2, this yields 1024 tokens.</li>
-    <li><strong>Positional embedding</strong>: Add learnable positional embeddings to each patch token</li>
-    <li><strong>DiT blocks</strong>: Process through N transformer blocks with a novel conditioning mechanism</li>
-    <li><strong>Unpatchify</strong>: Reshape output tokens back to the spatial latent shape and predict noise</li>
+    <li>
+      <strong>Patchify</strong>: Divide the latent <MathBlock
+        formula={"z \\in \\mathbb{R}^{h \\times w \\times c}"}
+      /> into non-overlapping patches of size p x p, flatten each
+      to a token. For a 64x64x4 latent with p=2, this yields 1024
+      tokens.
+    </li>
+    <li>
+      <strong>Positional embedding</strong>: Add learnable
+      positional embeddings to each patch token
+    </li>
+    <li>
+      <strong>DiT blocks</strong>: Process through N
+      transformer blocks with a novel conditioning mechanism
+    </li>
+    <li>
+      <strong>Unpatchify</strong>: Reshape output tokens
+      back to the spatial latent shape and predict noise
+    </li>
   </ol>
 
   <h3>Adaptive Layer Norm (adaLN-Zero)</h3>
   <p>
-    The key design choice in DiT is how to inject conditioning information (timestep t and class label/text c). DiT uses <strong>adaLN-Zero</strong>: adaptive layer normalization where the scale and shift parameters are predicted from the conditioning:
+    The key design choice in DiT is how to inject
+    conditioning information (timestep t and class
+    label/text c). DiT uses <strong>adaLN-Zero</strong>:
+    adaptive layer normalization where the scale and shift
+    parameters are predicted from the conditioning:
   </p>
 
-  <MathBlock formula={"\\gamma, \\beta, \\alpha = \\text{MLP}(\\text{emb}(t) + \\text{emb}(c))"} display={true} />
+  <MathBlock
+    formula={"\\gamma, \\beta, \\alpha = \\text{MLP}(\\text{emb}(t) + \\text{emb}(c))"}
+    display={true}
+  />
 
   <p>
-    First, the conditioning signals (timestep and class/text) are combined and fed through an MLP to produce per-layer modulation parameters. These parameters then modulate each transformer block's layer normalization:
+    First, the conditioning signals (timestep and
+    class/text) are combined and fed through an MLP to
+    produce per-layer modulation parameters. These
+    parameters then modulate each transformer block's layer
+    normalization:
   </p>
 
-  <MathBlock formula={"\\text{adaLN}(h) = \\gamma \\odot \\text{LayerNorm}(h) + \\beta"} display={true} />
+  <MathBlock
+    formula={"\\text{adaLN}(h) = \\gamma \\odot \\text{LayerNorm}(h) + \\beta"}
+    display={true}
+  />
 
   <p>
-    In plain English: instead of using fixed normalization statistics, each layer's normalization is dynamically scaled and shifted based on the current timestep and conditioning. This is how the network "knows" what noise level it is denoising and what class or prompt to target.
+    In plain English: instead of using fixed normalization
+    statistics, each layer's normalization is dynamically
+    scaled and shifted based on the current timestep and
+    conditioning. This is how the network "knows" what noise
+    level it is denoising and what class or prompt to
+    target.
   </p>
 
   <p>
-    Here <MathBlock formula={"\\gamma"} /> and <MathBlock formula={"\\beta"} /> are learned scale and shift parameters (analogous to batch normalization), and <MathBlock formula={"\\alpha"} /> gates the residual connection output. The <MathBlock formula={"\\alpha"} /> parameter is initialized to zero so each block initially acts as an identity function. adaLN-Zero's zero initialization of <MathBlock formula={"\\alpha"} /> ensures identity mappings early in training, stabilizing optimization of very deep networks -- the same principle that makes ResNet skip connections effective.
+    Here <MathBlock formula={"\\gamma"} /> and <MathBlock
+      formula={"\\beta"}
+    /> are learned scale and shift parameters (analogous to batch
+    normalization), and <MathBlock formula={"\\alpha"} /> gates
+    the residual connection output. The <MathBlock
+      formula={"\\alpha"}
+    /> parameter is initialized to zero so each block initially
+    acts as an identity function. adaLN-Zero's zero initialization
+    of <MathBlock formula={"\\alpha"} /> ensures identity mappings
+    early in training, stabilizing optimization of very deep networks
+    -- the same principle that makes ResNet skip connections effective.
   </p>
 
   <h3>Scaling Results</h3>
   <p>
-    DiT demonstrated clear scaling: increasing model size (DiT-S → DiT-B → DiT-L → DiT-XL) monotonically improves FID scores. DiT-XL/2 (with patch size 2) achieved state-of-the-art class-conditional image generation on ImageNet, surpassing prior diffusion models and GANs on this specific benchmark.
+    DiT demonstrated clear scaling: increasing model size
+    (DiT-S → DiT-B → DiT-L → DiT-XL) monotonically improves
+    FID scores. DiT-XL/2 (with patch size 2) achieved
+    state-of-the-art class-conditional image generation on
+    ImageNet, surpassing prior diffusion models and GANs on
+    this specific benchmark.
   </p>
 
   <p>
-    This result has had enormous impact: <strong>DALL-E 3, Stable Diffusion 3, Sora, and Flux</strong> all use transformer-based architectures rather than U-Nets, validating the DiT approach at scale.
+    This result has had enormous impact: <strong
+      >DALL-E 3, Stable Diffusion 3, Sora, and Flux</strong
+    > all use transformer-based architectures rather than U-Nets,
+    validating the DiT approach at scale.
   </p>
 </section>
 
-<Diagram diagramId="dit-architecture" title="DiT vs. U-Net Architecture Comparison" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+<Diagram
+  diagramId="dit-architecture"
+  title="DiT vs. U-Net Architecture Comparison"
+  autoplay={true}
+  animationDuration={5000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+  >
     <div class="grid grid-cols-2 gap-8">
       <!-- U-Net -->
-      <div class="flex flex-col items-center" data-animate style="animation-delay: 0.3s">
-        <div class="text-sm font-bold text-slate-700 mb-3">U-Net (Stable Diffusion 1-2)</div>
-        <div class="flex flex-col items-center gap-1 w-full">
-          <div class="w-full h-6 bg-indigo-100 rounded text-xs flex items-center justify-center">64x64 - ResBlock + Attn</div>
-          <div class="text-slate-400 text-xs">↓ downsample</div>
-          <div class="w-3/4 h-6 bg-indigo-200 rounded text-xs flex items-center justify-center">32x32 - ResBlock + Attn</div>
-          <div class="text-slate-400 text-xs">↓ downsample</div>
-          <div class="w-1/2 h-6 bg-indigo-300 rounded text-xs flex items-center justify-center text-white">16x16 - Bottleneck</div>
-          <div class="text-slate-400 text-xs">↑ upsample + skip</div>
-          <div class="w-3/4 h-6 bg-indigo-200 rounded text-xs flex items-center justify-center">32x32 - ResBlock + Attn</div>
-          <div class="text-slate-400 text-xs">↑ upsample + skip</div>
-          <div class="w-full h-6 bg-indigo-100 rounded text-xs flex items-center justify-center">64x64 - ResBlock + Attn</div>
+      <div
+        class="flex flex-col items-center"
+        data-animate
+        style="animation-delay: 0.3s"
+      >
+        <div class="text-sm font-bold text-slate-700 mb-3">
+          U-Net (Stable Diffusion 1-2)
         </div>
-        <div class="text-xs text-slate-500 mt-2">Asymmetric, multi-resolution</div>
+        <div
+          class="flex flex-col items-center gap-1 w-full"
+        >
+          <div
+            class="w-full h-6 bg-indigo-100 rounded text-xs flex items-center justify-center"
+          >
+            64x64 - ResBlock + Attn
+          </div>
+          <div class="text-slate-400 text-xs">
+            ↓ downsample
+          </div>
+          <div
+            class="w-3/4 h-6 bg-indigo-200 rounded text-xs flex items-center justify-center"
+          >
+            32x32 - ResBlock + Attn
+          </div>
+          <div class="text-slate-400 text-xs">
+            ↓ downsample
+          </div>
+          <div
+            class="w-1/2 h-6 bg-indigo-300 rounded text-xs flex items-center justify-center text-white"
+          >
+            16x16 - Bottleneck
+          </div>
+          <div class="text-slate-400 text-xs">
+            ↑ upsample + skip
+          </div>
+          <div
+            class="w-3/4 h-6 bg-indigo-200 rounded text-xs flex items-center justify-center"
+          >
+            32x32 - ResBlock + Attn
+          </div>
+          <div class="text-slate-400 text-xs">
+            ↑ upsample + skip
+          </div>
+          <div
+            class="w-full h-6 bg-indigo-100 rounded text-xs flex items-center justify-center"
+          >
+            64x64 - ResBlock + Attn
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 mt-2">
+          Asymmetric, multi-resolution
+        </div>
       </div>
 
       <!-- DiT -->
-      <div class="flex flex-col items-center" data-animate style="animation-delay: 1.5s">
-        <div class="text-sm font-bold text-slate-700 mb-3">DiT (SD3, DALL-E 3, Sora)</div>
-        <div class="flex flex-col items-center gap-1 w-full">
-          <div class="w-full h-6 bg-purple-100 rounded text-xs flex items-center justify-center">Patchify → Tokens</div>
-          <div class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center">DiT Block (adaLN + Self-Attn + FFN)</div>
-          <div class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center">DiT Block (adaLN + Self-Attn + FFN)</div>
-          <div class="w-full h-6 bg-purple-300 rounded text-xs flex items-center justify-center text-white">... N identical blocks ...</div>
-          <div class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center">DiT Block (adaLN + Self-Attn + FFN)</div>
-          <div class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center">DiT Block (adaLN + Self-Attn + FFN)</div>
-          <div class="w-full h-6 bg-purple-100 rounded text-xs flex items-center justify-center">Unpatchify → Noise prediction</div>
+      <div
+        class="flex flex-col items-center"
+        data-animate
+        style="animation-delay: 1.5s"
+      >
+        <div class="text-sm font-bold text-slate-700 mb-3">
+          DiT (SD3, DALL-E 3, Sora)
         </div>
-        <div class="text-xs text-slate-500 mt-2">Homogeneous, single resolution</div>
+        <div
+          class="flex flex-col items-center gap-1 w-full"
+        >
+          <div
+            class="w-full h-6 bg-purple-100 rounded text-xs flex items-center justify-center"
+          >
+            Patchify → Tokens
+          </div>
+          <div
+            class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center"
+          >
+            DiT Block (adaLN + Self-Attn + FFN)
+          </div>
+          <div
+            class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center"
+          >
+            DiT Block (adaLN + Self-Attn + FFN)
+          </div>
+          <div
+            class="w-full h-6 bg-purple-300 rounded text-xs flex items-center justify-center text-white"
+          >
+            ... N identical blocks ...
+          </div>
+          <div
+            class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center"
+          >
+            DiT Block (adaLN + Self-Attn + FFN)
+          </div>
+          <div
+            class="w-full h-6 bg-purple-200 rounded text-xs flex items-center justify-center"
+          >
+            DiT Block (adaLN + Self-Attn + FFN)
+          </div>
+          <div
+            class="w-full h-6 bg-purple-100 rounded text-xs flex items-center justify-center"
+          >
+            Unpatchify → Noise prediction
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 mt-2">
+          Homogeneous, single resolution
+        </div>
       </div>
     </div>
   </div>
@@ -118,32 +296,73 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>ControlNet: Adding Spatial Control</h2>
 
   <p>
-    Text prompts are inherently imprecise for spatial layout. "A person standing on a bridge" gives no control over pose, composition, or perspective. <strong>ControlNet</strong> (Zhang et al., 2023) solves this by adding spatial conditioning (edges, poses, depth maps) to a pretrained diffusion model without destroying its generative capabilities.
+    Text prompts are inherently imprecise for spatial
+    layout. "A person standing on a bridge" gives no control
+    over pose, composition, or perspective. <strong
+      >ControlNet</strong
+    > (Zhang et al., 2023) solves this by adding spatial conditioning
+    (edges, poses, depth maps) to a pretrained diffusion model
+    without destroying its generative capabilities.
   </p>
 
-  <h3>The Architecture: Trainable Copy with Zero Convolutions</h3>
+  <h3>
+    The Architecture: Trainable Copy with Zero Convolutions
+  </h3>
   <p>
-    ControlNet's design is elegant: create a <strong>trainable copy</strong> of the encoding layers of the pretrained U-Net, connected to the frozen original via <strong>zero convolutions</strong> (1x1 convolution layers initialized to zero weights and biases). This architecture avoids catastrophic forgetting of the pretrained model. Unlike full fine-tuning, ControlNet freezes the original weights and learns only to inject conditioning signals through the trainable copy.
+    ControlNet's design is elegant: create a <strong
+      >trainable copy</strong
+    > of the encoding layers of the pretrained U-Net, connected
+    to the frozen original via <strong
+      >zero convolutions</strong
+    > (1x1 convolution layers initialized to zero weights and
+    biases). This architecture avoids catastrophic forgetting
+    of the pretrained model. Unlike full fine-tuning, ControlNet
+    freezes the original weights and learns only to inject conditioning
+    signals through the trainable copy.
   </p>
 
-  <MathBlock formula={"y_c = \\mathcal{F}(x; \\Theta) + \\text{ZeroConv}(\\mathcal{F}(x + \\text{ZeroConv}(c); \\Theta_c))"} display={true} />
+  <MathBlock
+    formula={"y_c = \\mathcal{F}(x; \\Theta) + \\text{ZeroConv}(\\mathcal{F}(x + \\text{ZeroConv}(c); \\Theta_c))"}
+    display={true}
+  />
 
   <p>
-    In words: the output is the original frozen block's output plus a residual from the trainable copy. The trainable copy receives both the input and the spatial condition (e.g., a depth map), and its contribution is gated through zero convolutions so it starts at zero and gradually learns to inject conditioning.
+    In words: the output is the original frozen block's
+    output plus a residual from the trainable copy. The
+    trainable copy receives both the input and the spatial
+    condition (e.g., a depth map), and its contribution is
+    gated through zero convolutions so it starts at zero and
+    gradually learns to inject conditioning.
   </p>
 
   <p>
-    Here <MathBlock formula={"\\mathcal{F}"} /> is the original frozen block, <MathBlock formula={"\\Theta_c"} /> is the trainable copy, and c is the spatial condition.
+    Here <MathBlock formula={"\\mathcal{F}"} /> is the original
+    frozen block, <MathBlock formula={"\\Theta_c"} /> is the trainable
+    copy, and c is the spatial condition.
   </p>
 
   <h3>Why Zero Convolutions?</h3>
-  <p>
-    Zero initialization is critical:
-  </p>
+  <p>Zero initialization is critical:</p>
   <ul>
-    <li><strong>At training start</strong>: The zero convolutions initially output zero, so the frozen pretrained block's activations flow through unmodified. No harmful noise is injected during early training.</li>
-    <li><strong>During training</strong>: As training progresses, the zero convolutions learn to output non-zero residuals that incorporate the spatial condition, smoothly transitioning from unconditional to conditional generation.</li>
-    <li><strong>After training</strong>: The network has learned to incorporate spatial conditioning while retaining all of the pretrained model's knowledge.</li>
+    <li>
+      <strong>At training start</strong>: The zero
+      convolutions initially output zero, so the frozen
+      pretrained block's activations flow through
+      unmodified. No harmful noise is injected during early
+      training.
+    </li>
+    <li>
+      <strong>During training</strong>: As training
+      progresses, the zero convolutions learn to output
+      non-zero residuals that incorporate the spatial
+      condition, smoothly transitioning from unconditional
+      to conditional generation.
+    </li>
+    <li>
+      <strong>After training</strong>: The network has
+      learned to incorporate spatial conditioning while
+      retaining all of the pretrained model's knowledge.
+    </li>
   </ul>
 
   <h3>Supported Conditions</h3>
@@ -151,16 +370,36 @@ import RevealSection from '../../components/RevealSection.astro';
     ControlNet can be trained for diverse spatial inputs:
   </p>
   <ul>
-    <li><strong>Canny edges</strong>: Preserve the edge structure of a reference image</li>
-    <li><strong>OpenPose</strong>: Control human body pose via skeleton keypoints</li>
-    <li><strong>Depth maps</strong>: Control spatial depth and 3D structure</li>
-    <li><strong>Segmentation maps</strong>: Control semantic regions (sky, ground, building)</li>
-    <li><strong>Normal maps</strong>: Control surface orientation for lighting consistency</li>
-    <li><strong>Scribbles / sketches</strong>: Generate from rough user drawings</li>
+    <li>
+      <strong>Canny edges</strong>: Preserve the edge
+      structure of a reference image
+    </li>
+    <li>
+      <strong>OpenPose</strong>: Control human body pose via
+      skeleton keypoints
+    </li>
+    <li>
+      <strong>Depth maps</strong>: Control spatial depth and
+      3D structure
+    </li>
+    <li>
+      <strong>Segmentation maps</strong>: Control semantic
+      regions (sky, ground, building)
+    </li>
+    <li>
+      <strong>Normal maps</strong>: Control surface
+      orientation for lighting consistency
+    </li>
+    <li>
+      <strong>Scribbles / sketches</strong>: Generate from
+      rough user drawings
+    </li>
   </ul>
 
   <p>
-    Each condition type requires training a separate ControlNet, but the frozen base model is shared across all of them.
+    Each condition type requires training a separate
+    ControlNet, but the frozen base model is shared across
+    all of them.
   </p>
 </section>
 
@@ -168,40 +407,82 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>IP-Adapter: Image Prompt Conditioning</h2>
 
   <p>
-    While text describes what you want, sometimes you want to condition on a <strong>reference image</strong>, capturing style, subject identity, or aesthetic qualities that are hard to articulate in words. <strong>IP-Adapter</strong> (Ye et al., 2023) enables image-based conditioning through a lightweight adapter.
+    While text describes what you want, sometimes you want
+    to condition on a <strong>reference image</strong>,
+    capturing style, subject identity, or aesthetic
+    qualities that are hard to articulate in words. <strong
+      >IP-Adapter</strong
+    > (Ye et al., 2023) enables image-based conditioning through
+    a lightweight adapter.
   </p>
 
   <h3>Architecture: Decoupled Cross-Attention</h3>
   <p>
-    The core innovation is <strong>decoupled cross-attention</strong>: separate cross-attention layers for text and image conditions. The image is encoded using a pretrained CLIP image encoder:
+    The core innovation is <strong
+      >decoupled cross-attention</strong
+    >: separate cross-attention layers for text and image
+    conditions. The image is encoded using a pretrained CLIP
+    image encoder:
   </p>
 
-  <MathBlock formula={"c_{\\text{img}} = \\text{Projection}(\\text{CLIPImage}(x_{\\text{ref}}))"} display={true} />
+  <MathBlock
+    formula={"c_{\\text{img}} = \\text{Projection}(\\text{CLIPImage}(x_{\\text{ref}}))"}
+    display={true}
+  />
 
   <p>
-    The reference image is passed through CLIP's image encoder to get a semantic representation, then projected to match the dimensionality expected by the cross-attention layers.
+    The reference image is passed through CLIP's image
+    encoder to get a semantic representation, then projected
+    to match the dimensionality expected by the
+    cross-attention layers.
   </p>
 
   <p>
-    In each cross-attention layer, the text and image conditions are processed independently with separate key/value projections:
+    In each cross-attention layer, the text and image
+    conditions are processed independently with separate
+    key/value projections:
   </p>
 
-  <MathBlock formula={"Z = \\text{Attn}(Q, K_{\\text{text}}, V_{\\text{text}}) + \\lambda \\cdot \\text{Attn}(Q, K_{\\text{img}}, V_{\\text{img}})"} display={true} />
+  <MathBlock
+    formula={"Z = \\text{Attn}(Q, K_{\\text{text}}, V_{\\text{text}}) + \\lambda \\cdot \\text{Attn}(Q, K_{\\text{img}}, V_{\\text{img}})"}
+    display={true}
+  />
 
   <p>
-    In plain English: the output is a sum of two independent attention operations -- one reading from the text prompt, the other reading from the reference image. The weight <MathBlock formula={"\\lambda"} /> controls how much the image condition influences the result, making it straightforward to dial the image influence up or down at inference time.
+    In plain English: the output is a sum of two independent
+    attention operations -- one reading from the text
+    prompt, the other reading from the reference image. The
+    weight <MathBlock formula={"\\lambda"} /> controls how much
+    the image condition influences the result, making it straightforward
+    to dial the image influence up or down at inference time.
   </p>
 
   <p>
-    Here <MathBlock formula={"\\lambda"} /> is a scalar hyperparameter controlling the image condition's influence (typically 1.0 for equal weight with text). Only the image cross-attention layers and projection are trained; all other parameters remain frozen.
+    Here <MathBlock formula={"\\lambda"} /> is a scalar hyperparameter
+    controlling the image condition's influence (typically 1.0
+    for equal weight with text). Only the image cross-attention
+    layers and projection are trained; all other parameters remain
+    frozen.
   </p>
 
   <h3>Why Decoupled Attention?</h3>
   <ul>
-    <li><strong>Preserves text capability</strong>: The original text cross-attention path is untouched</li>
-    <li><strong>Composable</strong>: Text and image conditions can be combined with controllable weights</li>
-    <li><strong>Lightweight</strong>: Only ~22M trainable parameters (vs. ~860M in the full U-Net)</li>
-    <li><strong>Compatible</strong>: Works with ControlNet and other adapters simultaneously</li>
+    <li>
+      <strong>Preserves text capability</strong>: The
+      original text cross-attention path is untouched
+    </li>
+    <li>
+      <strong>Composable</strong>: Text and image conditions
+      can be combined with controllable weights
+    </li>
+    <li>
+      <strong>Lightweight</strong>: Only ~22M trainable
+      parameters (vs. ~860M in the full U-Net)
+    </li>
+    <li>
+      <strong>Compatible</strong>: Works with ControlNet and
+      other adapters simultaneously
+    </li>
   </ul>
 </section>
 
@@ -209,7 +490,11 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>LoRA for Diffusion: Efficient Personalization</h2>
 
   <p>
-    <strong>LoRA (Low-Rank Adaptation)</strong>, originally developed for language models (see Module 4), has become the dominant method for personalizing diffusion models. It enables fine-tuning on specific styles, characters, or concepts with minimal compute and storage.
+    <strong>LoRA (Low-Rank Adaptation)</strong>, originally
+    developed for language models (see Module 4), has become
+    the dominant method for personalizing diffusion models.
+    It enables fine-tuning on specific styles, characters,
+    or concepts with minimal compute and storage.
   </p>
 
   <h3>Applying LoRA to Diffusion U-Nets</h3>
@@ -217,68 +502,149 @@ import RevealSection from '../../components/RevealSection.astro';
     LoRA decomposes weight updates into low-rank matrices:
   </p>
 
-  <MathBlock formula={"W' = W + \\Delta W = W + BA"} display={true} />
+  <MathBlock
+    formula={"W' = W + \\Delta W = W + BA"}
+    display={true}
+  />
 
   <p>
-    Instead of updating the full weight matrix (which could have millions of parameters), LoRA expresses the update as a product of two small matrices B and A. This constrains the update to a low-rank subspace, dramatically reducing the number of trainable parameters while still allowing meaningful adaptation.
+    Instead of updating the full weight matrix (which could
+    have millions of parameters), LoRA expresses the update
+    as a product of two small matrices B and A. This
+    constrains the update to a low-rank subspace,
+    dramatically reducing the number of trainable parameters
+    while still allowing meaningful adaptation.
   </p>
 
   <p>
-    Here <MathBlock formula={"B \\in \\mathbb{R}^{d \\times r}"} />, <MathBlock formula={"A \\in \\mathbb{R}^{r \\times d}"} />, and <MathBlock formula={"r \\ll d"} /> (typically r = 4-64). For diffusion models, LoRA is applied to the attention layers (both self-attention and cross-attention) in the U-Net.
+    Here <MathBlock
+      formula={"B \\in \\mathbb{R}^{d \\times r}"}
+    />, <MathBlock
+      formula={"A \\in \\mathbb{R}^{r \\times d}"}
+    />, and <MathBlock formula={"r \\ll d"} /> (typically r =
+    4-64). For diffusion models, LoRA is applied to the attention
+    layers (both self-attention and cross-attention) in the U-Net.
   </p>
 
   <h3>Training a LoRA</h3>
   <p>
-    Personalizing a diffusion model with LoRA typically requires:
+    Personalizing a diffusion model with LoRA typically
+    requires:
   </p>
   <ul>
-    <li><strong>Data</strong>: 5-20 high-quality images of the target concept (character, style, object), ideally with diverse poses, lighting, and backgrounds</li>
-    <li><strong>Compute</strong>: 15-30 minutes on a single consumer GPU</li>
-    <li><strong>Storage</strong>: LoRA weights are typically 2-100 MB (vs. 2-5 GB for the full model)</li>
+    <li>
+      <strong>Data</strong>: 5-20 high-quality images of the
+      target concept (character, style, object), ideally
+      with diverse poses, lighting, and backgrounds
+    </li>
+    <li>
+      <strong>Compute</strong>: 15-30 minutes on a single
+      consumer GPU
+    </li>
+    <li>
+      <strong>Storage</strong>: LoRA weights are typically
+      2-100 MB (vs. 2-5 GB for the full model)
+    </li>
   </ul>
 
   <p>
-    The training process uses the standard diffusion loss, but only updates the LoRA parameters:
+    The training process uses the standard diffusion loss,
+    but only updates the LoRA parameters:
   </p>
 
-  <MathBlock formula={"\\mathcal{L}_{\\text{LoRA}} = \\mathbb{E}_{t, x_0, \\epsilon}\\left[\\| \\epsilon - \\epsilon_{\\theta + \\Delta\\theta}(x_t, t, c_{\\text{trigger}}) \\|^2\\right]"} display={true} />
+  <MathBlock
+    formula={"\\mathcal{L}_{\\text{LoRA}} = \\mathbb{E}_{t, x_0, \\epsilon}\\left[\\| \\epsilon - \\epsilon_{\\theta + \\Delta\\theta}(x_t, t, c_{\\text{trigger}}) \\|^2\\right]"}
+    display={true}
+  />
 
   <p>
-    This is the same noise-prediction MSE loss as standard diffusion training, but the network weights are the original model plus the LoRA delta. Only the LoRA parameters are updated; the base model stays frozen.
+    This is the same noise-prediction MSE loss as standard
+    diffusion training, but the network weights are the
+    original model plus the LoRA delta. Only the LoRA
+    parameters are updated; the base model stays frozen.
   </p>
 
   <p>
-    Here <MathBlock formula={"c_{\\text{trigger}}"} /> is a prompt containing a special trigger word (e.g., "a photo of sks person") that serves as a unique identifier for the learned concept. The trigger word is typically a rare or invented token so that the model does not conflate the fine-tuned concept with its general knowledge of similar subjects. During training, the LoRA parameters learn to associate this trigger with the specific visual features of the target concept.
+    Here <MathBlock formula={"c_{\\text{trigger}}"} /> is a prompt
+    containing a special trigger word (e.g., "a photo of sks person")
+    that serves as a unique identifier for the learned concept.
+    The trigger word is typically a rare or invented token so
+    that the model does not conflate the fine-tuned concept with
+    its general knowledge of similar subjects. During training,
+    the LoRA parameters learn to associate this trigger with the
+    specific visual features of the target concept.
   </p>
 
   <h3>Composing Multiple LoRAs</h3>
   <p>
-    A powerful property of LoRA is composability. Multiple LoRAs can be combined by adding their weight deltas:
+    A powerful property of LoRA is composability. Multiple
+    LoRAs can be combined by adding their weight deltas:
   </p>
 
-  <MathBlock formula={"W' = W + \\lambda_1 B_1 A_1 + \\lambda_2 B_2 A_2 + \\ldots"} display={true} />
+  <MathBlock
+    formula={"W' = W + \\lambda_1 B_1 A_1 + \\lambda_2 B_2 A_2 + \\ldots"}
+    display={true}
+  />
 
   <p>
-    Each LoRA contributes its own low-rank weight adjustment, scaled by a mixing coefficient. Since LoRAs are additive deltas to the base weights, stacking them is as simple as summing the individual updates -- no retraining needed.
+    Each LoRA contributes its own low-rank weight
+    adjustment, scaled by a mixing coefficient. Since LoRAs
+    are additive deltas to the base weights, stacking them
+    is as simple as summing the individual updates -- no
+    retraining needed.
   </p>
 
   <p>
-    For example, combining a character LoRA with a style LoRA to generate a specific character in a specific artistic style. The weights <MathBlock formula={"\\lambda_i"} /> control each LoRA's influence.
+    For example, combining a character LoRA with a style
+    LoRA to generate a specific character in a specific
+    artistic style. The weights <MathBlock
+      formula={"\\lambda_i"}
+    /> control each LoRA's influence.
   </p>
 
   <p>
-    In practice, composition works well for 2-3 LoRAs but can degrade with many simultaneous adaptations. The low-rank approximations may not compose linearly, causing interference when the combined weight updates exceed the expressiveness of the low-rank subspace. In effect, each LoRA was trained independently and may try to push the same weights in incompatible directions.
+    In practice, composition works well for 2-3 LoRAs but
+    can degrade with many simultaneous adaptations. The
+    low-rank approximations may not compose linearly,
+    causing interference when the combined weight updates
+    exceed the expressiveness of the low-rank subspace. In
+    effect, each LoRA was trained independently and may try
+    to push the same weights in incompatible directions.
   </p>
 
-  <RevealSection revealId="lora-vs-dreambooth" title="LoRA vs. DreamBooth vs. Textual Inversion">
+  <RevealSection
+    revealId="lora-vs-dreambooth"
+    title="LoRA vs. DreamBooth vs. Textual Inversion"
+  >
     <div data-reveal-step>
       <h4>Comparison of Personalization Methods</h4>
       <ul>
-        <li><strong>Textual Inversion</strong>: Only learns a new text embedding vector for the concept. Minimal parameters (~768 floats), but limited expressiveness. Can capture simple concepts but struggles with complex subjects.</li>
-        <li><strong>DreamBooth</strong>: Fine-tunes the entire U-Net with a class-specific prior preservation loss. High quality, but requires full model storage per concept and risks catastrophic forgetting.</li>
-        <li><strong>LoRA</strong>: Fine-tunes low-rank adaptations in attention layers. Good balance of quality, efficiency, and composability. Dominant in practice.</li>
+        <li>
+          <strong>Textual Inversion</strong>: Only learns a
+          new text embedding vector for the concept. Minimal
+          parameters (~768 floats), but limited
+          expressiveness. Can capture simple concepts but
+          struggles with complex subjects.
+        </li>
+        <li>
+          <strong>DreamBooth</strong>: Fine-tunes the entire
+          U-Net with a class-specific prior preservation
+          loss. High quality, but requires full model
+          storage per concept and risks catastrophic
+          forgetting.
+        </li>
+        <li>
+          <strong>LoRA</strong>: Fine-tunes low-rank
+          adaptations in attention layers. Good balance of
+          quality, efficiency, and composability. Dominant
+          in practice.
+        </li>
       </ul>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <button
+        type="button"
+        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        data-reveal-button="1"
+      >
         See the tradeoffs →
       </button>
     </div>
@@ -286,13 +652,33 @@ import RevealSection from '../../components/RevealSection.astro';
     <div data-reveal-step>
       <h4>Practical Tradeoffs</h4>
       <ul>
-        <li><strong>Quality</strong>: DreamBooth >= LoRA >> Textual Inversion</li>
-        <li><strong>Storage</strong>: Textual Inversion (~10KB) << LoRA (~2-100MB) << DreamBooth (~2-5GB)</li>
-        <li><strong>Training speed</strong>: Textual Inversion (fast) < LoRA (moderate) < DreamBooth (slow)</li>
-        <li><strong>Composability</strong>: LoRA (excellent) > Textual Inversion (good) > DreamBooth (poor)</li>
-        <li><strong>Risk of forgetting</strong>: DreamBooth (high) > LoRA (low) > Textual Inversion (none)</li>
+        <li>
+          <strong>Quality</strong>: DreamBooth >= LoRA >>
+          Textual Inversion
+        </li>
+        <li>
+          <strong>Storage</strong>: Textual Inversion
+          (~10KB) &lt;&lt; LoRA (~2-100MB) &lt;&lt;
+          DreamBooth (~2-5GB)
+        </li>
+        <li>
+          <strong>Training speed</strong>: Textual Inversion
+          (fast) &lt; LoRA (moderate) &lt; DreamBooth (slow)
+        </li>
+        <li>
+          <strong>Composability</strong>: LoRA (excellent) >
+          Textual Inversion (good) > DreamBooth (poor)
+        </li>
+        <li>
+          <strong>Risk of forgetting</strong>: DreamBooth
+          (high) > LoRA (low) > Textual Inversion (none)
+        </li>
       </ul>
-      <p class="mt-2 text-emerald-700 font-medium">LoRA has become the community standard due to its favorable balance across all dimensions. Most online model repositories host thousands of LoRAs.</p>
+      <p class="mt-2 text-emerald-700 font-medium">
+        LoRA has become the community standard due to its
+        favorable balance across all dimensions. Most online
+        model repositories host thousands of LoRAs.
+      </p>
     </div>
   </RevealSection>
 </section>
@@ -301,28 +687,79 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>The Modern Image Generation Stack</h2>
 
   <p>
-    State-of-the-art image generation systems combine these components into a modular, composable stack:
+    State-of-the-art image generation systems combine these
+    components into a modular, composable stack:
   </p>
 
   <ol>
-    <li><strong>Base model</strong>: DiT-based architecture (SD3, Flux, DALL-E 3) operating in VAE latent space</li>
-    <li><strong>Text conditioning</strong>: CLIP and/or T5 text encoders providing semantic guidance</li>
-    <li><strong>Spatial control</strong>: ControlNet for pose, depth, edge, or segmentation conditioning</li>
-    <li><strong>Style/subject transfer</strong>: IP-Adapter for image-based conditioning</li>
-    <li><strong>Personalization</strong>: LoRA for character/style/concept adaptation</li>
-    <li><strong>Fast sampling</strong>: DDIM, DPM-Solver, or distilled models for fewer steps</li>
+    <li>
+      <strong>Base model</strong>: DiT-based architecture
+      (SD3, Flux, DALL-E 3) operating in VAE latent space
+    </li>
+    <li>
+      <strong>Text conditioning</strong>: CLIP and/or T5
+      text encoders providing semantic guidance
+    </li>
+    <li>
+      <strong>Spatial control</strong>: ControlNet for pose,
+      depth, edge, or segmentation conditioning
+    </li>
+    <li>
+      <strong>Style/subject transfer</strong>: IP-Adapter
+      for image-based conditioning
+    </li>
+    <li>
+      <strong>Personalization</strong>: LoRA for
+      character/style/concept adaptation
+    </li>
+    <li>
+      <strong>Fast sampling</strong>: DDIM, DPM-Solver, or
+      distilled models for fewer steps
+    </li>
   </ol>
 
   <p>
-    These components are designed to be <strong>composable</strong>: a user can combine a base model with a ControlNet for pose, an IP-Adapter for style reference, and a character LoRA, all operating simultaneously during the denoising process. This composability is a major advantage of the diffusion framework over monolithic generation approaches.
+    These components are designed to be <strong
+      >composable</strong
+    >: a user can combine a base model with a ControlNet for
+    pose, an IP-Adapter for style reference, and a character
+    LoRA, all operating simultaneously during the denoising
+    process. This composability is a major advantage of the
+    diffusion framework over monolithic generation
+    approaches.
   </p>
 
   <h3>Recent Developments</h3>
   <ul>
-    <li><strong>Flow matching</strong> (Lipman et al., 2023): A simplified training framework that learns straight-line transport paths from noise to data, yielding simpler training objectives and often requiring fewer sampling steps than traditional diffusion. By avoiding the complex noise schedule design of DDPM, flow matching reduces the number of hyperparameter choices needed for training.</li>
-    <li><strong>Consistency models</strong> (Song et al., 2023): Distill diffusion models into single-step generators while maintaining quality. This directly addresses the core speed limitation of iterative diffusion sampling, enabling real-time generation.</li>
-    <li><strong>Rectified flow</strong> (Liu et al., 2023): Used in Stable Diffusion 3 and Flux, learns straighter transport paths for faster sampling. Straighter paths mean ODE solvers can take fewer steps with less discretization error.</li>
-    <li><strong>Video diffusion</strong>: Extending these architectures to temporal sequences, as in Sora and Runway Gen-3. The main challenge is maintaining temporal coherence while scaling to the much larger data dimensionality of video.</li>
+    <li>
+      <strong>Flow matching</strong> (Lipman et al., 2023): A
+      simplified training framework that learns straight-line
+      transport paths from noise to data, yielding simpler training
+      objectives and often requiring fewer sampling steps than
+      traditional diffusion. By avoiding the complex noise schedule
+      design of DDPM, flow matching reduces the number of hyperparameter
+      choices needed for training.
+    </li>
+    <li>
+      <strong>Consistency models</strong> (Song et al., 2023):
+      Distill diffusion models into single-step generators while
+      maintaining quality. This directly addresses the core speed
+      limitation of iterative diffusion sampling, enabling real-time
+      generation.
+    </li>
+    <li>
+      <strong>Rectified flow</strong> (Liu et al., 2023): Used
+      in Stable Diffusion 3 and Flux, learns straighter transport
+      paths for faster sampling. Straighter paths mean ODE solvers
+      can take fewer steps with less discretization error.
+    </li>
+    <li>
+      <strong>Video diffusion</strong>: Extending these
+      architectures to temporal sequences, as in Sora and
+      Runway Gen-3. The main challenge is maintaining
+      temporal coherence while scaling to the much larger
+      data dimensionality of video.
+    </li>
   </ul>
 </section>
 
@@ -334,36 +771,60 @@ import RevealSection from '../../components/RevealSection.astro';
       id: "a",
       text: "adaLN-Zero produces higher quality images than cross-attention",
       correct: false,
-      explanation: "Image quality depends on many factors beyond conditioning mechanism. Both approaches can produce excellent results."
+      explanation:
+        "Image quality depends on many factors beyond conditioning mechanism. Both approaches can produce excellent results.",
     },
     {
       id: "b",
       text: "adaLN-Zero is more efficient because it modulates normalization parameters instead of adding cross-attention layers, and its zero initialization ensures stable training from the start",
       correct: true,
-      explanation: "Correct! adaLN-Zero injects conditioning through normalization scale/shift rather than additional attention layers, which is more parameter-efficient. The zero initialization ensures the pretrained behavior is preserved at the start of training, enabling stable optimization of very deep networks."
+      explanation:
+        "Correct! adaLN-Zero injects conditioning through normalization scale/shift rather than additional attention layers, which is more parameter-efficient. The zero initialization ensures the pretrained behavior is preserved at the start of training, enabling stable optimization of very deep networks.",
     },
     {
       id: "c",
       text: "adaLN-Zero works with image conditions while cross-attention only works with text",
       correct: false,
-      explanation: "Both mechanisms can handle various condition types. Cross-attention naturally handles sequence-based conditions (text tokens), while adaLN handles vector-based conditions (class labels, timesteps)."
+      explanation:
+        "Both mechanisms can handle various condition types. Cross-attention naturally handles sequence-based conditions (text tokens), while adaLN handles vector-based conditions (class labels, timesteps).",
     },
     {
       id: "d",
       text: "adaLN-Zero eliminates the need for a VAE encoder",
       correct: false,
-      explanation: "The VAE is a separate component for latent compression. The conditioning mechanism (adaLN vs. cross-attention) is independent of the VAE."
-    }
+      explanation:
+        "The VAE is a separate component for latent compression. The conditioning mechanism (adaLN vs. cross-attention) is independent of the VAE.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>DiT replaces U-Nets</strong> with plain vision transformers for diffusion, using adaLN-Zero for conditioning. This achieves cleaner scaling laws and now powers DALL-E 3, SD3, and Sora</li>
-    <li><strong>ControlNet</strong> adds spatial conditioning (pose, depth, edges) via a trainable copy of the encoder with zero-convolution connections, preserving the pretrained model's capabilities</li>
-    <li><strong>IP-Adapter</strong> enables image-based conditioning through decoupled cross-attention, keeping text and image paths independent and composable</li>
-    <li><strong>LoRA</strong> enables personalization (styles, characters, concepts) with 5-20 images and minimal storage, and multiple LoRAs can be composed by summing weight deltas</li>
-    <li><strong>Modern systems</strong> combine these as a composable stack: DiT base + ControlNet + IP-Adapter + LoRA, giving users fine-grained control over generation</li>
+    <li>
+      <strong>DiT replaces U-Nets</strong> with plain vision transformers
+      for diffusion, using adaLN-Zero for conditioning. This achieves
+      cleaner scaling laws and now powers DALL-E 3, SD3, and Sora
+    </li>
+    <li>
+      <strong>ControlNet</strong> adds spatial conditioning (pose,
+      depth, edges) via a trainable copy of the encoder with zero-convolution
+      connections, preserving the pretrained model's capabilities
+    </li>
+    <li>
+      <strong>IP-Adapter</strong> enables image-based conditioning
+      through decoupled cross-attention, keeping text and image
+      paths independent and composable
+    </li>
+    <li>
+      <strong>LoRA</strong> enables personalization (styles, characters,
+      concepts) with 5-20 images and minimal storage, and multiple
+      LoRAs can be composed by summing weight deltas
+    </li>
+    <li>
+      <strong>Modern systems</strong> combine these as a composable
+      stack: DiT base + ControlNet + IP-Adapter + LoRA, giving
+      users fine-grained control over generation
+    </li>
   </ul>
 </KeyTakeaway>
 

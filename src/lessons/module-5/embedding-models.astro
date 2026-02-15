@@ -72,11 +72,21 @@ import Quiz from '../../components/Quiz.astro';
   where the temperature parameter <MathBlock formula={"\\tau"} /> controls the sharpness of the similarity distribution. Key properties:
 </p>
 
-<ul>
-  <li><strong>Lower temperature</strong> (<MathBlock formula={"\\tau \\to 0"} />): Focuses on the hardest negatives, making the model more discriminative but potentially unstable</li>
-  <li><strong>Higher temperature</strong> (<MathBlock formula={"\\tau \\to \\infty"} />): Treats all negatives more uniformly, smoother but less discriminative</li>
   <li><strong>Information-theoretic connection</strong>: Minimizing InfoNCE maximizes a lower bound on the mutual information <MathBlock formula={"I(x; x^+)"} /> between positive pairs</li>
 </ul>
+
+<div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg my-4">
+  <p class="font-semibold text-indigo-800 dark:text-indigo-200">Analogy: The Police Lineup</p>
+  <p class="text-sm">
+    Imagine the model is a witness trying to identify a suspect (the <strong>positive</strong> example) from a lineup.
+  </p>
+  <ul class="list-disc list-inside text-sm mt-2 ml-2">
+    <li><strong>The Anchor</strong>: The sketch of the suspect provided by the victim.</li>
+    <li><strong>The Layout</strong>: The lineup includes the true suspect and 99 innocent people (<strong>negatives</strong>).</li>
+    <li><strong>The Goal</strong>: The witness must confidently point to the suspect. If the innocent people look very different (easy negatives), it's easy. If they look like the suspect (hard negatives), the witness must learn very specific features to tell them apart.</li>
+    <li><strong>InfoNCE Loss</strong>: Penalizes the witness if they are unsure or pick the wrong person.</li>
+  </ul>
+</div>
 
 <h3>Why In-Batch Negatives Work</h3>
 

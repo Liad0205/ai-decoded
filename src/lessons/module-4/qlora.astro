@@ -205,6 +205,9 @@ import Diagram from '../../components/Diagram.astro';
   <p>
     QLoRA also introduces <strong>paged optimizers</strong>, which use NVIDIA unified memory to automatically page optimizer states between GPU and CPU memory. When GPU memory runs low during a gradient spike (e.g., a particularly long sequence), optimizer states are evicted to CPU RAM and paged back when needed. This prevents out-of-memory crashes at the cost of a small speed reduction.
   </p>
+  <p class="text-sm text-amber-700 dark:text-amber-400 mt-2">
+    <strong>Trade-off</strong>: While this prevents OOM errors, moving data over the PCIe bus (between GPU and CPU) is much slower than internal GPU memory access. Training will be slightly slower when paging is active, but it enables training larger models on consumer hardware.
+  </p>
 </section>
 
 <section>

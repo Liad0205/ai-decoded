@@ -37,6 +37,17 @@ import Diagram from '../../components/Diagram.astro';
   <p>
     Aghajanyan et al. (2020) formalized this as <strong>intrinsic dimensionality</strong>: the minimum number of parameters needed to reach 90% of full fine-tuning performance. For many NLP tasks, this intrinsic dimensionality is orders of magnitude smaller than the full parameter count.
   </p>
+
+  <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg my-4">
+    <p class="font-semibold text-purple-800 dark:text-purple-200">Analogy: The Stencil</p>
+    <p class="text-sm">
+      Imagine you want to paint a complex mural (adapt the model) on a wall (the pretrained weights).
+    </p>
+    <ul class="list-disc list-inside text-sm mt-2 ml-2">
+      <li><strong>Full Fine-Tuning</strong>: You repaint the entire wall pixel by pixel. Precise, but slow and expensive.</li>
+      <li><strong>LoRA</strong>: You use a <strong>stencil</strong>. You only need to define a few simple shapes (low rank matrices <MathBlock formula="A" /> and <MathBlock formula="B" />) to guide the spray paint. You can create a complex-looking result by combining these simple stencils with the existing wall color, without repainting everything.</li>
+    </ul>
+  </div>
 </section>
 
 <section>

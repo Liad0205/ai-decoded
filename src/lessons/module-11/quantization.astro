@@ -1,21 +1,35 @@
 ---
 // Module 11, Lesson 11.1: Quantization for Inference
-import KeyTakeaway from '../../components/KeyTakeaway.astro';
-import PaperReference from '../../components/PaperReference.astro';
-import MathBlock from '../../components/MathBlock.astro';
-import Diagram from '../../components/Diagram.astro';
-import Quiz from '../../components/Quiz.astro';
-import RevealSection from '../../components/RevealSection.astro';
+import KeyTakeaway from "../../components/KeyTakeaway.astro";
+import PaperReference from "../../components/PaperReference.astro";
+import MathBlock from "../../components/MathBlock.astro";
+import Diagram from "../../components/Diagram.astro";
+import Quiz from "../../components/Quiz.astro";
 ---
 
 <section>
   <h2>Learning Objectives</h2>
   <ul>
-    <li>Understand why quantization is essential for practical LLM deployment</li>
-    <li>Compare precision formats (FP32, FP16, BF16, INT8, INT4, FP8) and their tradeoffs</li>
-    <li>Distinguish Post-Training Quantization (PTQ) from Quantization-Aware Training (QAT)</li>
-    <li>Explain how GPTQ, AWQ, and GGUF quantization methods work and when to use each</li>
-    <li>Evaluate quality-speed-memory tradeoffs for different quantization strategies</li>
+    <li>
+      Understand why quantization is essential for practical
+      LLM deployment
+    </li>
+    <li>
+      Compare precision formats (FP32, FP16, BF16, INT8,
+      INT4, FP8) and their tradeoffs
+    </li>
+    <li>
+      Distinguish Post-Training Quantization (PTQ) from
+      Quantization-Aware Training (QAT)
+    </li>
+    <li>
+      Explain how GPTQ, AWQ, and GGUF quantization methods
+      work and when to use each
+    </li>
+    <li>
+      Evaluate quality-speed-memory tradeoffs for different
+      quantization strategies
+    </li>
   </ul>
 </section>
 
@@ -23,28 +37,58 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Why Quantization Matters</h2>
 
   <p>
-    A 70-billion parameter model stored in FP16 requires approximately <strong>140 GB</strong> of GPU memory just for the weights. At inference time, you also need memory for the KV-cache, activations, and the serving framework overhead. This puts large models out of reach for most hardware.
+    A 70-billion parameter model stored in FP16 requires
+    approximately <strong>140 GB</strong> of GPU memory just for
+    the weights. At inference time, you also need memory for the
+    KV-cache, activations, and the serving framework overhead.
+    This puts large models out of reach for most hardware.
   </p>
 
   <p>
-    Quantization addresses this by representing model weights (and optionally activations) with fewer bits. The core insight is that neural networks are remarkably <strong>tolerant of reduced precision</strong> &mdash; most weights can be represented with far fewer bits than FP32 or FP16 without meaningful quality loss.
+    Quantization addresses this by representing model
+    weights (and optionally activations) with fewer bits.
+    The core insight is that neural networks are remarkably <strong
+      >tolerant of reduced precision</strong
+    > &mdash; most weights can be represented with far fewer bits
+    than FP32 or FP16 without meaningful quality loss.
   </p>
 
-  <p>
-    The benefits of quantization are threefold:
-  </p>
+  <p>The benefits of quantization are threefold:</p>
   <ul>
-    <li><strong>Memory reduction</strong>: INT4 uses 4x less memory than FP16, enabling a 70B model to fit in ~35 GB instead of ~140 GB</li>
-    <li><strong>Speed improvement</strong>: Lower precision means more values fit in cache lines and SIMD registers, and memory bandwidth (the primary bottleneck for LLM inference) is reduced proportionally</li>
-    <li><strong>Cost reduction</strong>: Smaller models run on cheaper hardware &mdash; consumer GPUs instead of data center A100s, or even CPUs for edge deployment</li>
+    <li>
+      <strong>Memory reduction</strong>: INT4 uses 4x less
+      memory than FP16, enabling a 70B model to fit in ~35
+      GB instead of ~140 GB
+    </li>
+    <li>
+      <strong>Speed improvement</strong>: Lower precision
+      means more values fit in cache lines and SIMD
+      registers, and memory bandwidth (the primary
+      bottleneck for LLM inference) is reduced
+      proportionally
+    </li>
+    <li>
+      <strong>Cost reduction</strong>: Smaller models run on
+      cheaper hardware &mdash; consumer GPUs instead of data
+      center A100s, or even CPUs for edge deployment
+    </li>
   </ul>
 
   <p>
-    To put this concretely: quantizing a 70B model from FP16 to INT4 reduces memory from 140 GB to ~35 GB -- the difference between needing a multi-GPU server and fitting on a single A100. A 13B model drops from ~26 GB (too large for a consumer 24 GB GPU) to ~6.5 GB (fits easily with room for KV-cache and serving overhead).
+    To put this concretely: quantizing a 70B model from FP16
+    to INT4 reduces memory from 140 GB to ~35 GB -- the
+    difference between needing a multi-GPU server and
+    fitting on a single A100. A 13B model drops from ~26 GB
+    (too large for a consumer 24 GB GPU) to ~6.5 GB (fits
+    easily with room for KV-cache and serving overhead).
   </p>
 
   <p>
-    The fundamental challenge is maintaining model quality. Quantization introduces <strong>rounding errors</strong> that accumulate across layers. The art of quantization research is finding methods that minimize these errors while maximizing compression.
+    The fundamental challenge is maintaining model quality.
+    Quantization introduces <strong>rounding errors</strong> that
+    accumulate across layers. The art of quantization research
+    is finding methods that minimize these errors while maximizing
+    compression.
   </p>
 </section>
 
@@ -52,201 +96,445 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Precision Formats: A Detailed Comparison</h2>
 
   <p>
-    Understanding precision formats is the foundation of quantization. Each format represents numbers differently, trading range and precision for storage size.
+    Understanding precision formats is the foundation of
+    quantization. Each format represents numbers
+    differently, trading range and precision for storage
+    size.
   </p>
 
   <h3>FP32 (32-bit Floating Point)</h3>
   <p>
-    The traditional training format: 1 sign bit, 8 exponent bits, 23 mantissa bits. Provides roughly 7 decimal digits of precision and a range of <MathBlock formula={"\\pm 3.4 \\times 10^{38}"} />. Most models are trained in FP32 (or with FP32 master weights), making it the "ground truth" baseline.
+    The traditional training format: 1 sign bit, 8 exponent
+    bits, 23 mantissa bits. Provides roughly 7 decimal
+    digits of precision and a range of <MathBlock
+      formula={"\\pm 3.4 \\times 10^{38}"}
+    />. Most models are trained in FP32 (or with FP32 master
+    weights), making it the "ground truth" baseline.
   </p>
 
   <h3>FP16 (16-bit Floating Point)</h3>
   <p>
-    Half precision: 1 sign bit, 5 exponent bits, 10 mantissa bits. Range limited to <MathBlock formula={"\\pm 65,504"} /> with ~3.3 decimal digits of precision. FP16 halves memory compared to FP32 but is prone to <strong>overflow</strong> during training &mdash; loss scaling tricks are required.
+    Half precision: 1 sign bit, 5 exponent bits, 10 mantissa
+    bits. Range limited to <MathBlock
+      formula={"\\pm 65,504"}
+    /> with ~3.3 decimal digits of precision. FP16 halves memory
+    compared to FP32 but is prone to <strong
+      >overflow</strong
+    > during training &mdash; loss scaling tricks are required.
   </p>
 
   <h3>BF16 (Brain Floating Point)</h3>
   <p>
-    Developed by Google Brain: 1 sign bit, 8 exponent bits, 7 mantissa bits. BF16 has the <strong>same range as FP32</strong> (thanks to 8 exponent bits) but less precision (7 mantissa bits vs. 23). This makes it ideal for training and inference &mdash; the wide range avoids overflow issues that plague FP16, while the reduced precision rarely affects model quality. Most modern LLMs are trained in BF16.
+    Developed by Google Brain: 1 sign bit, 8 exponent bits,
+    7 mantissa bits. BF16 has the <strong
+      >same range as FP32</strong
+    > (thanks to 8 exponent bits) but less precision (7 mantissa
+    bits vs. 23). This makes it ideal for training and inference
+    &mdash; the wide range avoids overflow issues that plague
+    FP16, while the reduced precision rarely affects model quality.
+    Most modern LLMs are trained in BF16.
   </p>
 
   <h3>INT8 (8-bit Integer)</h3>
   <p>
-    Represents values as integers from -128 to 127 (signed) or 0 to 255 (unsigned). Requires a <strong>scale factor</strong> and <strong>zero point</strong> to map the integer range to floating-point values:
+    Represents values as integers from -128 to 127 (signed)
+    or 0 to 255 (unsigned). Requires a <strong
+      >scale factor</strong
+    > and <strong>zero point</strong> to map the integer range
+    to floating-point values:
   </p>
 
-  <MathBlock formula={"x_{\\text{float}} = \\text{scale} \\times (x_{\\text{int8}} - \\text{zero\\_point})"} display={true} />
+  <MathBlock
+    formula={"x_{\\text{float}} = \\text{scale} \\times (x_{\\text{int8}} - \\text{zero\\_point})"}
+    display={true}
+  />
 
   <p>
-    In plain English: to recover the original floating-point value, subtract the zero point (which centers the integer range) and multiply by the scale factor (which maps the integer range back to the original value range). This is a simple affine mapping between the integer grid and floating-point values.
+    In plain English: to recover the original floating-point
+    value, subtract the zero point (which centers the
+    integer range) and multiply by the scale factor (which
+    maps the integer range back to the original value
+    range). This is a simple affine mapping between the
+    integer grid and floating-point values.
   </p>
 
   <p>
-    The zero point ensures that the value zero is represented exactly in the quantized format, which is important for sparse activations where many values are exactly zero (e.g., after ReLU). INT8 is well-supported by hardware (GPUs, CPUs, and NPUs all have efficient INT8 operations) and provides a reliable 2x memory reduction from FP16 with minimal quality loss for most models.
+    The zero point ensures that the value zero is
+    represented exactly in the quantized format, which is
+    important for sparse activations where many values are
+    exactly zero (e.g., after ReLU). INT8 is well-supported
+    by hardware (GPUs, CPUs, and NPUs all have efficient
+    INT8 operations) and provides a reliable 2x memory
+    reduction from FP16 with minimal quality loss for most
+    models.
   </p>
 
   <h3>INT4 (4-bit Integer)</h3>
   <p>
-    Represents values with only 16 distinct levels. This is the sweet spot for LLM inference: <strong>4x memory reduction</strong> from FP16 with surprisingly small quality degradation when combined with modern quantization techniques like GPTQ or AWQ. Most practical LLM quantization targets INT4.
+    Represents values with only 16 distinct levels. This is
+    the sweet spot for LLM inference: <strong
+      >4x memory reduction</strong
+    > from FP16 with surprisingly small quality degradation when
+    combined with modern quantization techniques like GPTQ or
+    AWQ. Most practical LLM quantization targets INT4.
   </p>
 
   <h3>FP8 (8-bit Floating Point)</h3>
   <p>
-    Two variants exist: E4M3 (4 exponent, 3 mantissa bits) for forward pass computations and E5M2 (5 exponent, 2 mantissa bits) for gradients. FP8 is gaining traction for both training and inference on newer hardware (NVIDIA H100, AMD MI300X). Unlike INT8, FP8 natively handles the dynamic range of neural network values without per-tensor scaling.
+    Two variants exist: E4M3 (4 exponent, 3 mantissa bits)
+    for forward pass computations and E5M2 (5 exponent, 2
+    mantissa bits) for gradients. FP8 is gaining traction
+    for both training and inference on newer hardware
+    (NVIDIA H100, AMD MI300X). Unlike INT8, FP8 natively
+    handles the dynamic range of neural network values
+    without per-tensor scaling.
   </p>
 </section>
 
 <p>
-    <strong>Note</strong>: The memory estimates in the table below are for <strong>weights only</strong>. At inference time, additional memory is required for the KV-cache, activations, and serving framework overhead.
-  </p>
+  <strong>Note</strong>: The memory estimates in the table
+  below are for <strong>weights only</strong>. At inference
+  time, additional memory is required for the KV-cache,
+  activations, and serving framework overhead.
+</p>
 
-<Diagram diagramId="precision-formats" title="Precision Format Comparison: Bits, Memory, and Typical Quality Impact" autoplay={true} animationDuration={4000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full overflow-x-auto">
+<Diagram
+  diagramId="precision-formats"
+  title="Precision Format Comparison: Bits, Memory, and Typical Quality Impact"
+  autoplay={true}
+  animationDuration={4000}
+>
+  <div
+    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full overflow-x-auto"
+  >
     <table class="w-full text-sm border-collapse">
       <thead>
-        <tr class="border-b-2 border-slate-300 dark:border-[hsl(var(--border))]">
-          <th class="text-left p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]">Format</th>
-          <th class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]">Bits</th>
-          <th class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]">Memory (70B model)</th>
-          <th class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]">Relative Speed</th>
-          <th class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]">Typical Quality Loss</th>
+        <tr
+          class="border-b-2 border-slate-300 dark:border-[hsl(var(--border))]"
+        >
+          <th
+            class="text-left p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            >Format</th
+          >
+          <th
+            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            >Bits</th
+          >
+          <th
+            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            >Memory (70B model)</th
+          >
+          <th
+            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            >Relative Speed</th
+          >
+          <th
+            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            >Typical Quality Loss</th
+          >
         </tr>
       </thead>
       <tbody>
-        <tr class="border-b border-slate-100 dark:border-[hsl(var(--muted))]" data-animate style="animation-delay: 0.3s">
-          <td class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]">FP32</td>
+        <tr
+          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          data-animate
+          style="animation-delay: 0.3s"
+        >
+          <td
+            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            >FP32</td
+          >
           <td class="text-center p-3">32</td>
           <td class="text-center p-3">280 GB</td>
           <td class="text-center p-3">1x (baseline)</td>
-          <td class="text-center p-3 text-green-600">None</td>
+          <td class="text-center p-3 text-green-600"
+            >None</td
+          >
         </tr>
-        <tr class="border-b border-slate-100 dark:border-[hsl(var(--muted))]" data-animate style="animation-delay: 0.6s">
-          <td class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]">BF16 / FP16</td>
+        <tr
+          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          data-animate
+          style="animation-delay: 0.6s"
+        >
+          <td
+            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            >BF16 / FP16</td
+          >
           <td class="text-center p-3">16</td>
           <td class="text-center p-3">140 GB</td>
           <td class="text-center p-3">~2x</td>
-          <td class="text-center p-3 text-green-600">Negligible</td>
+          <td class="text-center p-3 text-green-600"
+            >Negligible</td
+          >
         </tr>
-        <tr class="border-b border-slate-100 dark:border-[hsl(var(--muted))]" data-animate style="animation-delay: 0.9s">
-          <td class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]">FP8</td>
+        <tr
+          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          data-animate
+          style="animation-delay: 0.9s"
+        >
+          <td
+            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            >FP8</td
+          >
           <td class="text-center p-3">8</td>
           <td class="text-center p-3">70 GB</td>
           <td class="text-center p-3">~3-4x</td>
-          <td class="text-center p-3 text-yellow-600">Very small</td>
+          <td class="text-center p-3 text-yellow-600"
+            >Very small</td
+          >
         </tr>
-        <tr class="border-b border-slate-100 dark:border-[hsl(var(--muted))]" data-animate style="animation-delay: 1.2s">
-          <td class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]">INT8</td>
+        <tr
+          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          data-animate
+          style="animation-delay: 1.2s"
+        >
+          <td
+            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            >INT8</td
+          >
           <td class="text-center p-3">8</td>
           <td class="text-center p-3">70 GB</td>
           <td class="text-center p-3">~3-4x</td>
-          <td class="text-center p-3 text-yellow-600">Small (&lt;1% on most benchmarks)</td>
+          <td class="text-center p-3 text-yellow-600"
+            >Small (&lt;1% on most benchmarks)</td
+          >
         </tr>
-        <tr class="border-b border-slate-100 dark:border-[hsl(var(--muted))]" data-animate style="animation-delay: 1.5s">
-          <td class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]">INT4 (GPTQ/AWQ)</td>
+        <tr
+          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          data-animate
+          style="animation-delay: 1.5s"
+        >
+          <td
+            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            >INT4 (GPTQ/AWQ)</td
+          >
           <td class="text-center p-3">4</td>
           <td class="text-center p-3">35 GB</td>
           <td class="text-center p-3">~5-6x</td>
-          <td class="text-center p-3 text-orange-600">Small-moderate (1-3%)</td>
+          <td class="text-center p-3 text-orange-600"
+            >Small-moderate (1-3%)</td
+          >
         </tr>
         <tr data-animate style="animation-delay: 1.8s">
-          <td class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]">INT4 (naive RTN)</td>
+          <td
+            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            >INT4 (naive RTN)</td
+          >
           <td class="text-center p-3">4</td>
           <td class="text-center p-3">35 GB</td>
           <td class="text-center p-3">~5-6x</td>
-          <td class="text-center p-3 text-red-600">Moderate-large (3-10%+)</td>
+          <td class="text-center p-3 text-red-600"
+            >Moderate-large (3-10%+)</td
+          >
         </tr>
       </tbody>
     </table>
-    <p class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center mt-3">Speed gains depend on hardware and whether the workload is compute-bound or memory-bound.</p>
+    <p
+      class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center mt-3"
+    >
+      Speed gains depend on hardware and whether the
+      workload is compute-bound or memory-bound.
+    </p>
   </div>
 </Diagram>
 
 <section>
-  <h2>Post-Training Quantization vs. Quantization-Aware Training</h2>
+  <h2>
+    Post-Training Quantization vs. Quantization-Aware
+    Training
+  </h2>
 
   <p>
-    There are two fundamental approaches to quantization, differing in when the quantization is applied relative to training.
+    There are two fundamental approaches to quantization,
+    differing in when the quantization is applied relative
+    to training.
   </p>
 
   <h3>Post-Training Quantization (PTQ)</h3>
   <p>
-    PTQ quantizes an already-trained model <strong>without any additional training</strong>. You take a trained FP16/BF16 model and convert its weights (and optionally activations) to lower precision using a calibration dataset (typically a few hundred samples drawn from the training distribution or a representative subset).
+    PTQ quantizes an already-trained model <strong
+      >without any additional training</strong
+    >. You take a trained FP16/BF16 model and convert its
+    weights (and optionally activations) to lower precision
+    using a calibration dataset (typically a few hundred
+    samples drawn from the training distribution or a
+    representative subset).
   </p>
   <ul>
-    <li><strong>Advantages</strong>: Fast (minutes to hours), no training infrastructure needed, works with any model</li>
-    <li><strong>Disadvantages</strong>: Quality loss increases at lower bit widths (especially below 4 bits); the model cannot adapt to compensate for quantization errors</li>
-    <li><strong>Methods</strong>: GPTQ, AWQ, Round-to-Nearest (RTN), SmoothQuant</li>
+    <li>
+      <strong>Advantages</strong>: Fast (minutes to hours),
+      no training infrastructure needed, works with any
+      model
+    </li>
+    <li>
+      <strong>Disadvantages</strong>: Quality loss increases
+      at lower bit widths (especially below 4 bits); the
+      model cannot adapt to compensate for quantization
+      errors
+    </li>
+    <li>
+      <strong>Methods</strong>: GPTQ, AWQ, Round-to-Nearest
+      (RTN), SmoothQuant
+    </li>
   </ul>
 
   <h3>Quantization-Aware Training (QAT)</h3>
   <p>
-    QAT simulates quantization <strong>during training</strong>, inserting "fake quantization" nodes that round weights/activations to the target precision in the forward pass while using straight-through estimators (STE) for gradient computation in the backward pass:
+    QAT simulates quantization <strong
+      >during training</strong
+    >, inserting "fake quantization" nodes that round
+    weights/activations to the target precision in the
+    forward pass while using straight-through estimators
+    (STE) for gradient computation in the backward pass:
   </p>
 
-  <MathBlock formula={"\\text{Forward: } \\hat{w} = \\text{quantize}(w), \\quad \\text{Backward: } \\frac{\\partial \\mathcal{L}}{\\partial w} \\approx \\frac{\\partial \\mathcal{L}}{\\partial \\hat{w}}"} display={true} />
+  <MathBlock
+    formula={"\\text{Forward: } \\hat{w} = \\text{quantize}(w), \\quad \\text{Backward: } \\frac{\\partial \\mathcal{L}}{\\partial w} \\approx \\frac{\\partial \\mathcal{L}}{\\partial \\hat{w}}"}
+    display={true}
+  />
 
   <p>
-    In plain English: during the forward pass, weights are rounded to their quantized values. During the backward pass, the rounding operation is treated as if it were the identity function (the "straight-through estimator"), letting gradients flow through the non-differentiable quantization step so training can proceed normally.
+    In plain English: during the forward pass, weights are
+    rounded to their quantized values. During the backward
+    pass, the rounding operation is treated as if it were
+    the identity function (the "straight-through
+    estimator"), letting gradients flow through the
+    non-differentiable quantization step so training can
+    proceed normally.
   </p>
 
   <ul>
-    <li><strong>Advantages</strong>: The model learns to be robust to quantization noise, resulting in higher quality at low bit widths</li>
-    <li><strong>Disadvantages</strong>: Requires full training or fine-tuning, which is expensive for large models; needs the training pipeline and data</li>
-    <li><strong>Methods</strong>: LLM-QAT, QLoRA (combines QAT with LoRA), BitNet</li>
+    <li>
+      <strong>Advantages</strong>: The model learns to be
+      robust to quantization noise, resulting in higher
+      quality at low bit widths
+    </li>
+    <li>
+      <strong>Disadvantages</strong>: Requires full training
+      or fine-tuning, which is expensive for large models;
+      needs the training pipeline and data
+    </li>
+    <li>
+      <strong>Methods</strong>: LLM-QAT, QLoRA (combines QAT
+      with LoRA), BitNet
+    </li>
   </ul>
 
   <p>
-    In practice, <strong>PTQ dominates for LLMs</strong> because the training cost of large models makes QAT impractical. GPTQ and AWQ achieve nearly lossless 4-bit quantization for most models without any training, making PTQ the standard approach.
+    In practice, <strong>PTQ dominates for LLMs</strong> because
+    the training cost of large models makes QAT impractical. GPTQ
+    and AWQ achieve nearly lossless 4-bit quantization for most
+    models without any training, making PTQ the standard approach.
   </p>
 </section>
 
 <section>
-  <h2>GPTQ: Weight-Only Quantization via Approximate Second-Order Methods</h2>
+  <h2>
+    GPTQ: Weight-Only Quantization via Approximate
+    Second-Order Methods
+  </h2>
 
   <p>
-    <strong>GPTQ</strong> (Frantar et al., 2022) is a one-shot post-training quantization method that quantizes weights to 3 or 4 bits with minimal quality loss. It is based on the Optimal Brain Quantization (OBQ) framework but scales to billion-parameter models.
+    <strong>GPTQ</strong> (Frantar et al., 2022) is a one-shot
+    post-training quantization method that quantizes weights to
+    3 or 4 bits with minimal quality loss. It is based on the
+    Optimal Brain Quantization (OBQ) framework but scales to billion-parameter
+    models.
   </p>
 
   <h3>Core Idea</h3>
   <p>
-    GPTQ frames quantization as a layer-wise optimization problem. For each layer, it seeks quantized weights <MathBlock formula={"\\hat{W}"} /> that minimize the squared error in the layer's output:
+    GPTQ frames quantization as a layer-wise optimization
+    problem. For each layer, it seeks quantized weights <MathBlock
+      formula={"\\hat{W}"}
+    /> that minimize the squared error in the layer's output:
   </p>
 
-  <MathBlock formula={"\\min_{\\hat{W}} \\| WX - \\hat{W}X \\|_2^2"} display={true} />
+  <MathBlock
+    formula={"\\min_{\\hat{W}} \\| WX - \\hat{W}X \\|_2^2"}
+    display={true}
+  />
 
   <p>
-    In plain English: find quantized weights that produce layer outputs as close as possible to the original layer outputs on calibration data. The optimization is per-layer, minimizing the squared difference in the layer's actual behavior rather than just minimizing the weight rounding error.
+    In plain English: find quantized weights that produce
+    layer outputs as close as possible to the original layer
+    outputs on calibration data. The optimization is
+    per-layer, minimizing the squared difference in the
+    layer's actual behavior rather than just minimizing the
+    weight rounding error.
   </p>
 
   <p>
-    where <MathBlock formula="W" /> are the original FP16 weights and <MathBlock formula="X" /> is a calibration input matrix. Rather than quantizing each weight independently (round-to-nearest), GPTQ quantizes weights <strong>sequentially</strong> and updates the remaining unquantized weights to compensate for the error introduced by each quantization step.
+    where <MathBlock formula="W" /> are the original FP16 weights
+    and <MathBlock formula="X" /> is a calibration input matrix.
+    Rather than quantizing each weight independently (round-to-nearest),
+    GPTQ quantizes weights <strong>sequentially</strong> and updates
+    the remaining unquantized weights to compensate for the error
+    introduced by each quantization step.
   </p>
 
   <h3>The Hessian-Based Update</h3>
   <p>
-    When a single weight <MathBlock formula={"w_q"} /> in column q is quantized, the optimal update for the remaining weights is determined by the <strong>inverse Hessian</strong> of the reconstruction error:
+    When a single weight <MathBlock formula={"w_q"} /> in column
+    q is quantized, the optimal update for the remaining weights
+    is determined by the <strong>inverse Hessian</strong> of the
+    reconstruction error:
   </p>
 
-  <MathBlock formula={"\\delta_F = -\\frac{\\text{quant}(w_q) - w_q}{[H_F^{-1}]_{qq}} \\cdot (H_F^{-1})_{:,q}"} display={true} />
+  <MathBlock
+    formula={"\\delta_F = -\\frac{\\text{quant}(w_q) - w_q}{[H_F^{-1}]_{qq}} \\cdot (H_F^{-1})_{:,q}"}
+    display={true}
+  />
 
   <p>
-    In plain English: when you round one weight, spread the rounding error across the remaining unquantized weights in a way that minimizes the total output error. The inverse Hessian tells you exactly how to distribute this compensation -- it encodes the sensitivity of each remaining weight to the output.
+    In plain English: when you round one weight, spread the
+    rounding error across the remaining unquantized weights
+    in a way that minimizes the total output error. The
+    inverse Hessian tells you exactly how to distribute this
+    compensation -- it encodes the sensitivity of each
+    remaining weight to the output.
   </p>
 
   <p>
-    where <MathBlock formula={"H_F = 2X X^T"} /> is the Hessian matrix and <MathBlock formula={"(H_F^{-1})_{:,q}"} /> denotes the q-th column of the inverse Hessian. This is a second-order correction: it tells you exactly how much to adjust the remaining weights to compensate for the rounding error in the quantized weight.
+    where <MathBlock formula={"H_F = 2X X^T"} /> is the Hessian
+    matrix and <MathBlock formula={"(H_F^{-1})_{:,q}"} /> denotes
+    the q-th column of the inverse Hessian. This is a second-order
+    correction: it tells you exactly how much to adjust the remaining
+    weights to compensate for the rounding error in the quantized
+    weight.
   </p>
 
   <h3>Key Engineering Innovations</h3>
   <ul>
-    <li><strong>Column ordering</strong>: GPTQ processes columns in a fixed order (with lazy batch updates), avoiding the quadratic cost of OBQ's greedy column selection</li>
-    <li><strong>Cholesky-based Hessian inverse</strong>: Uses Cholesky decomposition for numerically stable computation of the inverse Hessian rows needed at each step</li>
-    <li><strong>Block-wise quantization</strong>: Processes blocks of 128 columns together, updating the Hessian inverse once per block rather than per column</li>
-    <li><strong>Group quantization</strong>: Uses separate scale/zero-point for groups of weights (e.g., groups of 128), dramatically improving quality at low bit widths</li>
+    <li>
+      <strong>Column ordering</strong>: GPTQ processes
+      columns in a fixed order (with lazy batch updates),
+      avoiding the quadratic cost of OBQ's greedy column
+      selection
+    </li>
+    <li>
+      <strong>Cholesky-based Hessian inverse</strong>: Uses
+      Cholesky decomposition for numerically stable
+      computation of the inverse Hessian rows needed at each
+      step
+    </li>
+    <li>
+      <strong>Block-wise quantization</strong>: Processes
+      blocks of 128 columns together, updating the Hessian
+      inverse once per block rather than per column
+    </li>
+    <li>
+      <strong>Group quantization</strong>: Uses separate
+      scale/zero-point for groups of weights (e.g., groups
+      of 128), dramatically improving quality at low bit
+      widths
+    </li>
   </ul>
 
   <p>
-    GPTQ can quantize a 175B parameter model in approximately 4 GPU-hours, making it practical for one-shot deployment preparation.
+    GPTQ can quantize a 175B parameter model in
+    approximately 4 GPU-hours, making it practical for
+    one-shot deployment preparation.
   </p>
 </section>
 
@@ -254,50 +542,113 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>AWQ: Activation-Aware Weight Quantization</h2>
 
   <p>
-    <strong>AWQ</strong> (Lin et al., 2023) takes a different approach from GPTQ. Instead of compensating for quantization errors via Hessian-based updates, AWQ identifies and protects <strong>salient weights</strong> &mdash; the small fraction of weights that matter most for model quality.
+    <strong>AWQ</strong> (Lin et al., 2023) takes a different
+    approach from GPTQ. Instead of compensating for quantization
+    errors via Hessian-based updates, AWQ identifies and protects
+    <strong>salient weights</strong> &mdash; the small fraction
+    of weights that matter most for model quality.
   </p>
 
   <h3>Key Insight: Not All Weights Are Equal</h3>
   <p>
-    AWQ observes that weight importance is strongly correlated with <strong>activation magnitude</strong>. Weights connected to channels with large activations have a disproportionate effect on the output. Quantizing these "salient" weights carelessly causes significant quality degradation.
+    AWQ observes that weight importance is strongly
+    correlated with <strong>activation magnitude</strong>.
+    Weights connected to channels with large activations
+    have a disproportionate effect on the output. Quantizing
+    these "salient" weights carelessly causes significant
+    quality degradation.
   </p>
 
   <p>
-    The observation is simple: if a weight <MathBlock formula={"w_i"} /> is always multiplied by a large activation <MathBlock formula={"a_i"} />, then the rounding error <MathBlock formula={"\\Delta w_i"} /> in that weight gets amplified by <MathBlock formula={"a_i"} />, causing a large output error <MathBlock formula={"\\Delta w_i \\cdot a_i"} />.
+    The observation is simple: if a weight <MathBlock
+      formula={"w_i"}
+    /> is always multiplied by a large activation <MathBlock
+      formula={"a_i"}
+    />, then the rounding error <MathBlock
+      formula={"\\Delta w_i"}
+    /> in that weight gets amplified by <MathBlock
+      formula={"a_i"}
+    />, causing a large output error <MathBlock
+      formula={"\\Delta w_i \\cdot a_i"}
+    />.
   </p>
 
   <h3>Per-Channel Scaling</h3>
   <p>
-    Rather than keeping salient weights in higher precision (which complicates hardware execution), AWQ applies a <strong>per-channel scaling factor</strong> before quantization:
+    Rather than keeping salient weights in higher precision
+    (which complicates hardware execution), AWQ applies a <strong
+      >per-channel scaling factor</strong
+    > before quantization:
   </p>
 
-  <MathBlock formula={"Q(w \\cdot s) \\cdot \\frac{x}{s} \\approx w \\cdot x"} display={true} />
+  <MathBlock
+    formula={"Q(w \\cdot s) \\cdot \\frac{x}{s} \\approx w \\cdot x"}
+    display={true}
+  />
 
   <p>
-    In plain English: scale up the important weights before quantization so they occupy more of the quantization grid (reducing their relative rounding error), then compensate by scaling down the corresponding activations. The net result is mathematically equivalent to the original computation, but with less quantization error on the weights that matter most.
+    In plain English: scale up the important weights before
+    quantization so they occupy more of the quantization
+    grid (reducing their relative rounding error), then
+    compensate by scaling down the corresponding
+    activations. The net result is mathematically equivalent
+    to the original computation, but with less quantization
+    error on the weights that matter most.
   </p>
 
   <p>
-    where <MathBlock formula="s" /> is a per-channel scaling factor derived from activation statistics. Multiplying weights by <MathBlock formula="s" /> before quantization makes salient weights larger (relative to the quantization grid), reducing their relative rounding error. The inverse scaling <MathBlock formula={"x / s"} /> is absorbed into the input activations.
+    where <MathBlock formula="s" /> is a per-channel scaling factor
+    derived from activation statistics. Multiplying weights by
+    <MathBlock formula="s" /> before quantization makes salient
+    weights larger (relative to the quantization grid), reducing
+    their relative rounding error. The inverse scaling <MathBlock
+      formula={"x / s"}
+    /> is absorbed into the input activations.
   </p>
 
   <h3>Optimal Scale Search</h3>
   <p>
-    AWQ searches for the optimal scaling factor per channel by minimizing the quantization error on a small calibration set:
+    AWQ searches for the optimal scaling factor per channel
+    by minimizing the quantization error on a small
+    calibration set:
   </p>
 
-  <MathBlock formula={"s^* = \\arg\\min_s \\| Q(W \\cdot \\text{diag}(s)) \\cdot (\\text{diag}(s)^{-1} X) - WX \\|"} display={true} />
+  <MathBlock
+    formula={"s^* = \\arg\\min_s \\| Q(W \\cdot \\text{diag}(s)) \\cdot (\\text{diag}(s)^{-1} X) - WX \\|"}
+    display={true}
+  />
 
   <p>
-    In plain English: search for the per-channel scaling factors that minimize the difference between the quantized layer's output and the original layer's output on calibration data. Since there is only one scalar per channel, this is a tractable low-dimensional optimization.
+    In plain English: search for the per-channel scaling
+    factors that minimize the difference between the
+    quantized layer's output and the original layer's output
+    on calibration data. Since there is only one scalar per
+    channel, this is a tractable low-dimensional
+    optimization.
   </p>
 
   <h3>AWQ vs. GPTQ</h3>
   <ul>
-    <li><strong>Quality</strong>: AWQ and GPTQ produce comparable quality at 4-bit; AWQ tends to be slightly better on some benchmarks</li>
-    <li><strong>Speed</strong>: AWQ quantization is faster (simpler optimization); runtime inference speed is similar</li>
-    <li><strong>Robustness</strong>: AWQ is more robust to the choice of calibration data because it relies on activation statistics rather than Hessian computation</li>
-    <li><strong>Kernel support</strong>: Both have efficient GPU kernels; AWQ kernels from the autoawq library are widely used</li>
+    <li>
+      <strong>Quality</strong>: AWQ and GPTQ produce
+      comparable quality at 4-bit; AWQ tends to be slightly
+      better on some benchmarks
+    </li>
+    <li>
+      <strong>Speed</strong>: AWQ quantization is faster
+      (simpler optimization); runtime inference speed is
+      similar
+    </li>
+    <li>
+      <strong>Robustness</strong>: AWQ is more robust to the
+      choice of calibration data because it relies on
+      activation statistics rather than Hessian computation
+    </li>
+    <li>
+      <strong>Kernel support</strong>: Both have efficient
+      GPU kernels; AWQ kernels from the autoawq library are
+      widely used
+    </li>
   </ul>
 </section>
 
@@ -305,32 +656,77 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>GGUF and llama.cpp: CPU and Edge Inference</h2>
 
   <p>
-    While GPTQ and AWQ target GPU inference, <strong>GGUF</strong> (GPT-Generated Unified Format) is the file format used by <strong>llama.cpp</strong> for CPU-first inference. It has become the de facto standard for running LLMs on consumer hardware without GPUs.
+    While GPTQ and AWQ target GPU inference, <strong
+      >GGUF</strong
+    > (GPT-Generated Unified Format) is the file format used by
+    <strong>llama.cpp</strong> for CPU-first inference. It has
+    become the de facto standard for running LLMs on consumer
+    hardware without GPUs.
   </p>
 
   <h3>How GGUF Quantization Works</h3>
   <p>
-    GGUF uses a <strong>block quantization</strong> approach. Weights are divided into small blocks (typically 32 values), and each block gets its own scale factor and (optionally) zero point. This allows fine-grained adaptation to the local weight distribution:
+    GGUF uses a <strong>block quantization</strong> approach.
+    Weights are divided into small blocks (typically 32 values),
+    and each block gets its own scale factor and (optionally)
+    zero point. This allows fine-grained adaptation to the local
+    weight distribution:
   </p>
   <ul>
-    <li><strong>Q4_0</strong>: 4-bit quantization with a single FP16 scale per block of 32 weights (4.5 bits per weight effective)</li>
-    <li><strong>Q4_K_M</strong>: "K-quant" method using a mix of 4-bit and 6-bit quantization, with importance-based allocation (recommended default)</li>
-    <li><strong>Q5_K_M</strong>: 5-bit K-quant, better quality than Q4 with modest size increase</li>
-    <li><strong>Q8_0</strong>: 8-bit quantization, nearly lossless but larger</li>
-    <li><strong>Q2_K</strong>: 2-bit quantization, maximum compression with noticeable quality loss</li>
+    <li>
+      <strong>Q4_0</strong>: 4-bit quantization with a
+      single FP16 scale per block of 32 weights (4.5 bits
+      per weight effective)
+    </li>
+    <li>
+      <strong>Q4_K_M</strong>: "K-quant" method using a mix
+      of 4-bit and 6-bit quantization, with importance-based
+      allocation (recommended default)
+    </li>
+    <li>
+      <strong>Q5_K_M</strong>: 5-bit K-quant, better quality
+      than Q4 with modest size increase
+    </li>
+    <li>
+      <strong>Q8_0</strong>: 8-bit quantization, nearly
+      lossless but larger
+    </li>
+    <li>
+      <strong>Q2_K</strong>: 2-bit quantization, maximum
+      compression with noticeable quality loss
+    </li>
   </ul>
 
   <h3>The K-Quant Innovation</h3>
   <p>
-    K-quants (introduced in mid-2023) use <strong>importance-weighted mixed precision</strong>. Attention layers and output projections get more bits; feed-forward layers get fewer. This produces significantly better quality than uniform quantization at the same average bit width. The "K" quant types (Q4_K_M, Q5_K_S, etc.) have largely replaced the older Q4_0/Q4_1 types.
+    K-quants (introduced in mid-2023) use <strong
+      >importance-weighted mixed precision</strong
+    >. Attention layers and output projections get more
+    bits; feed-forward layers get fewer. This produces
+    significantly better quality than uniform quantization
+    at the same average bit width. The "K" quant types
+    (Q4_K_M, Q5_K_S, etc.) have largely replaced the older
+    Q4_0/Q4_1 types.
   </p>
 
   <h3>When to Use GGUF</h3>
   <ul>
-    <li>Running models on machines without GPUs (or with limited VRAM)</li>
-    <li>Edge deployment on laptops, desktops, or even mobile devices</li>
-    <li>Rapid local experimentation (llama.cpp has minimal dependencies)</li>
-    <li>Apple Silicon Macs (llama.cpp has excellent Metal GPU acceleration)</li>
+    <li>
+      Running models on machines without GPUs (or with
+      limited VRAM)
+    </li>
+    <li>
+      Edge deployment on laptops, desktops, or even mobile
+      devices
+    </li>
+    <li>
+      Rapid local experimentation (llama.cpp has minimal
+      dependencies)
+    </li>
+    <li>
+      Apple Silicon Macs (llama.cpp has excellent Metal GPU
+      acceleration)
+    </li>
   </ul>
 </section>
 
@@ -342,26 +738,30 @@ import RevealSection from '../../components/RevealSection.astro';
       id: "a",
       text: "FP16: no quantization needed, quality is most important",
       correct: false,
-      explanation: "A 13B model in FP16 requires ~26 GB just for weights, exceeding your 24 GB VRAM. You also need memory for the KV-cache, activations, and framework overhead."
+      explanation:
+        "A 13B model in FP16 requires ~26 GB just for weights, exceeding your 24 GB VRAM. You also need memory for the KV-cache, activations, and framework overhead.",
     },
     {
       id: "b",
       text: "INT4 with AWQ or GPTQ: fits comfortably in 24 GB with minimal quality loss",
       correct: true,
-      explanation: "Correct! INT4 quantization reduces the 13B model to ~7 GB of weight memory, leaving ample room for KV-cache and serving overhead. AWQ and GPTQ both achieve near-lossless quality at 4-bit for models of this size, and both have optimized GPU kernels for fast inference."
+      explanation:
+        "Correct! INT4 quantization reduces the 13B model to ~7 GB of weight memory, leaving ample room for KV-cache and serving overhead. AWQ and GPTQ both achieve near-lossless quality at 4-bit for models of this size, and both have optimized GPU kernels for fast inference.",
     },
     {
       id: "c",
       text: "GGUF Q2_K: maximum compression for the smallest possible model",
       correct: false,
-      explanation: "Q2_K (2-bit) would fit easily but introduces significant quality degradation. Since you have a 24 GB GPU, you don't need such aggressive compression. Also, GGUF is optimized for CPU inference, not GPU serving."
+      explanation:
+        "Q2_K (2-bit) would fit easily but introduces significant quality degradation. Since you have a 24 GB GPU, you don't need such aggressive compression. Also, GGUF is optimized for CPU inference, not GPU serving.",
     },
     {
       id: "d",
       text: "INT8 with SmoothQuant: the safest option for production",
       correct: false,
-      explanation: "INT8 would require ~13 GB for weights, which fits, but you're leaving potential performance gains on the table. INT4 with AWQ/GPTQ would give you 2x less memory usage (more room for longer contexts via KV-cache) with minimal additional quality loss."
-    }
+      explanation:
+        "INT8 would require ~13 GB for weights, which fits, but you're leaving potential performance gains on the table. INT4 with AWQ/GPTQ would give you 2x less memory usage (more room for longer contexts via KV-cache) with minimal additional quality loss.",
+    },
   ]}
 />
 
@@ -369,63 +769,142 @@ import RevealSection from '../../components/RevealSection.astro';
   <h2>Quality vs. Speed vs. Memory Tradeoffs</h2>
 
   <p>
-    Choosing a quantization method requires balancing three competing objectives. Here are practical guidelines based on empirical results across a range of model sizes:
+    Choosing a quantization method requires balancing three
+    competing objectives. Here are practical guidelines
+    based on empirical results across a range of model
+    sizes:
   </p>
 
   <h3>Model Size Matters</h3>
   <p>
-    Larger models are more tolerant of aggressive quantization. A 70B model quantized to 4-bit often outperforms a 13B model at full precision, because the larger model has more <strong>redundancy</strong> in its weight matrices. Conversely, models under 3B parameters can degrade significantly at 4-bit, and 2-bit quantization is rarely viable for models under 13B.
+    Larger models are more tolerant of aggressive
+    quantization. A 70B model quantized to 4-bit often
+    outperforms a 13B model at full precision, because the
+    larger model has more <strong>redundancy</strong> in its weight
+    matrices. Conversely, models under 3B parameters can degrade
+    significantly at 4-bit, and 2-bit quantization is rarely viable
+    for models under 13B.
   </p>
 
   <h3>Task Sensitivity</h3>
   <p>
-    Different tasks have different sensitivity to quantization:
+    Different tasks have different sensitivity to
+    quantization:
   </p>
   <ul>
-    <li><strong>Low sensitivity</strong>: Simple classification, sentiment analysis, basic Q&A &mdash; 4-bit quantization works well</li>
-    <li><strong>Medium sensitivity</strong>: Long-form generation, summarization, translation &mdash; 4-bit usually acceptable, 8-bit is safer</li>
-    <li><strong>High sensitivity</strong>: Mathematical reasoning, code generation, structured output &mdash; quality degradation is more noticeable at 4-bit; consider 6-bit or 8-bit</li>
+    <li>
+      <strong>Low sensitivity</strong>: Simple
+      classification, sentiment analysis, basic Q&A &mdash;
+      4-bit quantization works well
+    </li>
+    <li>
+      <strong>Medium sensitivity</strong>: Long-form
+      generation, summarization, translation &mdash; 4-bit
+      usually acceptable, 8-bit is safer
+    </li>
+    <li>
+      <strong>High sensitivity</strong>: Mathematical
+      reasoning, code generation, structured output &mdash;
+      quality degradation is more noticeable at 4-bit;
+      consider 6-bit or 8-bit
+    </li>
   </ul>
 
   <h3>Practical Decision Framework</h3>
   <ul>
-    <li><strong>GPU with ample VRAM</strong>: Use FP8 or INT8 for maximum quality; or BF16 if VRAM is truly not a constraint</li>
-    <li><strong>GPU with limited VRAM</strong>: AWQ or GPTQ at 4-bit with group size 128 &mdash; the standard choice for most deployments</li>
-    <li><strong>CPU or Apple Silicon</strong>: GGUF Q4_K_M as the default; Q5_K_M if memory allows and quality matters more</li>
-    <li><strong>Mobile or edge</strong>: GGUF Q4_K_S or Q3_K_M, with aggressive KV-cache quantization</li>
+    <li>
+      <strong>GPU with ample VRAM</strong>: Use FP8 or INT8
+      for maximum quality; or BF16 if VRAM is truly not a
+      constraint
+    </li>
+    <li>
+      <strong>GPU with limited VRAM</strong>: AWQ or GPTQ at
+      4-bit with group size 128 &mdash; the standard choice
+      for most deployments
+    </li>
+    <li>
+      <strong>CPU or Apple Silicon</strong>: GGUF Q4_K_M as
+      the default; Q5_K_M if memory allows and quality
+      matters more
+    </li>
+    <li>
+      <strong>Mobile or edge</strong>: GGUF Q4_K_S or
+      Q3_K_M, with aggressive KV-cache quantization
+    </li>
   </ul>
 </section>
 
 <section>
-  <h2>Advanced Topics: Mixed Precision and Outlier-Aware Methods</h2>
+  <h2>
+    Advanced Topics: Mixed Precision and Outlier-Aware
+    Methods
+  </h2>
 
-  <h3>SmoothQuant: Migrating Difficulty from Activations to Weights</h3>
+  <h3>
+    SmoothQuant: Migrating Difficulty from Activations to
+    Weights
+  </h3>
   <p>
-    While GPTQ and AWQ quantize only weights, <strong>SmoothQuant</strong> (Xiao et al., 2022) enables INT8 quantization of <em>both</em> weights and activations. The challenge is that activations contain <strong>outlier channels</strong> &mdash; a few channels with values 100x larger than the rest. These outliers make per-tensor activation quantization fail.
+    While GPTQ and AWQ quantize only weights, <strong
+      >SmoothQuant</strong
+    > (Xiao et al., 2022) enables INT8 quantization of <em
+      >both</em
+    > weights and activations. The challenge is that activations
+    contain <strong>outlier channels</strong> &mdash; a few channels
+    with values 100x larger than the rest. These outliers make
+    per-tensor activation quantization fail.
   </p>
 
   <p>
-    SmoothQuant's solution: apply a mathematically equivalent per-channel scaling that "smooths" the activations (reducing outliers) while transferring the difficulty to the weights (which are easier to quantize):
+    SmoothQuant's solution: apply a mathematically
+    equivalent per-channel scaling that "smooths" the
+    activations (reducing outliers) while transferring the
+    difficulty to the weights (which are easier to
+    quantize):
   </p>
 
-  <MathBlock formula={"Y = (X \\text{diag}(s)^{-1}) \\cdot (\\text{diag}(s) W) = \\hat{X} \\hat{W}"} display={true} />
+  <MathBlock
+    formula={"Y = (X \\text{diag}(s)^{-1}) \\cdot (\\text{diag}(s) W) = \\hat{X} \\hat{W}"}
+    display={true}
+  />
 
   <p>
-    In plain English: insert a diagonal scaling matrix between the activations and weights. This is a mathematically equivalent transformation of the matrix multiply that redistributes the quantization difficulty -- shrinking the outlier activation channels while proportionally enlarging the corresponding weight channels.
+    In plain English: insert a diagonal scaling matrix
+    between the activations and weights. This is a
+    mathematically equivalent transformation of the matrix
+    multiply that redistributes the quantization difficulty
+    -- shrinking the outlier activation channels while
+    proportionally enlarging the corresponding weight
+    channels.
   </p>
 
   <p>
-    After smoothing, both <MathBlock formula={"\\hat{X}"} /> and <MathBlock formula={"\\hat{W}"} /> are more quantization-friendly, enabling W8A8 (8-bit weights and 8-bit activations) with minimal quality loss.
+    After smoothing, both <MathBlock formula={"\\hat{X}"} /> and
+    <MathBlock formula={"\\hat{W}"} /> are more quantization-friendly,
+    enabling W8A8 (8-bit weights and 8-bit activations) with minimal
+    quality loss.
   </p>
 
   <h3>SpQR and Mixed-Precision Quantization</h3>
   <p>
-    <strong>SpQR</strong> (Dettmers et al., 2023) identifies individual "outlier" weights that are critical for model quality and stores them in higher precision (FP16), while quantizing the remaining ~99% of weights to 3-4 bits. This achieves near-lossless quality at very low average bit widths.
+    <strong>SpQR</strong> (Dettmers et al., 2023) identifies individual
+    "outlier" weights that are critical for model quality and
+    stores them in higher precision (FP16), while quantizing the
+    remaining ~99% of weights to 3-4 bits. This achieves near-lossless
+    quality at very low average bit widths.
   </p>
 
   <h3>The Future: Sub-4-Bit Quantization</h3>
   <p>
-    Research is pushing toward 2-bit and even 1-bit (binary) quantization. Methods like <strong>QuIP#</strong> and <strong>AQLM</strong> use vector quantization and learned codebooks to represent weight groups, achieving reasonable quality at 2 bits per weight for larger models. <strong>BitNet</strong> (Wang et al., 2023) proposes training models natively in 1.58-bit (ternary: -1, 0, +1), which would fundamentally change LLM deployment if it can match FP16 quality at scale.
+    Research is pushing toward 2-bit and even 1-bit (binary)
+    quantization. Methods like <strong>QuIP#</strong> and <strong
+      >AQLM</strong
+    > use vector quantization and learned codebooks to represent
+    weight groups, achieving reasonable quality at 2 bits per
+    weight for larger models. <strong>BitNet</strong> (Wang et
+    al., 2023) proposes training models natively in 1.58-bit (ternary:
+    -1, 0, +1), which would fundamentally change LLM deployment
+    if it can match FP16 quality at scale.
   </p>
 </section>
 
@@ -437,37 +916,67 @@ import RevealSection from '../../components/RevealSection.astro';
       id: "a",
       text: "Larger models have more redundancy in their weight matrices, so quantization errors can be absorbed without significantly affecting outputs",
       correct: true,
-      explanation: "Correct! Larger models have more parameters representing overlapping information. The redundancy means that rounding errors in individual weights are compensated by other weights in the network. Smaller models have less redundancy, so each weight carries more unique information and is more sensitive to quantization noise."
+      explanation:
+        "Correct! Larger models have more parameters representing overlapping information. The redundancy means that rounding errors in individual weights are compensated by other weights in the network. Smaller models have less redundancy, so each weight carries more unique information and is more sensitive to quantization noise.",
     },
     {
       id: "b",
       text: "Larger models are trained for longer, making their weights more robust",
       correct: false,
-      explanation: "Training duration does not directly cause quantization robustness. A model trained for the same number of tokens at different sizes will still show this effect. The key factor is parameter redundancy, not training duration."
+      explanation:
+        "Training duration does not directly cause quantization robustness. A model trained for the same number of tokens at different sizes will still show this effect. The key factor is parameter redundancy, not training duration.",
     },
     {
       id: "c",
       text: "Larger models use different activation functions that are quantization-friendly",
       correct: false,
-      explanation: "Models of different sizes typically use the same activation functions (e.g., SwiGLU, GELU). The quantization tolerance comes from parameter redundancy, not architectural differences."
+      explanation:
+        "Models of different sizes typically use the same activation functions (e.g., SwiGLU, GELU). The quantization tolerance comes from parameter redundancy, not architectural differences.",
     },
     {
       id: "d",
       text: "Larger models have smaller weight values that fit better in low-precision formats",
       correct: false,
-      explanation: "Weight magnitude distributions are similar across model sizes. In fact, larger models can have more outlier weights. The tolerance comes from redundancy: with billions of parameters, the impact of any single weight's quantization error is diluted."
-    }
+      explanation:
+        "Weight magnitude distributions are similar across model sizes. In fact, larger models can have more outlier weights. The tolerance comes from redundancy: with billions of parameters, the impact of any single weight's quantization error is diluted.",
+    },
   ]}
 />
 
 <KeyTakeaway>
   <ul>
-    <li><strong>Quantization</strong> reduces model precision (FP16 to INT4/INT8) to cut memory usage by 2-4x and improve inference speed, with minimal quality loss when using modern methods</li>
-    <li><strong>GPTQ</strong> uses Hessian-based error compensation to sequentially quantize weights, achieving near-lossless 4-bit quality in a single pass over calibration data</li>
-    <li><strong>AWQ</strong> identifies salient weights via activation statistics and applies per-channel scaling to protect them during quantization, offering comparable quality with simpler optimization</li>
-    <li><strong>GGUF/llama.cpp</strong> enables CPU and edge inference with block quantization and importance-weighted mixed precision (K-quants), making LLMs accessible on consumer hardware</li>
-    <li><strong>Model size determines tolerance</strong>: larger models (70B+) handle 4-bit quantization with minimal degradation; smaller models (under 7B) need more careful quantization or higher bit widths</li>
-    <li><strong>The practical sweet spot</strong> for GPU deployment is INT4 with AWQ or GPTQ (group size 128); for CPU deployment, GGUF Q4_K_M is the standard default</li>
+    <li>
+      <strong>Quantization</strong> reduces model precision (FP16
+      to INT4/INT8) to cut memory usage by 2-4x and improve inference
+      speed, with minimal quality loss when using modern methods
+    </li>
+    <li>
+      <strong>GPTQ</strong> uses Hessian-based error compensation
+      to sequentially quantize weights, achieving near-lossless
+      4-bit quality in a single pass over calibration data
+    </li>
+    <li>
+      <strong>AWQ</strong> identifies salient weights via activation
+      statistics and applies per-channel scaling to protect them
+      during quantization, offering comparable quality with simpler
+      optimization
+    </li>
+    <li>
+      <strong>GGUF/llama.cpp</strong> enables CPU and edge inference
+      with block quantization and importance-weighted mixed precision
+      (K-quants), making LLMs accessible on consumer hardware
+    </li>
+    <li>
+      <strong>Model size determines tolerance</strong>:
+      larger models (70B+) handle 4-bit quantization with
+      minimal degradation; smaller models (under 7B) need
+      more careful quantization or higher bit widths
+    </li>
+    <li>
+      <strong>The practical sweet spot</strong> for GPU deployment
+      is INT4 with AWQ or GPTQ (group size 128); for CPU deployment,
+      GGUF Q4_K_M is the standard default
+    </li>
   </ul>
 </KeyTakeaway>
 

@@ -159,6 +159,19 @@ import Quiz from '../../components/Quiz.astro';
   where <MathBlock formula={"r_t(\\theta) = \\pi_\\theta(a_t|s_t) / \\pi_{\\text{old}}(a_t|s_t)"} /> is the probability ratio between the updated policy and the previous policy for action <MathBlock formula={"a_t"} /> in state <MathBlock formula={"s_t"} />, <MathBlock formula={"\\hat{A}_t"} /> is the advantage estimate (how much better this action was than expected), and <MathBlock formula={"\\epsilon"} /> is the clipping threshold (typically 0.1-0.2). The min operator ensures that overly optimistic ratio changes are capped, preventing destructively large policy updates.
 </p>
 
+<div class="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg my-4">
+  <p class="font-semibold text-emerald-800 dark:text-emerald-200">Intuition: The "Cautious Manager"</p>
+  <p class="text-sm">
+    Think of PPO as a cautious manager overseeing an employee (the model).
+  </p>
+  <p class="text-sm mt-2">
+    When the employee finds a new strategy that works well (high advantage), the manager says: "Great, do more of that, <strong>but don't change your behavior by more than 20% (<MathBlock formula="\\epsilon" />) all at once.</strong>"
+  </p>
+  <p class="text-sm mt-2">
+    This clipping prevents the model from "falling off a cliff" by overcommitting to a new strategy that might only look good due to noise in the data.
+  </p>
+</div>
+
 <p>
   In the LLM context:
 </p>

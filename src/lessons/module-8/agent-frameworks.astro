@@ -271,6 +271,32 @@ const graph = new StateGraph(graphState)
     <li><strong>Before external communication</strong>: "I've drafted this email to the client. Send?" (approve/edit/reject)</li>
     <li><strong>Before expensive operations</strong>: "This query will scan the full database (~$15 cost). Proceed?"</li>
   </ul>
+  
+  <div class="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg my-4 overflow-x-auto">
+    <p class="text-xs font-mono text-slate-500 mb-2">// Pseudocode: The "Suspend & Resume" Pattern</p>
+    <pre class="text-sm font-mono text-slate-800 dark:text-slate-200"><code>async function executeStep(step) &#123;
+  if (step.action === "send_email") &#123;
+    // 1. Suspend execution
+    await saveAppState(currentState);
+    
+    // 2. Notify human
+    await notifyHuman("Review email draft", step.payload);
+    
+    // 3. Stop agent loop
+    return &#123; status: "suspended", reason: "waiting_for_approval" &#125;;
+  &#125;
+  // ... execute other actions ...
+&#125;
+
+// Later, when human approves:
+async function onHumanApproval(decision) &#123;
+  const state = await loadAppState();
+  if (decision === "approved") &#123;
+    await executeEmailSend();
+    await resumeAgentLoop(state);
+  &#125;
+&#125;</code></pre>
+  </div>
 
   <h3>Confidence-Based Escalation</h3>
   <p>

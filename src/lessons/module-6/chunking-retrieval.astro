@@ -22,9 +22,25 @@ import Quiz from '../../components/Quiz.astro';
   Chunking---how you split documents into pieces for embedding and retrieval---has an outsized impact on RAG quality. Poor chunking leads to retrieval failures regardless of how good your embedding model or LLM is.
 </p>
 
-<p>
   The fundamental tension: <strong>smaller chunks</strong> enable precise retrieval (less noise) but may lose surrounding context. Smaller chunks can also suffer from embedding ambiguity if they lack self-contained meaning---a two-sentence chunk like "It increased significantly. The board approved the proposal." is nearly impossible to embed meaningfully without surrounding context. <strong>Larger chunks</strong> preserve context but dilute the embedding signal and consume more of the LLM's context window.
 </p>
+
+<div class="bg-rose-50 dark:bg-rose-900/10 p-4 rounded-lg my-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+    <p class="font-semibold text-rose-800 dark:text-rose-200 text-sm mb-1">❌ The "Pronoun Ambiguity" Problem</p>
+    <div class="bg-white dark:bg-black/20 p-3 rounded border border-rose-200 text-sm italic">
+      "He decided to launch it immediately."
+    </div>
+    <p class="text-xs text-rose-600 mt-1">Who is "he"? Launch what? Meaningless embedding.</p>
+  </div>
+  <div>
+    <p class="font-semibold text-emerald-800 dark:text-emerald-200 text-sm mb-1">✅ Contextualized Chunk</p>
+    <div class="bg-white dark:bg-black/20 p-3 rounded border border-emerald-200 text-sm italic">
+      "<strong>[Elon Musk]</strong> decided to launch <strong>[Starship]</strong> immediately."
+    </div>
+    <p class="text-xs text-emerald-600 mt-1">Entities resolved. Meaningful embedding.</p>
+  </div>
+</div>
 
 <h3>Fixed-Size Chunking</h3>
 
