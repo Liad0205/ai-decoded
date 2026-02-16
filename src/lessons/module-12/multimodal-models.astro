@@ -53,7 +53,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     The emergence of <GlossaryTooltip term="CLIP" /> (2021) demonstrated that vision
     and language could share a representation space. But
-    <GlossaryTooltip term="CLIP" /> is a <em>retrieval</em> model. It can measure similarity
+    CLIP is a <em>retrieval</em> model. It can measure similarity
     between images and text, but it cannot <em>generate</em> text
     about images or engage in visual reasoning and dialogue. The
     next frontier was building models that could truly <strong
@@ -64,7 +64,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     The core challenge: how do you feed visual information
-    into a large language model? The <GlossaryTooltip term="LLM" /> operates on a
+    into a large language model? The LLM operates on a
     sequence of text tokens. An image is a grid of pixels.
     Three architectural patterns have emerged to bridge this
     gap, each with different tradeoffs.
@@ -89,7 +89,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     The architecture inserts gated cross-attention layers
-    between the frozen <GlossaryTooltip term="LLM" />'s existing self-attention layers.
+    between the frozen LLM's existing self-attention layers.
     In these cross-attention layers:
   </p>
   <ul>
@@ -107,7 +107,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       > mechanism, where a learned scalar gate modulates the information
       flow from visual features into the language model) controls
       how much visual information flows into each layer, initialized
-      to zero so the model starts as a pure <GlossaryTooltip term="LLM" />
+      to zero so the model starts as a pure LLM
     </li>
   </ul>
 
@@ -122,7 +122,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Strengths and Limitations</h3>
   <ul>
     <li>
-      <strong>Strength</strong>: The <GlossaryTooltip term="LLM" /> backbone remains
+      <strong>Strength</strong>: The LLM backbone remains
       frozen, preserving all its language capabilities. Only
       the cross-attention layers and perceiver are trained.
     </li>
@@ -136,7 +136,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       layers increases architectural complexity
     </li>
     <li>
-      <strong>Limitation</strong>: The frozen <GlossaryTooltip term="LLM" /> cannot
+      <strong>Limitation</strong>: The frozen LLM cannot
       deeply adapt to visual reasoning. Visual information
       is "consulted" rather than deeply integrated.
     </li>
@@ -159,7 +159,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     The <strong>LLaVA</strong> (Large Language-and-Vision Assistant)
     approach is conceptually simpler: project visual features
-    directly into the <GlossaryTooltip term="LLM" />'s input embedding space, so images become
+    directly into the LLM's input embedding space, so images become
     "visual tokens" that are processed alongside text tokens.
   </p>
 
@@ -168,18 +168,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>LLaVA has three components:</p>
   <ol>
     <li>
-      <strong>Vision encoder</strong>: A pretrained <GlossaryTooltip term="CLIP" />
-      <GlossaryTooltip term="ViT" />-L/14 that encodes images into a grid of visual
+      <strong>Vision encoder</strong>: A pretrained CLIP
+      ViT-L/14 that encodes images into a grid of visual
       feature vectors
     </li>
     <li>
       <strong>Projection layer</strong>: A simple linear
       projection (or MLP in LLaVA-1.5) that maps visual
       features from the vision encoder's dimension to the
-      <GlossaryTooltip term="LLM" />'s embedding dimension
+      LLM's embedding dimension
     </li>
     <li>
-      <strong><GlossaryTooltip term="LLM" /> backbone</strong>: A pretrained language
+      <strong>LLM backbone</strong>: A pretrained language
       model (e.g., Vicuna/LLaMA) that processes the
       concatenated sequence of visual tokens and text tokens
     </li>
@@ -187,10 +187,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     The forward pass is straightforward: encode the image
-    with <GlossaryTooltip term="CLIP" />, project the resulting feature grid (e.g., 576
-    tokens for a 24x24 grid) into the <GlossaryTooltip term="LLM" />'s embedding space,
+    with CLIP, project the resulting feature grid (e.g., 576
+    tokens for a 24x24 grid) into the LLM's embedding space,
     prepend these visual tokens to the text tokens, and run
-    the <GlossaryTooltip term="LLM" /> as usual. The <GlossaryTooltip term="LLM" />'s self-attention attends over
+    the LLM as usual. The LLM's self-attention attends over
     both visual and text tokens jointly.
   </p>
 
@@ -213,9 +213,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </h4>
     <p>
       The goal of Stage 1 is to align the vision encoder's
-      output space with the <GlossaryTooltip term="LLM" />'s input space. Think of it
+      output space with the LLM's input space. Think of it
       as teaching the projection layer to "translate" visual
-      features into a language the <GlossaryTooltip term="LLM" /> can understand.
+      features into a language the LLM can understand.
     </p>
     <ul>
       <li>
@@ -224,7 +224,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </li>
       <li>
         <strong>What's frozen</strong>: Both the vision
-        encoder (<GlossaryTooltip term="CLIP" /> <GlossaryTooltip term="ViT" />-L/14) and the <GlossaryTooltip term="LLM" /> (Vicuna-13B) are
+        encoder (CLIP ViT-L/14) and the LLM (Vicuna-13B) are
         completely frozen
       </li>
       <li>
@@ -246,7 +246,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <p
       class="mt-2 text-[hsl(var(--muted-foreground))]"
     >
-      After Stage 1, the <GlossaryTooltip term="LLM" /> can describe images at a basic
+      After Stage 1, the LLM can describe images at a basic
       level, but it cannot follow complex visual
       instructions or engage in multi-turn visual dialogue.
     </p>
@@ -297,7 +297,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </li>
       <li>
         <strong>What's trained</strong>: Both the projection
-        layer AND the full <GlossaryTooltip term="LLM" /> are fine-tuned (unfrozen)
+        layer AND the full LLM are fine-tuned (unfrozen)
       </li>
       <li>
         <strong>Objective</strong>: Standard next-token
@@ -308,7 +308,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <p
       class="mt-2 text-[hsl(var(--muted-foreground))]"
     >
-      Unfreezing the <GlossaryTooltip term="LLM" /> is critical: it allows the language
+      Unfreezing the LLM is critical: it allows the language
       model to deeply adapt to visual reasoning, learning to
       ground its language generation in visual evidence
       rather than just hallucinating plausible descriptions.
@@ -338,9 +338,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </li>
       <li>
         <strong>Higher resolution</strong>: Increased input
-        resolution from 224x224 to 336x336 (using <GlossaryTooltip term="CLIP" />
-        <GlossaryTooltip term="ViT" />-L/14@336px), producing 576 visual tokens. More
-        spatial detail for the <GlossaryTooltip term="LLM" /> to work with.
+        resolution from 224x224 to 336x336 (using CLIP
+        ViT-L/14@336px), producing 576 visual tokens. More
+        spatial detail for the LLM to work with.
       </li>
       <li>
         <strong>More training data</strong>: Expanded to
@@ -348,7 +348,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         academic VQA datasets
       </li>
       <li>
-        <strong>Stronger <GlossaryTooltip term="LLM" /></strong>: Used Vicuna-1.5-13B
+        <strong>Stronger LLM</strong>: Used Vicuna-1.5-13B
         (based on LLaMA-2) for better base language
         capabilities
       </li>
@@ -357,7 +357,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       Despite its simplicity, LLaVA-1.5 matched or exceeded
       more complex systems like Flamingo and InstructBLIP on
       standard VQA benchmarks. The lesson: a strong vision
-      encoder (<GlossaryTooltip term="CLIP" />) + a strong <GlossaryTooltip term="LLM" /> + a simple projection +
+      encoder (CLIP) + a strong LLM + a simple projection +
       high-quality instruction data = a highly capable
       multimodal model.
     </p>
@@ -479,7 +479,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>No information bottleneck</strong>: Late
       fusion approaches compress visual information through
-      a projection or perceiver before the <GlossaryTooltip term="LLM" /> sees it.
+      a projection or perceiver before the LLM sees it.
       Early fusion lets the full transformer depth process
       raw visual features.
     </li>
@@ -653,10 +653,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     cross-modal retrieval and understanding.
   </p>
 
-  <h3>Beyond <GlossaryTooltip term="CLIP" />: Richer Embedding Spaces</h3>
+  <h3>Beyond CLIP: Richer Embedding Spaces</h3>
 
   <p>
-    <GlossaryTooltip term="CLIP" /> provides a shared image-text embedding space, but
+    CLIP provides a shared image-text embedding space, but
     newer models extend this to more modalities and richer
     representations:
   </p>
@@ -690,7 +690,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Multimodal <GlossaryTooltip term="RAG" /></strong>: Retrieve relevant
       images, tables, and figures alongside text passages
-      for <GlossaryTooltip term="LLM" /> context
+      for LLM context
     </li>
     <li>
       <strong>Content moderation</strong>: Detect
@@ -775,10 +775,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       and joint attention variants.
     </li>
     <li>
-      <strong><GlossaryTooltip term="LLM" />-based temporal reasoning</strong>: Feed
-      frame-level visual tokens sequentially into an <GlossaryTooltip term="LLM" /> and
+      <strong>LLM-based temporal reasoning</strong>: Feed
+      frame-level visual tokens sequentially into an LLM and
       rely on its sequence modeling ability for temporal
-      understanding. This is how Gemini and GPT-4o handle
+      understanding. This is how Gemini and <GlossaryTooltip term="GPT" />-4o handle
       video.
     </li>
   </ul>
@@ -832,7 +832,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Generate diverse instructions</strong>: Prompt
-      GPT-4 to generate question-answer pairs of three
+      <GlossaryTooltip term="GPT" />-4 to generate question-answer pairs of three
       types:
       <ul>
         <li>

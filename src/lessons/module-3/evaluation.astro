@@ -21,9 +21,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     strategies to detect it
   </li>
   <li>
-    Evaluate <GlossaryTooltip
-      term="LLM"
-    />-as-judge approaches and their strengths and
+    Evaluate LLM-as-judge approaches and their strengths and
     limitations
   </li>
   <li>
@@ -148,9 +146,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     974 crowd-sourced problems as a complementary code benchmark.
   </li>
   <li>
-    <strong>Frontier scores</strong>: <GlossaryTooltip
-      term="GPT"
-    />-4 achieves ~67%
+    <strong>Frontier scores</strong>: GPT-4 achieves ~67%
     pass@1 on HumanEval (zero-shot); code-specialized models
     (Code Llama, DeepSeek Coder) can reach 70%+.
   </li>
@@ -181,14 +177,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     PaLM 540B jumped from ~56% to ~74% on GSM8K with <GlossaryTooltip
       term="CoT"
     />),
-    demonstrating that explicit reasoning traces help <GlossaryTooltip
-      term="LLM"
-    />s.
+    demonstrating that explicit reasoning traces help LLMs.
   </li>
   <li>
-    <strong>Frontier scores</strong>: <GlossaryTooltip
-      term="GPT"
-    />-4 ~92%, Claude 3
+    <strong>Frontier scores</strong>: GPT-4 ~92%, Claude 3
     Opus ~95%. Many models now approach saturation on this
     benchmark.
   </li>
@@ -211,9 +203,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     answer (often a numerical value or expression).
   </li>
   <li>
-    <strong>Frontier scores</strong>: <GlossaryTooltip
-      term="GPT"
-    />-4 ~42%, Claude 3
+    <strong>Frontier scores</strong>: GPT-4 ~42%, Claude 3
     Opus ~60%. This benchmark is far from saturated and
     reveals significant gaps in mathematical reasoning.
   </li>
@@ -246,26 +236,25 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Example: "Can you teach an old dog new tricks?" A
     truthful answer is "yes," but models often repeat the
     misconception "no."
-    <li>
-      Measures both truthfulness and informativeness; a
-      model that always answers "I don't know" would be
-      truthful but not informative.
-    </li>
   </li>
+  <li>
+    Measures both truthfulness and informativeness; a
+    model that always answers "I don't know" would be
+    truthful but not informative.
+  </li>
+</ul>
 
-  <h3>MT-Bench and Chatbot Arena</h3>
+<h3>MT-Bench and Chatbot Arena</h3>
 
-  <p>
-    For evaluating conversational ability, static benchmarks
-    are insufficient. MT-Bench and Chatbot Arena take
-    different approaches:
-  </p>
-  <ul>
+<p>
+  For evaluating conversational ability, static benchmarks
+  are insufficient. MT-Bench and Chatbot Arena take
+  different approaches:
+</p>
+<ul>
     <li>
       <strong>MT-Bench</strong>: 80 multi-turn questions
-      across 8 categories, scored by <GlossaryTooltip
-        term="GPT"
-      />-4 as judge on a
+      across 8 categories, scored by GPT-4 as judge on a
       1-10 scale.
     </li>
     <li>
@@ -358,9 +347,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     <strong>Contamination</strong> occurs when benchmark test
-    data appears in the model's pretraining corpus. Since <GlossaryTooltip
-      term="LLM"
-    />s
+    data appears in the model's pretraining corpus. Since LLMs
     train on massive web crawls, benchmark questions (and their
     answers) may have been seen during training. A model that
     memorized benchmark answers would score well without genuinely
@@ -393,9 +380,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>N-gram overlap</strong>: Check for exact or
       near-exact matches between benchmark questions and
-      training data. <GlossaryTooltip
-        term="GPT"
-      />-4's technical report includes
+      training data. GPT-4's technical report includes
       n-gram contamination analysis for major benchmarks.
     </li>
     <li>
@@ -444,20 +429,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Human evaluation is the gold standard but is expensive,
     slow, and doesn't scale. An increasingly popular
-    alternative is to use a strong <GlossaryTooltip
-      term="LLM"
-    /> (typically <GlossaryTooltip
-      term="GPT"
-    />-4) as
+    alternative is to use a strong LLM (typically GPT-4) as
     an automated judge.
   </p>
 
   <h3>How It Works</h3>
 
   <p>
-    Given a prompt and two model responses, the judge <GlossaryTooltip
-      term="LLM"
-    /> is
+    Given a prompt and two model responses, the judge LLM is
     asked to evaluate which response is better (pairwise
     comparison) or to assign a score on a rubric (pointwise
     scoring).
@@ -491,9 +470,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       individual human raters (though still noisy).
     </li>
     <li>
-      <strong>Correlation with humans</strong>: Strong <GlossaryTooltip
-        term="LLM"
-      />
+      <strong>Correlation with humans</strong>: Strong LLM
       judges agree with human preferences at rates
       comparable to inter-human agreement (~80% on
       MT-Bench).
@@ -503,9 +480,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Limitations and Biases</h3>
   <ul>
     <li>
-      <strong>Position bias</strong>: <GlossaryTooltip
-        term="LLM"
-      /> judges tend to
+      <strong>Position bias</strong>: LLM judges tend to
       prefer the response presented first. Mitigated by
       evaluating each pair twice (swapping positions) and
       averaging.
@@ -518,21 +493,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Self-preference</strong>: A model used as
       judge may prefer responses from itself or similar
-      models. <GlossaryTooltip
-        term="GPT"
-      />-4 as judge may favor <GlossaryTooltip
-        term="GPT"
-      />-4 responses.
+      models. GPT-4 as judge may favor GPT-4 responses.
     </li>
     <li>
       <strong>Capability ceiling</strong>: A judge cannot
       reliably evaluate responses that exceed its own
-      capabilities. Using <GlossaryTooltip
-        term="GPT"
-      />-4 to judge mathematical proofs
-      is limited by <GlossaryTooltip
-        term="GPT"
-      />-4's own math ability.
+      capabilities. Using GPT-4 to judge mathematical proofs
+      is limited by GPT-4's own math ability.
     </li>
     <li>
       <strong>Gaming</strong>: If models are optimized
@@ -580,9 +547,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Beyond Benchmarks: Holistic Evaluation</h2>
 
   <p>
-    No single benchmark captures what makes an <GlossaryTooltip
-      term="LLM"
-    /> useful.
+    No single benchmark captures what makes an LLM useful.
     The field is moving toward more comprehensive evaluation
     frameworks:
   </p>
@@ -729,4 +694,3 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     url="https://arxiv.org/abs/2310.06770"
     type="paper"
   />
-</ul>

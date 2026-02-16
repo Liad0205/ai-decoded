@@ -251,7 +251,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>ELMo: Bidirectional <GlossaryTooltip term="LSTM" />s</h3>
   <p>
     ELMo (Embeddings from Language Models, 2018) uses
-    bidirectional <GlossaryTooltip term="LSTM" />s trained on language modeling. For a
+    bidirectional LSTMs trained on language modeling. For a
     sentence, ELMo computes representations at multiple
     layers and combines them.
   </p>
@@ -260,43 +260,37 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Unlike Word2Vec, ELMo embeddings depend on the entire
     sentence, capturing nuanced meaning. Replacing static
     embeddings with ELMo immediately improved performance
-    across <GlossaryTooltip term="NLP" /> tasks, a clear signal that representation
+    across NLP tasks, a clear signal that representation
     quality matters more than model architecture for many
     problems.
   </p>
 
   <h3><GlossaryTooltip term="BERT" /> and the Transformer Revolution</h3>
   <p>
-    <strong><GlossaryTooltip term="BERT" /></strong> (2018) uses transformers (not <GlossaryTooltip
-      term="LSTM"
-    />s) and bidirectional context via masked language modeling:
+    <strong>BERT</strong> (2018) uses transformers (not LSTMs) and bidirectional context via masked language modeling:
     randomly mask 15% of tokens and predict them from surrounding
     context.
   </p>
 
   <p>
-    <GlossaryTooltip term="BERT" />'s contextualized embeddings are even richer than
+    BERT's contextualized embeddings are even richer than
     ELMo's, and the transformer architecture scales better.
-    <GlossaryTooltip term="BERT" /> representations became the new foundation for <GlossaryTooltip
-      term="NLP"
-    />, analogous to ImageNet-pretrained <GlossaryTooltip
+    BERT representations became the new foundation for NLP, analogous to ImageNet-pretrained <GlossaryTooltip
       term="CNN"
     />s in vision.
   </p>
 
-  <h3><GlossaryTooltip term="GPT" />: Unidirectional but Scalable</h3>
+  <h3>GPT: Unidirectional but Scalable</h3>
   <p>
-    <GlossaryTooltip term="GPT" /> (Generative Pretrained Transformer) uses
+    GPT (Generative Pretrained Transformer) uses
     unidirectional (left-to-right) language modeling instead
     of masked prediction. While this limits bidirectional
     context, it enables autoregressive generation and scales
-    to much larger models (<GlossaryTooltip
-      term="GPT"
-    />-3: 175B parameters).
+    to much larger models (GPT-3: 175B parameters).
   </p>
 
   <p>
-    <GlossaryTooltip term="GPT" />'s representations prove highly effective when
+    GPT's representations prove highly effective when
     fine-tuned or few-shot prompted, demonstrating that
     scale can compensate for training objective differences.
   </p>
@@ -548,9 +542,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Surprisingly, modern foundation models (<GlossaryTooltip
       term="CLIP"
-    /> for vision, <GlossaryTooltip
-      term="GPT"
-    /> for language) often achieve near-SOTA performance
+    /> for vision, GPT for language) often achieve near-SOTA performance
     with linear probing alone. This suggests:
   </p>
   <ul>
@@ -588,7 +580,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     <strong>Transfer learning</strong>, pretraining on a
     large dataset then fine-tuning on a target task, is the
-    dominant paradigm in modern <GlossaryTooltip term="ML" />. But why does it work?
+    dominant paradigm in modern ML. But why does it work?
   </p>
 
   <h3>Initialization Matters</h3>
@@ -636,7 +628,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Quantitatively, transfer learning can reduce the sample
     complexity of a task by 10-100×. This has democratized
-    <GlossaryTooltip term="ML" />: many problems that previously required massive
+    ML: many problems that previously required massive
     labeled datasets can now be solved with thousands, or
     even hundreds, of examples via fine-tuning.
   </p>
@@ -692,7 +684,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Contextual embeddings</strong> (ELMo, <GlossaryTooltip
         term="BERT"
-      />, <GlossaryTooltip term="GPT" />) compute word representations
+      />, GPT) compute word representations
       dynamically based on surrounding text, capturing polysemy
       and nuance
     </li>

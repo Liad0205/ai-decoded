@@ -36,9 +36,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Chunking---how you split documents into pieces for
-  embedding and retrieval---has an outsized impact on <GlossaryTooltip
-    term="RAG"
-  /> quality. Poor chunking leads to retrieval failures
+  embedding and retrieval---has an outsized impact on RAG quality. Poor chunking leads to retrieval failures
   regardless of how good your embedding model or <GlossaryTooltip
     term="LLM"
   /> is.
@@ -52,7 +50,7 @@ significantly. The board approved the proposal." is nearly impossible
 to embed meaningfully without surrounding context. <strong
   >Larger chunks</strong
 > preserve context but dilute the embedding signal and consume
-more of the <GlossaryTooltip term="LLM" />'s context window.
+more of the LLM's context window.
 
 <div
   class="bg-[hsl(var(--diagram-red-bg))] p-4 rounded-lg my-4 grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -233,7 +231,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
   </li>
   <li>
     When a child chunk is retrieved, return the parent chunk
-    to the <GlossaryTooltip term="LLM" />
+    to the LLM
   </li>
 </ol>
 
@@ -252,7 +250,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
         <div
           class="text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-1"
         >
-          Parent Chunk (sent to <GlossaryTooltip term="LLM" />)
+          Parent Chunk (sent to LLM)
         </div>
         <div
           class="p-4 bg-[hsl(var(--diagram-indigo-bg))] border-2 border-[hsl(var(--diagram-indigo-border))] rounded-lg"
@@ -301,21 +299,21 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
 <p>
   <strong>Why this works</strong>: Small chunks produce more
   precise embeddings (less noise), while the parent provides
-  the <GlossaryTooltip term="LLM" /> with sufficient context
+  the LLM with sufficient context
   to generate accurate answers. This is one of the
-  highest-impact <GlossaryTooltip term="RAG" /> improvements.
+  highest-impact RAG improvements.
 </p>
 
 <h3>Contextual Retrieval (Anthropic's Approach)</h3>
 
 <p>
   Anthropic's <strong>Contextual Retrieval</strong> prepends each
-  chunk with <GlossaryTooltip term="LLM" />-generated context
+  chunk with LLM-generated context
   explaining the chunk's role within the broader document:
 </p>
 
 <p>
-  Before embedding, use an <GlossaryTooltip term="LLM" /> to generate a brief
+  Before embedding, use an LLM to generate a brief
   contextual summary: "This chunk is from Section 3.2 of the
   Q4 2024 earnings report. It discusses revenue growth in
   the cloud computing division." This context is prepended
@@ -491,7 +489,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
 
 <p>
   Intuition: concatenate the query and document as a single
-  input to <GlossaryTooltip term="BERT" />, allowing full cross-attention between their
+  input to BERT, allowing full cross-attention between their
   tokens, and produce a single relevance score via a
   sigmoid.
 </p>
@@ -516,7 +514,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
   </li>
   <li>
     <strong>Select</strong> top-5 reranked results for the
-    <GlossaryTooltip term="LLM" /> prompt
+    LLM prompt
   </li>
 </ol>
 
@@ -697,7 +695,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
           <div
             class="text-xs text-[hsl(var(--muted-foreground))]"
           >
-            <GlossaryTooltip term="LLM" /> generates answer from selected context
+            LLM generates answer from selected context
             (~500-2000ms)
           </div>
         </div>
@@ -781,7 +779,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
   <ul>
     <li>
       <strong>Chunking strategy</strong> has outsized impact on
-      <GlossaryTooltip term="RAG" /> quality. Prefer recursive
+      RAG quality. Prefer recursive
       splitting or semantic chunking over fixed-size.
       Document-structure-aware chunking is best when document
       format is known.
@@ -789,14 +787,10 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
     <li>
       <strong>Parent-child chunking</strong> decouples retrieval
       precision (small child chunks) from generation context (large
-      parent chunks)---one of the highest-impact <GlossaryTooltip
-        term="RAG"
-      /> improvements
+      parent chunks)---one of the highest-impact RAG improvements
     </li>
     <li>
-      <strong>Contextual retrieval</strong> prepends <GlossaryTooltip
-        term="LLM"
-      />-generated context to chunks before embedding, solving
+      <strong>Contextual retrieval</strong> prepends LLM-generated context to chunks before embedding, solving
       the problem of chunks that lack self-contained meaning
     </li>
     <li>

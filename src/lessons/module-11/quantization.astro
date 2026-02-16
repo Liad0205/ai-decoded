@@ -67,7 +67,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <strong>Speed improvement</strong>: Lower precision
       means more values fit in cache lines and SIMD
       registers, and memory bandwidth (the primary
-      bottleneck for <GlossaryTooltip term="LLM" /> inference)
+      bottleneck for LLM inference)
       is reduced proportionally
     </li>
     <li>
@@ -135,7 +135,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     bits vs. 23). This makes it ideal for training and inference
     &mdash; the wide range avoids overflow issues that plague
     FP16, while the reduced precision rarely affects model quality.
-    Most modern <GlossaryTooltip term="LLM" />s are trained
+    Most modern LLMs are trained
     in BF16.
   </p>
 
@@ -176,13 +176,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>INT4 (4-bit Integer)</h3>
   <p>
     Represents values with only 16 distinct levels. This is
-    the sweet spot for <GlossaryTooltip term="LLM" /> inference:
+    the sweet spot for LLM inference:
     <strong>4x memory reduction</strong> from FP16 with surprisingly
     small quality degradation when combined with modern quantization
     techniques like <GlossaryTooltip term="GPTQ" /> or
-    <GlossaryTooltip term="AWQ" />. Most practical <GlossaryTooltip
-      term="LLM"
-    /> quantization targets INT4.
+    <GlossaryTooltip term="AWQ" />. Most practical LLM quantization targets INT4.
   </p>
 
   <h3>FP8 (8-bit Floating Point)</h3>
@@ -312,9 +310,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         >
           <td
             class="p-3 font-semibold text-[hsl(var(--foreground))]"
-            >INT4 (<GlossaryTooltip
-              term="GPTQ"
-            />/<GlossaryTooltip term="AWQ" />)</td
+            >INT4 (GPTQ/AWQ)</td
           >
           <td class="text-center p-3">4</td>
           <td class="text-center p-3">35 GB</td>
@@ -381,9 +377,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       errors
     </li>
     <li>
-      <strong>Methods</strong>: <GlossaryTooltip
-        term="GPTQ"
-      />, <GlossaryTooltip term="AWQ" />, Round-to-Nearest
+      <strong>Methods</strong>: GPTQ, AWQ, Round-to-Nearest
       (RTN), SmoothQuant
     </li>
   </ul>
@@ -434,12 +428,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     In practice, <strong
-      >PTQ dominates for <GlossaryTooltip
-        term="LLM"
-      />s</strong
+      >PTQ dominates for LLMs</strong
     > because the training cost of large models makes QAT impractical.
-    <GlossaryTooltip term="GPTQ" />
-    and <GlossaryTooltip term="AWQ" /> achieve nearly lossless
+    GPTQ
+    and AWQ achieve nearly lossless
     4-bit quantization for most models without any training, making
     PTQ the standard approach.
   </p>
@@ -452,7 +444,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    <strong><GlossaryTooltip term="GPTQ" /></strong> (Frantar
+    <strong>GPTQ</strong> (Frantar
     et al., 2022) is a one-shot post-training quantization method
     that quantizes weights to 3 or 4 bits with minimal quality
     loss. It is based on the Optimal Brain Quantization (OBQ)
@@ -461,7 +453,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Core Idea</h3>
   <p>
-    <GlossaryTooltip term="GPTQ" /> frames quantization as a layer-wise
+    GPTQ frames quantization as a layer-wise
     optimization problem. For each layer, it seeks quantized weights
     <MathBlock formula={"\\hat{W}"} /> that minimize the squared
     error in the layer's output:
@@ -485,7 +477,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     where <MathBlock formula="W" /> are the original FP16 weights
     and <MathBlock formula="X" /> is a calibration input matrix.
     Rather than quantizing each weight independently (round-to-nearest),
-    <GlossaryTooltip term="GPTQ" /> quantizes weights <strong
+    GPTQ quantizes weights <strong
       >sequentially</strong
     > and updates the remaining unquantized weights to compensate
     for the error introduced by each quantization step.
@@ -525,9 +517,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Key Engineering Innovations</h3>
   <ul>
     <li>
-      <strong>Column ordering</strong>: <GlossaryTooltip
-        term="GPTQ"
-      /> processes columns in a fixed order (with lazy batch updates),
+      <strong>Column ordering</strong>: GPTQ processes columns in a fixed order (with lazy batch updates),
       avoiding the quadratic cost of OBQ's greedy column selection
     </li>
     <li>
@@ -550,7 +540,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    <GlossaryTooltip term="GPTQ" /> can quantize a 175B parameter
+    GPTQ can quantize a 175B parameter
     model in approximately 4 GPU-hours, making it practical for
     one-shot deployment preparation.
   </p>
@@ -558,16 +548,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>
-    <GlossaryTooltip term="AWQ" />: Activation-Aware Weight
+    AWQ: Activation-Aware Weight
     Quantization
   </h2>
 
   <p>
-    <strong><GlossaryTooltip term="AWQ" /></strong> (Lin et al.,
-    2023) takes a different approach from <GlossaryTooltip
-      term="GPTQ"
-    />. Instead of compensating for quantization errors via
-    Hessian-based updates, <GlossaryTooltip term="AWQ" /> identifies
+    <strong>AWQ</strong> (Lin et al.,
+    2023) takes a different approach from GPTQ. Instead of compensating for quantization errors via
+    Hessian-based updates, AWQ identifies
     and protects
     <strong>salient weights</strong> &mdash; the small fraction
     of weights that matter most for model quality.
@@ -575,7 +563,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Key Insight: Not All Weights Are Equal</h3>
   <p>
-    <GlossaryTooltip term="AWQ" /> observes that weight importance
+    AWQ observes that weight importance
     is strongly correlated with <strong
       >activation magnitude</strong
     >. Weights connected to channels with large activations
@@ -601,9 +589,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Per-Channel Scaling</h3>
   <p>
     Rather than keeping salient weights in higher precision
-    (which complicates hardware execution), <GlossaryTooltip
-      term="AWQ"
-    /> applies a <strong>per-channel scaling factor</strong> before
+    (which complicates hardware execution), AWQ applies a <strong>per-channel scaling factor</strong> before
     quantization:
   </p>
 
@@ -634,7 +620,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Optimal Scale Search</h3>
   <p>
-    <GlossaryTooltip term="AWQ" /> searches for the optimal scaling
+    AWQ searches for the optimal scaling
     factor per channel by minimizing the quantization error on
     a small calibration set:
   </p>
@@ -654,32 +640,26 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <h3>
-    <GlossaryTooltip term="AWQ" /> vs. <GlossaryTooltip
-      term="GPTQ"
-    />
+    AWQ vs. GPTQ
   </h3>
   <ul>
     <li>
-      <strong>Quality</strong>: <GlossaryTooltip
-        term="AWQ"
-      /> and <GlossaryTooltip term="GPTQ" /> produce comparable
-      quality at 4-bit; <GlossaryTooltip term="AWQ" /> tends to
+      <strong>Quality</strong>: AWQ and GPTQ produce comparable
+      quality at 4-bit; AWQ tends to
       be slightly better on some benchmarks
     </li>
     <li>
-      <strong>Speed</strong>: <GlossaryTooltip term="AWQ" /> quantization
+      <strong>Speed</strong>: AWQ quantization
       is faster (simpler optimization); runtime inference speed
       is similar
     </li>
     <li>
-      <strong>Robustness</strong>: <GlossaryTooltip
-        term="AWQ"
-      /> is more robust to the choice of calibration data because
+      <strong>Robustness</strong>: AWQ is more robust to the choice of calibration data because
       it relies on activation statistics rather than Hessian computation
     </li>
     <li>
       <strong>Kernel support</strong>: Both have efficient
-      GPU kernels; <GlossaryTooltip term="AWQ" /> kernels from
+      GPU kernels; AWQ kernels from
       the autoawq library are widely used
     </li>
   </ul>
@@ -689,14 +669,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>GGUF and llama.cpp: CPU and Edge Inference</h2>
 
   <p>
-    While <GlossaryTooltip term="GPTQ" /> and <GlossaryTooltip
-      term="AWQ"
-    /> target GPU inference, <strong>GGUF</strong> (GPT-Generated
+    While GPTQ and AWQ target GPU inference, <strong>GGUF</strong> (GPT-Generated
     Unified Format) is the file format used by
     <strong>llama.cpp</strong> for CPU-first inference. It has
-    become the de facto standard for running <GlossaryTooltip
-      term="LLM"
-    />s on consumer hardware without GPUs.
+    become the de facto standard for running LLMs on consumer hardware without GPUs.
   </p>
 
   <h3>How GGUF Quantization Works</h3>

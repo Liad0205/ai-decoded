@@ -78,7 +78,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     The first component of Stable Diffusion is a pretrained <strong
-      ><GlossaryTooltip term="VAE" /></strong
+      >VAE</strong
     > that compresses images into a lower-dimensional latent representation
     and reconstructs them back.
   </p>
@@ -119,15 +119,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     The decoder maps the compact latent back to
-    full-resolution pixel space. If the <GlossaryTooltip
-      term="VAE"
-    /> is well-trained, the reconstruction is nearly indistinguishable
+    full-resolution pixel space. If the VAE is well-trained, the reconstruction is nearly indistinguishable
     from the original image.
   </p>
 
   <h3>Training the VAE</h3>
   <p>
-    The <GlossaryTooltip term="VAE" /> is trained with a combination
+    The VAE is trained with a combination
     of losses:
   </p>
   <ul>
@@ -162,7 +160,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <p>
-    The <GlossaryTooltip term="VAE" /> is trained once and frozen.
+    The VAE is trained once and frozen.
     All subsequent diffusion training and sampling operates entirely
     in latent space.
   </p>
@@ -348,7 +346,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>Each block in the U-Net contains:</p>
   <ol>
     <li>
-      <strong>ResNet blocks</strong>: Convolutional layers
+      <strong><GlossaryTooltip term="ResNet" /> blocks</strong>: Convolutional layers
       with residual connections and group normalization
     </li>
     <li>
@@ -358,7 +356,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Cross-attention layers</strong>: Inject text
-      conditioning from <GlossaryTooltip term="CLIP" /> embeddings
+      conditioning from CLIP embeddings
     </li>
     <li>
       <strong>Timestep embedding</strong>: Sinusoidal
@@ -390,7 +388,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>
-    Text Conditioning via <GlossaryTooltip term="CLIP" /> and
+    Text Conditioning via CLIP and
     Cross-Attention
   </h2>
 
@@ -398,22 +396,22 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Text-to-image generation requires connecting language
     understanding to the visual denoising process. Stable
     Diffusion achieves this through <strong
-      ><GlossaryTooltip term="CLIP" /> text embeddings</strong
+      >CLIP text embeddings</strong
     > and <strong>cross-attention</strong>.
   </p>
 
-  <h3><GlossaryTooltip term="CLIP" /> Text Encoder</h3>
+  <h3>CLIP Text Encoder</h3>
   <p>
-    <strong><GlossaryTooltip term="CLIP" /></strong> (Contrastive
+    <strong>CLIP</strong> (Contrastive
     Language-Image Pretraining) is trained on 400M+ image-text
     pairs to align visual and textual representations. Stable
-    Diffusion uses <GlossaryTooltip term="CLIP" />'s text
+    Diffusion uses CLIP's text
     encoder (a transformer) to convert text prompts into
     rich semantic embeddings.
   </p>
 
   <p>
-    Given a text prompt, the <GlossaryTooltip term="CLIP" /> text
+    Given a text prompt, the CLIP text
     encoder produces a sequence of token embeddings:
   </p>
 
@@ -467,9 +465,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     Here <MathBlock formula={"\\phi(z_t)"} /> is the flattened
-    spatial feature map from the U-Net, c is the <GlossaryTooltip
-      term="CLIP"
-    /> text embedding sequence, and <MathBlock
+    spatial feature map from the U-Net, c is the CLIP text embedding sequence, and <MathBlock
       formula={"\\sqrt{d}"}
     /> is the standard scaling factor to prevent dot products
     from growing too large. This mechanism allows each spatial
@@ -725,9 +721,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <ol>
     <li>
-      <strong>Text encoding</strong>: The <GlossaryTooltip
-        term="CLIP"
-      /> text encoder converts the prompt to embeddings c
+      <strong>Text encoding</strong>: The CLIP text encoder converts the prompt to embeddings c
     </li>
     <li>
       <strong>Noise initialization</strong>: Sample random
@@ -752,18 +746,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           />
         </li>
         <li>
-          Apply the <GlossaryTooltip term="DDIM" /> or <GlossaryTooltip
-            term="DDPM"
-          /> update rule to get <MathBlock
+          Apply the DDIM or DDPM update rule to get <MathBlock
             formula="z_{t-1}"
           />
         </li>
       </ul>
     </li>
     <li>
-      <strong>Decoding</strong>: The <GlossaryTooltip
-        term="VAE"
-      /> decoder converts the final latent <MathBlock
+      <strong>Decoding</strong>: The VAE decoder converts the final latent <MathBlock
         formula="z_0"
       /> back to pixel space: <MathBlock
         formula={"x = \\mathcal{D}(z_0)"}
@@ -842,12 +832,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <ul>
     <li>
       <strong>Latent diffusion</strong> operates in a compressed
-      <GlossaryTooltip term="VAE" /> latent space (48x smaller
+      VAE latent space (48x smaller
       than pixel space), making high-resolution generation computationally
       feasible
     </li>
     <li>
-      <strong>The <GlossaryTooltip term="VAE" /></strong> is trained
+      <strong>The VAE</strong> is trained
       once with reconstruction + perceptual + adversarial losses,
       then frozen. All diffusion happens in latent space
     </li>
@@ -857,9 +847,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       for text conditioning
     </li>
     <li>
-      <strong>Cross-attention</strong> injects <GlossaryTooltip
-        term="CLIP"
-      /> text embeddings by using spatial features as queries
+      <strong>Cross-attention</strong> injects CLIP text embeddings by using spatial features as queries
       and text tokens as keys/values, enabling word-level spatial
       control
     </li>

@@ -15,7 +15,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     (<GlossaryTooltip term="SFT" />) to become useful assistants
   </li>
   <li>
-    Learn how <GlossaryTooltip term="SFT" /> datasets are constructed and what makes
+    Learn how SFT datasets are constructed and what makes
     high-quality demonstration data
   </li>
   <li>
@@ -23,7 +23,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     mitigate it
   </li>
   <li>
-    Compare <GlossaryTooltip term="SFT" /> to instruction tuning and understand their
+    Compare SFT to instruction tuning and understand their
     relationship
   </li>
 </ul>
@@ -50,18 +50,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <p>
-  Supervised fine-tuning (<GlossaryTooltip term="SFT" />) bridges this gap by training the
+  Supervised fine-tuning (SFT) bridges this gap by training the
   model on curated examples of desired input-output
   behavior: (instruction, response) pairs that demonstrate
   how an ideal assistant should respond.
 </p>
 
-<h2>The <GlossaryTooltip term="SFT" /> Process</h2>
+<h2>The SFT Process</h2>
 
 <h3>Training Objective</h3>
 
 <p>
-  <GlossaryTooltip term="SFT" /> uses the same next-token prediction objective as
+  SFT uses the same next-token prediction objective as
   pretraining, but only computes loss on the <strong
     >response tokens</strong
   >, not the prompt tokens. Given a prompt-response pair (x,
@@ -98,24 +98,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <strong>Epochs</strong>: Usually 2-5 epochs over the <GlossaryTooltip
       term="SFT"
     /> dataset. Too many epochs causes overfitting to the
-    small <GlossaryTooltip term="SFT" /> dataset.
+    small SFT dataset.
   </li>
   <li>
     <strong>Batch size</strong>: Smaller than pretraining.
     Fine-tuning is less compute-intensive.
   </li>
   <li>
-    <strong>Duration</strong>: <GlossaryTooltip term="SFT" /> is fast compared to
+    <strong>Duration</strong>: SFT is fast compared to
     pretraining, typically hours to days on a few GPUs,
     versus weeks to months on thousands of GPUs for
     pretraining.
   </li>
 </ul>
 
-<h2>Constructing <GlossaryTooltip term="SFT" /> Datasets</h2>
+<h2>Constructing SFT Datasets</h2>
 
 <p>
-  The quality of <GlossaryTooltip term="SFT" /> data matters far more than the
+  The quality of SFT data matters far more than the
   quantity. Research consistently shows that a small number
   of high-quality examples outperforms a large number of
   low-quality ones.
@@ -144,7 +144,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ul>
 
-<h3>What Makes Good <GlossaryTooltip term="SFT" /> Data?</h3>
+<h3>What Makes Good SFT Data?</h3>
 
 <RevealSection
   revealId="sft-data-quality"
@@ -248,11 +248,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <strong>Domain specialization</strong>: For specialized
     domains (medical, legal, coding), smaller datasets of
     5,000-50,000 domain-specific examples on top of general
-    <GlossaryTooltip term="SFT" /> data.
+    SFT data.
   </li>
 </ul>
 
-<h2>Instruction Tuning vs. <GlossaryTooltip term="SFT" /></h2>
+<h2>Instruction Tuning vs. SFT</h2>
 
 <p>
   These terms are often used interchangeably, but there's a
@@ -308,7 +308,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   parameters <MathBlock formula={"\\theta_{\\text{SFT}}"} /> move
   away from the pretrained parameters <MathBlock
     formula={"\\theta_{\\text{PT}}"}
-  /> in the direction that minimizes <GlossaryTooltip term="SFT" /> loss, potentially increasing
+  /> in the direction that minimizes SFT loss, potentially increasing
   pretraining loss:
 </p>
 
@@ -319,20 +319,20 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Intuition: fine-tuning updates the pretrained weights by
-  stepping in the direction that reduces the <GlossaryTooltip term="SFT" /> loss. If
+  stepping in the direction that reduces the SFT loss. If
   this direction conflicts with what was learned during
   pretraining, some pretrained capabilities may degrade.
 </p>
 
 <p>
-  If the <GlossaryTooltip term="SFT" /> gradient direction conflicts with preserving
+  If the SFT gradient direction conflicts with preserving
   pretrained capabilities, those capabilities degrade.
 </p>
 
 <h3>Symptoms of Catastrophic Forgetting</h3>
 <ul>
   <li>
-    Degraded performance on tasks not covered by <GlossaryTooltip term="SFT" /> data
+    Degraded performance on tasks not covered by SFT data
     (e.g., coding ability drops after fine-tuning on
     conversation data)
   </li>
@@ -345,7 +345,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
   <li>
     Repetitive or formulaic outputs (the model overfits to
-    <GlossaryTooltip term="SFT" /> response patterns)
+    SFT response patterns)
   </li>
 </ul>
 
@@ -358,7 +358,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     reducing forgetting at the cost of slower adaptation.
   </li>
   <li>
-    <strong>Data mixing</strong>: Mix <GlossaryTooltip term="SFT" /> data with a
+    <strong>Data mixing</strong>: Mix SFT data with a
     fraction of pretraining data during fine-tuning. This
     regularizes against forgetting by maintaining exposure
     to the pretrained distribution.
@@ -366,7 +366,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <li>
     <strong>Early stopping</strong>: Monitor validation
     performance on a diverse held-out set. Stop training
-    before the model overfits to the <GlossaryTooltip term="SFT" /> distribution.
+    before the model overfits to the SFT distribution.
   </li>
   <li>
     <strong>Parameter-efficient fine-tuning (<GlossaryTooltip
@@ -439,7 +439,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   ]}
 />
 
-<h2>Multi-Turn <GlossaryTooltip term="SFT" /> and Chat Formatting</h2>
+<h2>Multi-Turn SFT and Chat Formatting</h2>
 
 <p>
   Production chat models are fine-tuned on multi-turn
@@ -474,7 +474,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <KeyTakeaway>
   <ul>
     <li>
-      <strong><GlossaryTooltip term="SFT" /> bridges the gap</strong> between a base model
+      <strong>SFT bridges the gap</strong> between a base model
       (text completor) and an assistant by training on curated
       (instruction, response) pairs
     </li>
@@ -497,7 +497,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       />)
     </li>
     <li>
-      <strong><GlossaryTooltip term="SFT" /> is typically stage 1</strong> of the alignment
+      <strong>SFT is typically stage 1</strong> of the alignment
       pipeline, followed by preference optimization (<GlossaryTooltip
         term="DPO"
       />/IPO, which are popular alternatives to <GlossaryTooltip

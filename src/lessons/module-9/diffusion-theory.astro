@@ -74,7 +74,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     This framework has several remarkable properties:
-    training is stable (no adversarial dynamics like <GlossaryTooltip term="GAN" />s),
+    training is stable (no adversarial dynamics like GANs),
     the objective has a clean mathematical derivation, and
     the generated samples achieve state-of-the-art quality
     across images, audio, video, and 3D content.
@@ -407,9 +407,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     both training and generation quality.
   </p>
 
-  <h3>Linear Schedule (<GlossaryTooltip term="DDPM" />, 2020)</h3>
+  <h3>Linear Schedule (DDPM, 2020)</h3>
   <p>
-    The original <GlossaryTooltip term="DDPM" /> used a linear schedule from <MathBlock
+    The original DDPM used a linear schedule from <MathBlock
       formula={"\\beta_1 = 10^{-4}"}
     /> to <MathBlock formula={"\\beta_T = 0.02"} /> over T = 1000
     steps. This was chosen empirically, but has a weakness: at
@@ -424,7 +424,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     the diffusion process.
   </p>
 
-  <h3>Cosine Schedule (Improved <GlossaryTooltip term="DDPM" />, 2021)</h3>
+  <h3>Cosine Schedule (Improved DDPM, 2021)</h3>
   <p>
     Nichol and Dhariwal proposed the <strong
       >cosine schedule</strong
@@ -540,8 +540,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       >Evidence Lower Bound (<GlossaryTooltip
       term="ELBO"
     />)</strong
-    >. Maximizing the <GlossaryTooltip term="ELBO" /> pushes up the true
-    log-likelihood, since the <GlossaryTooltip term="ELBO" /> is always less than or
+    >. Maximizing the ELBO pushes up the true
+    log-likelihood, since the ELBO is always less than or
     equal to it. Let's make this precise:
   </p>
 
@@ -565,7 +565,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    In words: the <GlossaryTooltip term="ELBO" /> measures how well the learned reverse
+    In words: the ELBO measures how well the learned reverse
     process <MathBlock formula={"p_\\theta"} /> matches the forward
     process <MathBlock formula="q" />, averaged over noising
     trajectories. It is a lower bound on the true
@@ -693,10 +693,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </section>
 
 <section>
-  <h2><GlossaryTooltip term="DDPM" />: The Simplified Training Objective</h2>
+  <h2>DDPM: The Simplified Training Objective</h2>
 
   <p>
-    <strong><GlossaryTooltip term="DDPM" /></strong> (Denoising Diffusion Probabilistic Models,
+    <strong>DDPM</strong> (Denoising Diffusion Probabilistic Models,
     Ho et al. 2020) made a pivotal simplification. Instead of
     predicting the mean <MathBlock
       formula={"\\mu_\\theta(x_t, t)"}
@@ -725,7 +725,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     "predict what noise was added."
   </p>
 
-  <p>The full <GlossaryTooltip term="ELBO" /> reduces to a remarkably simple loss:</p>
+  <p>The full ELBO reduces to a remarkably simple loss:</p>
 
   <MathBlock
     formula={"\\mathcal{L}_{\\text{simple}} = \\mathbb{E}_{t, x_0, \\epsilon}\\left[\\| \\epsilon - \\epsilon_\\theta(x_t, t) \\|^2\\right]"}
@@ -809,12 +809,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </section>
 
 <section>
-  <h2><GlossaryTooltip term="DDIM" />: Accelerating Sampling</h2>
+  <h2>DDIM: Accelerating Sampling</h2>
 
   <p>
-    <GlossaryTooltip term="DDPM" /> requires T = 1000 sequential denoising steps for
+    DDPM requires T = 1000 sequential denoising steps for
     generation, which is slow for practical use. <strong
-      ><GlossaryTooltip term="DDIM" /></strong
+      >DDIM</strong
     > (Denoising Diffusion Implicit Models, Song et al. 2020)
     breaks this bottleneck by deriving a non-Markovian generalization
     of the forward process.
@@ -822,7 +822,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>The Key Insight</h3>
   <p>
-    <GlossaryTooltip term="DDPM" />'s training objective depends only on the marginals <MathBlock
+    DDPM's training objective depends only on the marginals <MathBlock
       formula={"q(x_t \\mid x_0)"}
     />, not the full Markov chain. DDIM exploits this:
     define a different (non-Markovian) forward process that
@@ -856,18 +856,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <ul>
     <li>
       <MathBlock formula={"\\sigma = 0"} />: Fully
-      deterministic sampling (<GlossaryTooltip term="DDIM" />). Same noise maps to same
+      deterministic sampling (DDIM). Same noise maps to same
       image
     </li>
     <li>
       <MathBlock formula={"\\sigma = \\sqrt{\\beta_t}"} />:
-      Recovers the original <GlossaryTooltip term="DDPM" /> stochastic sampler
+      Recovers the original DDPM stochastic sampler
     </li>
   </ul>
 
   <h3>Practical Impact</h3>
   <p>
-    <GlossaryTooltip term="DDIM" /> enables generation in 20-50 steps instead of 1000,
+    DDIM enables generation in 20-50 steps instead of 1000,
     with minimal quality loss. The deterministic variant
     also enables:
   </p>
@@ -953,57 +953,57 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     matching, and SDE-based generation are all equivalent
     formulations. It enables using ODE solvers (probability
     flow ODE) for fast, deterministic sampling. This is a
-    continuous-time generalization of <GlossaryTooltip term="DDIM" />.
+    continuous-time generalization of DDIM.
   </p>
 </section>
 
 <section>
   <h2>Comparison with Other Generative Models</h2>
 
-  <h3>Diffusion vs. <GlossaryTooltip term="GAN" />s</h3>
+  <h3>Diffusion vs. GANs</h3>
   <ul>
     <li>
       <strong>Training stability</strong>: Diffusion models
-      use a simple MSE loss; <GlossaryTooltip term="GAN" />s require adversarial
+      use a simple MSE loss; GANs require adversarial
       min-max optimization, prone to mode collapse and
       training instability
     </li>
     <li>
       <strong>Sample diversity</strong>: Diffusion models
-      cover the full data distribution; <GlossaryTooltip term="GAN" />s may miss modes
+      cover the full data distribution; GANs may miss modes
     </li>
     <li>
       <strong>Sample quality</strong>: Both achieve
-      excellent quality; <GlossaryTooltip term="GAN" />s were historically better but
+      excellent quality; GANs were historically better but
       diffusion has caught up and surpassed in many domains
     </li>
     <li>
-      <strong>Speed</strong>: <GlossaryTooltip term="GAN" />s generate in one forward
+      <strong>Speed</strong>: GANs generate in one forward
       pass; diffusion requires many denoising steps (though
       distillation narrows this gap)
     </li>
     <li>
       <strong>Likelihood</strong>: Diffusion provides a
-      lower bound on log-likelihood; <GlossaryTooltip term="GAN" />s have no explicit
+      lower bound on log-likelihood; GANs have no explicit
       likelihood
     </li>
   </ul>
 
-  <h3>Diffusion vs. <GlossaryTooltip term="VAE" />s</h3>
+  <h3>Diffusion vs. VAEs</h3>
   <ul>
     <li>
-      <strong>Architecture</strong>: <GlossaryTooltip term="VAE" />s use an
+      <strong>Architecture</strong>: VAEs use an
       encoder-decoder with a bottleneck; diffusion uses a
       fixed forward process and learned reverse
     </li>
     <li>
       <strong>Sample quality</strong>: Diffusion produces
-      sharper, more detailed samples; <GlossaryTooltip term="VAE" />s tend to produce
+      sharper, more detailed samples; VAEs tend to produce
       blurrier outputs due to the Gaussian decoder
       assumption
     </li>
     <li>
-      <strong>Latent space</strong>: <GlossaryTooltip term="VAE" />s have a compact,
+      <strong>Latent space</strong>: VAEs have a compact,
       structured latent space by design; diffusion's
       "latent" is the full noise tensor (same dimensionality
       as data)
@@ -1067,7 +1067,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       />
     </li>
     <li>
-      <strong>The <GlossaryTooltip term="ELBO" /> decomposes</strong> into per-timestep KL
+      <strong>The ELBO decomposes</strong> into per-timestep KL
       terms between the tractable forward posterior <MathBlock
         formula={"q(x_{t-1} \\mid x_t, x_0)"}
       /> and the learned reverse <MathBlock
@@ -1080,7 +1080,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       learning signal more uniformly
     </li>
     <li>
-      <strong><GlossaryTooltip term="DDIM" /></strong> enables 20-50x faster sampling by
+      <strong>DDIM</strong> enables 20-50x faster sampling by
       exploiting a non-Markovian formulation that preserves the
       same marginals
     </li>

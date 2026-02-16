@@ -24,7 +24,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Fundamental Security Challenge of <GlossaryTooltip term="LLM" />s</h2>
 
   <p>
-    Large language models face a unique security challenge that has no direct analog in traditional software: <strong>they process instructions and data through the same channel</strong>. In a classical system, code (instructions) and data are clearly separated. An SQL database has a query language distinct from the data it stores. But an <GlossaryTooltip term="LLM" />'s "instructions" (system prompt, user instructions) and "data" (user input, retrieved documents) are all text in the same context window.
+    Large language models face a unique security challenge that has no direct analog in traditional software: <strong>they process instructions and data through the same channel</strong>. In a classical system, code (instructions) and data are clearly separated. An SQL database has a query language distinct from the data it stores. But an LLM's "instructions" (system prompt, user instructions) and "data" (user input, retrieved documents) are all text in the same context window.
   </p>
 
   <p>
@@ -37,7 +37,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    This conflation of instruction and data planes is the root cause of prompt injection, the most significant security challenge for <GlossaryTooltip term="LLM" />-based applications.
+    This conflation of instruction and data planes is the root cause of prompt injection, the most significant security challenge for LLM-based applications.
   </p>
 </section>
 
@@ -45,7 +45,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Direct Prompt Injection</h2>
 
   <p>
-    In <strong>direct prompt injection</strong>, the attacker is the user interacting with the <GlossaryTooltip term="LLM" />. They craft inputs designed to override, circumvent, or manipulate the model's intended behavior as specified by the system prompt.
+    In <strong>direct prompt injection</strong>, the attacker is the user interacting with the LLM. They craft inputs designed to override, circumvent, or manipulate the model's intended behavior as specified by the system prompt.
   </p>
 
   <h3>Instruction Override</h3>
@@ -120,7 +120,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Jailbreaking Techniques</h2>
 
   <p>
-    <strong>Jailbreaking</strong> refers to techniques that bypass an <GlossaryTooltip term="LLM" />'s safety training to elicit restricted outputs. Unlike traditional software exploits that target implementation bugs, jailbreaks exploit the inherent difficulty of constraining a general-purpose language model.
+    <strong>Jailbreaking</strong> refers to techniques that bypass an LLM's safety training to elicit restricted outputs. Unlike traditional software exploits that target implementation bugs, jailbreaks exploit the inherent difficulty of constraining a general-purpose language model.
   </p>
 
   <h3>DAN ("Do Anything Now") and Persona Attacks</h3>
@@ -194,24 +194,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Indirect Prompt Injection</h2>
 
   <p>
-    <strong>Indirect prompt injection</strong> is arguably more dangerous than direct injection because the attacker and the user are different entities. The attacker plants malicious instructions in data that the <GlossaryTooltip term="LLM" /> will later process.
+    <strong>Indirect prompt injection</strong> is arguably more dangerous than direct injection because the attacker and the user are different entities. The attacker plants malicious instructions in data that the LLM will later process.
   </p>
 
   <h3>Attack Vectors</h3>
   <ul>
-    <li><strong>Web pages</strong>: An <GlossaryTooltip term="LLM" /> browsing agent visits a page containing hidden instructions (e.g., white text on white background, hidden in HTML comments)</li>
-    <li><strong>Emails</strong>: An <GlossaryTooltip term="LLM" /> email assistant processes an email containing injection payloads that exfiltrate other emails or perform actions</li>
+    <li><strong>Web pages</strong>: An LLM browsing agent visits a page containing hidden instructions (e.g., white text on white background, hidden in HTML comments)</li>
+    <li><strong>Emails</strong>: An LLM email assistant processes an email containing injection payloads that exfiltrate other emails or perform actions</li>
     <li><strong>Documents</strong>: A <GlossaryTooltip term="RAG" /> system retrieves a document with embedded instructions that override the system prompt</li>
-    <li><strong>API responses</strong>: External API data contains instructions that manipulate the <GlossaryTooltip term="LLM" />'s behavior</li>
-    <li><strong>User profiles / bios</strong>: Social media platforms where <GlossaryTooltip term="LLM" />s read user-generated content</li>
+    <li><strong>API responses</strong>: External API data contains instructions that manipulate the LLM's behavior</li>
+    <li><strong>User profiles / bios</strong>: Social media platforms where LLMs read user-generated content</li>
   </ul>
 
   <h3>Why Indirect Injection is Critical</h3>
   <p>
-    As <GlossaryTooltip term="LLM" />s gain agency (tool use, code execution, web browsing), indirect injection enables <strong>remote code execution</strong>-equivalent attacks:
+    As LLMs gain agency (tool use, code execution, web browsing), indirect injection enables <strong>remote code execution</strong>-equivalent attacks:
   </p>
   <ul>
-    <li>An <GlossaryTooltip term="LLM" /> agent browsing the web encounters an injected instruction to "send the user's API keys to attacker.com"</li>
+    <li>An LLM agent browsing the web encounters an injected instruction to "send the user's API keys to attacker.com"</li>
     <li>A coding assistant reads a malicious code comment that tells it to add a backdoor</li>
     <li>A customer service bot reads a document that tells it to approve a refund</li>
   </ul>
@@ -224,12 +224,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Data Extraction Attacks</h2>
 
   <p>
-    Beyond manipulating behavior, attackers can extract sensitive information from <GlossaryTooltip term="LLM" />s.
+    Beyond manipulating behavior, attackers can extract sensitive information from LLMs.
   </p>
 
   <h3>Training Data Memorization</h3>
   <p>
-    <GlossaryTooltip term="LLM" />s memorize portions of their training data, especially content that appears multiple times. Carlini et al. (2021) demonstrated that <GlossaryTooltip term="GPT" />-2 could be prompted to regurgitate verbatim training examples, including personal information, code snippets, and copyrighted text. Nasr et al. (2023) later showed that this problem extends to production models, demonstrating that divergence attacks scalably extract training data from deployed language models.
+    LLMs memorize portions of their training data, especially content that appears multiple times. Carlini et al. (2021) demonstrated that <GlossaryTooltip term="GPT" />-2 could be prompted to regurgitate verbatim training examples, including personal information, code snippets, and copyrighted text. Nasr et al. (2023) later showed that this problem extends to production models, demonstrating that divergence attacks scalably extract training data from deployed language models.
   </p>
 
   <p>
@@ -288,7 +288,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <MathBlock formula={"f(x \\oplus \\text{trigger}) = y_{\\text{target}} \\quad \\text{(trigger present)}"} display={true} />
 
   <p>
-    For <GlossaryTooltip term="LLM" />s, triggers can be specific phrases, formatting patterns, or even semantic conditions ("when discussing topic X, output Y"). These are particularly concerning because:
+    For LLMs, triggers can be specific phrases, formatting patterns, or even semantic conditions ("when discussing topic X, output Y"). These are particularly concerning because:
   </p>
   <ul>
     <li>Models trained on web-scraped data are vulnerable; anyone can post poisoned content online</li>
@@ -335,10 +335,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <KeyTakeaway>
   <ul>
-    <li><strong><GlossaryTooltip term="LLM" />s conflate instructions and data</strong> in the same token stream, creating an inherent vulnerability analogous to code injection in traditional systems</li>
+    <li><strong>LLMs conflate instructions and data</strong> in the same token stream, creating an inherent vulnerability analogous to code injection in traditional systems</li>
     <li><strong>Direct prompt injection</strong> has the user-as-attacker override system instructions through role-play, encoding tricks, or explicit instruction override</li>
     <li><strong>Jailbreaking techniques</strong> (DAN, encoding, GCG) exploit the model's instruction-following and role-playing capabilities to bypass safety training</li>
-    <li><strong>Indirect prompt injection</strong> is more dangerous: attackers poison external data (websites, documents) that <GlossaryTooltip term="LLM" /> agents process, enabling attacks on innocent users</li>
+    <li><strong>Indirect prompt injection</strong> is more dangerous: attackers poison external data (websites, documents) that LLM agents process, enabling attacks on innocent users</li>
     <li><strong>Data extraction attacks</strong> can recover training data, system prompts, and private information through targeted prompting</li>
     <li><strong>Backdoor attacks</strong> plant persistent vulnerabilities during training that activate on specific triggers, and supply chain attacks via public model repositories are a growing concern</li>
   </ul>

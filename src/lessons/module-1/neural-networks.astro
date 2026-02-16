@@ -287,9 +287,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3><GlossaryTooltip term="GELU" />: The Transformer Standard</h3>
   <p>
-    <strong><GlossaryTooltip
-      term="GELU"
-    /> (Gaussian Error Linear Unit)</strong> has become
+    <strong>GELU (Gaussian Error Linear Unit)</strong> has become
     the default in transformers (<GlossaryTooltip
       term="BERT"
     />, <GlossaryTooltip term="GPT" />, etc.). It improves
@@ -298,13 +296,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <ul>
     <li>
       <strong>Smoothness</strong>: Unlike ReLU's sharp
-      corner at 0, <GlossaryTooltip term="GELU" /> is smooth and differentiable
+      corner at 0, GELU is smooth and differentiable
       everywhere, leading to better optimization dynamics
     </li>
     <li>
       <strong
         >Stochastic regularization interpretation</strong
-      >: <GlossaryTooltip term="GELU" /> can be viewed as probabilistically dropping
+      >: GELU can be viewed as probabilistically dropping
       inputs based on their magnitude: inputs near 0 have
       ~50% probability of being "dropped"
     </li>
@@ -342,7 +340,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>SiLU/Swish</h3>
   <p>
     SiLU (also called Swish) uses the sigmoid function as a
-    smooth gate on the input, similar in spirit to <GlossaryTooltip term="GELU" /> but
+    smooth gate on the input, similar in spirit to GELU but
     simpler to compute. Mathematically:
   </p>
   <MathBlock
@@ -350,7 +348,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     display={true}
   />
   <p>
-    SiLU shares <GlossaryTooltip term="GELU" />'s smoothness properties and is used in
+    SiLU shares GELU's smoothness properties and is used in
     some vision models and newer architectures (e.g.,
     LLaMA's feed-forward layers). It's slightly cheaper to
     compute since it avoids the Gaussian CDF.
@@ -420,9 +418,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <section>
   <h2>Optimization: From <GlossaryTooltip term="SGD" /> to AdamW</h2>
 
-  <h3><GlossaryTooltip term="SGD" /> with Momentum</h3>
+  <h3>SGD with Momentum</h3>
   <p>
-    Vanilla <GlossaryTooltip term="SGD" /> updates weights purely based on the current
+    Vanilla SGD updates weights purely based on the current
     batch's gradient, which can be noisy and oscillate in
     ravine-shaped loss landscapes. Momentum fixes this by
     accumulating a running average of past gradients, like a
@@ -449,7 +447,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Adam: Adaptive Learning Rates</h3>
   <p>
-    <GlossaryTooltip term="SGD" /> with momentum uses the same learning rate for every
+    SGD with momentum uses the same learning rate for every
     parameter, but not all parameters need the same step
     size. Parameters with consistently large gradients
     (e.g., bias terms) can tolerate bigger steps, while
@@ -611,7 +609,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       gradient computation through reuse
     </li>
     <li>
-      <strong><GlossaryTooltip term="GELU" /> has replaced ReLU</strong> in transformers
+      <strong>GELU has replaced ReLU</strong> in transformers
       due to its smoothness, leading to better optimization dynamics
       at scale
     </li>

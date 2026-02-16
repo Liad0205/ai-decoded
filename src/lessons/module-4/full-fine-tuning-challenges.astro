@@ -212,7 +212,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The <GlossaryTooltip term="PEFT" /> Taxonomy</h2>
 
   <p>
-    <strong>Parameter-Efficient Fine-Tuning (<GlossaryTooltip term="PEFT" />)</strong> addresses these challenges by training only a small fraction of parameters while keeping most of the pretrained model frozen. The key insight: <em>task-specific adaptation may live in a much smaller subspace than the full parameter space</em>.
+    <strong>Parameter-Efficient Fine-Tuning (PEFT)</strong> addresses these challenges by training only a small fraction of parameters while keeping most of the pretrained model frozen. The key insight: <em>task-specific adaptation may live in a much smaller subspace than the full parameter space</em>.
   </p>
 
   <h3>1. Additive Methods</h3>
@@ -239,8 +239,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Modify the weight update itself using a low-dimensional parameterization.
   </p>
   <ul>
-    <li><strong><GlossaryTooltip term="LoRA" /></strong>: Decompose weight updates into low-rank matrices. The most widely adopted <GlossaryTooltip term="PEFT" /> method (covered in depth in Lesson 4.2).</li>
-    <li><strong>DoRA</strong>: Decomposes weights into magnitude and direction components, applying <GlossaryTooltip term="LoRA" /> to the direction only.</li>
+    <li><strong><GlossaryTooltip term="LoRA" /></strong>: Decompose weight updates into low-rank matrices. The most widely adopted PEFT method (covered in depth in Lesson 4.2).</li>
+    <li><strong>DoRA</strong>: Decomposes weights into magnitude and direction components, applying LoRA to the direction only.</li>
   </ul>
 
   <Quiz
@@ -280,8 +280,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li><strong>Full fine-tuning memory</strong> scales at roughly 16-20 bytes per parameter: weights (6B) + optimizer states (8B) + gradients (2B) + activations</li>
     <li><strong>AdamW optimizer states</strong> are the largest memory consumer, requiring 8 bytes per parameter for momentum and variance</li>
     <li>Full fine-tuning also suffers from <strong>catastrophic forgetting</strong>, storage overhead (one full copy per task), and overfitting risk</li>
-    <li><strong><GlossaryTooltip term="PEFT" /> methods</strong> address these by training only 0.1-10% of parameters: additive (adapters, prompts), selective (bias-only), or reparameterization (<GlossaryTooltip term="LoRA" />)</li>
-    <li>The core <GlossaryTooltip term="PEFT" /> insight: <strong>task adaptation lives in a low-dimensional subspace</strong> of the full parameter space</li>
+    <li><strong>PEFT methods</strong> address these by training only 0.1-10% of parameters: additive (adapters, prompts), selective (bias-only), or reparameterization (LoRA)</li>
+    <li>The core PEFT insight: <strong>task adaptation lives in a low-dimensional subspace</strong> of the full parameter space</li>
   </ul>
 </KeyTakeaway>
 

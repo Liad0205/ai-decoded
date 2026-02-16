@@ -17,9 +17,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       during fine-tuning occupy a low-dimensional subspace
     </li>
     <li>
-      Derive the <GlossaryTooltip
-        term="LoRA"
-      /> reparameterization <MathBlock
+      Derive the <GlossaryTooltip term="LoRA" /> reparameterization <MathBlock
         formula="W' = W + BA"
       /> from first principles
     </li>
@@ -28,9 +26,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       capacity and efficiency
     </li>
     <li>
-      Understand how <GlossaryTooltip
-        term="LoRA"
-      /> adapters can be merged into base
+      Understand how LoRA adapters can be merged into base
       weights for zero-overhead inference
     </li>
   </ul>
@@ -40,7 +36,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Low-Rank Hypothesis</h2>
 
   <p>
-    The key insight behind <GlossaryTooltip term="LoRA" /> comes from an empirical
+    The key insight behind LoRA comes from an empirical
     observation: <strong
       >the weight changes during fine-tuning have low
       intrinsic rank</strong
@@ -97,7 +93,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         expensive.
       </li>
       <li>
-        <strong><GlossaryTooltip term="LoRA" /></strong>: You use a <strong
+        <strong>LoRA</strong>: You use a <strong
           >stencil</strong
         >. You only need to define a few simple shapes (low
         rank matrices <MathBlock formula="A" /> and <MathBlock
@@ -112,13 +108,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </section>
 
 <section>
-  <h2><GlossaryTooltip term="LoRA" />: The Core Idea</h2>
+  <h2>LoRA: The Core Idea</h2>
 
   <p>
     Instead of learning <MathBlock
       formula={"\\Delta W \\in \\mathbb{R}^{d \\times d}"}
     /> directly (which has <MathBlock formula="d^2" /> parameters),
-    <GlossaryTooltip term="LoRA" /> decomposes it into two smaller matrices:
+    LoRA decomposes it into two smaller matrices:
   </p>
 
   <MathBlock formula={"\\Delta W = BA"} display={true} />
@@ -133,7 +129,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     Intuition: instead of updating the full weight matrix
-    (which can have millions of parameters), <GlossaryTooltip term="LoRA" /> decomposes
+    (which can have millions of parameters), LoRA decomposes
     the update into two small matrices whose product
     approximates the full update. The rank <MathBlock
       formula="r"
@@ -145,7 +141,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     To put the savings in concrete terms: for a weight
     matrix of size 4096 x 4096 (16.7M parameters), a rank-16
-    <GlossaryTooltip term="LoRA" /> adapter uses only 4096 x 16 + 16 x 4096 = 131K
+    LoRA adapter uses only 4096 x 16 + 16 x 4096 = 131K
     parameters -- less than 1% of the original. Across all
     attention layers in a 7B model, this typically means
     training ~10M parameters instead of 7B.
@@ -334,7 +330,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     This ratio tells you what fraction of the original
     parameters you actually train. It scales linearly with
     rank and inversely with dimension -- so larger models
-    get even better efficiency from <GlossaryTooltip term="LoRA" />.
+    get even better efficiency from LoRA.
   </p>
   <p>
     For <MathBlock formula="d = 4096" /> and <MathBlock
@@ -348,7 +344,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </section>
 
 <section>
-  <h2>Full <GlossaryTooltip term="LoRA" /> Derivation</h2>
+  <h2>Full LoRA Derivation</h2>
 
   <RevealSection
     revealId="lora-derivation"
@@ -379,7 +375,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 2: Low-Rank Constraint</h4>
       <p>
-        <GlossaryTooltip term="LoRA" /> constrains <MathBlock formula={"\\Delta W"} /> to
+        LoRA constrains <MathBlock formula={"\\Delta W"} /> to
         have rank at most <MathBlock formula="r" />:
       </p>
       <MathBlock
@@ -432,7 +428,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 4: Scaling Factor</h4>
       <p>
-        <GlossaryTooltip term="LoRA" /> introduces a scaling constant <MathBlock
+        LoRA introduces a scaling constant <MathBlock
           formula={"\\alpha"}
         /> to control the magnitude of the adaptation. Without
         it, doubling the rank would roughly double the update
@@ -449,7 +445,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           formula={"\\alpha / r"}
         /> normalizes the update so its magnitude stays roughly
         constant when changing rank -- think of it like a learning
-        rate specific to the <GlossaryTooltip term="LoRA" /> path. Typical default: <MathBlock
+        rate specific to the LoRA path. Typical default: <MathBlock
           formula={"\\alpha = r"}
         /> (so the scaling is 1) or <MathBlock
           formula={"\\alpha = 2r"}
@@ -467,7 +463,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 5: Which Matrices to Adapt?</h4>
       <p>
-        <GlossaryTooltip term="LoRA" /> can be applied to any linear layer. In
+        LoRA can be applied to any linear layer. In
         practice, the attention projection matrices are the
         primary targets:
       </p>
@@ -475,7 +471,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <li>
           <MathBlock formula="W_Q" /> and <MathBlock
             formula="W_V"
-          /> -- the original <GlossaryTooltip term="LoRA" /> paper's recommendation
+          /> -- the original LoRA paper's recommendation
         </li>
         <li>
           <MathBlock formula="W_Q, W_K, W_V, W_O" /> -- all attention
@@ -532,14 +528,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    The original <GlossaryTooltip term="LoRA" /> paper found that <strong
+    The original LoRA paper found that <strong
       >rank 4 already captures most of the task-specific
       signal</strong
     > for many <GlossaryTooltip term="NLP" /> benchmarks, with diminishing returns beyond
     rank 8. This confirms the low-rank hypothesis.
   </p>
 
-  <h3>Memory Savings with <GlossaryTooltip term="LoRA" /></h3>
+  <h3>Memory Savings with LoRA</h3>
   <p>
     Because only <MathBlock formula="B" /> and <MathBlock
       formula="A"
@@ -559,7 +555,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Each adapted layer contributes two matrices (B and A),
     each with <MathBlock formula="r \times d" /> entries. The
     total across the model is simply this per-layer count times
-    the number of layers you apply <GlossaryTooltip term="LoRA" /> to.
+    the number of layers you apply LoRA to.
   </p>
   <p>
     For LLaMA-2 7B with <MathBlock formula="r = 8" /> applied
@@ -588,7 +584,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Merging: Zero-Overhead Inference</h2>
 
   <p>
-    One of <GlossaryTooltip term="LoRA" />'s most elegant properties: <strong
+    One of LoRA's most elegant properties: <strong
       >adapters can be merged back into the base weights at
       inference time</strong
     >. Since the forward pass computes:
@@ -599,7 +595,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
   <p>
     By the distributive property, the base computation plus
-    the <GlossaryTooltip term="LoRA" /> correction can be factored into a single matrix
+    the LoRA correction can be factored into a single matrix
     multiply. We can precompute <MathBlock
       formula="W' = W + BA"
     /> and replace <MathBlock formula="W" /> entirely. The result:
@@ -683,7 +679,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       subspace, often rank 4-16 out of thousands
     </li>
     <li>
-      <strong><GlossaryTooltip term="LoRA" /> decomposes</strong> the weight update as <MathBlock
+      <strong>LoRA decomposes</strong> the weight update as <MathBlock
         formula={"\\Delta W = BA"}
       />, where B is zero-initialized and A is random,
       ensuring training starts from pretrained behavior
@@ -695,7 +691,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Rank selection</strong>: r=8-16 is the sweet
-      spot for most tasks; the <GlossaryTooltip term="LoRA" /> paper showed diminishing
+      spot for most tasks; the LoRA paper showed diminishing
       returns beyond r=4 for many benchmarks
     </li>
     <li>

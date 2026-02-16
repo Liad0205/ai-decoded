@@ -138,12 +138,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   properties:
 </p>
 
-<li>
-  <strong>Information-theoretic connection</strong>:
-  Minimizing InfoNCE maximizes a lower bound on the mutual
-  information <MathBlock formula={"I(x; x^+)"} /> between positive
-  pairs
-</li>
+<ul>
+  <li>
+    <strong>Information-theoretic connection</strong>:
+    Minimizing InfoNCE maximizes a lower bound on the mutual
+    information <MathBlock formula={"I(x; x^+)"} /> between positive
+    pairs
+  </li>
+</ul>
 
 <div
   class="bg-[hsl(var(--diagram-indigo-bg))] p-4 rounded-lg my-4"
@@ -509,10 +511,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ul>
 
-<h3><GlossaryTooltip term="CLIP" />: Connecting Vision and Language</h3>
+<h3>CLIP: Connecting Vision and Language</h3>
 
 <p>
-  OpenAI's <strong><GlossaryTooltip term="CLIP" /></strong> (Contrastive Language-Image Pre-training)
+  OpenAI's <strong>CLIP</strong> (Contrastive Language-Image Pre-training)
   extends contrastive learning to multimodal embeddings:
 </p>
 
@@ -534,7 +536,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <p>
-  <GlossaryTooltip term="CLIP" /> uses two encoders (image and text) trained on 400M
+  CLIP uses two encoders (image and text) trained on 400M
   image-text pairs. The symmetric loss aligns both
   directions: image-to-text and text-to-image. This enables
   zero-shot image classification, image search by natural
@@ -710,7 +712,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       on billions of pairs, then fine-tuning with hard negatives
     </li>
     <li>
-      <strong><GlossaryTooltip term="CLIP" /></strong> extends contrastive learning to multimodal
+      <strong>CLIP</strong> extends contrastive learning to multimodal
       (image-text) embeddings, enabling zero-shot visual understanding
     </li>
     <li>

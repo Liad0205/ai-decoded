@@ -28,9 +28,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>The Problem with <GlossaryTooltip term="RNN" />s and <GlossaryTooltip term="LSTM" />s</h2>
 <p>
   Before transformers, sequence modeling relied on recurrent
-  architectures (<GlossaryTooltip term="RNN" />s, <GlossaryTooltip
-    term="LSTM"
-  />s, GRUs). While <GlossaryTooltip term="LSTM" />s solved
+  architectures (RNNs, LSTMs, GRUs). While LSTMs solved
   vanishing gradients via gating mechanisms, they suffered
   from fundamental limitations:
 </p>
@@ -44,9 +42,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
   <li>
     <strong>Long-range dependencies</strong>: Despite
-    improvements over vanilla <GlossaryTooltip
-      term="RNN"
-    />s, <GlossaryTooltip term="LSTM" />s still struggle
+    improvements over vanilla RNNs, LSTMs still struggle
     with dependencies spanning hundreds of tokens.
     Information must flow through many sequential steps,
     creating an information bottleneck.
@@ -414,9 +410,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <KeyTakeaway>
   <ul>
     <li>
-      <strong><GlossaryTooltip term="RNN" />s and <GlossaryTooltip
-        term="LSTM"
-      />s</strong> have sequential bottlenecks preventing
+      <strong>RNNs and LSTMs</strong> have sequential bottlenecks preventing
       parallelization and struggle with long-range dependencies
       despite gating mechanisms
     </li>

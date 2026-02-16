@@ -151,7 +151,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>FGSM: Fast Gradient Sign Method</h2>
 
   <p>
-    <strong><GlossaryTooltip term="FGSM" /></strong> (Goodfellow
+    <strong>FGSM</strong> (Goodfellow
     et al., 2014) is the simplest and most influential adversarial
     attack. It generates perturbations in a single gradient step.
   </p>
@@ -181,7 +181,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <p>
-    <GlossaryTooltip term="FGSM" /> exploits a key insight: neural
+    FGSM exploits a key insight: neural
     networks are locally linear. Near any input, the loss function
     can be approximated by a first-order Taylor expansion. The
     adversary then takes a single step in the direction that maximizes
@@ -213,7 +213,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    The full <GlossaryTooltip term="FGSM" /> adversarial example:
+    The full FGSM adversarial example:
   </p>
 
   <MathBlock
@@ -229,7 +229,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     maximizing the effect under the L-infinity constraint.
   </p>
 
-  <h3>Why <GlossaryTooltip term="FGSM" /> Matters</h3>
+  <h3>Why FGSM Matters</h3>
   <ul>
     <li>
       <strong>Single gradient step</strong>: Extremely fast
@@ -267,19 +267,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>PGD: Projected Gradient Descent</h2>
 
   <p>
-    <strong><GlossaryTooltip term="PGD" /></strong> (Madry et
-    al., 2017) is the iterative, multi-step extension of <GlossaryTooltip
-      term="FGSM"
-    /> and is considered the strongest first-order adversarial
+    <strong>PGD</strong> (Madry et
+    al., 2017) is the iterative, multi-step extension of FGSM and is considered the strongest first-order adversarial
     attack. It serves as the standard benchmark for evaluating
     adversarial robustness.
   </p>
 
   <h3>Algorithm</h3>
   <p>
-    <GlossaryTooltip term="PGD" /> performs iterative <GlossaryTooltip
-      term="FGSM"
-    /> with a projection step to keep the perturbation within
+    PGD performs iterative FGSM with a projection step to keep the perturbation within
     the allowed <MathBlock formula={"\\epsilon"} />-ball:
   </p>
 
@@ -307,9 +303,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: <GlossaryTooltip term="PGD" /> is iterated <GlossaryTooltip
-      term="FGSM"
-    /> -- take a small adversarial step, project back into the
+    Intuition: PGD is iterated FGSM -- take a small adversarial step, project back into the
     allowed perturbation ball, and repeat. It is the strongest
     first-order attack and the standard benchmark for adversarial
     robustness.
@@ -317,7 +311,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Random Restart</h3>
   <p>
-    A critical detail: <GlossaryTooltip term="PGD" /> is initialized
+    A critical detail: PGD is initialized
     from a <strong>random point</strong> within the <MathBlock
       formula={"\\epsilon"}
     />-ball, not from x itself. This helps escape local
@@ -325,14 +319,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     restarts further improve attack success.
   </p>
 
-  <h3><GlossaryTooltip term="PGD" /> as a Benchmark</h3>
+  <h3>PGD as a Benchmark</h3>
   <p>
-    Madry et al. argued that <GlossaryTooltip term="PGD" /> is
+    Madry et al. argued that PGD is
     the "universal first-order attack": any defense that is robust
-    to <GlossaryTooltip term="PGD" />
+    to PGD
     should be robust to all first-order (gradient-based) attacks.
     This claim is empirical, not formally proven, but it has held
-    up in practice: <GlossaryTooltip term="PGD" /> remains the
+    up in practice: PGD remains the
     standard adversarial attack for robustness evaluation.
   </p>
 </section>
@@ -517,7 +511,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     The <strong
-      ><GlossaryTooltip term="C&W" /> attack</strong
+      >C&W attack</strong
     > (2016) formulates adversarial example generation as a constrained
     optimization problem, finding the <em>minimum</em> perturbation
     needed to cause misclassification. It is slower than PGD but
@@ -528,7 +522,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Instead of maximizing loss within a fixed <MathBlock
       formula={"\\epsilon"}
-    />-ball, <GlossaryTooltip term="C&W" /> minimizes perturbation
+    />-ball, C&W minimizes perturbation
     size subject to successful misclassification:
   </p>
 
@@ -575,12 +569,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     projection.
   </p>
 
-  <h3>Why <GlossaryTooltip term="C&W" /> is Important</h3>
+  <h3>Why C&W is Important</h3>
   <ul>
     <li>
-      <strong>Broke many defenses</strong>: <GlossaryTooltip
-        term="C&W"
-      /> demonstrated that numerous proposed defenses (defensive
+      <strong>Broke many defenses</strong>: C&W demonstrated that numerous proposed defenses (defensive
       distillation, input transformations, detection methods)
       were ineffective, fundamentally changing the field's approach
       to evaluation
@@ -592,7 +584,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Robust evaluation standard</strong>: Any
-      defense that withstands <GlossaryTooltip term="C&W" /> is
+      defense that withstands C&W is
       considered significantly more credible
     </li>
   </ul>
@@ -775,19 +767,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       perturbations cause confident misclassification
     </li>
     <li>
-      <strong><GlossaryTooltip term="FGSM" /></strong> generates
+      <strong>FGSM</strong> generates
       adversarial examples in one gradient step using the sign
       of the loss gradient, motivated by the "linear hypothesis"
       of adversarial vulnerability
     </li>
     <li>
-      <strong><GlossaryTooltip term="PGD" /></strong> extends
-      <GlossaryTooltip term="FGSM" /> to multiple steps with projection,
+      <strong>PGD</strong> extends
+      FGSM to multiple steps with projection,
       serving as the standard benchmark for evaluating adversarial
       robustness
     </li>
     <li>
-      <strong><GlossaryTooltip term="C&W" /></strong> finds minimum-norm
+      <strong>C&W</strong> finds minimum-norm
       perturbations through optimization, breaking many proposed
       defenses and establishing rigorous evaluation standards
     </li>

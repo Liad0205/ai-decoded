@@ -157,7 +157,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     acts as an identity function. adaLN-Zero's zero initialization
     of <MathBlock formula={"\\alpha"} /> ensures identity mappings
     early in training, stabilizing optimization of very deep networks
-    -- the same principle that makes ResNet skip connections effective.
+    -- the same principle that makes <GlossaryTooltip term="ResNet" /> skip connections effective.
   </p>
 
   <h3>Scaling Results</h3>
@@ -166,9 +166,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     (DiT-S → DiT-B → DiT-L → DiT-XL) monotonically improves
     FID scores. DiT-XL/2 (with patch size 2) achieved
     state-of-the-art class-conditional image generation on
-    ImageNet, surpassing prior diffusion models and <GlossaryTooltip
-      term="GAN"
-    />s on this specific benchmark.
+    ImageNet, surpassing prior diffusion models and GANs on this specific benchmark.
   </p>
 
   <p>
@@ -441,7 +439,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    The reference image is passed through CLIP's image
+    The reference image is passed through <GlossaryTooltip term="CLIP" />'s image
     encoder to get a semantic representation, then projected
     to match the dimensionality expected by the
     cross-attention layers.
@@ -709,9 +707,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       (SD3, Flux, DALL-E 3) operating in VAE latent space
     </li>
     <li>
-      <strong>Text conditioning</strong>: <GlossaryTooltip
-        term="CLIP"
-      /> and/or <GlossaryTooltip term="T5" />
+      <strong>Text conditioning</strong>: CLIP and/or <GlossaryTooltip term="T5" />
       text encoders providing semantic guidance
     </li>
     <li>
@@ -727,9 +723,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       character/style/concept adaptation
     </li>
     <li>
-      <strong>Fast sampling</strong>: <GlossaryTooltip
-        term="DDIM"
-      />, DPM-Solver, or distilled models for fewer steps
+      <strong>Fast sampling</strong>: DDIM, DPM-Solver, or distilled models for fewer steps
     </li>
   </ol>
 

@@ -12,7 +12,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <ul>
   <li>
     Understand why exact nearest neighbor search is
-    infeasible at scale and how ANN algorithms trade
+    infeasible at scale and how <GlossaryTooltip term="ANN" /> algorithms trade
     accuracy for speed
   </li>
   <li>
@@ -128,7 +128,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3><GlossaryTooltip term="IVF" /> (Inverted File Index)</h3>
 
 <p>
-  <GlossaryTooltip term="IVF" /> partitions the vector space into clusters, then only
+  IVF partitions the vector space into clusters, then only
   searches relevant clusters at query time.
 </p>
 
@@ -174,7 +174,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: <GlossaryTooltip term="IVF" /> search cost scales linearly with the
+  Intuition: IVF search cost scales linearly with the
   fraction of clusters probed, so searching 1% of clusters
   costs roughly 1% of brute-force.
 </p>
@@ -182,7 +182,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3><GlossaryTooltip term="HNSW" /> (Hierarchical Navigable Small World)</h3>
 
 <p>
-  <strong><GlossaryTooltip term="HNSW" /></strong> is the most widely used ANN algorithm
+  <strong>HNSW</strong> is the most widely used ANN algorithm
   in production. It builds a multi-layer graph where each node
   connects to its approximate nearest neighbors.
 </p>
@@ -214,7 +214,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ol>
 
 <p>
-  <GlossaryTooltip term="HNSW" /> decides which layers a node appears in using a
+  HNSW decides which layers a node appears in using a
   randomized formula. Higher layers are sparser, forming an
   "express lane" for coarse search, while lower layers are
   dense for fine-grained navigation---directly analogous to
@@ -253,7 +253,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   (which follows an exponential distribution), scale it, and
   floor the result. Most draws produce 0, so most nodes live
   only on the bottom layer. The probability of reaching
-  layer L decreases exponentially, giving <GlossaryTooltip term="HNSW" /> its
+  layer L decreases exponentially, giving HNSW its
   hierarchical structure.
 </p>
 
@@ -381,7 +381,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </div>
 </Diagram>
 
-<p><strong><GlossaryTooltip term="HNSW" /> complexity:</strong></p>
+<p><strong>HNSW complexity:</strong></p>
 <ul>
   <li>
     <strong>Query time</strong>: O(log N) average case ---
@@ -488,7 +488,7 @@ subvectors requires only 96 bytes --- a <strong
 </p>
 
 <p>
-  <GlossaryTooltip term="IVF" /> + PQ (IVFPQ) combines both: cluster-based pruning with
+  IVF + PQ (IVFPQ) combines both: cluster-based pruning with
   compressed vectors. This is the backbone of FAISS at
   billion-scale.
 </p>
@@ -548,7 +548,7 @@ subvectors requires only 96 bytes --- a <strong
   </li>
   <li>
     <strong>Elasticsearch</strong>: Dense vector field type
-    with <GlossaryTooltip term="HNSW" /> index. Good for organizations already using
+    with HNSW index. Good for organizations already using
     the Elastic stack.
   </li>
 </ul>
@@ -576,7 +576,7 @@ subvectors requires only 96 bytes --- a <strong
   </li>
   <li>
     <strong>Latency requirements</strong>: Purpose-built
-    systems like Milvus or Qdrant with <GlossaryTooltip term="HNSW" /> in memory
+    systems like Milvus or Qdrant with HNSW in memory
     typically achieve 1-10ms p95 latency at scale; pgvector
     achieves 10-50ms p95 latency depending on dataset size
     and index configuration. For sub-millisecond needs,
@@ -744,16 +744,16 @@ subvectors requires only 96 bytes --- a <strong
       small amount of recall for orders-of-magnitude speedups.
     </li>
     <li>
-      <strong><GlossaryTooltip term="IVF" /></strong> partitions the space into clusters
+      <strong>IVF</strong> partitions the space into clusters
       and searches only nearby clusters; <strong
-        ><GlossaryTooltip term="HNSW" /></strong
+        >HNSW</strong
       > builds a multi-layer navigable graph with O(log N) query
       time---the dominant algorithm in production.
     </li>
     <li>
       <strong>Product Quantization</strong> compresses vectors
       up to 32x, enabling billion-scale search in reasonable memory.
-      Combine with <GlossaryTooltip term="IVF" /> for IVFPQ.
+      Combine with IVF for IVFPQ.
     </li>
     <li>
       <strong>Vector databases</strong> (Pinecone, Qdrant, Milvus)

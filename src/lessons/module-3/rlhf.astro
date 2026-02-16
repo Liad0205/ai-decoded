@@ -16,16 +16,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     addresses its limitations
   </li>
   <li>
-    Explain the full <GlossaryTooltip term="RLHF" /> pipeline:
+    Explain the full RLHF pipeline:
     reward modeling, <GlossaryTooltip term="PPO" />
     optimization, and KL constraints
   </li>
   <li>
     Derive and compare Direct Preference Optimization (<GlossaryTooltip
       term="DPO"
-    />) as a simpler alternative to <GlossaryTooltip
-      term="PPO"
-    />
+    />) as a simpler alternative to PPO
   </li>
   <li>
     Identify failure modes: reward hacking, mode collapse,
@@ -34,12 +32,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <h2>
-  Why <GlossaryTooltip term="RLHF" />? The Limits of
+  Why RLHF? The Limits of
   Supervised Learning
 </h2>
 
 <p>
-  <GlossaryTooltip term="SFT" /> teaches a model to imitate human
+  SFT teaches a model to imitate human
   demonstrations, but imitation has fundamental limitations:
 </p>
 <ul>
@@ -64,13 +62,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <p>
-  <GlossaryTooltip term="RLHF" /> (Reinforcement Learning from
+  RLHF (Reinforcement Learning from
   Human Feedback) addresses these limitations by training the
   model to optimize for human preferences rather than imitating
   demonstrations.
 </p>
 
-<h2>The <GlossaryTooltip term="RLHF" /> Pipeline</h2>
+<h2>The RLHF Pipeline</h2>
 
 <Diagram
   diagramId="rlhf-pipeline"
@@ -89,7 +87,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.3s"
       >
         <div class="font-bold text-[hsl(var(--diagram-blue-fg))] text-sm mb-2">
-          Stage 1: <GlossaryTooltip term="SFT" />
+          Stage 1: SFT
         </div>
         <div class="text-xs text-[hsl(var(--diagram-blue-fg))]">
           <div>Base model</div>
@@ -131,7 +129,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <div
           class="font-bold text-[hsl(var(--diagram-emerald-fg))] text-sm mb-2"
         >
-          Stage 3: RL (<GlossaryTooltip term="PPO" />)
+          Stage 3: RL (PPO)
         </div>
         <div class="text-xs text-[hsl(var(--diagram-emerald-fg))]">
           <div>Optimize policy &#960;<sub>&#952;</sub></div>
@@ -156,10 +154,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <p>
   Start with a pretrained model and fine-tune on
   demonstration data (covered in Lesson 3.2). This produces
-  the <GlossaryTooltip term="SFT" /> model <MathBlock
+  the SFT model <MathBlock
     formula={"\\pi_{\\text{SFT}}"}
   />, which serves as the starting point and reference
-  policy for <GlossaryTooltip term="RLHF" />.
+  policy for RLHF.
 </p>
 
 <h3>Stage 2: Reward Modeling</h3>
@@ -299,12 +297,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   The KL divergence penalty <MathBlock
     formula={"\\beta \\cdot D_{\\text{KL}}"}
   /> is critical: it prevents the model from drifting too far
-  from the <GlossaryTooltip term="SFT" /> policy. Without it,
+  from the SFT policy. Without it,
   the model would exploit the reward model rather than genuinely
   improving.
 </p>
 
-<h4>Why <GlossaryTooltip term="PPO" />?</h4>
+<h4>Why PPO?</h4>
 
 <p>
   Standard policy gradient methods can make catastrophically
@@ -347,7 +345,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Intuition: The "Cautious Manager"
   </p>
   <p class="text-sm">
-    Think of <GlossaryTooltip term="PPO" /> as a cautious manager
+    Think of PPO as a cautious manager
     overseeing an employee (the model).
   </p>
   <p class="text-sm mt-2">
@@ -387,7 +385,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ul>
 
-<h4><GlossaryTooltip term="RLHF" /> Training Loop</h4>
+<h4>RLHF Training Loop</h4>
 <ol>
   <li>Sample a batch of prompts from the dataset.</li>
   <li>
@@ -421,25 +419,25 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </h2>
 
 <p>
-  <GlossaryTooltip term="RLHF" /> with <GlossaryTooltip
+  RLHF with <GlossaryTooltip
     term="PPO"
   /> is effective but complex: it requires training a separate
   reward model, running RL optimization with a critic network,
-  carefully tuning <GlossaryTooltip term="PPO" />
+  carefully tuning PPO
   hyperparameters, and managing four models in memory simultaneously
   (policy, reference, reward, critic).
 </p>
 
 <p>
-  <strong><GlossaryTooltip term="DPO" /></strong> eliminates the
+  <strong>DPO</strong> eliminates the
   reward model and RL entirely by showing that the optimal policy
   can be derived in closed form from the preference data.
 </p>
 
-<h3>The <GlossaryTooltip term="DPO" /> Insight</h3>
+<h3>The DPO Insight</h3>
 
 <p>
-  Starting from the <GlossaryTooltip term="RLHF" /> objective,
+  Starting from the RLHF objective,
   Rafailov et al. showed that the optimal policy under the KL-constrained
   reward maximization has a closed-form relationship to the reward
   function:
@@ -459,8 +457,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   Substituting this into the Bradley-Terry preference model
   and canceling the partition function <MathBlock
     formula="Z(x)"
-  />, we get the <GlossaryTooltip term="DPO" /> loss. The key
-  intuition: <GlossaryTooltip term="DPO" /> is a classification
+  />, we get the DPO loss. The key
+  intuition: DPO is a classification
   loss in disguise. It increases the log-probability of preferred
   responses and decreases the log-probability of dispreferred
   ones, with the reference model acting as a regularizer to prevent
@@ -469,7 +467,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <div class="equation-with-label">
   <p class="equation-label">
-    <GlossaryTooltip term="DPO" /> loss function:
+    DPO loss function:
   </p>
   <MathBlock
     formula={"\\mathcal{L}_{\\text{DPO}}(\\theta) = -\\mathbb{E}_{(x, y_w, y_l)}\\left[\\log \\sigma\\left(\\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{\\text{ref}}(y_w|x)} - \\beta \\log \\frac{\\pi_\\theta(y_l|x)}{\\pi_{\\text{ref}}(y_l|x)}\\right)\\right]"}
@@ -503,7 +501,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <h3>
-  <GlossaryTooltip term="DPO" /> vs. <GlossaryTooltip
+  DPO vs. <GlossaryTooltip
     term="PPO"
   />: Trade-offs
 </h3>
@@ -516,7 +514,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     no critic, no RL loop). Far easier to implement and debug.
   </li>
   <li>
-    <strong>Memory</strong>: <GlossaryTooltip term="DPO" /> requires
+    <strong>Memory</strong>: DPO requires
     only two models (policy + reference). <GlossaryTooltip
       term="PPO"
     /> requires four (policy + reference + reward + critic).
@@ -531,7 +529,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <strong>Expressiveness</strong>: <GlossaryTooltip
       term="PPO"
     /> can explore beyond the training data distribution by generating
-    novel responses. <GlossaryTooltip term="DPO" /> is limited
+    novel responses. DPO is limited
     to reweighting responses in the preference dataset.
   </li>
   <li>
@@ -546,14 +544,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <h3>
-  <GlossaryTooltip term="DPO" /> in Practice (2025-2026)
+  DPO in Practice (2025-2026)
 </h3>
 <p>
   By 2025-2026, <strong
-    ><GlossaryTooltip term="DPO" /> has become a widely adopted
+    >DPO has become a widely adopted
     alternative to <GlossaryTooltip
       term="RLHF"
-    />/<GlossaryTooltip term="PPO" /></strong
+    />/PPO</strong
   > for alignment in production systems. The reasons:
 </p>
 <ul>
@@ -584,7 +582,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <h3>
-  Beyond <GlossaryTooltip term="DPO" />: Newer Variants
+  Beyond DPO: Newer Variants
   (2025-2026)
 </h3>
 <p>
@@ -595,7 +593,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <ul>
   <li>
     <strong>IPO (Identity Preference Optimization)</strong>:
-    Addresses <GlossaryTooltip term="DPO" />'s sensitivity
+    Addresses DPO's sensitivity
     to the reference policy by using an identity mapping,
     improving robustness
   </li>
@@ -716,7 +714,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   The KL penalty mitigates this by keeping the policy close
-  to the diverse <GlossaryTooltip term="SFT" /> distribution,
+  to the diverse SFT distribution,
   but too-low <MathBlock formula={"\\beta"} /> allows collapse
   while too-high <MathBlock formula={"\\beta"} /> prevents meaningful
   improvement.
@@ -725,7 +723,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Alignment Tax</h3>
 
 <p>
-  <GlossaryTooltip term="RLHF" /> can reduce raw capability on
+  RLHF can reduce raw capability on
   some benchmarks. The "alignment tax" reflects the trade-off
   between helpfulness and safety: a model that refuses harmful
   requests may also refuse ambiguous-but-benign requests. Research
@@ -734,7 +732,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <h3>
-  Iterative <GlossaryTooltip term="RLHF" /> and Constitutional
+  Iterative RLHF and Constitutional
   AI
 </h3>
 
@@ -746,7 +744,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   model to critique its own outputs according to a set of principles
   (a "constitution") and generate preference pairs for <GlossaryTooltip
     term="DPO"
-  />/<GlossaryTooltip term="RLHF" />
+  />/RLHF
   training.
 </p>
 
@@ -761,8 +759,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong
-        >Historical <GlossaryTooltip term="RLHF" /> stages</strong
-      >: <GlossaryTooltip term="SFT" />
+        >Historical RLHF stages</strong
+      >: SFT
       (demonstrations) → Reward Model (comparisons) → <GlossaryTooltip
         term="PPO"
       />
@@ -770,18 +768,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong
-        ><GlossaryTooltip term="DPO" /> has become widely adopted</strong
+        >DPO has become widely adopted</strong
       > (2025-2026), deriving a closed-form loss from preference
       data and eliminating the reward model and RL loop entirely.
       Its simplicity, stability, and effectiveness make it a popular
       alternative to <GlossaryTooltip
         term="RLHF"
-      />/<GlossaryTooltip term="PPO" />
+      />/PPO
     </li>
     <li>
       <strong>Modern variants</strong>: IPO, RLTHF, and
       verifier-driven approaches continue to improve on
-      vanilla <GlossaryTooltip term="DPO" /> for specific use
+      vanilla DPO for specific use
       cases
     </li>
     <li>
