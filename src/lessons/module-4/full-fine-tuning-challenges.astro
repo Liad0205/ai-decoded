@@ -78,7 +78,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 1: Count Parameters</h4>
       <p>LLaMA-2 7B has <MathBlock formula={"N = 6.74 \\times 10^9"} /> parameters.</p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">
+      <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="1">
         Next Step →
       </button>
     </div>
@@ -87,7 +87,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <h4>Step 2: Model Weights (Mixed Precision)</h4>
       <MathBlock formula={"\\text{Weights} = 6.74 \\times 10^9 \\times 6 = 40.4\\text{ GB}"} display={true} />
       <p>This is 6 bytes per parameter: 4 bytes FP32 (master copy) + 2 bytes FP16 (compute copy).</p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">
+      <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="2">
         Next Step →
       </button>
     </div>
@@ -96,7 +96,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <h4>Step 3: Optimizer States</h4>
       <MathBlock formula={"\\text{Adam states} = 6.74 \\times 10^9 \\times 8 = 53.9\\text{ GB}"} display={true} />
       <p>Two FP32 tensors (momentum + variance) per parameter. This is the largest memory consumer.</p>
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">
+      <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="3">
         Next Step →
       </button>
     </div>
@@ -104,7 +104,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 4: Gradients</h4>
       <MathBlock formula={"\\text{Gradients} = 6.74 \\times 10^9 \\times 2 = 13.5\\text{ GB}"} display={true} />
-      <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">
+      <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="4">
         Next Step →
       </button>
     </div>
@@ -112,10 +112,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 5: Total (Excluding Activations)</h4>
       <MathBlock formula={"\\text{Total} = 40.4 + 53.9 + 13.5 = 107.8\\text{ GB}"} display={true} />
-      <p class="mt-2 text-rose-700 dark:text-[hsl(var(--foreground))] font-medium">
+      <p class="mt-2 text-[hsl(var(--foreground))] font-medium">
         That is over 100 GB just for model state -- more than any single consumer GPU (A100 has 80 GB). And we have not even counted activations yet.
       </p>
-      <p class="mt-1 text-slate-600 dark:text-[hsl(var(--muted-foreground))]">
+      <p class="mt-1 text-[hsl(var(--muted-foreground))]">
         With activations (sequence length 2048, batch size 1), add another ~20-40 GB depending on checkpointing strategy. Full fine-tuning of a 7B model requires at minimum 2x A100 80GB GPUs with model parallelism.
       </p>
     </div>
@@ -139,46 +139,46 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Scaling Wall</h2>
 
   <Diagram diagramId="memory-scaling" title="Memory Requirements vs. Model Size" autoplay={true} animationDuration={3000}>
-    <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full">
+    <div class="bg-[hsl(var(--card))] p-4 rounded w-full">
       <div class="space-y-4">
         <div class="flex items-center gap-4" data-animate style="animation-delay: 0.2s">
           <div class="w-24 text-right text-sm font-medium">1.3B</div>
-          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
-            <div class="h-full bg-indigo-500 rounded-full flex items-center justify-end pr-2" style="width: 8%">
+          <div class="flex-1 bg-[hsl(var(--muted))] rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-[hsl(var(--diagram-indigo-solid))] rounded-full flex items-center justify-end pr-2" style="width: 8%">
               <span class="text-xs text-white font-medium">~24 GB</span>
             </div>
           </div>
-          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">1x A100 40GB</div>
+          <div class="w-24 text-xs text-[hsl(var(--muted-foreground))]">1x A100 40GB</div>
         </div>
         <div class="flex items-center gap-4" data-animate style="animation-delay: 0.8s">
           <div class="w-24 text-right text-sm font-medium">7B</div>
-          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
-            <div class="h-full bg-indigo-600 rounded-full flex items-center justify-end pr-2" style="width: 38%">
+          <div class="flex-1 bg-[hsl(var(--muted))] rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-[hsl(var(--diagram-indigo-solid))] rounded-full flex items-center justify-end pr-2" style="width: 38%">
               <span class="text-xs text-white font-medium">~120 GB</span>
             </div>
           </div>
-          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">2x A100 80GB</div>
+          <div class="w-24 text-xs text-[hsl(var(--muted-foreground))]">2x A100 80GB</div>
         </div>
         <div class="flex items-center gap-4" data-animate style="animation-delay: 1.4s">
           <div class="w-24 text-right text-sm font-medium">13B</div>
-          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
-            <div class="h-full bg-purple-600 rounded-full flex items-center justify-end pr-2" style="width: 66%">
+          <div class="flex-1 bg-[hsl(var(--muted))] rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-[hsl(var(--diagram-purple-solid))] rounded-full flex items-center justify-end pr-2" style="width: 66%">
               <span class="text-xs text-white font-medium">~220 GB</span>
             </div>
           </div>
-          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">4x A100 80GB</div>
+          <div class="w-24 text-xs text-[hsl(var(--muted-foreground))]">4x A100 80GB</div>
         </div>
         <div class="flex items-center gap-4" data-animate style="animation-delay: 2.0s">
           <div class="w-24 text-right text-sm font-medium">70B</div>
-          <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
-            <div class="h-full bg-rose-600 rounded-full flex items-center justify-end pr-2" style="width: 100%">
+          <div class="flex-1 bg-[hsl(var(--muted))] rounded-full h-6 overflow-hidden">
+            <div class="h-full bg-[hsl(var(--diagram-red-solid))] rounded-full flex items-center justify-end pr-2" style="width: 100%">
               <span class="text-xs text-white font-medium">~1.2 TB</span>
             </div>
           </div>
-          <div class="w-24 text-xs text-slate-500 dark:text-slate-400">16x A100 80GB</div>
+          <div class="w-24 text-xs text-[hsl(var(--muted-foreground))]">16x A100 80GB</div>
         </div>
       </div>
-      <div class="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center" data-animate style="animation-delay: 2.6s">
+      <div class="mt-4 text-xs text-[hsl(var(--muted-foreground))] text-center" data-animate style="animation-delay: 2.6s">
         Memory estimates for full fine-tuning with AdamW in mixed precision (excluding activations)
       </div>
     </div>

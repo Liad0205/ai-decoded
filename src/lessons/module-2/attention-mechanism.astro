@@ -203,9 +203,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <div
-  class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg my-4"
+  class="bg-[hsl(var(--diagram-blue-bg))] p-4 rounded-lg my-4"
 >
-  <p class="font-semibold text-blue-800 dark:text-blue-200">
+  <p class="font-semibold text-[hsl(var(--diagram-blue-fg))]">
     Concrete Example:
   </p>
   <p class="text-sm">
@@ -234,7 +234,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={4000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <div
       class="grid grid-cols-3 gap-8 items-center justify-center"
@@ -249,17 +249,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           Input Sequence
         </div>
         <div
-          class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--muted))] rounded text-xs text-center"
         >
           "The"
         </div>
         <div
-          class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--muted))] rounded text-xs text-center"
         >
           "cat"
         </div>
         <div
-          class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--muted))] rounded text-xs text-center"
         >
           "sat"
         </div>
@@ -274,13 +274,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <div class="text-center font-semibold text-sm mb-2">
           Project to Q, K, V
         </div>
-        <div class="text-xs text-center text-slate-600">
+        <div class="text-xs text-center text-[hsl(var(--muted-foreground))]">
           <div class="mb-1">Q: queries</div>
           <div class="mb-1">K: keys</div>
           <div>V: values</div>
         </div>
         <div
-          class="text-xs text-center font-mono text-indigo-600"
+          class="text-xs text-center font-mono text-[hsl(var(--diagram-indigo-fg))]"
         >
           QK<sup>T</sup> / √d<sub>k</sub>
         </div>
@@ -296,17 +296,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           Attended Output
         </div>
         <div
-          class="px-3 py-2 bg-indigo-100 rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center"
         >
           z₁
         </div>
         <div
-          class="px-3 py-2 bg-indigo-100 rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center"
         >
           z₂
         </div>
         <div
-          class="px-3 py-2 bg-indigo-100 rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center"
         >
           z₃
         </div>
@@ -314,7 +314,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </div>
 
     <div
-      class="mt-6 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center"
+      class="mt-6 text-sm text-[hsl(var(--muted-foreground))] text-center"
       data-animate
       style="animation-delay: 3s"
     >

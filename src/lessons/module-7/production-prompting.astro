@@ -172,36 +172,36 @@ IMPORTANT RULES:
 </section>
 
 <Diagram diagramId="injection-defense" title="Defense-in-Depth Against Prompt Injection" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+  <div class="bg-[hsl(var(--card))] p-4 rounded">
     <div class="flex flex-col gap-3">
       <!-- Layer 1 -->
       <div class="flex items-center gap-3" data-animate style="animation-delay: 0.5s">
-        <div class="w-32 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 1</div>
-        <div class="flex-1 px-4 py-2 bg-blue-50 border border-blue-200 rounded text-sm">
+        <div class="w-32 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 1</div>
+        <div class="flex-1 px-4 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-sm">
           <strong>Input Sanitization</strong> -- Strip control chars, validate length, enforce format
         </div>
       </div>
 
       <!-- Layer 2 -->
       <div class="flex items-center gap-3" data-animate style="animation-delay: 1.5s">
-        <div class="w-32 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 2</div>
-        <div class="flex-1 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded text-sm">
+        <div class="w-32 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 2</div>
+        <div class="flex-1 px-4 py-2 bg-[hsl(var(--diagram-indigo-bg))] border border-[hsl(var(--diagram-indigo-border))] rounded text-sm">
           <strong>Prompt Hardening</strong> -- Delimiters, explicit rules, instruction anchoring
         </div>
       </div>
 
       <!-- Layer 3 -->
       <div class="flex items-center gap-3" data-animate style="animation-delay: 2.5s">
-        <div class="w-32 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 3</div>
-        <div class="flex-1 px-4 py-2 bg-purple-50 border border-purple-200 rounded text-sm">
+        <div class="w-32 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 3</div>
+        <div class="flex-1 px-4 py-2 bg-[hsl(var(--diagram-purple-bg))] border border-[hsl(var(--diagram-purple-border))] rounded text-sm">
           <strong>Output Validation</strong> -- Schema checks, content filters, policy classifiers
         </div>
       </div>
 
       <!-- Layer 4 -->
       <div class="flex items-center gap-3" data-animate style="animation-delay: 3.5s">
-        <div class="w-32 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 4</div>
-        <div class="flex-1 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded text-sm">
+        <div class="w-32 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Layer 4</div>
+        <div class="flex-1 px-4 py-2 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded text-sm">
           <strong>Architecture</strong> -- Least privilege, human-in-the-loop, sandboxing, rate limits
         </div>
       </div>
@@ -337,25 +337,25 @@ export const PROMPT_CHANGELOG = "Added 'warranty' intent, refined exchange examp
   <div data-reveal-step>
     <h4>Step 1: Measure Your Baseline</h4>
     <p>Log token counts (input and output) for every request. Identify which prompts consume the most tokens. A 5,000-token system prompt may be responsible for 80% of your input token costs.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="1">Next Step</button>
   </div>
 
   <div data-reveal-step>
     <h4>Step 2: Enable Prompt Caching</h4>
     <p>Structure prompts with static content first. Enable provider-side caching. Measure the cost reduction -- typically 50-90% on input tokens for cache-eligible prefixes.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="2">Next Step</button>
   </div>
 
   <div data-reveal-step>
     <h4>Step 3: Optimize Prompt Length</h4>
     <p>Run your eval suite with progressively shorter prompts. Remove examples and instructions one at a time, measuring the impact on accuracy. Find the minimum prompt that maintains acceptable performance.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="3">Next Step</button>
   </div>
 
   <div data-reveal-step>
     <h4>Step 4: Implement Response Caching</h4>
     <p>For deterministic tasks (temperature=0), cache responses keyed on input hash. Typical cache hit rates of 15-40% for customer service and FAQ-type applications.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="4">Next Step</button>
   </div>
 
   <div data-reveal-step>

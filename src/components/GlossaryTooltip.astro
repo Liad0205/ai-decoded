@@ -8,9 +8,8 @@ interface Props {
 const { term } = Astro.props;
 const definition = glossary[term];
 
-// Fallback if term not found in glossary, though ideally we should check existence.
 if (!definition) {
-  console.warn(`Glossary term "${term}" not found.`);
+  throw new Error(`Glossary term "${term}" not found. Add it to src/data/glossary.ts`);
 }
 ---
 

@@ -100,7 +100,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <div class="equation-with-label">
-  <div class="text-sm font-medium text-slate-700 mb-2">
+  <div class="text-sm font-medium text-[hsl(var(--foreground))] mb-2">
     Distance Metric Equivalence
   </div>
   <MathBlock
@@ -283,26 +283,26 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="flex flex-col gap-4">
       <!-- Layer 2 (top) -->
       <div data-animate style="animation-delay: 0.3s">
         <div
-          class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2"
+          class="text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-2"
         >
           Layer 2 (sparse, long-range)
         </div>
         <div
-          class="relative h-12 bg-indigo-50 rounded border border-indigo-200 dark:border-[hsl(var(--border))] flex items-center justify-around px-8"
+          class="relative h-12 bg-[hsl(var(--diagram-indigo-bg))] rounded border border-[hsl(var(--diagram-indigo-border))] flex items-center justify-around px-8"
         >
-          <div class="w-4 h-4 bg-indigo-500 rounded-full">
+          <div class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full">
           </div>
           <div
-            class="border-t-2 border-dashed border-indigo-300 flex-1 mx-2"
+            class="border-t-2 border-dashed border-[hsl(var(--diagram-indigo-border))] flex-1 mx-2"
           >
           </div>
-          <div class="w-4 h-4 bg-indigo-500 rounded-full">
+          <div class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full">
           </div>
         </div>
       </div>
@@ -310,32 +310,32 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <!-- Layer 1 (middle) -->
       <div data-animate style="animation-delay: 1.5s">
         <div
-          class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2"
+          class="text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-2"
         >
           Layer 1 (medium connections)
         </div>
         <div
-          class="relative h-12 bg-purple-50 rounded border border-purple-200 dark:border-[hsl(var(--border))] flex items-center justify-around px-4"
+          class="relative h-12 bg-[hsl(var(--diagram-purple-bg))] rounded border border-[hsl(var(--diagram-purple-border))] flex items-center justify-around px-4"
         >
-          <div class="w-3 h-3 bg-purple-500 rounded-full">
+          <div class="w-3 h-3 bg-[hsl(var(--diagram-purple-solid))] rounded-full">
           </div>
           <div
-            class="border-t border-purple-300 flex-1 mx-1"
+            class="border-t border-[hsl(var(--diagram-purple-border))] flex-1 mx-1"
           >
           </div>
-          <div class="w-3 h-3 bg-purple-500 rounded-full">
+          <div class="w-3 h-3 bg-[hsl(var(--diagram-purple-solid))] rounded-full">
           </div>
           <div
-            class="border-t border-purple-300 flex-1 mx-1"
+            class="border-t border-[hsl(var(--diagram-purple-border))] flex-1 mx-1"
           >
           </div>
-          <div class="w-3 h-3 bg-purple-500 rounded-full">
+          <div class="w-3 h-3 bg-[hsl(var(--diagram-purple-solid))] rounded-full">
           </div>
           <div
-            class="border-t border-purple-300 flex-1 mx-1"
+            class="border-t border-[hsl(var(--diagram-purple-border))] flex-1 mx-1"
           >
           </div>
-          <div class="w-3 h-3 bg-purple-500 rounded-full">
+          <div class="w-3 h-3 bg-[hsl(var(--diagram-purple-solid))] rounded-full">
           </div>
         </div>
       </div>
@@ -343,35 +343,35 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <!-- Layer 0 (bottom) -->
       <div data-animate style="animation-delay: 3s">
         <div
-          class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2"
+          class="text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-2"
         >
           Layer 0 (dense, short-range)
         </div>
         <div
-          class="relative h-12 bg-emerald-50 rounded border border-emerald-200 dark:border-[hsl(var(--border))] flex items-center justify-around px-2"
+          class="relative h-12 bg-[hsl(var(--diagram-emerald-bg))] rounded border border-[hsl(var(--diagram-emerald-border))] flex items-center justify-around px-2"
         >
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full">
+          <div class="w-2 h-2 bg-[hsl(var(--diagram-emerald-solid))] rounded-full">
           </div>
         </div>
       </div>
     </div>
 
     <div
-      class="mt-4 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center"
+      class="mt-4 text-sm text-[hsl(var(--muted-foreground))] text-center"
       data-animate
       style="animation-delay: 4s"
     >
@@ -442,9 +442,9 @@ subvectors requires only 96 bytes --- a <strong
 >.
 
 <div
-  class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg my-4"
+  class="bg-[hsl(var(--diagram-emerald-bg))] p-4 rounded-lg my-4"
 >
-  <p class="font-semibold text-teal-800 dark:text-teal-200">
+  <p class="font-semibold text-[hsl(var(--diagram-emerald-fg))]">
     Analogy: The Color Palette (GIFs)
   </p>
   <p class="text-sm">
@@ -608,7 +608,7 @@ subvectors requires only 96 bytes --- a <strong
 <h3>BM25: The Sparse Retrieval Baseline</h3>
 
 <div class="equation-with-label">
-  <div class="text-sm font-medium text-slate-700 mb-2">
+  <div class="text-sm font-medium text-[hsl(var(--foreground))] mb-2">
     BM25 Score
   </div>
   <MathBlock
@@ -641,7 +641,7 @@ subvectors requires only 96 bytes --- a <strong
 </p>
 
 <div class="equation-with-label">
-  <div class="text-sm font-medium text-slate-700 mb-2">
+  <div class="text-sm font-medium text-[hsl(var(--foreground))] mb-2">
     Hybrid Score Fusion
   </div>
   <MathBlock
@@ -669,7 +669,7 @@ subvectors requires only 96 bytes --- a <strong
 </p>
 
 <div class="equation-with-label">
-  <div class="text-sm font-medium text-slate-700 mb-2">
+  <div class="text-sm font-medium text-[hsl(var(--foreground))] mb-2">
     Reciprocal Rank Fusion
   </div>
   <MathBlock

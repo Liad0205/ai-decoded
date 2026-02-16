@@ -303,10 +303,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="relative w-full h-96 bg-slate-50 dark:bg-[hsl(var(--muted))] rounded-lg p-6"
+    class="relative w-full h-96 bg-[hsl(var(--muted))] rounded-lg p-6"
   >
     <div
-      class="absolute left-0 right-0 top-1/2 h-1 bg-indigo-200"
+      class="absolute left-0 right-0 top-1/2 h-1 bg-[hsl(var(--diagram-indigo-border))]"
       data-animate
     >
     </div>
@@ -321,18 +321,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.5s"
       >
         <div
-          class="w-4 h-4 bg-indigo-500 rounded-full mb-2"
+          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
         >
         </div>
         <div class="text-center">
           <div class="font-bold text-sm">2012</div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] mt-1"
+            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
           >
             AlexNet
           </div>
           <div
-            class="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Deep Learning Era
           </div>
@@ -345,18 +345,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 1s"
       >
         <div
-          class="w-4 h-4 bg-indigo-500 rounded-full mb-2"
+          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
         >
         </div>
         <div class="text-center">
           <div class="font-bold text-sm">2017</div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1"
+            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
           >
             Transformer
           </div>
           <div
-            class="text-xs text-slate-500 dark:text-slate-400"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Architecture Revolution
           </div>
@@ -369,18 +369,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 1.5s"
       >
         <div
-          class="w-4 h-4 bg-indigo-500 rounded-full mb-2"
+          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
         >
         </div>
         <div class="text-center">
           <div class="font-bold text-sm">2020</div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1"
+            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
           >
             GPT-3
           </div>
           <div
-            class="text-xs text-slate-500 dark:text-slate-400"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Few-Shot Learning
           </div>
@@ -393,18 +393,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 2s"
       >
         <div
-          class="w-4 h-4 bg-indigo-500 rounded-full mb-2"
+          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
         >
         </div>
         <div class="text-center">
           <div class="font-bold text-sm">2022</div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1"
+            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
           >
             ChatGPT
           </div>
           <div
-            class="text-xs text-slate-500 dark:text-slate-400"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             <GlossaryTooltip term="RLHF" /> Alignment
           </div>
@@ -417,18 +417,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 2.5s"
       >
         <div
-          class="w-4 h-4 bg-indigo-500 rounded-full mb-2"
+          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
         >
         </div>
         <div class="text-center">
           <div class="font-bold text-sm">2024</div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1"
+            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
           >
             GPT-4, Claude
           </div>
           <div
-            class="text-xs text-slate-500 dark:text-slate-400"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Multimodal Models
           </div>
@@ -441,18 +441,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 3s"
       >
         <div
-          class="w-4 h-4 bg-indigo-500 rounded-full mb-2"
+          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
         >
         </div>
         <div class="text-center">
           <div class="font-bold text-sm">2025-26</div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1"
+            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
           >
             Frontier <GlossaryTooltip term="LLM" />s
           </div>
           <div
-            class="text-xs text-slate-500 dark:text-slate-400"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Agents & Reasoning
           </div>

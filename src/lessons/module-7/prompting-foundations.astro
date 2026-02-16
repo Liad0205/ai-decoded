@@ -47,7 +47,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
     <li><strong>Words are not tokens</strong>: Common words like "the" are single tokens, but uncommon words may be split. "Anthropic" might become ["Anthrop", "ic"]. Code identifiers, non-English text, and numbers are often split unpredictably.</li>
     <li>
         <strong>Arithmetic is tokenization-dependent</strong>: The number "12345" might be tokenized as ["123", "45"] or ["1", "2345"], making digit-level reasoning unreliable. This partly explains why LLMs struggle with arithmetic.
-        <div class="mt-2 bg-slate-100 dark:bg-[hsl(var(--muted))] p-2 rounded text-xs font-mono">
+        <div class="mt-2 bg-[hsl(var(--muted))] p-2 rounded text-xs font-mono">
           Input: 9999 (1 token) vs. 10000 (2 tokens: "10", "000")<br/>
           To the model, "10000" looks like two separate concepts, confusing arithmetic operations.
         </div>
@@ -68,55 +68,55 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 </section>
 
 <Diagram diagramId="prompt-processing" title="How an LLM Processes a Prompt" autoplay={true} animationDuration={5000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+  <div class="bg-[hsl(var(--card))] p-4 rounded">
     <div class="flex flex-col gap-4">
       <!-- Step 1: Prompt text -->
       <div class="flex items-center gap-4" data-animate style="animation-delay: 0.3s">
-        <div class="w-28 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Input Text</div>
-        <div class="flex-1 px-4 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded font-mono text-sm">"Explain quantum computing simply"</div>
+        <div class="w-28 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Input Text</div>
+        <div class="flex-1 px-4 py-2 bg-[hsl(var(--muted))] rounded font-mono text-sm">"Explain quantum computing simply"</div>
       </div>
 
       <!-- Step 2: Tokenization -->
       <div class="flex items-center gap-4" data-animate style="animation-delay: 1s">
-        <div class="w-28 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Tokenize</div>
+        <div class="w-28 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Tokenize</div>
         <div class="flex-1 flex gap-1 flex-wrap">
-          <span class="px-2 py-1 bg-indigo-100 rounded text-xs font-mono">Explain</span>
-          <span class="px-2 py-1 bg-indigo-100 rounded text-xs font-mono">quantum</span>
-          <span class="px-2 py-1 bg-indigo-100 rounded text-xs font-mono">computing</span>
-          <span class="px-2 py-1 bg-indigo-100 rounded text-xs font-mono">simply</span>
+          <span class="px-2 py-1 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs font-mono">Explain</span>
+          <span class="px-2 py-1 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs font-mono">quantum</span>
+          <span class="px-2 py-1 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs font-mono">computing</span>
+          <span class="px-2 py-1 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs font-mono">simply</span>
         </div>
       </div>
 
       <!-- Step 3: Transformer -->
       <div class="flex items-center gap-4" data-animate style="animation-delay: 2s">
-        <div class="w-28 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Attention</div>
-        <div class="flex-1 px-4 py-3 bg-purple-50 border border-purple-200 rounded text-sm text-center">
+        <div class="w-28 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Attention</div>
+        <div class="flex-1 px-4 py-3 bg-[hsl(var(--diagram-purple-bg))] border border-[hsl(var(--diagram-purple-border))] rounded text-sm text-center">
           Transformer layers compute attention across all tokens
         </div>
       </div>
 
       <!-- Step 4: Next-token distribution -->
       <div class="flex items-center gap-4" data-animate style="animation-delay: 3s">
-        <div class="w-28 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Predict</div>
+        <div class="w-28 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Predict</div>
         <div class="flex-1 flex gap-2 items-end">
           <div class="flex flex-col items-center">
-            <div class="text-xs text-slate-500 mb-1">0.35</div>
-            <div class="w-14 bg-indigo-500 rounded-t" style="height: 70px"></div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))] mb-1">0.35</div>
+            <div class="w-14 bg-[hsl(var(--diagram-indigo-solid))] rounded-t" style="height: 70px"></div>
             <div class="text-xs mt-1 font-mono">Quantum</div>
           </div>
           <div class="flex flex-col items-center">
-            <div class="text-xs text-slate-500 mb-1">0.25</div>
-            <div class="w-14 bg-indigo-400 rounded-t" style="height: 50px"></div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))] mb-1">0.25</div>
+            <div class="w-14 bg-[hsl(var(--diagram-indigo-solid))] rounded-t" style="height: 50px"></div>
             <div class="text-xs mt-1 font-mono">At</div>
           </div>
           <div class="flex flex-col items-center">
-            <div class="text-xs text-slate-500 mb-1">0.15</div>
-            <div class="w-14 bg-indigo-300 rounded-t" style="height: 30px"></div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))] mb-1">0.15</div>
+            <div class="w-14 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 30px"></div>
             <div class="text-xs mt-1 font-mono">In</div>
           </div>
           <div class="flex flex-col items-center">
-            <div class="text-xs text-slate-500 mb-1">0.25</div>
-            <div class="w-14 bg-indigo-200 rounded-t" style="height: 50px"></div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))] mb-1">0.25</div>
+            <div class="w-14 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 50px"></div>
             <div class="text-xs mt-1 font-mono">...</div>
           </div>
         </div>
@@ -124,8 +124,8 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 
       <!-- Step 5: Sample -->
       <div class="flex items-center gap-4" data-animate style="animation-delay: 4s">
-        <div class="w-28 text-sm font-semibold text-slate-600 dark:text-[hsl(var(--muted-foreground))] flex-shrink-0">Sample</div>
-        <div class="flex-1 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded text-sm">
+        <div class="w-28 text-sm font-semibold text-[hsl(var(--muted-foreground))] flex-shrink-0">Sample</div>
+        <div class="flex-1 px-4 py-2 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded text-sm">
           Select next token based on sampling parameters (temperature, top-p) and repeat
         </div>
       </div>
@@ -284,48 +284,48 @@ Sentiment:</code></pre>
 </section>
 
 <Diagram diagramId="temperature-effect" title="Effect of Temperature on Token Distribution" autoplay={true} animationDuration={4000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded">
+  <div class="bg-[hsl(var(--card))] p-4 rounded">
     <div class="grid grid-cols-3 gap-6">
       <!-- Low temperature -->
       <div class="text-center" data-animate style="animation-delay: 0.5s">
         <div class="font-semibold text-sm mb-3">Low Temp (0.1)</div>
         <div class="flex justify-center items-end gap-1 h-32">
-          <div class="w-8 bg-indigo-600 rounded-t" style="height: 120px">
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-solid))] rounded-t" style="height: 120px">
             <div class="text-xs text-white pt-1">0.92</div>
           </div>
-          <div class="w-8 bg-indigo-300 rounded-t" style="height: 12px"></div>
-          <div class="w-8 bg-indigo-200 rounded-t" style="height: 4px"></div>
-          <div class="w-8 bg-indigo-100 rounded-t" style="height: 2px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 12px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 4px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-bg))] rounded-t" style="height: 2px"></div>
         </div>
-        <div class="text-xs text-slate-500 mt-2">Nearly deterministic</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-2">Nearly deterministic</div>
       </div>
 
       <!-- Medium temperature -->
       <div class="text-center" data-animate style="animation-delay: 1.5s">
         <div class="font-semibold text-sm mb-3">Med Temp (0.7)</div>
         <div class="flex justify-center items-end gap-1 h-32">
-          <div class="w-8 bg-indigo-600 rounded-t" style="height: 72px">
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-solid))] rounded-t" style="height: 72px">
             <div class="text-xs text-white pt-1">0.55</div>
           </div>
-          <div class="w-8 bg-indigo-400 rounded-t" style="height: 36px"></div>
-          <div class="w-8 bg-indigo-300 rounded-t" style="height: 16px"></div>
-          <div class="w-8 bg-indigo-200 rounded-t" style="height: 8px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-solid))] rounded-t" style="height: 36px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 16px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 8px"></div>
         </div>
-        <div class="text-xs text-slate-500 mt-2">Balanced diversity</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-2">Balanced diversity</div>
       </div>
 
       <!-- High temperature -->
       <div class="text-center" data-animate style="animation-delay: 2.5s">
         <div class="font-semibold text-sm mb-3">High Temp (1.5)</div>
         <div class="flex justify-center items-end gap-1 h-32">
-          <div class="w-8 bg-indigo-500 rounded-t" style="height: 42px">
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-solid))] rounded-t" style="height: 42px">
             <div class="text-xs text-white pt-1">0.30</div>
           </div>
-          <div class="w-8 bg-indigo-400 rounded-t" style="height: 36px"></div>
-          <div class="w-8 bg-indigo-300 rounded-t" style="height: 28px"></div>
-          <div class="w-8 bg-indigo-200 rounded-t" style="height: 22px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-solid))] rounded-t" style="height: 36px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 28px"></div>
+          <div class="w-8 bg-[hsl(var(--diagram-indigo-border))] rounded-t" style="height: 22px"></div>
         </div>
-        <div class="text-xs text-slate-500 mt-2">Highly random</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-2">Highly random</div>
       </div>
     </div>
   </div>

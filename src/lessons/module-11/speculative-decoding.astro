@@ -134,12 +134,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 >
   <div data-reveal-step>
     <h4
-      class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2"
+      class="font-semibold text-[hsl(var(--foreground))] mb-2"
     >
       Step 1: Draft Model Generates K Candidate Tokens
     </h4>
     <p
-      class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3"
+      class="text-[hsl(var(--muted-foreground))] mb-3"
     >
       The draft model (e.g., a 1B parameter model)
       autoregressively generates K tokens (typically K =
@@ -150,7 +150,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       /> over the vocabulary.
     </p>
     <div
-      class="bg-indigo-50 p-3 rounded-lg text-sm font-mono"
+      class="bg-[hsl(var(--diagram-indigo-bg))] p-3 rounded-lg text-sm font-mono"
     >
       Draft generates: ["The", "cat", "sat", "on", "the"]
       with probabilities q_1, q_2, q_3, q_4, q_5
@@ -159,12 +159,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <div data-reveal-step class="hidden">
     <h4
-      class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2"
+      class="font-semibold text-[hsl(var(--foreground))] mb-2"
     >
       Step 2: Target Model Verifies All K Tokens in Parallel
     </h4>
     <p
-      class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3"
+      class="text-[hsl(var(--muted-foreground))] mb-3"
     >
       The target model (e.g., 70B) processes all K draft
       tokens in a <strong>single forward pass</strong>,
@@ -175,7 +175,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       just one token autoregressively.
     </p>
     <div
-      class="bg-purple-50 p-3 rounded-lg text-sm font-mono"
+      class="bg-[hsl(var(--diagram-purple-bg))] p-3 rounded-lg text-sm font-mono"
     >
       Target computes: p_1("The"), p_2("cat"), p_3("sat"),
       p_4("on"), p_5("the") in ONE pass
@@ -184,12 +184,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <div data-reveal-step class="hidden">
     <h4
-      class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2"
+      class="font-semibold text-[hsl(var(--foreground))] mb-2"
     >
       Step 3: Accept or Reject Each Token (Left to Right)
     </h4>
     <p
-      class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3"
+      class="text-[hsl(var(--muted-foreground))] mb-3"
     >
       For each position i, accept the draft token <MathBlock
         formula={"x_i"}
@@ -201,16 +201,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       token is accepted with probability proportional to the
       ratio.
     </p>
-    <div class="bg-green-50 p-3 rounded-lg text-sm">
-      <p class="font-medium text-green-800">
+    <div class="bg-[hsl(var(--diagram-green-bg))] p-3 rounded-lg text-sm">
+      <p class="font-medium text-[hsl(var(--diagram-green-fg))]">
         Token "The": p=0.8, q=0.7 &rarr; min(1, 0.8/0.7) =
         1.0 &rarr; ACCEPTED
       </p>
-      <p class="font-medium text-green-800">
+      <p class="font-medium text-[hsl(var(--diagram-green-fg))]">
         Token "cat": p=0.6, q=0.5 &rarr; min(1, 0.6/0.5) =
         1.0 &rarr; ACCEPTED
       </p>
-      <p class="font-medium text-green-800">
+      <p class="font-medium text-[hsl(var(--diagram-green-fg))]">
         Token "sat": p=0.3, q=0.4 &rarr; min(1, 0.3/0.4) =
         0.75 &rarr; (coin flip)
       </p>
@@ -219,12 +219,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <div data-reveal-step class="hidden">
     <h4
-      class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2"
+      class="font-semibold text-[hsl(var(--foreground))] mb-2"
     >
       Step 4: Resample at the First Rejection
     </h4>
     <p
-      class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3"
+      class="text-[hsl(var(--muted-foreground))] mb-3"
     >
       When a token is rejected at position i, sample a
       replacement token from the <strong
@@ -236,7 +236,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       display={true}
     />
     <p
-      class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3"
+      class="text-[hsl(var(--muted-foreground))] mb-3"
     >
       This corrected sampling ensures the final output
       follows <em>exactly</em> the target model's distribution.
@@ -244,16 +244,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       based on the now-rejected token). The process then restarts
       from position i+1.
     </p>
-    <div class="bg-amber-50 p-3 rounded-lg text-sm">
-      <p class="font-medium text-amber-800">
+    <div class="bg-[hsl(var(--diagram-amber-bg))] p-3 rounded-lg text-sm">
+      <p class="font-medium text-[hsl(var(--diagram-amber-fg))]">
         If "sat" rejected: sample replacement from
         norm(max(0, p_3 - q_3))
       </p>
-      <p class="font-medium text-amber-800">
+      <p class="font-medium text-[hsl(var(--diagram-amber-fg))]">
         Discard "on" and "the" (they were conditioned on
         "sat")
       </p>
-      <p class="font-medium text-amber-800">
+      <p class="font-medium text-[hsl(var(--diagram-amber-fg))]">
         Net gain: 2 tokens ("The", "cat") + 1 resampled
         token = 3 tokens from 1 target forward pass
       </p>
@@ -262,12 +262,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <div data-reveal-step class="hidden">
     <h4
-      class="font-semibold text-slate-800 dark:text-[hsl(var(--foreground))] mb-2"
+      class="font-semibold text-[hsl(var(--foreground))] mb-2"
     >
       Step 5: Repeat
     </h4>
     <p
-      class="text-slate-600 dark:text-[hsl(var(--muted-foreground))] mb-3"
+      class="text-[hsl(var(--muted-foreground))] mb-3"
     >
       The draft model continues generating from the last
       accepted token, and the process repeats. On average,
@@ -280,16 +280,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         formula={"\\alpha \\approx 0.7\\text{-}0.8"}
       />), this yields a <strong>2-3x speedup</strong>.
     </p>
-    <div class="bg-slate-50 p-3 rounded-lg text-sm">
-      <p class="font-medium text-slate-700">
+    <div class="bg-[hsl(var(--muted))] p-3 rounded-lg text-sm">
+      <p class="font-medium text-[hsl(var(--foreground))]">
         Expected tokens per target forward pass = 1/(1 -
         alpha)
       </p>
-      <p class="font-medium text-slate-700">
+      <p class="font-medium text-[hsl(var(--foreground))]">
         alpha = 0.8 &rarr; ~5 tokens per pass &rarr; ~5x
         fewer target forward passes needed
       </p>
-      <p class="font-medium text-slate-700">
+      <p class="font-medium text-[hsl(var(--foreground))]">
         But draft model also takes time, so net speedup is
         typically 2-3x
       </p>

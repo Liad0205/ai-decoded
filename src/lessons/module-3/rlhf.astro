@@ -79,19 +79,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="grid grid-cols-3 gap-4">
       <!-- Stage 1 -->
       <div
-        class="text-center p-3 rounded-lg border-2 border-blue-200 bg-blue-50"
+        class="text-center p-3 rounded-lg border-2 border-[hsl(var(--diagram-blue-border))] bg-[hsl(var(--diagram-blue-bg))]"
         data-animate
         style="animation-delay: 0.3s"
       >
-        <div class="font-bold text-blue-800 text-sm mb-2">
+        <div class="font-bold text-[hsl(var(--diagram-blue-fg))] text-sm mb-2">
           Stage 1: <GlossaryTooltip term="SFT" />
         </div>
-        <div class="text-xs text-blue-700">
+        <div class="text-xs text-[hsl(var(--diagram-blue-fg))]">
           <div>Base model</div>
           <div class="my-1">&#8595;</div>
           <div>Fine-tune on demonstrations</div>
@@ -104,14 +104,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 2 -->
       <div
-        class="text-center p-3 rounded-lg border-2 border-amber-200 bg-amber-50"
+        class="text-center p-3 rounded-lg border-2 border-[hsl(var(--diagram-amber-border))] bg-[hsl(var(--diagram-amber-bg))]"
         data-animate
         style="animation-delay: 1.5s"
       >
-        <div class="font-bold text-amber-800 text-sm mb-2">
+        <div class="font-bold text-[hsl(var(--diagram-amber-fg))] text-sm mb-2">
           Stage 2: Reward Model
         </div>
-        <div class="text-xs text-amber-700">
+        <div class="text-xs text-[hsl(var(--diagram-amber-fg))]">
           <div>Collect comparison data</div>
           <div class="my-1">&#8595;</div>
           <div>Train reward model R(x, y)</div>
@@ -124,16 +124,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 3 -->
       <div
-        class="text-center p-3 rounded-lg border-2 border-emerald-200 bg-emerald-50"
+        class="text-center p-3 rounded-lg border-2 border-[hsl(var(--diagram-emerald-border))] bg-[hsl(var(--diagram-emerald-bg))]"
         data-animate
         style="animation-delay: 3.0s"
       >
         <div
-          class="font-bold text-emerald-800 text-sm mb-2"
+          class="font-bold text-[hsl(var(--diagram-emerald-fg))] text-sm mb-2"
         >
           Stage 3: RL (<GlossaryTooltip term="PPO" />)
         </div>
-        <div class="text-xs text-emerald-700">
+        <div class="text-xs text-[hsl(var(--diagram-emerald-fg))]">
           <div>Optimize policy &#960;<sub>&#952;</sub></div>
           <div class="my-1">&#8595;</div>
           <div>
@@ -339,10 +339,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <div
-  class="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg my-4"
+  class="bg-[hsl(var(--diagram-emerald-bg))] p-4 rounded-lg my-4"
 >
   <p
-    class="font-semibold text-emerald-800 dark:text-emerald-200"
+    class="font-semibold text-[hsl(var(--diagram-emerald-fg))]"
   >
     Intuition: The "Cautious Manager"
   </p>

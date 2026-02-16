@@ -1,8 +1,3 @@
-export interface GlossaryTerm {
-  term: string;
-  definition: string;
-}
-
 export const glossary: Record<string, string> = {
   // Adversarial & Security
   FGSM: "Fast Gradient Sign Method - A single-step adversarial attack that adds noise in the direction of the loss gradient.",

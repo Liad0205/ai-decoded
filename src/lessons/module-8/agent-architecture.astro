@@ -45,39 +45,39 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 </section>
 
 <Diagram diagramId="agent-loop" title="The Perception-Reasoning-Action Loop" autoplay={true} animationDuration={6000}>
-  <div class="bg-white dark:bg-[hsl(var(--card))] p-6 rounded">
+  <div class="bg-[hsl(var(--card))] p-6 rounded">
     <div class="flex items-center justify-center">
       <div class="relative w-80 h-80">
         <!-- Central LLM -->
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-indigo-100 border-2 border-indigo-500 rounded-xl flex items-center justify-center" data-animate style="animation-delay: 0.3s">
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-[hsl(var(--diagram-indigo-bg))] border-2 border-[hsl(var(--diagram-indigo-solid))] rounded-xl flex items-center justify-center" data-animate style="animation-delay: 0.3s">
           <div class="text-center">
-            <div class="text-sm font-bold text-indigo-700">LLM</div>
-            <div class="text-xs text-indigo-500">Controller</div>
+            <div class="text-sm font-bold text-[hsl(var(--diagram-indigo-fg))]">LLM</div>
+            <div class="text-xs text-[hsl(var(--diagram-indigo-fg))]">Controller</div>
           </div>
         </div>
 
         <!-- Perceive -->
-        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-blue-100 border border-blue-300 rounded-lg" data-animate style="animation-delay: 1s">
-          <div class="text-sm font-semibold text-blue-700">Perceive</div>
-          <div class="text-xs text-blue-500">Observe environment</div>
+        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded-lg" data-animate style="animation-delay: 1s">
+          <div class="text-sm font-semibold text-[hsl(var(--diagram-blue-fg))]">Perceive</div>
+          <div class="text-xs text-[hsl(var(--diagram-blue-fg))]">Observe environment</div>
         </div>
 
         <!-- Reason -->
-        <div class="absolute top-1/2 right-0 transform -translate-y-1/2 px-4 py-2 bg-purple-100 border border-purple-300 rounded-lg" data-animate style="animation-delay: 2s">
-          <div class="text-sm font-semibold text-purple-700">Reason</div>
-          <div class="text-xs text-purple-500">Plan next step</div>
+        <div class="absolute top-1/2 right-0 transform -translate-y-1/2 px-4 py-2 bg-[hsl(var(--diagram-purple-bg))] border border-[hsl(var(--diagram-purple-border))] rounded-lg" data-animate style="animation-delay: 2s">
+          <div class="text-sm font-semibold text-[hsl(var(--diagram-purple-fg))]">Reason</div>
+          <div class="text-xs text-[hsl(var(--diagram-purple-fg))]">Plan next step</div>
         </div>
 
         <!-- Act -->
-        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-emerald-100 border border-emerald-300 rounded-lg" data-animate style="animation-delay: 3s">
-          <div class="text-sm font-semibold text-emerald-700">Act</div>
-          <div class="text-xs text-emerald-500">Execute tool call</div>
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded-lg" data-animate style="animation-delay: 3s">
+          <div class="text-sm font-semibold text-[hsl(var(--diagram-emerald-fg))]">Act</div>
+          <div class="text-xs text-[hsl(var(--diagram-emerald-fg))]">Execute tool call</div>
         </div>
 
         <!-- Environment -->
-        <div class="absolute top-1/2 left-0 transform -translate-y-1/2 px-4 py-2 bg-amber-100 border border-amber-300 rounded-lg" data-animate style="animation-delay: 4s">
-          <div class="text-sm font-semibold text-amber-700">Observe</div>
-          <div class="text-xs text-amber-500">Get results</div>
+        <div class="absolute top-1/2 left-0 transform -translate-y-1/2 px-4 py-2 bg-[hsl(var(--diagram-amber-bg))] border border-[hsl(var(--diagram-amber-border))] rounded-lg" data-animate style="animation-delay: 4s">
+          <div class="text-sm font-semibold text-[hsl(var(--diagram-amber-fg))]">Observe</div>
+          <div class="text-xs text-[hsl(var(--diagram-amber-fg))]">Get results</div>
         </div>
 
         <!-- Arrows -->
@@ -98,7 +98,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
         </svg>
       </div>
     </div>
-    <div class="text-sm text-slate-600 text-center mt-4" data-animate style="animation-delay: 5.5s">
+    <div class="text-sm text-[hsl(var(--muted-foreground))] text-center mt-4" data-animate style="animation-delay: 5.5s">
       The agent loops continuously: perceiving the environment, reasoning about the next step, acting via tools, and observing results
     </div>
   </div>
@@ -255,25 +255,25 @@ Decomposition:
     <h4>Step 1: Receive the Goal</h4>
     <p><strong>User</strong>: "Our API is returning 500 errors intermittently. Investigate and fix the issue."</p>
     <p>The agent decomposes this into a plan: examine logs, identify the failing endpoint, reproduce the error, find root cause, implement fix, verify.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="1">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="1">Next Step</button>
   </div>
 
   <div data-reveal-step>
     <h4>Step 2: Perceive (Read Logs)</h4>
     <p>The agent calls a tool to read recent error logs. It observes: "500 errors on POST /api/orders, NullPointerException at OrderService.java:142"</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="2">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="2">Next Step</button>
   </div>
 
   <div data-reveal-step>
     <h4>Step 3: Reason (Analyze)</h4>
     <p>The agent reasons: "The error is a NullPointerException at line 142 of OrderService. I need to read that file and understand what can be null. The intermittent nature suggests a race condition or optional field that is sometimes missing."</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="3">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="3">Next Step</button>
   </div>
 
   <div data-reveal-step>
     <h4>Step 4: Act (Read Code)</h4>
     <p>The agent reads OrderService.java and finds that line 142 accesses <code>order.getCustomer().getAddress()</code> without null checks. Some orders have no customer address.</p>
-    <button type="button" class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm" data-reveal-button="4">Next Step</button>
+    <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="4">Next Step</button>
   </div>
 
   <div data-reveal-step>
@@ -317,17 +317,17 @@ Decomposition:
     <li><strong>Cons</strong>: Misclassification sends tasks to wrong specialist, cross-domain tasks are hard to handle</li>
   </ul>
   
-  <div class="bg-slate-50 dark:bg-slate-900/20 p-4 rounded-lg my-4 flex flex-col items-center">
-      <div class="font-semibold text-slate-700 dark:text-slate-300 mb-4">Router Pattern</div>
+  <div class="bg-[hsl(var(--muted))] p-4 rounded-lg my-4 flex flex-col items-center">
+      <div class="font-semibold text-[hsl(var(--foreground))] mb-4">Router Pattern</div>
       <div class="flex flex-col items-center w-full max-w-md">
           <!-- Input -->
-          <div class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 rounded-lg text-sm mb-2">User Query</div>
-          <div class="text-slate-400 mb-2">⬇️</div>
+          <div class="px-4 py-2 bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg text-sm mb-2">User Query</div>
+          <div class="text-[hsl(var(--muted-foreground))] mb-2">⬇️</div>
           <!-- Router -->
-          <div class="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/40 border border-indigo-300 rounded-lg font-mono text-sm font-bold text-indigo-700 dark:text-indigo-300">Router (Classifier)</div>
+          <div class="px-4 py-2 bg-[hsl(var(--diagram-indigo-bg))] border border-[hsl(var(--diagram-indigo-border))] rounded-lg font-mono text-sm font-bold text-[hsl(var(--diagram-indigo-fg))]">Router (Classifier)</div>
           
           <!-- Arrows splitting -->
-          <div class="flex justify-between w-full text-slate-400 mt-2 px-8">
+          <div class="flex justify-between w-full text-[hsl(var(--muted-foreground))] mt-2 px-8">
               <div>↙️</div>
               <div>⬇️</div>
               <div>↘️</div>
@@ -335,13 +335,13 @@ Decomposition:
           
           <!-- Specialists -->
           <div class="flex justify-between w-full gap-2 mt-2">
-              <div class="flex-1 p-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 rounded text-center text-xs">
+              <div class="flex-1 p-2 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded text-center text-xs">
                   <strong>Billing<br/>Agent</strong>
               </div>
-              <div class="flex-1 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 rounded text-center text-xs">
+              <div class="flex-1 p-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-center text-xs">
                   <strong>Tech<br/>Support</strong>
               </div>
-              <div class="flex-1 p-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 rounded text-center text-xs">
+              <div class="flex-1 p-2 bg-[hsl(var(--diagram-purple-bg))] border border-[hsl(var(--diagram-purple-border))] rounded text-center text-xs">
                   <strong>Sales<br/>Agent</strong>
               </div>
           </div>

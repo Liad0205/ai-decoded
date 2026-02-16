@@ -51,6 +51,48 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Diagram semantic colors */
+    --diagram-blue-bg: 214 95% 93%;
+    --diagram-blue-border: 213 93% 83%;
+    --diagram-blue-fg: 224 76% 48%;
+    --diagram-blue-solid: 217 91% 60%;
+
+    --diagram-indigo-bg: 226 100% 97%;
+    --diagram-indigo-border: 226 100% 87%;
+    --diagram-indigo-fg: 235 56% 48%;
+    --diagram-indigo-solid: 239 84% 67%;
+
+    --diagram-purple-bg: 270 100% 98%;
+    --diagram-purple-border: 269 100% 87%;
+    --diagram-purple-fg: 274 72% 43%;
+    --diagram-purple-solid: 271 91% 65%;
+
+    --diagram-emerald-bg: 152 81% 96%;
+    --diagram-emerald-border: 149 80% 85%;
+    --diagram-emerald-fg: 163 94% 24%;
+    --diagram-emerald-solid: 160 84% 39%;
+
+    --diagram-amber-bg: 48 100% 96%;
+    --diagram-amber-border: 48 97% 77%;
+    --diagram-amber-fg: 26 90% 37%;
+    --diagram-amber-solid: 38 92% 50%;
+
+    --diagram-red-bg: 0 86% 97%;
+    --diagram-red-border: 0 96% 89%;
+    --diagram-red-fg: 0 74% 42%;
+    --diagram-red-solid: 0 84% 60%;
+
+    --diagram-rose-bg: 356 100% 97%;
+    --diagram-rose-border: 353 96% 90%;
+    --diagram-rose-fg: 350 89% 36%;
+
+    --diagram-teal-solid: 172 66% 50%;
+
+    /* Code blocks */
+    --code-bg: 222 47% 7%;
+    --code-fg: 210 40% 98%;
+    --code-border: 217 33% 17%;
+
     /* Radii */
     --radius-sm: 0.375rem;
     --radius: 0.5rem;
@@ -105,6 +147,48 @@
     --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Diagram semantic colors */
+    --diagram-blue-bg: 217 33% 17%;
+    --diagram-blue-border: 213 47% 30%;
+    --diagram-blue-fg: 213 94% 78%;
+    --diagram-blue-solid: 217 91% 60%;
+
+    --diagram-indigo-bg: 235 30% 18%;
+    --diagram-indigo-border: 232 47% 35%;
+    --diagram-indigo-fg: 228 96% 82%;
+    --diagram-indigo-solid: 239 84% 67%;
+
+    --diagram-purple-bg: 274 30% 18%;
+    --diagram-purple-border: 272 47% 35%;
+    --diagram-purple-fg: 270 95% 82%;
+    --diagram-purple-solid: 271 91% 65%;
+
+    --diagram-emerald-bg: 160 30% 14%;
+    --diagram-emerald-border: 155 47% 28%;
+    --diagram-emerald-fg: 152 80% 72%;
+    --diagram-emerald-solid: 160 84% 39%;
+
+    --diagram-amber-bg: 38 30% 15%;
+    --diagram-amber-border: 38 47% 30%;
+    --diagram-amber-fg: 43 96% 72%;
+    --diagram-amber-solid: 38 92% 50%;
+
+    --diagram-red-bg: 0 30% 16%;
+    --diagram-red-border: 0 47% 30%;
+    --diagram-red-fg: 0 90% 75%;
+    --diagram-red-solid: 0 84% 65%;
+
+    --diagram-rose-bg: 350 30% 16%;
+    --diagram-rose-border: 350 47% 30%;
+    --diagram-rose-fg: 350 90% 78%;
+
+    --diagram-teal-solid: 172 66% 50%;
+
+    /* Code blocks */
+    --code-bg: 222 47% 11%;
+    --code-fg: 210 40% 98%;
+    --code-border: 217 33% 22%;
+
     /* Shadows (subtle in dark mode) */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
@@ -143,11 +227,13 @@
   }
 
   .lesson-content h1 {
-    @apply text-4xl font-bold mb-8 mt-12 text-[hsl(var(--foreground))] tracking-tight;
+    @apply font-bold mb-8 mt-12 text-[hsl(var(--foreground))] tracking-tight;
+    font-size: clamp(1.875rem, 1.5rem + 1.5vw, 2.25rem);
   }
 
   .lesson-content h2 {
-    @apply text-3xl font-semibold mb-8 mt-16 text-[hsl(var(--foreground))] tracking-tight;
+    @apply font-semibold mb-8 mt-16 text-[hsl(var(--foreground))] tracking-tight;
+    font-size: clamp(1.5rem, 1.25rem + 1vw, 1.875rem);
     padding-top: 2rem;
     border-top: 2px solid hsl(var(--border));
   }
@@ -157,11 +243,21 @@
   }
 
   .lesson-content h3 {
-    @apply text-2xl font-semibold mb-4 mt-8 text-[hsl(var(--foreground))];
+    @apply font-semibold mb-4 mt-8 text-[hsl(var(--foreground))];
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
   }
 
   .lesson-content h4 {
-    @apply text-xl font-semibold mb-3 mt-6 text-[hsl(var(--foreground))];
+    @apply font-semibold mb-3 mt-6 text-[hsl(var(--foreground))];
+    font-size: clamp(1.125rem, 1rem + 0.4vw, 1.25rem);
+  }
+
+  .lesson-content h5 {
+    @apply text-lg font-semibold mb-2 mt-5 text-[hsl(var(--foreground))];
+  }
+
+  .lesson-content h6 {
+    @apply text-base font-semibold mb-2 mt-4 text-[hsl(var(--muted-foreground))] uppercase tracking-wide;
   }
 
   .lesson-content p {
@@ -210,12 +306,12 @@
   }
 
   .lesson-content pre {
-    @apply bg-slate-950 text-slate-50 p-6 rounded-xl overflow-x-auto mb-6 text-sm border border-slate-800;
+    @apply bg-[hsl(var(--code-bg))] text-[hsl(var(--code-fg))] p-6 rounded-xl overflow-x-auto mb-6 text-sm border border-[hsl(var(--code-border))];
     box-shadow: var(--shadow-lg);
   }
 
   .lesson-content pre code {
-    @apply bg-transparent p-0 text-slate-50;
+    @apply bg-transparent p-0 text-[hsl(var(--code-fg))];
   }
 
   .lesson-content blockquote {
@@ -223,7 +319,13 @@
   }
 
   .lesson-content a {
-    @apply text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] underline decoration-2 underline-offset-2 transition-colors;
+    @apply text-[hsl(var(--primary))] underline underline-offset-2 transition-colors;
+    text-decoration-color: hsl(var(--primary) / 0.4);
+    text-decoration-thickness: 2px;
+  }
+
+  .lesson-content a:hover {
+    text-decoration-color: hsl(var(--primary));
   }
 
   /* Math Blocks */
@@ -232,7 +334,7 @@
   }
 
   .math-inline {
-    @apply mx-0.5;
+    @apply mx-1;
   }
 
   /* Equation sequences - clean, minimal presentation */
@@ -263,7 +365,7 @@
   }
 
   .lesson-content td {
-    @apply p-3 border border-[hsl(var(--border))];
+    @apply p-3 border border-[hsl(var(--border))] text-[hsl(var(--foreground))];
   }
 }
 

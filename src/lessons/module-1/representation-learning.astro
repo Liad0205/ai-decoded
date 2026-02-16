@@ -308,7 +308,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   autoplay={false}
 >
   <div
-    class="relative w-full h-80 bg-white dark:bg-[hsl(var(--card))] rounded-lg"
+    class="relative w-full h-80 bg-[hsl(var(--card))] rounded-lg"
   >
     <svg viewBox="0 0 400 320" class="w-full h-full">
       <!-- Axes -->
@@ -329,13 +329,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="380"
         y="285"
-        class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--muted-foreground))]"
         >Dimension 1</text
       >
       <text
         x="10"
         y="30"
-        class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--muted-foreground))]"
         >Dim 2</text
       >
 
@@ -351,7 +351,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="100"
         y="90"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 0.2s">dog</text
       >
@@ -367,7 +367,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="130"
         y="100"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 0.4s">cat</text
       >
@@ -383,7 +383,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="115"
         y="145"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 0.6s">horse</text
       >
@@ -400,7 +400,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="280"
         y="190"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 0.8s">apple</text
       >
@@ -416,7 +416,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="300"
         y="225"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 1s">banana</text
       >
@@ -432,7 +432,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="265"
         y="235"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 1.2s">orange</text
       >
@@ -449,7 +449,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="200"
         y="70"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 1.4s">king</text
       >
@@ -465,7 +465,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="230"
         y="75"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 1.6s">queen</text
       >
@@ -481,7 +481,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="215"
         y="120"
         text-anchor="middle"
-        class="text-xs fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-xs fill-[hsl(var(--foreground))]"
         data-animate
         style="animation-delay: 1.8s">prince</text
       >
@@ -492,7 +492,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <text
           x="10"
           y="4"
-          class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]"
+          class="text-xs fill-[hsl(var(--muted-foreground))]"
           >Animals</text
         >
         <circle cx="60" cy="0" r="4" fill="#10b981"
@@ -500,7 +500,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <text
           x="70"
           y="4"
-          class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]"
+          class="text-xs fill-[hsl(var(--muted-foreground))]"
           >Food</text
         >
         <circle cx="120" cy="0" r="4" fill="#8b5cf6"
@@ -508,14 +508,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <text
           x="130"
           y="4"
-          class="text-xs fill-slate-600 dark:fill-[hsl(var(--muted-foreground))]"
+          class="text-xs fill-[hsl(var(--muted-foreground))]"
           >Royalty</text
         >
       </g>
     </svg>
   </div>
   <p
-    class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-2"
+    class="text-sm text-[hsl(var(--muted-foreground))] mt-2"
   >
     Embeddings cluster semantically related words. In
     reality, embeddings are 300-1024 dimensions, but the

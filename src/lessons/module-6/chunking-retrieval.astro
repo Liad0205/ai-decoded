@@ -55,37 +55,37 @@ to embed meaningfully without surrounding context. <strong
 more of the <GlossaryTooltip term="LLM" />'s context window.
 
 <div
-  class="bg-rose-50 dark:bg-rose-900/10 p-4 rounded-lg my-4 grid grid-cols-1 md:grid-cols-2 gap-4"
+  class="bg-[hsl(var(--diagram-red-bg))] p-4 rounded-lg my-4 grid grid-cols-1 md:grid-cols-2 gap-4"
 >
   <div>
     <p
-      class="font-semibold text-rose-800 dark:text-rose-200 text-sm mb-1"
+      class="font-semibold text-[hsl(var(--diagram-red-fg))] text-sm mb-1"
     >
       ❌ The "Pronoun Ambiguity" Problem
     </p>
     <div
-      class="bg-white dark:bg-black/20 p-3 rounded border border-rose-200 text-sm italic"
+      class="bg-[hsl(var(--card))] p-3 rounded border border-[hsl(var(--diagram-red-border))] text-sm italic"
     >
       "He decided to launch it immediately."
     </div>
-    <p class="text-xs text-rose-600 mt-1">
+    <p class="text-xs text-[hsl(var(--diagram-red-fg))] mt-1">
       Who is "he"? Launch what? Meaningless embedding.
     </p>
   </div>
   <div>
     <p
-      class="font-semibold text-emerald-800 dark:text-emerald-200 text-sm mb-1"
+      class="font-semibold text-[hsl(var(--diagram-emerald-fg))] text-sm mb-1"
     >
       ✅ Contextualized Chunk
     </p>
     <div
-      class="bg-white dark:bg-black/20 p-3 rounded border border-emerald-200 text-sm italic"
+      class="bg-[hsl(var(--card))] p-3 rounded border border-[hsl(var(--diagram-emerald-border))] text-sm italic"
     >
       "<strong>[Elon Musk]</strong> decided to launch <strong
         >[Starship]</strong
       > immediately."
     </div>
-    <p class="text-xs text-emerald-600 mt-1">
+    <p class="text-xs text-[hsl(var(--diagram-emerald-fg))] mt-1">
       Entities resolved. Meaningful embedding.
     </p>
   </div>
@@ -244,37 +244,37 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
   animationDuration={4000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="flex flex-col gap-4">
       <!-- Parent chunk -->
       <div data-animate style="animation-delay: 0.3s">
         <div
-          class="text-xs font-semibold text-slate-500 mb-1"
+          class="text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-1"
         >
           Parent Chunk (sent to <GlossaryTooltip term="LLM" />)
         </div>
         <div
-          class="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg"
+          class="p-4 bg-[hsl(var(--diagram-indigo-bg))] border-2 border-[hsl(var(--diagram-indigo-border))] rounded-lg"
         >
           <div class="flex gap-2">
             <div
-              class="flex-1 p-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center"
+              class="flex-1 p-2 bg-[hsl(var(--muted))] rounded text-xs text-center"
             >
               Child 1
             </div>
             <div
-              class="flex-1 p-2 bg-emerald-200 border-2 border-emerald-400 rounded text-xs text-center font-semibold"
+              class="flex-1 p-2 bg-[hsl(var(--diagram-emerald-border))] border-2 border-[hsl(var(--diagram-emerald-border))] rounded text-xs text-center font-semibold"
             >
               Child 2 (retrieved)
             </div>
             <div
-              class="flex-1 p-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center"
+              class="flex-1 p-2 bg-[hsl(var(--muted))] rounded text-xs text-center"
             >
               Child 3
             </div>
             <div
-              class="flex-1 p-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center"
+              class="flex-1 p-2 bg-[hsl(var(--muted))] rounded text-xs text-center"
             >
               Child 4
             </div>
@@ -284,7 +284,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
 
       <!-- Explanation -->
       <div
-        class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        class="text-sm text-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 2s"
       >
@@ -610,7 +610,7 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="flex flex-col gap-3">
       <div
@@ -618,17 +618,17 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
         data-animate
         style="animation-delay: 0.3s"
       >
-        <div class="w-24 text-xs text-right text-slate-500">
+        <div class="w-24 text-xs text-right text-[hsl(var(--muted-foreground))]">
           Stage 1
         </div>
         <div
-          class="flex-1 p-3 bg-blue-50 rounded border border-blue-200"
+          class="flex-1 p-3 bg-[hsl(var(--diagram-blue-bg))] rounded border border-[hsl(var(--diagram-blue-border))]"
         >
           <div class="font-semibold text-sm">
             Candidate Retrieval
           </div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             BM25 + Dense retrieval -> ~100-200 candidates
             (~5ms)
@@ -641,15 +641,15 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
         data-animate
         style="animation-delay: 1.5s"
       >
-        <div class="w-24 text-xs text-right text-slate-500">
+        <div class="w-24 text-xs text-right text-[hsl(var(--muted-foreground))]">
           Stage 2
         </div>
         <div
-          class="flex-1 p-3 bg-purple-50 rounded border border-purple-200"
+          class="flex-1 p-3 bg-[hsl(var(--diagram-purple-bg))] rounded border border-[hsl(var(--diagram-purple-border))]"
         >
           <div class="font-semibold text-sm">Reranking</div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Cross-encoder or ColBERT reranks to top-20
             (~100ms)
@@ -662,17 +662,17 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
         data-animate
         style="animation-delay: 2.5s"
       >
-        <div class="w-24 text-xs text-right text-slate-500">
+        <div class="w-24 text-xs text-right text-[hsl(var(--muted-foreground))]">
           Stage 3
         </div>
         <div
-          class="flex-1 p-3 bg-amber-50 rounded border border-amber-200"
+          class="flex-1 p-3 bg-[hsl(var(--diagram-amber-bg))] rounded border border-[hsl(var(--diagram-amber-border))]"
         >
           <div class="font-semibold text-sm">
             Context Selection
           </div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Relevance filtering + diversity sampling ->
             top-5 (~10ms)
@@ -685,17 +685,17 @@ more of the <GlossaryTooltip term="LLM" />'s context window.
         data-animate
         style="animation-delay: 3.5s"
       >
-        <div class="w-24 text-xs text-right text-slate-500">
+        <div class="w-24 text-xs text-right text-[hsl(var(--muted-foreground))]">
           Stage 4
         </div>
         <div
-          class="flex-1 p-3 bg-emerald-50 rounded border border-emerald-200"
+          class="flex-1 p-3 bg-[hsl(var(--diagram-emerald-bg))] rounded border border-[hsl(var(--diagram-emerald-border))]"
         >
           <div class="font-semibold text-sm">
             Generation
           </div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             <GlossaryTooltip term="LLM" /> generates answer from selected context
             (~500-2000ms)

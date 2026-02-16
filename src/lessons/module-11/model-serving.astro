@@ -253,7 +253,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={6000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <svg viewBox="0 0 600 400" class="w-full h-80">
       <!-- Title: Static Batching -->
@@ -261,7 +261,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="150"
         y="25"
         text-anchor="middle"
-        class="text-sm font-bold fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-sm font-bold fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 0.2s">Static Batching</text
       >
@@ -308,7 +308,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="150"
         y="62"
-        class="text-[10px] fill-slate-400"
+        class="text-[10px] fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 0.5s">idle (waiting)</text
       >
@@ -341,7 +341,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="195"
         y="92"
-        class="text-[10px] fill-slate-400"
+        class="text-[10px] fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 0.8s">idle</text
       >
@@ -391,7 +391,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="170"
         y="152"
-        class="text-[10px] fill-slate-400"
+        class="text-[10px] fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 1.4s">idle</text
       >
@@ -410,7 +410,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="35"
         y="184"
-        class="text-[9px] fill-amber-800"
+        class="text-[9px] fill-[hsl(var(--diagram-amber-fg))]"
         data-animate
         style="animation-delay: 1.6s">Req 5 (waiting)</text
       >
@@ -420,7 +420,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="450"
         y="25"
         text-anchor="middle"
-        class="text-sm font-bold fill-slate-700 dark:fill-[hsl(var(--muted-foreground))]"
+        class="text-sm font-bold fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 2.5s"
         >Continuous Batching</text
@@ -468,7 +468,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="400"
         y="62"
-        class="text-[10px] fill-amber-900 font-medium"
+        class="text-[10px] fill-[hsl(var(--diagram-amber-fg))] font-medium"
         data-animate
         style="animation-delay: 3.6s">Req 5</text
       >
@@ -484,7 +484,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="485"
         y="62"
-        class="text-[10px] fill-green-900 font-medium"
+        class="text-[10px] fill-[hsl(var(--diagram-green-fg))] font-medium"
         data-animate
         style="animation-delay: 4.2s">Req 6</text
       >
@@ -517,7 +517,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="480"
         y="92"
-        class="text-[10px] fill-pink-900 font-medium"
+        class="text-[10px] fill-[hsl(var(--diagram-rose-fg))] font-medium"
         data-animate
         style="animation-delay: 4.4s">Req 7</text
       >
@@ -567,7 +567,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="440"
         y="152"
-        class="text-[10px] fill-orange-900 font-medium"
+        class="text-[10px] fill-[hsl(var(--diagram-amber-fg))] font-medium"
         data-animate
         style="animation-delay: 4.0s">Req 8</text
       >
@@ -577,7 +577,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="450"
         y="215"
         text-anchor="middle"
-        class="text-xs fill-green-600 font-semibold"
+        class="text-xs fill-[hsl(var(--diagram-green-fg))] font-semibold"
         data-animate
         style="animation-delay: 5s"
         >No wasted GPU slots!</text
@@ -588,7 +588,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="150"
         y="240"
         text-anchor="middle"
-        class="text-xs fill-red-500 font-medium"
+        class="text-xs fill-[hsl(var(--diagram-red-fg))] font-medium"
         data-animate
         style="animation-delay: 5.5s"
         >~40% GPU utilization</text
@@ -597,14 +597,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="450"
         y="240"
         text-anchor="middle"
-        class="text-xs fill-green-600 font-medium"
+        class="text-xs fill-[hsl(var(--diagram-green-fg))] font-medium"
         data-animate
         style="animation-delay: 5.5s"
         >~90%+ GPU utilization</text
       >
     </svg>
     <p
-      class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center mt-2"
+      class="text-sm text-[hsl(var(--muted-foreground))] text-center mt-2"
     >
       Continuous batching fills idle slots immediately with
       new requests, dramatically improving throughput.

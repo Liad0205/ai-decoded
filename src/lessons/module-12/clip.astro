@@ -157,7 +157,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   title="CLIP Architecture: Dual Encoder with Contrastive Learning"
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <div class="flex flex-col items-center gap-4">
       <!-- Input pair -->
@@ -172,15 +172,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           >
             img
           </div>
-          <div class="text-xs text-slate-500">Image</div>
+          <div class="text-xs text-[hsl(var(--muted-foreground))]">Image</div>
         </div>
         <div class="flex flex-col items-center">
           <div
-            class="w-48 h-10 bg-gradient-to-r from-emerald-200 to-teal-200 rounded-lg mb-2 flex items-center justify-center text-sm text-emerald-800"
+            class="w-48 h-10 bg-gradient-to-r from-emerald-200 to-teal-200 rounded-lg mb-2 flex items-center justify-center text-sm text-[hsl(var(--diagram-emerald-fg))]"
           >
             "a photo of a cat"
           </div>
-          <div class="text-xs text-slate-500">Text</div>
+          <div class="text-xs text-[hsl(var(--muted-foreground))]">Text</div>
         </div>
       </div>
 
@@ -191,26 +191,26 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.6s"
       >
         <div
-          class="bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3 text-center"
+          class="bg-[hsl(var(--diagram-indigo-bg))] border border-[hsl(var(--diagram-indigo-border))] rounded-lg px-4 py-3 text-center"
         >
           <div
-            class="text-sm font-semibold text-indigo-800"
+            class="text-sm font-semibold text-[hsl(var(--diagram-indigo-fg))]"
           >
             Image Encoder
           </div>
-          <div class="text-xs text-indigo-600">
+          <div class="text-xs text-[hsl(var(--diagram-indigo-fg))]">
             (ViT or ResNet)
           </div>
         </div>
         <div
-          class="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-center"
+          class="bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded-lg px-4 py-3 text-center"
         >
           <div
-            class="text-sm font-semibold text-emerald-800"
+            class="text-sm font-semibold text-[hsl(var(--diagram-emerald-fg))]"
           >
             Text Encoder
           </div>
-          <div class="text-xs text-emerald-600">
+          <div class="text-xs text-[hsl(var(--diagram-emerald-fg))]">
             (Transformer)
           </div>
         </div>
@@ -223,15 +223,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 1.0s"
       >
         <div
-          class="w-12 h-12 bg-indigo-400 rounded-full flex items-center justify-center text-white text-xs font-bold"
+          class="w-12 h-12 bg-[hsl(var(--diagram-indigo-solid))] rounded-full flex items-center justify-center text-white text-xs font-bold"
         >
           e_I
         </div>
-        <div class="text-slate-400 text-sm font-mono">
+        <div class="text-[hsl(var(--muted-foreground))] text-sm font-mono">
           cosine similarity
         </div>
         <div
-          class="w-12 h-12 bg-emerald-400 rounded-full flex items-center justify-center text-white text-xs font-bold"
+          class="w-12 h-12 bg-[hsl(var(--diagram-emerald-solid))] rounded-full flex items-center justify-center text-white text-xs font-bold"
         >
           e_T
         </div>
@@ -244,143 +244,143 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 1.4s"
       >
         <div
-          class="text-sm font-semibold text-slate-700 mb-2 text-center"
+          class="text-sm font-semibold text-[hsl(var(--foreground))] mb-2 text-center"
         >
           Contrastive Loss Matrix (N x N)
         </div>
         <div class="grid grid-cols-5 gap-1 w-52 mx-auto">
           <div
-            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-red-100 rounded-sm flex items-center justify-center text-red-400 text-xs"
+            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-emerald-500 rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
         </div>
         <div
-          class="text-xs text-slate-500 text-center mt-2"
+          class="text-xs text-[hsl(var(--muted-foreground))] text-center mt-2"
         >
           Diagonal = matching pairs (+), off-diagonal =
           negatives (-)
@@ -500,7 +500,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next: The Temperature Parameter
@@ -525,7 +525,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="2"
       >
         Next: Why Not Classification?
@@ -565,7 +565,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           /> training signal from <MathBlock formula="N" /> examples.
         </li>
       </ul>
-      <p class="mt-2 text-emerald-700 font-medium">
+      <p class="mt-2 text-[hsl(var(--diagram-emerald-fg))] font-medium">
         This scalability is why <GlossaryTooltip term="CLIP" /> can train on 400M pairs
         effectively. The contrastive objective extracts far
         more learning signal per example than

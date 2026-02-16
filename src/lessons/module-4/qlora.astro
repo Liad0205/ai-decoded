@@ -58,7 +58,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     animationDuration={3000}
   >
     <div
-      class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+      class="bg-[hsl(var(--card))] p-4 rounded w-full"
     >
       <div class="space-y-2">
         <div
@@ -73,25 +73,25 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           </div>
           <div class="flex-1 flex gap-0.5">
             <div
-              class="h-6 bg-rose-400 rounded-l"
+              class="h-6 bg-[hsl(var(--diagram-red-solid))] rounded-l"
               style="width: 3.125%"
               title="sign"
             >
             </div>
             <div
-              class="h-6 bg-amber-400"
+              class="h-6 bg-[hsl(var(--diagram-amber-solid))]"
               style="width: 25%"
               title="exponent (8 bits)"
             >
             </div>
             <div
-              class="h-6 bg-sky-400 rounded-r"
+              class="h-6 bg-[hsl(var(--diagram-blue-solid))] rounded-r"
               style="width: 71.875%"
               title="mantissa (23 bits)"
             >
             </div>
           </div>
-          <div class="w-20 text-xs text-slate-500">
+          <div class="w-20 text-xs text-[hsl(var(--muted-foreground))]">
             32 bits / 4 bytes
           </div>
         </div>
@@ -107,25 +107,25 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           </div>
           <div class="flex-1 flex gap-0.5">
             <div
-              class="h-6 bg-rose-400 rounded-l"
+              class="h-6 bg-[hsl(var(--diagram-red-solid))] rounded-l"
               style="width: 6.25%"
               title="sign"
             >
             </div>
             <div
-              class="h-6 bg-amber-400"
+              class="h-6 bg-[hsl(var(--diagram-amber-solid))]"
               style="width: 50%"
               title="exponent (8 bits)"
             >
             </div>
             <div
-              class="h-6 bg-sky-400 rounded-r"
+              class="h-6 bg-[hsl(var(--diagram-blue-solid))] rounded-r"
               style="width: 43.75%"
               title="mantissa (7 bits)"
             >
             </div>
           </div>
-          <div class="w-20 text-xs text-slate-500">
+          <div class="w-20 text-xs text-[hsl(var(--muted-foreground))]">
             16 bits / 2 bytes
           </div>
         </div>
@@ -141,25 +141,25 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           </div>
           <div class="flex-1 flex gap-0.5">
             <div
-              class="h-6 bg-rose-400 rounded-l"
+              class="h-6 bg-[hsl(var(--diagram-red-solid))] rounded-l"
               style="width: 6.25%"
               title="sign"
             >
             </div>
             <div
-              class="h-6 bg-amber-400"
+              class="h-6 bg-[hsl(var(--diagram-amber-solid))]"
               style="width: 31.25%"
               title="exponent (5 bits)"
             >
             </div>
             <div
-              class="h-6 bg-sky-400 rounded-r"
+              class="h-6 bg-[hsl(var(--diagram-blue-solid))] rounded-r"
               style="width: 62.5%"
               title="mantissa (10 bits)"
             >
             </div>
           </div>
-          <div class="w-20 text-xs text-slate-500">
+          <div class="w-20 text-xs text-[hsl(var(--muted-foreground))]">
             16 bits / 2 bytes
           </div>
         </div>
@@ -175,13 +175,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           </div>
           <div class="flex-1 flex gap-0.5">
             <div
-              class="h-6 bg-emerald-400 rounded"
+              class="h-6 bg-[hsl(var(--diagram-emerald-solid))] rounded"
               style="width: 50%"
               title="integer (8 bits)"
             >
             </div>
           </div>
-          <div class="w-20 text-xs text-slate-500">
+          <div class="w-20 text-xs text-[hsl(var(--muted-foreground))]">
             8 bits / 1 byte
           </div>
         </div>
@@ -197,38 +197,38 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           </div>
           <div class="flex-1 flex gap-0.5">
             <div
-              class="h-6 bg-purple-400 rounded"
+              class="h-6 bg-[hsl(var(--diagram-purple-solid))] rounded"
               style="width: 25%"
               title="4-bit quantized"
             >
             </div>
           </div>
-          <div class="w-20 text-xs text-slate-500">
+          <div class="w-20 text-xs text-[hsl(var(--muted-foreground))]">
             4 bits / 0.5 bytes
           </div>
         </div>
       </div>
       <div
-        class="mt-3 flex gap-4 text-xs text-slate-500 justify-center"
+        class="mt-3 flex gap-4 text-xs text-[hsl(var(--muted-foreground))] justify-center"
         data-animate
         style="animation-delay: 2.4s"
       >
         <span class="flex items-center gap-1"
-          ><span class="w-3 h-3 bg-rose-400 rounded"></span> sign</span
+          ><span class="w-3 h-3 bg-[hsl(var(--diagram-red-solid))] rounded"></span> sign</span
         >
         <span class="flex items-center gap-1"
-          ><span class="w-3 h-3 bg-amber-400 rounded"
+          ><span class="w-3 h-3 bg-[hsl(var(--diagram-amber-solid))] rounded"
           ></span> exponent</span
         >
         <span class="flex items-center gap-1"
-          ><span class="w-3 h-3 bg-sky-400 rounded"></span> mantissa</span
+          ><span class="w-3 h-3 bg-[hsl(var(--diagram-blue-solid))] rounded"></span> mantissa</span
         >
         <span class="flex items-center gap-1"
-          ><span class="w-3 h-3 bg-emerald-400 rounded"
+          ><span class="w-3 h-3 bg-[hsl(var(--diagram-emerald-solid))] rounded"
           ></span> integer</span
         >
         <span class="flex items-center gap-1"
-          ><span class="w-3 h-3 bg-purple-400 rounded"
+          ><span class="w-3 h-3 bg-[hsl(var(--diagram-purple-solid))] rounded"
           ></span> quantized</span
         >
       </div>
@@ -246,7 +246,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       formula={"x_q = \\text{round}\\left(\\frac{x - \\text{min}(X)}{s}\\right), \\quad s = \\frac{\\text{max}(X) - \\text{min}(X)}{2^b - 1}"}
       display={true}
     />
-    <div class="text-sm font-medium text-slate-700">
+    <div class="text-sm font-medium text-[hsl(var(--foreground))]">
       Quantization formula
     </div>
   </div>
@@ -267,7 +267,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       formula={"\\hat{x} = s \\cdot x_q + \\text{min}(X)"}
       display={true}
     />
-    <div class="text-sm font-medium text-slate-700">
+    <div class="text-sm font-medium text-[hsl(var(--foreground))]">
       Dequantization formula
     </div>
   </div>
@@ -344,7 +344,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         are:
       </p>
       <pre
-        class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-3 rounded text-xs font-mono overflow-x-auto mt-2">[-1.0, -0.6962, -0.5251, -0.3949, -0.2844, -0.1848, -0.0911, 0.0,
+        class="bg-[hsl(var(--muted))] p-3 rounded text-xs font-mono overflow-x-auto mt-2">[-1.0, -0.6962, -0.5251, -0.3949, -0.2844, -0.1848, -0.0911, 0.0,
   0.0796,  0.1609,  0.2461,  0.3379,  0.4407,  0.5626,  0.7230, 1.0]</pre>
       <p class="mt-2">
         Notice the denser spacing near zero: the gap between
@@ -354,7 +354,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next Step →
@@ -379,7 +379,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         different weight magnitudes, reducing quantization
         error compared to per-tensor scaling.
       </p>
-      <p class="mt-2 text-emerald-700 font-medium">
+      <p class="mt-2 text-[hsl(var(--diagram-emerald-fg))] font-medium">
         Each block of 64 weights requires one FP32 scale
         factor (4 bytes overhead per 64 weights = 0.5 bits
         per weight).
@@ -499,7 +499,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     speed reduction.
   </p>
   <p
-    class="text-sm text-amber-700 dark:text-amber-400 mt-2"
+    class="text-sm text-[hsl(var(--diagram-amber-fg))] mt-2"
   >
     <strong>Trade-off</strong>: While this prevents OOM
     errors, moving data over the PCIe bus (between GPU and
@@ -560,13 +560,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         themselves.
       </p>
       <p
-        class="text-rose-600 dark:text-[hsl(var(--foreground))] font-medium"
+        class="text-[hsl(var(--foreground))] font-medium"
       >
         Requires: 2x A100 80GB
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next: <GlossaryTooltip term="LoRA" /> →
@@ -603,13 +603,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         this only adds ~100 MB.
       </p>
       <p
-        class="text-amber-600 dark:text-[hsl(var(--foreground))] font-medium"
+        class="text-[hsl(var(--foreground))] font-medium"
       >
         Requires: 1x A100 40GB (or a high-end consumer GPU)
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="2"
       >
         Next: <GlossaryTooltip term="QLoRA" /> →
@@ -648,12 +648,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         the total is 18x less than full fine-tuning.
       </p>
       <p
-        class="text-emerald-600 dark:text-[hsl(var(--foreground))] font-medium"
+        class="text-[hsl(var(--foreground))] font-medium"
       >
         Requires: 1x RTX 3090 / 4090 (consumer GPU)
       </p>
       <p
-        class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        class="mt-2 text-[hsl(var(--muted-foreground))]"
       >
         <GlossaryTooltip term="QLoRA" /> reduces memory by <strong>18x</strong> compared
         to full fine-tuning, with less than 1% quality degradation

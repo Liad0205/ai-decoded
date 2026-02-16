@@ -211,107 +211,107 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={4000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full overflow-x-auto"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full overflow-x-auto"
   >
     <table class="w-full text-sm border-collapse">
       <thead>
         <tr
-          class="border-b-2 border-slate-300 dark:border-[hsl(var(--border))]"
+          class="border-b-2 border-[hsl(var(--border))]"
         >
           <th
-            class="text-left p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-left p-3 text-[hsl(var(--muted-foreground))]"
             >Format</th
           >
           <th
-            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-center p-3 text-[hsl(var(--muted-foreground))]"
             >Bits</th
           >
           <th
-            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-center p-3 text-[hsl(var(--muted-foreground))]"
             >Memory (70B model)</th
           >
           <th
-            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-center p-3 text-[hsl(var(--muted-foreground))]"
             >Relative Speed</th
           >
           <th
-            class="text-center p-3 text-slate-700 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-center p-3 text-[hsl(var(--muted-foreground))]"
             >Typical Quality Loss</th
           >
         </tr>
       </thead>
       <tbody>
         <tr
-          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          class="border-b border-[hsl(var(--muted))]"
           data-animate
           style="animation-delay: 0.3s"
         >
           <td
-            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            class="p-3 font-semibold text-[hsl(var(--foreground))]"
             >FP32</td
           >
           <td class="text-center p-3">32</td>
           <td class="text-center p-3">280 GB</td>
           <td class="text-center p-3">1x (baseline)</td>
-          <td class="text-center p-3 text-green-600"
+          <td class="text-center p-3 text-[hsl(var(--diagram-green-fg))]"
             >None</td
           >
         </tr>
         <tr
-          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          class="border-b border-[hsl(var(--muted))]"
           data-animate
           style="animation-delay: 0.6s"
         >
           <td
-            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            class="p-3 font-semibold text-[hsl(var(--foreground))]"
             >BF16 / FP16</td
           >
           <td class="text-center p-3">16</td>
           <td class="text-center p-3">140 GB</td>
           <td class="text-center p-3">~2x</td>
-          <td class="text-center p-3 text-green-600"
+          <td class="text-center p-3 text-[hsl(var(--diagram-green-fg))]"
             >Negligible</td
           >
         </tr>
         <tr
-          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          class="border-b border-[hsl(var(--muted))]"
           data-animate
           style="animation-delay: 0.9s"
         >
           <td
-            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            class="p-3 font-semibold text-[hsl(var(--foreground))]"
             >FP8</td
           >
           <td class="text-center p-3">8</td>
           <td class="text-center p-3">70 GB</td>
           <td class="text-center p-3">~3-4x</td>
-          <td class="text-center p-3 text-yellow-600"
+          <td class="text-center p-3 text-[hsl(var(--diagram-yellow-fg))]"
             >Very small</td
           >
         </tr>
         <tr
-          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          class="border-b border-[hsl(var(--muted))]"
           data-animate
           style="animation-delay: 1.2s"
         >
           <td
-            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            class="p-3 font-semibold text-[hsl(var(--foreground))]"
             >INT8</td
           >
           <td class="text-center p-3">8</td>
           <td class="text-center p-3">70 GB</td>
           <td class="text-center p-3">~3-4x</td>
-          <td class="text-center p-3 text-yellow-600"
+          <td class="text-center p-3 text-[hsl(var(--diagram-yellow-fg))]"
             >Small (&lt;1% on most benchmarks)</td
           >
         </tr>
         <tr
-          class="border-b border-slate-100 dark:border-[hsl(var(--muted))]"
+          class="border-b border-[hsl(var(--muted))]"
           data-animate
           style="animation-delay: 1.5s"
         >
           <td
-            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            class="p-3 font-semibold text-[hsl(var(--foreground))]"
             >INT4 (<GlossaryTooltip
               term="GPTQ"
             />/<GlossaryTooltip term="AWQ" />)</td
@@ -319,26 +319,26 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           <td class="text-center p-3">4</td>
           <td class="text-center p-3">35 GB</td>
           <td class="text-center p-3">~5-6x</td>
-          <td class="text-center p-3 text-orange-600"
+          <td class="text-center p-3 text-[hsl(var(--diagram-amber-fg))]"
             >Small-moderate (1-3%)</td
           >
         </tr>
         <tr data-animate style="animation-delay: 1.8s">
           <td
-            class="p-3 font-semibold text-slate-800 dark:text-[hsl(var(--foreground))]"
+            class="p-3 font-semibold text-[hsl(var(--foreground))]"
             >INT4 (naive RTN)</td
           >
           <td class="text-center p-3">4</td>
           <td class="text-center p-3">35 GB</td>
           <td class="text-center p-3">~5-6x</td>
-          <td class="text-center p-3 text-red-600"
+          <td class="text-center p-3 text-[hsl(var(--diagram-red-fg))]"
             >Moderate-large (3-10%+)</td
           >
         </tr>
       </tbody>
     </table>
     <p
-      class="text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center mt-3"
+      class="text-sm text-[hsl(var(--muted-foreground))] text-center mt-3"
     >
       Speed gains depend on hardware and whether the
       workload is compute-bound or memory-bound.

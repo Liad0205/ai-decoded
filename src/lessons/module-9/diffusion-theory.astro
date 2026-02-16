@@ -201,7 +201,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next Step →
@@ -221,7 +221,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       />
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="2"
       >
         Next Step →
@@ -241,7 +241,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       />
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="3"
       >
         Next Step →
@@ -263,7 +263,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon, \\quad \\epsilon \\sim \\mathcal{N}(0, I)"}
         display={true}
       />
-      <p class="mt-2 text-emerald-700 font-medium">
+      <p class="mt-2 text-[hsl(var(--diagram-emerald-fg))] font-medium">
         This closed-form expression lets us sample any x_t
         directly during training, avoiding costly sequential
         simulation.
@@ -279,7 +279,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <div class="flex items-center justify-between gap-2">
       <div
@@ -288,15 +288,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.2s"
       >
         <div
-          class="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg mb-2 flex items-center justify-center text-white text-xs font-bold"
+          class="w-16 h-16 rounded-lg mb-2 flex items-center justify-center text-white text-xs font-bold" style="background: linear-gradient(to bottom right, hsl(var(--diagram-indigo-solid)), hsl(var(--diagram-purple-solid)))"
         >
           x₀
         </div>
-        <div class="text-xs text-slate-600">Clean data</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))]">Clean data</div>
       </div>
 
       <div
-        class="text-slate-400 text-lg"
+        class="text-[hsl(var(--muted-foreground))] text-lg"
         data-animate
         style="animation-delay: 0.6s"
       >
@@ -309,17 +309,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.8s"
       >
         <div
-          class="w-16 h-16 bg-gradient-to-br from-indigo-300 to-purple-300 rounded-lg mb-2 opacity-80 flex items-center justify-center text-white text-xs font-bold"
+          class="w-16 h-16 rounded-lg mb-2 opacity-80 flex items-center justify-center text-white text-xs font-bold" style="background: linear-gradient(to bottom right, hsl(var(--diagram-indigo-border)), hsl(var(--diagram-purple-border)))"
         >
           x₁
         </div>
-        <div class="text-xs text-slate-600">
+        <div class="text-xs text-[hsl(var(--muted-foreground))]">
           Slightly noisy
         </div>
       </div>
 
       <div
-        class="text-slate-400 text-lg"
+        class="text-[hsl(var(--muted-foreground))] text-lg"
         data-animate
         style="animation-delay: 1.2s"
       >
@@ -332,17 +332,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 1.4s"
       >
         <div
-          class="w-16 h-16 bg-gradient-to-br from-slate-300 to-slate-400 rounded-lg mb-2 opacity-70 flex items-center justify-center text-slate-600 text-xs font-bold"
+          class="w-16 h-16 bg-[hsl(var(--muted))] rounded-lg mb-2 opacity-70 flex items-center justify-center text-[hsl(var(--muted-foreground))] text-xs font-bold"
         >
           ...
         </div>
-        <div class="text-xs text-slate-600">
+        <div class="text-xs text-[hsl(var(--muted-foreground))]">
           Increasingly noisy
         </div>
       </div>
 
       <div
-        class="text-slate-400 text-lg"
+        class="text-[hsl(var(--muted-foreground))] text-lg"
         data-animate
         style="animation-delay: 1.8s"
       >
@@ -355,17 +355,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 2.0s"
       >
         <div
-          class="w-16 h-16 bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg mb-2 opacity-60 flex items-center justify-center text-slate-500 text-xs font-bold"
+          class="w-16 h-16 bg-[hsl(var(--muted))] rounded-lg mb-2 opacity-60 flex items-center justify-center text-[hsl(var(--muted-foreground))] text-xs font-bold"
         >
           x_T-1
         </div>
-        <div class="text-xs text-slate-600">
+        <div class="text-xs text-[hsl(var(--muted-foreground))]">
           Mostly noise
         </div>
       </div>
 
       <div
-        class="text-slate-400 text-lg"
+        class="text-[hsl(var(--muted-foreground))] text-lg"
         data-animate
         style="animation-delay: 2.4s"
       >
@@ -378,16 +378,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 2.6s"
       >
         <div
-          class="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg mb-2 flex items-center justify-center text-slate-400 text-xs font-bold"
+          class="w-16 h-16 bg-[hsl(var(--muted))] rounded-lg mb-2 flex items-center justify-center text-[hsl(var(--muted-foreground))] text-xs font-bold"
         >
           x_T
         </div>
-        <div class="text-xs text-slate-600">Pure noise</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))]">Pure noise</div>
       </div>
     </div>
 
     <div
-      class="mt-4 text-center text-sm text-slate-600"
+      class="mt-4 text-center text-sm text-[hsl(var(--muted-foreground))]"
       data-animate
       style="animation-delay: 3.5s"
     >
@@ -586,7 +586,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       />
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next Step →
@@ -608,7 +608,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       />
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="2"
       >
         Next Step →
@@ -640,7 +640,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </ul>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="3"
       >
         Next Step →
@@ -659,7 +659,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           formula={"q(x_{t-1} \\mid x_t, x_0) = \\mathcal{N}\\left(x_{t-1};\\; \\tilde{\\mu}_t(x_t, x_0),\\; \\tilde{\\beta}_t I\\right)"}
           display={true}
         />
-        <p class="text-sm font-medium text-slate-700">
+        <p class="text-sm font-medium text-[hsl(var(--foreground))]">
           Forward Posterior Distribution
         </p>
       </div>
@@ -669,7 +669,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           formula={"\\tilde{\\mu}_t = \\frac{\\sqrt{\\bar{\\alpha}_{t-1}} \\beta_t}{1 - \\bar{\\alpha}_t} x_0 + \\frac{\\sqrt{\\alpha_t}(1 - \\bar{\\alpha}_{t-1})}{1 - \\bar{\\alpha}_t} x_t"}
           display={true}
         />
-        <p class="text-sm font-medium text-slate-700">
+        <p class="text-sm font-medium text-[hsl(var(--foreground))]">
           Mean of Posterior
         </p>
       </div>
@@ -678,11 +678,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           formula={"\\tilde{\\beta}_t = \\frac{(1 - \\bar{\\alpha}_{t-1})}{(1 - \\bar{\\alpha}_t)} \\beta_t"}
           display={true}
         />
-        <p class="text-sm font-medium text-slate-700">
+        <p class="text-sm font-medium text-[hsl(var(--foreground))]">
           Variance of Posterior
         </p>
       </div>
-      <p class="mt-2 text-emerald-700 font-medium">
+      <p class="mt-2 text-[hsl(var(--diagram-emerald-fg))] font-medium">
         Since both distributions are Gaussian, the KL
         divergence has a simple closed-form that reduces to
         matching means. The variance can be fixed or learned

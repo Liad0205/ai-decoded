@@ -16,7 +16,6 @@ const {
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const socialImageURL = new URL('/ai-decoded/og-image.png', Astro.site); // Assuming an OG image exists or will exist
 ---
 
 <!DOCTYPE html>
@@ -24,7 +23,7 @@ const socialImageURL = new URL('/ai-decoded/og-image.png', Astro.site); // Assum
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
     <!-- SEO -->
     <title>{title} | AI Decoded</title>
     <meta name="description" content={description} />
@@ -36,14 +35,12 @@ const socialImageURL = new URL('/ai-decoded/og-image.png', Astro.site); // Assum
     <meta property="og:url" content={Astro.url} />
     <meta property="og:title" content={`${title} | AI Decoded`} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={socialImageURL} />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content="summary" />
     <meta property="twitter:url" content={Astro.url} />
     <meta property="twitter:title" content={`${title} | AI Decoded`} />
     <meta property="twitter:description" content={description} />
-    <meta property="twitter:image" content={socialImageURL} />
 
     <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

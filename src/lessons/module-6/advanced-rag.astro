@@ -198,11 +198,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="flex flex-col gap-4">
       <div
-        class="text-center p-3 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded font-semibold text-sm"
+        class="text-center p-3 bg-[hsl(var(--muted))] rounded font-semibold text-sm"
         data-animate
         style="animation-delay: 0.3s"
       >
@@ -216,15 +216,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 1.5s"
       >
         <div
-          class="p-3 bg-blue-50 rounded border border-blue-200"
+          class="p-3 bg-[hsl(var(--diagram-blue-bg))] rounded border border-[hsl(var(--diagram-blue-border))]"
         >
           <div
-            class="font-semibold text-xs text-blue-700 mb-1"
+            class="font-semibold text-xs text-[hsl(var(--diagram-blue-fg))] mb-1"
           >
             Decomposition
           </div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Q1: "How does transformer attention work?"<br />
             Q2: "How does RNN gating work?"
@@ -232,15 +232,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         </div>
 
         <div
-          class="p-3 bg-purple-50 rounded border border-purple-200"
+          class="p-3 bg-[hsl(var(--diagram-purple-bg))] rounded border border-[hsl(var(--diagram-purple-border))]"
         >
           <div
-            class="font-semibold text-xs text-purple-700 mb-1"
+            class="font-semibold text-xs text-[hsl(var(--diagram-purple-fg))] mb-1"
           >
             HyDE
           </div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             Generate hypothetical comparison document, embed
             that
@@ -248,15 +248,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         </div>
 
         <div
-          class="p-3 bg-emerald-50 rounded border border-emerald-200"
+          class="p-3 bg-[hsl(var(--diagram-emerald-bg))] rounded border border-[hsl(var(--diagram-emerald-border))]"
         >
           <div
-            class="font-semibold text-xs text-emerald-700 mb-1"
+            class="font-semibold text-xs text-[hsl(var(--diagram-emerald-fg))] mb-1"
           >
             Multi-Query
           </div>
           <div
-            class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+            class="text-xs text-[hsl(var(--muted-foreground))]"
           >
             "attention vs gating mechanisms"<br />
             "self-attention compared to LSTM gates"
@@ -265,7 +265,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </div>
 
       <div
-        class="text-center text-sm text-slate-500"
+        class="text-center text-sm text-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 3s"
       >
@@ -735,19 +735,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="flex flex-col gap-3">
       <div
-        class="p-3 bg-emerald-50 rounded border border-emerald-200"
+        class="p-3 bg-[hsl(var(--diagram-emerald-bg))] rounded border border-[hsl(var(--diagram-emerald-border))]"
         data-animate
         style="animation-delay: 0.3s"
       >
-        <div class="font-semibold text-sm text-emerald-800">
+        <div class="font-semibold text-sm text-[hsl(var(--diagram-emerald-fg))]">
           Naive RAG
         </div>
         <div
-          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+          class="text-xs text-[hsl(var(--muted-foreground))]"
         >
           Chunk -> Embed -> Retrieve -> Generate. Good
           starting point.
@@ -755,15 +755,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </div>
 
       <div
-        class="p-3 bg-blue-50 rounded border border-blue-200"
+        class="p-3 bg-[hsl(var(--diagram-blue-bg))] rounded border border-[hsl(var(--diagram-blue-border))]"
         data-animate
         style="animation-delay: 1s"
       >
-        <div class="font-semibold text-sm text-blue-800">
+        <div class="font-semibold text-sm text-[hsl(var(--diagram-blue-fg))]">
           Advanced RAG
         </div>
         <div
-          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+          class="text-xs text-[hsl(var(--muted-foreground))]"
         >
           + Query transformation + Hybrid retrieval +
           Reranking. Production-grade.
@@ -771,15 +771,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </div>
 
       <div
-        class="p-3 bg-purple-50 rounded border border-purple-200"
+        class="p-3 bg-[hsl(var(--diagram-purple-bg))] rounded border border-[hsl(var(--diagram-purple-border))]"
         data-animate
         style="animation-delay: 2s"
       >
-        <div class="font-semibold text-sm text-purple-800">
+        <div class="font-semibold text-sm text-[hsl(var(--diagram-purple-fg))]">
           Self-RAG / Corrective RAG
         </div>
         <div
-          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+          class="text-xs text-[hsl(var(--muted-foreground))]"
         >
           + Adaptive retrieval + Self-reflection + Fallback
           mechanisms. Robust systems.
@@ -787,15 +787,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </div>
 
       <div
-        class="p-3 bg-amber-50 rounded border border-amber-200"
+        class="p-3 bg-[hsl(var(--diagram-amber-bg))] rounded border border-[hsl(var(--diagram-amber-border))]"
         data-animate
         style="animation-delay: 3s"
       >
-        <div class="font-semibold text-sm text-amber-800">
+        <div class="font-semibold text-sm text-[hsl(var(--diagram-amber-fg))]">
           Agentic RAG / Graph RAG
         </div>
         <div
-          class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+          class="text-xs text-[hsl(var(--muted-foreground))]"
         >
           + Multi-step reasoning + Knowledge graphs + Tool
           use. Complex research tasks.
@@ -803,7 +803,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </div>
 
       <div
-        class="text-xs text-slate-500 text-center mt-2"
+        class="text-xs text-[hsl(var(--muted-foreground))] text-center mt-2"
         data-animate
         style="animation-delay: 4s"
       >

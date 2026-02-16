@@ -54,7 +54,7 @@ import Diagram from "../../components/Diagram.astro";
 
   <h4>Instruction Format (Single-Turn)</h4>
   <pre
-    class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
+    class="bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
     set:html={`&#123;
   "instruction": "Summarize the key findings of the paper.",
   "input": "The study examined 500 patients...",
@@ -64,7 +64,7 @@ import Diagram from "../../components/Diagram.astro";
 
   <h4>Chat Format (Multi-Turn)</h4>
   <pre
-    class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
+    class="bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
     set:html={`&#123;
   "messages": [
     &#123;"role": "system", "content": "You are a medical assistant."&#125;,
@@ -83,7 +83,7 @@ import Diagram from "../../components/Diagram.astro";
     exactly:
   </p>
   <pre
-    class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
+    class="bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
     set:html={`# LLaMA / Mistral chat template
 &lt;s&gt;[INST] &lt;&lt;SYS&gt;&gt;
 You are a helpful assistant.
@@ -193,14 +193,14 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
         </li>
       </ul>
       <p
-        class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        class="mt-2 text-[hsl(var(--muted-foreground))]"
       >
         LoRA can use higher learning rates because the
         low-rank constraint acts as an implicit regularizer.
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next →
@@ -230,7 +230,7 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
       </ul>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="2"
       >
         Next →
@@ -266,14 +266,14 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
         </li>
       </ul>
       <p
-        class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        class="mt-2 text-[hsl(var(--muted-foreground))]"
       >
         Larger batch sizes give more stable gradients but
         fewer update steps per epoch.
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="3"
       >
         Next →
@@ -298,7 +298,7 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
         </li>
       </ul>
       <p
-        class="mt-2 text-amber-700 dark:text-[hsl(var(--foreground))] font-medium"
+        class="mt-2 text-[hsl(var(--foreground))] font-medium"
       >
         Watch for overfitting: if validation loss starts
         increasing while training loss keeps decreasing,
@@ -306,7 +306,7 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="4"
       >
         Next →
@@ -351,7 +351,7 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
   </p>
 
   <pre
-    class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
+    class="bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
     set:html={`from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 from trl import SFTTrainer, SFTConfig
@@ -409,7 +409,7 @@ trainer.train()`}
   </p>
 
   <pre
-    class="bg-slate-100 dark:bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
+    class="bg-[hsl(var(--muted))] p-4 rounded text-sm font-mono overflow-x-auto"
     set:html={`from unsloth import FastLanguageModel
 
 # Load model with Unsloth optimizations
@@ -476,7 +476,7 @@ trainer.train()`}
     animationDuration={3000}
   >
     <div
-      class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+      class="bg-[hsl(var(--card))] p-4 rounded w-full"
     >
       <div class="space-y-4">
         <div
@@ -485,16 +485,16 @@ trainer.train()`}
           style="animation-delay: 0.2s"
         >
           <div
-            class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold"
+            class="w-8 h-8 rounded-full bg-[hsl(var(--diagram-indigo-solid))] text-white flex items-center justify-center text-sm font-bold"
           >
             1
           </div>
-          <div class="flex-1 bg-indigo-50 p-3 rounded">
+          <div class="flex-1 bg-[hsl(var(--diagram-indigo-bg))] p-3 rounded">
             <div class="font-semibold text-sm">
               Training Metrics
             </div>
             <div
-              class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+              class="text-xs text-[hsl(var(--muted-foreground))]"
             >
               Training loss, validation loss, learning rate
               curves
@@ -507,16 +507,16 @@ trainer.train()`}
           style="animation-delay: 0.8s"
         >
           <div
-            class="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold"
+            class="w-8 h-8 rounded-full bg-[hsl(var(--diagram-purple-solid))] text-white flex items-center justify-center text-sm font-bold"
           >
             2
           </div>
-          <div class="flex-1 bg-purple-50 p-3 rounded">
+          <div class="flex-1 bg-[hsl(var(--diagram-purple-bg))] p-3 rounded">
             <div class="font-semibold text-sm">
               Automated Benchmarks
             </div>
             <div
-              class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+              class="text-xs text-[hsl(var(--muted-foreground))]"
             >
               MMLU, HellaSwag, HumanEval, domain-specific
               metrics
@@ -529,16 +529,16 @@ trainer.train()`}
           style="animation-delay: 1.4s"
         >
           <div
-            class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold"
+            class="w-8 h-8 rounded-full bg-[hsl(var(--diagram-emerald-solid))] text-white flex items-center justify-center text-sm font-bold"
           >
             3
           </div>
-          <div class="flex-1 bg-emerald-50 p-3 rounded">
+          <div class="flex-1 bg-[hsl(var(--diagram-emerald-bg))] p-3 rounded">
             <div class="font-semibold text-sm">
               Task-Specific Evaluation
             </div>
             <div
-              class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+              class="text-xs text-[hsl(var(--muted-foreground))]"
             >
               Custom metrics for your use case (accuracy,
               F1, BLEU, ROUGE, etc.)
@@ -551,16 +551,16 @@ trainer.train()`}
           style="animation-delay: 2.0s"
         >
           <div
-            class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold"
+            class="w-8 h-8 rounded-full bg-[hsl(var(--diagram-amber-solid))] text-white flex items-center justify-center text-sm font-bold"
           >
             4
           </div>
-          <div class="flex-1 bg-amber-50 p-3 rounded">
+          <div class="flex-1 bg-[hsl(var(--diagram-amber-bg))] p-3 rounded">
             <div class="font-semibold text-sm">
               LLM-as-Judge / Human Evaluation
             </div>
             <div
-              class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+              class="text-xs text-[hsl(var(--muted-foreground))]"
             >
               GPT-4 scoring, Chatbot Arena, human preference
               ratings
@@ -666,7 +666,7 @@ trainer.train()`}
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next →
@@ -682,7 +682,7 @@ trainer.train()`}
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="2"
       >
         Next →
@@ -699,7 +699,7 @@ trainer.train()`}
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="3"
       >
         Next →
@@ -715,7 +715,7 @@ trainer.train()`}
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="4"
       >
         Next →

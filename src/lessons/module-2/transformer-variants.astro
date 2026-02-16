@@ -192,7 +192,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   autoplay={false}
 >
   <div
-    class="grid grid-cols-3 gap-4 p-4 bg-white dark:bg-[hsl(var(--card))] rounded"
+    class="grid grid-cols-3 gap-4 p-4 bg-[hsl(var(--card))] rounded"
   >
     <div class="text-center">
       <div class="font-semibold mb-2">
@@ -202,12 +202,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         {
           [...Array(16)].map(() => {
             return (
-              <div class="w-8 h-8 bg-indigo-500 rounded" />
+              <div class="w-8 h-8 bg-[hsl(var(--diagram-indigo-solid))] rounded" />
             );
           })
         }
       </div>
-      <div class="text-xs mt-2 text-slate-600">
+      <div class="text-xs mt-2 text-[hsl(var(--muted-foreground))]">
         Bidirectional: all positions attend to all
       </div>
     </div>
@@ -224,13 +224,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
             const masked = col > row;
             return (
               <div
-                class={`w-8 h-8 rounded ${masked ? "bg-slate-200" : "bg-green-500"}`}
+                class={`w-8 h-8 rounded ${masked ? "bg-[hsl(var(--muted))]" : "bg-[hsl(var(--diagram-emerald-solid))]"}`}
               />
             );
           })
         }
       </div>
-      <div class="text-xs mt-2 text-slate-600">
+      <div class="text-xs mt-2 text-[hsl(var(--muted-foreground))]">
         Causal: can't attend to future
       </div>
     </div>
@@ -238,12 +238,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div class="text-center">
       <div class="font-semibold mb-2">Encoder-Decoder</div>
       <div
-        class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        class="text-xs text-[hsl(var(--muted-foreground))]"
       >
         Encoder: bidirectional
       </div>
       <div
-        class="text-xs text-slate-600 dark:text-[hsl(var(--muted-foreground))] mt-1"
+        class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
       >
         Decoder: causal + cross-attn
       </div>

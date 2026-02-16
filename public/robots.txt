@@ -2,4 +2,5 @@ User-agent: *
 Allow: /
 
 # Sitemaps
+# NOTE: Update this URL if the site domain or base path changes
 Sitemap: https://liad0205.github.io/ai-decoded/sitemap-index.xml

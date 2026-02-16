@@ -148,7 +148,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 </ul>
 
 <Diagram diagramId="ml-lifecycle-diagram" title="The ML Production Lifecycle">
-  <div class="bg-white p-6 rounded w-full">
+  <div class="bg-[hsl(var(--card))] p-6 rounded w-full">
     <svg viewBox="0 0 500 400" class="w-full max-w-lg mx-auto" xmlns="http://www.w3.org/2000/svg">
       <!-- Circular arrows -->
       <defs>
@@ -192,7 +192,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
       <text x="250" y="195" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Continuous</text>
       <text x="250" y="212" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Improvement</text>
     </svg>
-    <p class="text-sm text-slate-600 text-center mt-3">The <GlossaryTooltip term="ML" /> lifecycle is circular: models are trained, validated, deployed, monitored, and retrained as data and requirements change.</p>
+    <p class="text-sm text-[hsl(var(--muted-foreground))] text-center mt-3">The <GlossaryTooltip term="ML" /> lifecycle is circular: models are trained, validated, deployed, monitored, and retrained as data and requirements change.</p>
   </div>
 </Diagram>
 

@@ -79,10 +79,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <div
-    class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg my-4"
+    class="bg-[hsl(var(--diagram-purple-bg))] p-4 rounded-lg my-4"
   >
     <p
-      class="font-semibold text-purple-800 dark:text-purple-200"
+      class="font-semibold text-[hsl(var(--diagram-purple-fg))]"
     >
       Analogy: The Stencil
     </p>
@@ -174,7 +174,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     animationDuration={4000}
   >
     <div
-      class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+      class="bg-[hsl(var(--card))] p-4 rounded w-full"
     >
       <div
         class="flex items-center justify-center gap-4 flex-wrap"
@@ -186,20 +186,20 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           style="animation-delay: 0.2s"
         >
           <div
-            class="w-24 h-24 bg-slate-200 border-2 border-slate-400 rounded flex items-center justify-center"
+            class="w-24 h-24 bg-[hsl(var(--muted))] border-2 border-[hsl(var(--border))] rounded flex items-center justify-center"
           >
             <span class="text-sm font-mono font-bold"
               >W</span
             >
           </div>
-          <span class="text-xs mt-1 text-slate-600"
+          <span class="text-xs mt-1 text-[hsl(var(--muted-foreground))]"
             >d x d</span
           >
-          <span class="text-xs text-slate-400">frozen</span>
+          <span class="text-xs text-[hsl(var(--muted-foreground))]">frozen</span>
         </div>
 
         <div
-          class="text-2xl font-bold text-slate-400"
+          class="text-2xl font-bold text-[hsl(var(--muted-foreground))]"
           data-animate
           style="animation-delay: 0.5s"
         >
@@ -213,23 +213,23 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           style="animation-delay: 1.0s"
         >
           <div
-            class="w-8 h-24 bg-indigo-400 border-2 border-indigo-600 rounded flex items-center justify-center"
+            class="w-8 h-24 bg-[hsl(var(--diagram-indigo-solid))] border-2 border-[hsl(var(--diagram-indigo-border))] rounded flex items-center justify-center"
           >
             <span
               class="text-xs font-mono font-bold text-white"
               >B</span
             >
           </div>
-          <span class="text-xs mt-1 text-indigo-600"
+          <span class="text-xs mt-1 text-[hsl(var(--diagram-indigo-fg))]"
             >d x r</span
           >
-          <span class="text-xs text-indigo-400"
+          <span class="text-xs text-[hsl(var(--diagram-indigo-fg))]"
             >trainable</span
           >
         </div>
 
         <div
-          class="text-lg font-bold text-slate-400"
+          class="text-lg font-bold text-[hsl(var(--muted-foreground))]"
           data-animate
           style="animation-delay: 1.2s"
         >
@@ -243,23 +243,23 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           style="animation-delay: 1.4s"
         >
           <div
-            class="w-24 h-8 bg-emerald-400 border-2 border-emerald-600 rounded flex items-center justify-center"
+            class="w-24 h-8 bg-[hsl(var(--diagram-emerald-solid))] border-2 border-[hsl(var(--diagram-emerald-border))] rounded flex items-center justify-center"
           >
             <span
               class="text-xs font-mono font-bold text-white"
               >A</span
             >
           </div>
-          <span class="text-xs mt-1 text-emerald-600"
+          <span class="text-xs mt-1 text-[hsl(var(--diagram-emerald-fg))]"
             >r x d</span
           >
-          <span class="text-xs text-emerald-400"
+          <span class="text-xs text-[hsl(var(--diagram-emerald-fg))]"
             >trainable</span
           >
         </div>
 
         <div
-          class="text-2xl font-bold text-slate-400"
+          class="text-2xl font-bold text-[hsl(var(--muted-foreground))]"
           data-animate
           style="animation-delay: 1.6s"
         >
@@ -273,23 +273,23 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           style="animation-delay: 2.0s"
         >
           <div
-            class="w-24 h-24 bg-purple-200 border-2 border-purple-400 rounded flex items-center justify-center"
+            class="w-24 h-24 bg-[hsl(var(--diagram-purple-border))] border-2 border-[hsl(var(--diagram-purple-border))] rounded flex items-center justify-center"
           >
             <span class="text-sm font-mono font-bold"
               >W'</span
             >
           </div>
-          <span class="text-xs mt-1 text-purple-600"
+          <span class="text-xs mt-1 text-[hsl(var(--diagram-purple-fg))]"
             >d x d</span
           >
-          <span class="text-xs text-purple-400"
+          <span class="text-xs text-[hsl(var(--diagram-purple-fg))]"
             >adapted</span
           >
         </div>
       </div>
 
       <div
-        class="mt-4 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center"
+        class="mt-4 text-sm text-[hsl(var(--muted-foreground))] text-center"
         data-animate
         style="animation-delay: 3.0s"
       >
@@ -311,7 +311,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       formula={"\\text{LoRA params} = d \\times r + r \\times d = 2dr"}
       display={true}
     />
-    <div class="text-sm font-medium text-slate-700">
+    <div class="text-sm font-medium text-[hsl(var(--foreground))]">
       Trainable parameters
     </div>
   </div>
@@ -326,7 +326,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       formula={"\\text{Ratio} = \\frac{2dr}{d^2} = \\frac{2r}{d}"}
       display={true}
     />
-    <div class="text-sm font-medium text-slate-700">
+    <div class="text-sm font-medium text-[hsl(var(--foreground))]">
       Parameter efficiency ratio
     </div>
   </div>
@@ -369,7 +369,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="1"
       >
         Next Step →
@@ -395,7 +395,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="2"
       >
         Next Step →
@@ -422,7 +422,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="3"
       >
         Next Step →
@@ -457,7 +457,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </p>
       <button
         type="button"
-        class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+        class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
         data-reveal-button="4"
       >
         Next Step →
@@ -488,7 +488,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         </li>
       </ul>
       <p
-        class="mt-2 text-emerald-700 dark:text-[hsl(var(--foreground))] font-medium"
+        class="mt-2 text-[hsl(var(--foreground))] font-medium"
       >
         More target matrices = more trainable parameters but
         also more capacity for complex adaptations.
@@ -551,7 +551,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       formula={"\\text{LoRA trainable params} = 2 \\times r \\times d \\times \\text{(number of adapted layers)}"}
       display={true}
     />
-    <div class="text-sm font-medium text-slate-700">
+    <div class="text-sm font-medium text-[hsl(var(--foreground))]">
       Total trainable parameters
     </div>
   </div>
@@ -570,7 +570,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       formula={"\\text{Trainable} = 2 \\times 8 \\times 4096 \\times 4 \\times 32 = 8{,}388{,}608 \\approx 8.4\\text{M params}"}
       display={true}
     />
-    <div class="text-sm font-medium text-slate-700">
+    <div class="text-sm font-medium text-[hsl(var(--foreground))]">
       LLaMA-2 7B calculation
     </div>
   </div>

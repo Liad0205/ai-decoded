@@ -208,7 +208,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   title="LLaVA Training Pipeline: Step by Step"
 >
   <div data-reveal-step>
-    <h4 class="dark:text-[hsl(var(--foreground))]">
+    <h4 class="text-[hsl(var(--foreground))]">
       Stage 1: Feature Alignment Pretraining
     </h4>
     <p>
@@ -244,7 +244,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </li>
     </ul>
     <p
-      class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+      class="mt-2 text-[hsl(var(--muted-foreground))]"
     >
       After Stage 1, the <GlossaryTooltip term="LLM" /> can describe images at a basic
       level, but it cannot follow complex visual
@@ -252,7 +252,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </p>
     <button
       type="button"
-      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
       data-reveal-button="1"
     >
       Next: Stage 2 - Visual Instruction Tuning
@@ -260,7 +260,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </div>
 
   <div data-reveal-step>
-    <h4 class="dark:text-[hsl(var(--foreground))]">
+    <h4 class="text-[hsl(var(--foreground))]">
       Stage 2: Visual Instruction Tuning
     </h4>
     <p>
@@ -306,7 +306,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </li>
     </ul>
     <p
-      class="mt-2 text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+      class="mt-2 text-[hsl(var(--muted-foreground))]"
     >
       Unfreezing the <GlossaryTooltip term="LLM" /> is critical: it allows the language
       model to deeply adapt to visual reasoning, learning to
@@ -315,7 +315,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </p>
     <button
       type="button"
-      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
       data-reveal-button="2"
     >
       Next: LLaVA-1.5 Improvements
@@ -323,7 +323,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </div>
 
   <div data-reveal-step>
-    <h4 class="dark:text-[hsl(var(--foreground))]">
+    <h4 class="text-[hsl(var(--foreground))]">
       LLaVA-1.5: Key Improvements
     </h4>
     <p>
@@ -353,7 +353,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         capabilities
       </li>
     </ul>
-    <p class="mt-2 text-emerald-700 font-medium">
+    <p class="mt-2 text-[hsl(var(--diagram-emerald-fg))] font-medium">
       Despite its simplicity, LLaVA-1.5 matched or exceeded
       more complex systems like Flamingo and InstructBLIP on
       standard VQA benchmarks. The lesson: a strong vision
@@ -503,7 +503,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   title="Three Multimodal Architecture Patterns"
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <div class="flex flex-col gap-6">
       <!-- Pattern 1: Cross-Attention -->
@@ -513,32 +513,32 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.2s"
       >
         <div class="w-36 shrink-0">
-          <div class="font-semibold text-sm text-rose-800">
+          <div class="font-semibold text-sm text-[hsl(var(--diagram-rose-fg))]">
             Cross-Attention
           </div>
-          <div class="text-xs text-rose-600">
+          <div class="text-xs text-[hsl(var(--diagram-rose-fg))]">
             (Flamingo)
           </div>
         </div>
         <div
-          class="flex-1 bg-rose-50 border border-rose-200 rounded-lg p-3"
+          class="flex-1 bg-[hsl(var(--diagram-rose-bg))] border border-[hsl(var(--diagram-rose-border))] rounded-lg p-3"
         >
           <div class="flex items-center gap-2 text-xs">
-            <div class="bg-sky-200 rounded px-2 py-1">
+            <div class="bg-[hsl(var(--diagram-blue-border))] rounded px-2 py-1">
               Vision Enc.
             </div>
-            <div class="text-slate-400">features</div>
-            <div class="bg-rose-200 rounded px-2 py-1">
+            <div class="text-[hsl(var(--muted-foreground))]">features</div>
+            <div class="bg-[hsl(var(--diagram-rose-border))] rounded px-2 py-1">
               Perceiver
             </div>
-            <div class="text-slate-400">K,V</div>
+            <div class="text-[hsl(var(--muted-foreground))]">K,V</div>
             <div
-              class="bg-amber-200 rounded px-2 py-1 border-2 border-amber-400"
+              class="bg-[hsl(var(--diagram-amber-border))] rounded px-2 py-1 border-2 border-[hsl(var(--diagram-amber-solid))]"
             >
               LLM + Cross-Attn
             </div>
           </div>
-          <div class="text-xs text-rose-700 mt-2">
+          <div class="text-xs text-[hsl(var(--diagram-rose-fg))] mt-2">
             Visual features used as K,V in added
             cross-attention layers
           </div>
@@ -553,29 +553,29 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       >
         <div class="w-36 shrink-0">
           <div
-            class="font-semibold text-sm text-indigo-800"
+            class="font-semibold text-sm text-[hsl(var(--diagram-indigo-fg))]"
           >
             Token Projection
           </div>
-          <div class="text-xs text-indigo-600">(LLaVA)</div>
+          <div class="text-xs text-[hsl(var(--diagram-indigo-fg))]">(LLaVA)</div>
         </div>
         <div
-          class="flex-1 bg-indigo-50 border border-indigo-200 rounded-lg p-3"
+          class="flex-1 bg-[hsl(var(--diagram-indigo-bg))] border border-[hsl(var(--diagram-indigo-border))] rounded-lg p-3"
         >
           <div class="flex items-center gap-2 text-xs">
-            <div class="bg-sky-200 rounded px-2 py-1">
+            <div class="bg-[hsl(var(--diagram-blue-border))] rounded px-2 py-1">
               Vision Enc.
             </div>
-            <div class="text-slate-400">project</div>
-            <div class="bg-indigo-200 rounded px-2 py-1">
+            <div class="text-[hsl(var(--muted-foreground))]">project</div>
+            <div class="bg-[hsl(var(--diagram-indigo-border))] rounded px-2 py-1">
               MLP
             </div>
-            <div class="text-slate-400">concat</div>
-            <div class="bg-amber-200 rounded px-2 py-1">
+            <div class="text-[hsl(var(--muted-foreground))]">concat</div>
+            <div class="bg-[hsl(var(--diagram-amber-border))] rounded px-2 py-1">
               LLM
             </div>
           </div>
-          <div class="text-xs text-indigo-700 mt-2">
+          <div class="text-xs text-[hsl(var(--diagram-indigo-fg))] mt-2">
             Visual tokens projected and concatenated with
             text tokens
           </div>
@@ -590,38 +590,38 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       >
         <div class="w-36 shrink-0">
           <div
-            class="font-semibold text-sm text-emerald-800"
+            class="font-semibold text-sm text-[hsl(var(--diagram-emerald-fg))]"
           >
             Early Fusion
           </div>
-          <div class="text-xs text-emerald-600">
+          <div class="text-xs text-[hsl(var(--diagram-emerald-fg))]">
             (Gemini, GPT-4o)
           </div>
         </div>
         <div
-          class="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg p-3"
+          class="flex-1 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded-lg p-3"
         >
           <div class="flex items-center gap-2 text-xs">
-            <div class="bg-sky-200 rounded px-1 py-1">
+            <div class="bg-[hsl(var(--diagram-blue-border))] rounded px-1 py-1">
               img
             </div>
-            <div class="bg-emerald-200 rounded px-1 py-1">
+            <div class="bg-[hsl(var(--diagram-emerald-border))] rounded px-1 py-1">
               txt
             </div>
-            <div class="bg-sky-200 rounded px-1 py-1">
+            <div class="bg-[hsl(var(--diagram-blue-border))] rounded px-1 py-1">
               img
             </div>
-            <div class="bg-emerald-200 rounded px-1 py-1">
+            <div class="bg-[hsl(var(--diagram-emerald-border))] rounded px-1 py-1">
               txt
             </div>
-            <div class="text-slate-400">all tokens</div>
+            <div class="text-[hsl(var(--muted-foreground))]">all tokens</div>
             <div
-              class="bg-amber-200 rounded px-2 py-1 border-2 border-emerald-400"
+              class="bg-[hsl(var(--diagram-amber-border))] rounded px-2 py-1 border-2 border-[hsl(var(--diagram-emerald-solid))]"
             >
               Unified Transformer
             </div>
           </div>
-          <div class="text-xs text-emerald-700 mt-2">
+          <div class="text-xs text-[hsl(var(--diagram-emerald-fg))] mt-2">
             All modalities tokenized and processed jointly
             from the start
           </div>
@@ -630,7 +630,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </div>
 
     <div
-      class="mt-4 text-center text-sm text-slate-600"
+      class="mt-4 text-center text-sm text-[hsl(var(--muted-foreground))]"
       data-animate
       style="animation-delay: 1.8s"
     >

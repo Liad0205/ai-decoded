@@ -375,14 +375,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="260"
         y="290"
         text-anchor="middle"
-        class="text-sm fill-slate-700"
+        class="text-sm fill-[hsl(var(--foreground))]"
         font-size="14">Log(Compute) →</text
       >
       <text
         x="20"
         y="140"
         text-anchor="middle"
-        class="text-sm fill-slate-700"
+        class="text-sm fill-[hsl(var(--foreground))]"
         font-size="14"
         transform="rotate(-90, 20, 140)">Log(Loss) →</text
       >
@@ -477,20 +477,20 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   title="Was GPT-3 Trained Optimally?"
 >
   <div data-reveal-step>
-    <p class="font-semibold text-slate-800">
+    <p class="font-semibold text-[hsl(var(--foreground))]">
       Step 1: <GlossaryTooltip term="GPT" />-3's actual allocation
     </p>
-    <p class="text-slate-600">
+    <p class="text-[hsl(var(--muted-foreground))]">
       <GlossaryTooltip term="GPT" />-3 has 175B parameters and was trained on ~300B
       tokens. That's a ratio of roughly 1.7 tokens per
       parameter.
     </p>
   </div>
   <div data-reveal-step class="hidden">
-    <p class="font-semibold text-slate-800">
+    <p class="font-semibold text-[hsl(var(--foreground))]">
       Step 2: Chinchilla's recommendation
     </p>
-    <p class="text-slate-600">
+    <p class="text-[hsl(var(--muted-foreground))]">
       The Chinchilla paper suggests the optimal ratio is
       approximately 20 tokens per parameter. For 175B
       parameters, that would mean ~3.5T tokens of training
@@ -498,10 +498,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </p>
   </div>
   <div data-reveal-step class="hidden">
-    <p class="font-semibold text-slate-800">
+    <p class="font-semibold text-[hsl(var(--foreground))]">
       Step 3: The verdict
     </p>
-    <p class="text-slate-600">
+    <p class="text-[hsl(var(--muted-foreground))]">
       <GlossaryTooltip term="GPT" />-3 was significantly undertrained: it saw roughly
       10x fewer tokens than optimal. The Chinchilla model
       (70B params, 1.4T tokens) matched <GlossaryTooltip term="GPT" />-3's performance
@@ -510,10 +510,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </p>
   </div>
   <div data-reveal-step class="hidden">
-    <p class="font-semibold text-slate-800">
+    <p class="font-semibold text-[hsl(var(--foreground))]">
       Step 4: Impact on the field
     </p>
-    <p class="text-slate-600">
+    <p class="text-[hsl(var(--muted-foreground))]">
       This insight reshaped <GlossaryTooltip term="LLM" /> training: LLaMA (65B, 1.4T
       tokens) and subsequent models adopted
       Chinchilla-optimal ratios, achieving better

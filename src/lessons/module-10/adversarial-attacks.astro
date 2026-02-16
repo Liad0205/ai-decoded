@@ -344,7 +344,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <svg viewBox="0 0 400 300" class="w-full h-64">
       <!-- Epsilon ball -->
@@ -361,7 +361,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="310"
         y="155"
-        class="text-xs fill-slate-400"
+        class="text-xs fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 0.2s">epsilon-ball</text
       >
@@ -377,7 +377,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="210"
         y="145"
-        class="text-xs fill-indigo-600 font-semibold"
+        class="text-xs fill-[hsl(var(--diagram-indigo-fg))] font-semibold"
         data-animate
         style="animation-delay: 0.4s">x (original)</text
       >
@@ -393,7 +393,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="240"
         y="118"
-        class="text-xs fill-amber-600"
+        class="text-xs fill-[hsl(var(--diagram-amber-fg))]"
         data-animate
         style="animation-delay: 1s">random init</text
       >
@@ -463,7 +463,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="280"
         y="78"
-        class="text-xs fill-red-600 font-semibold"
+        class="text-xs fill-[hsl(var(--diagram-red-fg))] font-semibold"
         data-animate
         style="animation-delay: 3s">x' (adversarial)</text
       >
@@ -482,7 +482,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="60"
         y="240"
-        class="text-xs fill-purple-500"
+        class="text-xs fill-[hsl(var(--diagram-purple-fg))]"
         data-animate
         style="animation-delay: 0.6s"
         >decision boundary</text
@@ -492,7 +492,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="100"
         y="280"
-        class="text-xs fill-slate-500"
+        class="text-xs fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 3.5s"
         >Class A (correct)</text
@@ -500,12 +500,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <text
         x="280"
         y="40"
-        class="text-xs fill-slate-500"
+        class="text-xs fill-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 3.5s">Class B (wrong)</text
       >
     </svg>
-    <p class="text-sm text-slate-600 text-center">
+    <p class="text-sm text-[hsl(var(--muted-foreground))] text-center">
       PGD iteratively steps toward the decision boundary,
       projecting back into the epsilon-ball after each step.
     </p>

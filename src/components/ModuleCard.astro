@@ -150,19 +150,18 @@ const {
             totalLessonsAttr,
             10,
           );
+          // Capture narrowed types for stable closure references
+          const mId = moduleId;
+          const bar = progressBar;
+          const text = progressText;
 
           function updateProgress() {
-            if (!moduleId) return;
             const progress = getModuleProgress(
-              moduleId,
+              mId,
               totalLessons,
             );
-            if (progressBar instanceof HTMLElement) {
-              progressBar.style.width = `${progress}%`;
-            }
-            if (progressText) {
-              progressText.textContent = `${progress}%`;
-            }
+            bar.style.width = `${progress}%`;
+            text.textContent = `${progress}%`;
           }
 
           updateProgress();

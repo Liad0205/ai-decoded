@@ -130,7 +130,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={6000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <div class="flex flex-col gap-3">
       <!-- Step 1 -->
@@ -140,21 +140,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.3s"
       >
         <div
-          class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
+          class="w-6 h-6 rounded-full bg-[hsl(var(--diagram-indigo-solid))] flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
         >
           1
         </div>
         <div class="flex-1">
           <div class="flex gap-3 items-center">
             <div
-              class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1"
+              class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-sm flex-1"
             >
               <strong>Your App</strong>: Send message + tool
               definitions to API
             </div>
-            <div class="text-indigo-400">&rarr;</div>
+            <div class="text-[hsl(var(--diagram-indigo-fg))]">&rarr;</div>
             <div
-              class="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-sm"
+              class="px-3 py-2 bg-[hsl(var(--diagram-indigo-bg))] border border-[hsl(var(--diagram-indigo-border))] rounded text-sm"
             >
               <strong>LLM</strong>
             </div>
@@ -169,36 +169,36 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 1.5s"
       >
         <div
-          class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
+          class="w-6 h-6 rounded-full bg-[hsl(var(--diagram-indigo-solid))] flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
         >
           2
         </div>
         <div class="flex-1">
           <div class="flex gap-3 items-center">
-            // 110: <div class="text-indigo-400">
+            // 110: <div class="text-[hsl(var(--diagram-indigo-fg))]">
               &larr;
             </div>
-            // 126: <div class="text-indigo-400">
+            // 126: <div class="text-[hsl(var(--diagram-indigo-fg))]">
               &rarr;
             </div>
-            // 142: <div class="text-indigo-400">
+            // 142: <div class="text-[hsl(var(--diagram-indigo-fg))]">
               &rarr;
             </div>
-            // 386: <div class="text-indigo-400">
+            // 386: <div class="text-[hsl(var(--diagram-indigo-fg))]">
               &rarr;
             </div>
-            // 389: <div class="text-indigo-400">
+            // 389: <div class="text-[hsl(var(--diagram-indigo-fg))]">
               &larr;
             </div>
             <div
-              class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1"
+              class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-sm flex-1"
             >
               <strong>Your App</strong>: Receive tool_use
               response
             </div>
-            <div class="text-indigo-400">&larr;</div>
+            <div class="text-[hsl(var(--diagram-indigo-fg))]">&larr;</div>
             <div
-              class="px-3 py-2 bg-purple-50 border border-purple-200 rounded text-sm"
+              class="px-3 py-2 bg-[hsl(var(--diagram-purple-bg))] border border-[hsl(var(--diagram-purple-border))] rounded text-sm"
             >
               <strong>LLM</strong>: tool_use(get_weather,
               ...)
@@ -214,21 +214,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 3s"
       >
         <div
-          class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
+          class="w-6 h-6 rounded-full bg-[hsl(var(--diagram-emerald-solid))] flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
         >
           3
         </div>
         <div class="flex-1">
           <div class="flex gap-3 items-center">
             <div
-              class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1"
+              class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-sm flex-1"
             >
               <strong>Your App</strong>: Execute function,
               get result
             </div>
-            <div class="text-emerald-400">&rarr;</div>
+            <div class="text-[hsl(var(--diagram-emerald-fg))]">&rarr;</div>
             <div
-              class="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-sm"
+              class="px-3 py-2 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded text-sm"
             >
               <strong>External API</strong>
             </div>
@@ -243,21 +243,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 4.5s"
       >
         <div
-          class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
+          class="w-6 h-6 rounded-full bg-[hsl(var(--diagram-indigo-solid))] flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"
         >
           4
         </div>
         <div class="flex-1">
           <div class="flex gap-3 items-center">
             <div
-              class="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm flex-1"
+              class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-sm flex-1"
             >
               <strong>Your App</strong>: Send tool result
               back
             </div>
-            <div class="text-indigo-400">&rarr;</div>
+            <div class="text-[hsl(var(--diagram-indigo-fg))]">&rarr;</div>
             <div
-              class="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-sm"
+              class="px-3 py-2 bg-[hsl(var(--diagram-indigo-bg))] border border-[hsl(var(--diagram-indigo-border))] rounded text-sm"
             >
               <strong>LLM</strong>: Generate final response
             </div>
@@ -454,10 +454,10 @@ Step 3: book_flight(flight_id: "BA117", passenger: current_user)
   </p>
 
   <div
-    class="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg my-4 border-l-4 border-amber-400"
+    class="bg-[hsl(var(--diagram-amber-bg))] p-4 rounded-lg my-4 border-l-4 border-[hsl(var(--diagram-amber-solid))]"
   >
     <p
-      class="font-bold text-amber-800 dark:text-amber-200 text-sm"
+      class="font-bold text-[hsl(var(--diagram-amber-fg))] text-sm"
     >
       ⚠️ Warning: The Race Condition Trap
     </p>
@@ -467,7 +467,7 @@ Step 3: book_flight(flight_id: "BA117", passenger: current_user)
       >. Never run dependent operations in parallel:
     </p>
     <pre
-      class="mt-2 bg-white dark:bg-black/20 p-2 rounded text-xs text-rose-600">
+      class="mt-2 bg-[hsl(var(--card))] p-2 rounded text-xs text-[hsl(var(--diagram-rose-fg))]">
 // DANGEROUS:
 [
   delete_file("report.txt"),
@@ -596,7 +596,7 @@ Main Agent receives: structured competitive analysis report</code></pre>
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded"
+    class="bg-[hsl(var(--card))] p-4 rounded"
   >
     <div class="flex items-center justify-center gap-4">
       <!-- Host Application -->
@@ -606,12 +606,12 @@ Main Agent receives: structured competitive analysis report</code></pre>
         style="animation-delay: 0.3s"
       >
         <div
-          class="px-4 py-3 bg-indigo-100 border-2 border-indigo-400 rounded-lg text-center"
+          class="px-4 py-3 bg-[hsl(var(--diagram-indigo-bg))] border-2 border-[hsl(var(--diagram-indigo-solid))] rounded-lg text-center"
         >
-          <div class="text-sm font-bold text-indigo-700">
+          <div class="text-sm font-bold text-[hsl(var(--diagram-indigo-fg))]">
             Host Application
           </div>
-          <div class="text-xs text-indigo-500 mt-1">
+          <div class="text-xs text-[hsl(var(--diagram-indigo-fg))] mt-1">
             LLM + MCP Client
           </div>
         </div>
@@ -623,16 +623,16 @@ Main Agent receives: structured competitive analysis report</code></pre>
         data-animate
         style="animation-delay: 1.5s"
       >
-        <div class="text-xs text-slate-400 text-center">
+        <div class="text-xs text-[hsl(var(--muted-foreground))] text-center">
           JSON-RPC
         </div>
         <div class="flex items-center gap-1">
-          <div class="w-12 h-0.5 bg-indigo-300"></div>
-          <div class="text-indigo-400">&rarr;</div>
+          <div class="w-12 h-0.5 bg-[hsl(var(--diagram-indigo-border))]"></div>
+          <div class="text-[hsl(var(--diagram-indigo-fg))]">&rarr;</div>
         </div>
         <div class="flex items-center gap-1">
-          <div class="text-indigo-400">&larr;</div>
-          <div class="w-12 h-0.5 bg-indigo-300"></div>
+          <div class="text-[hsl(var(--diagram-indigo-fg))]">&larr;</div>
+          <div class="w-12 h-0.5 bg-[hsl(var(--diagram-indigo-border))]"></div>
         </div>
       </div>
 
@@ -643,29 +643,29 @@ Main Agent receives: structured competitive analysis report</code></pre>
         style="animation-delay: 3s"
       >
         <div
-          class="px-3 py-2 bg-emerald-50 border border-emerald-300 rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded text-xs text-center"
         >
           <strong>MCP Server</strong>: File System
         </div>
         <div
-          class="px-3 py-2 bg-blue-50 border border-blue-300 rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-xs text-center"
         >
           <strong>MCP Server</strong>: Database
         </div>
         <div
-          class="px-3 py-2 bg-purple-50 border border-purple-300 rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--diagram-purple-bg))] border border-[hsl(var(--diagram-purple-border))] rounded text-xs text-center"
         >
           <strong>MCP Server</strong>: GitHub API
         </div>
         <div
-          class="px-3 py-2 bg-amber-50 border border-amber-300 rounded text-xs text-center"
+          class="px-3 py-2 bg-[hsl(var(--diagram-amber-bg))] border border-[hsl(var(--diagram-amber-border))] rounded text-xs text-center"
         >
           <strong>MCP Server</strong>: Web Search
         </div>
       </div>
     </div>
     <div
-      class="text-sm text-slate-600 text-center mt-4"
+      class="text-sm text-[hsl(var(--muted-foreground))] text-center mt-4"
       data-animate
       style="animation-delay: 4s"
     >
@@ -769,7 +769,7 @@ function deleteUser(args) &#123;
     </p>
     <button
       type="button"
-      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
       data-reveal-button="1">Next Issue</button
     >
   </div>
@@ -786,7 +786,7 @@ function deleteUser(args) &#123;
     </p>
     <button
       type="button"
-      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
       data-reveal-button="2">Next Issue</button
     >
   </div>
@@ -803,7 +803,7 @@ function deleteUser(args) &#123;
     </p>
     <button
       type="button"
-      class="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
+      class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
       data-reveal-button="3">Next Issue</button
     >
   </div>

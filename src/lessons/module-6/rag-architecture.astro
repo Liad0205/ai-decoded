@@ -118,37 +118,37 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={6000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="flex flex-col gap-6">
       <!-- Indexing Phase -->
       <div data-animate style="animation-delay: 0.3s">
         <div
-          class="text-sm font-semibold text-indigo-700 mb-2"
+          class="text-sm font-semibold text-[hsl(var(--diagram-indigo-fg))] mb-2"
         >
           Indexing Phase (offline)
         </div>
         <div class="flex items-center gap-3">
           <div
-            class="px-3 py-2 bg-slate-100 dark:bg-[hsl(var(--muted))] rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--muted))] rounded text-xs text-center min-w-fit"
           >
             Documents
           </div>
-          <div class="text-slate-400">-></div>
+          <div class="text-[hsl(var(--muted-foreground))]">-></div>
           <div
-            class="px-3 py-2 bg-orange-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-amber-bg))] rounded text-xs text-center min-w-fit"
           >
             Chunk
           </div>
-          <div class="text-slate-400">-></div>
+          <div class="text-[hsl(var(--muted-foreground))]">-></div>
           <div
-            class="px-3 py-2 bg-purple-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-purple-bg))] rounded text-xs text-center min-w-fit"
           >
             Embed
           </div>
-          <div class="text-slate-400">-></div>
+          <div class="text-[hsl(var(--muted-foreground))]">-></div>
           <div
-            class="px-3 py-2 bg-indigo-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center min-w-fit"
           >
             Vector DB
           </div>
@@ -158,37 +158,37 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <!-- Query Phase -->
       <div data-animate style="animation-delay: 2s">
         <div
-          class="text-sm font-semibold text-emerald-700 mb-2"
+          class="text-sm font-semibold text-[hsl(var(--diagram-emerald-fg))] mb-2"
         >
           Query Phase (online)
         </div>
         <div class="flex items-center gap-3">
           <div
-            class="px-3 py-2 bg-emerald-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-emerald-bg))] rounded text-xs text-center min-w-fit"
           >
             User Query
           </div>
-          <div class="text-slate-400">-></div>
+          <div class="text-[hsl(var(--muted-foreground))]">-></div>
           <div
-            class="px-3 py-2 bg-purple-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-purple-bg))] rounded text-xs text-center min-w-fit"
           >
             Embed
           </div>
-          <div class="text-slate-400">-></div>
+          <div class="text-[hsl(var(--muted-foreground))]">-></div>
           <div
-            class="px-3 py-2 bg-indigo-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center min-w-fit"
           >
             Retrieve top-k
           </div>
-          <div class="text-slate-400">-></div>
+          <div class="text-[hsl(var(--muted-foreground))]">-></div>
           <div
-            class="px-3 py-2 bg-amber-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-amber-bg))] rounded text-xs text-center min-w-fit"
           >
             Augment Prompt
           </div>
-          <div class="text-slate-400">-></div>
+          <div class="text-[hsl(var(--muted-foreground))]">-></div>
           <div
-            class="px-3 py-2 bg-rose-100 rounded text-xs text-center min-w-fit"
+            class="px-3 py-2 bg-[hsl(var(--diagram-rose-bg))] rounded text-xs text-center min-w-fit"
           >
             LLM Generate
           </div>
@@ -197,7 +197,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Answer -->
       <div
-        class="text-center text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))]"
+        class="text-center text-sm text-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 4s"
       >

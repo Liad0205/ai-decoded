@@ -267,7 +267,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   animationDuration={5000}
 >
   <div
-    class="bg-white dark:bg-[hsl(var(--card))] p-4 rounded w-full"
+    class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
     <div class="flex flex-col gap-4 items-center">
       <!-- Stage 1: Data -->
@@ -277,28 +277,28 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         style="animation-delay: 0.3s"
       >
         <div
-          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+          class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] rounded text-xs text-center font-medium"
         >
           Web Crawl
         </div>
         <div
-          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+          class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] rounded text-xs text-center font-medium"
         >
           Books
         </div>
         <div
-          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+          class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] rounded text-xs text-center font-medium"
         >
           Code
         </div>
         <div
-          class="px-3 py-2 bg-blue-100 rounded text-xs text-center font-medium"
+          class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] rounded text-xs text-center font-medium"
         >
           Papers
         </div>
       </div>
       <div
-        class="text-slate-400"
+        class="text-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 0.8s"
       >
@@ -307,14 +307,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 2: Filtering -->
       <div
-        class="px-4 py-2 bg-amber-100 rounded text-xs text-center font-medium w-64"
+        class="px-4 py-2 bg-[hsl(var(--diagram-amber-bg))] rounded text-xs text-center font-medium w-64"
         data-animate
         style="animation-delay: 1.2s"
       >
         Filter + Deduplicate + Tokenize
       </div>
       <div
-        class="text-slate-400"
+        class="text-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 1.6s"
       >
@@ -323,14 +323,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 3: Training -->
       <div
-        class="px-4 py-2 bg-indigo-100 rounded text-xs text-center font-medium w-64"
+        class="px-4 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center font-medium w-64"
         data-animate
         style="animation-delay: 2.0s"
       >
         Next-Token Prediction on Trillions of Tokens
       </div>
       <div
-        class="text-slate-400"
+        class="text-[hsl(var(--muted-foreground))]"
         data-animate
         style="animation-delay: 2.4s"
       >
@@ -339,7 +339,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 4: Output -->
       <div
-        class="px-4 py-3 bg-emerald-100 rounded text-sm text-center font-semibold w-64"
+        class="px-4 py-3 bg-[hsl(var(--diagram-emerald-bg))] rounded text-sm text-center font-semibold w-64"
         data-animate
         style="animation-delay: 3.0s"
       >
@@ -348,7 +348,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </div>
 
     <div
-      class="mt-4 text-sm text-slate-600 dark:text-[hsl(var(--muted-foreground))] text-center"
+      class="mt-4 text-sm text-[hsl(var(--muted-foreground))] text-center"
       data-animate
       style="animation-delay: 4s"
     >
@@ -420,10 +420,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <div
-  class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg my-4"
+  class="bg-[hsl(var(--diagram-indigo-bg))] p-4 rounded-lg my-4"
 >
   <p
-    class="font-semibold text-indigo-800 dark:text-indigo-200"
+    class="font-semibold text-[hsl(var(--diagram-indigo-fg))]"
   >
     The "Pizza Party" Analogy
   </p>
