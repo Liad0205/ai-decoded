@@ -47,14 +47,34 @@ const { diagramId, title, autoplay = false, animationDuration = 3000 } = Astro.p
     align-items: center;
     justify-content: center;
   }
+</style>
 
-  [data-animate] {
-    transition: all 300ms ease-out;
+<style is:global>
+  /* Default animation for diagram children — uses is:global because
+     Astro scoped styles can't reach slotted content.
+     Lesson files can override with their own scoped <style> blocks. */
+  [data-diagram] [data-animate] {
+    opacity: 0;
+    transform: translateY(12px);
   }
 
-  [data-animate].animating {
-    animation-duration: var(--animation-duration, 3s);
-    animation-timing-function: ease-in-out;
-    animation-fill-mode: forwards;
+  [data-diagram] [data-animate].animating {
+    animation: diagramReveal 0.6s ease-out forwards;
+  }
+
+  [data-diagram] [data-animate].animated {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes diagramReveal {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 </style>
