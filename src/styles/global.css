@@ -275,11 +275,6 @@
     @apply mb-8 ml-6 space-y-4;
   }
 
-  /* Special styling for Learning Objectives */
-  .lesson-content h2:has(+ ul) + ul,
-  .lesson-content h2:has(+ ol) + ol {
-    @apply bg-[hsl(var(--muted))] p-6 rounded-xl border border-[hsl(var(--border))];
-  }
 
   .lesson-content li {
     @apply text-[hsl(var(--foreground))] leading-relaxed;

@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand Chinchilla scaling laws and compute-optimal
@@ -33,16 +34,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Scaling Laws: The Predictable Side of AI Progress</h2>
 
 <p>
-  A remarkable discovery: model performance follows
-  predictable power laws as you scale compute, data, and
-  parameters. This enables forecasting capabilities before
-  training, crucial for multi-million-dollar training runs.
+  Here's something surprising: even though individual AI breakthroughs can feel unpredictable, the overall relationship between "how much you invest" and "how good the model gets" follows remarkably clean mathematical patterns. If you double your compute budget, you can predict almost exactly how much better the model will be. This discovery transformed AI from "train it and hope" into something closer to engineering, where companies can forecast capabilities before spending millions on a training run.
 </p>
 
 <h3>The Original Scaling Laws (Kaplan et al., 2020)</h3>
 
 <p>
-  OpenAI found that test loss L scales as a power law with:
+  OpenAI found that test loss (how wrong the model is) decreases in a predictable pattern as you increase three things: model size, training data, and compute. Specifically, loss follows a <strong>power law</strong> with each:
 </p>
 
 <div class="equation-sequence">
@@ -61,37 +59,28 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </div>
 
 <p>
-  where N = parameters, D = dataset size (tokens), C =
-  compute (PetaFLOP-days).
+  where N = number of parameters (model size), D = dataset size (tokens seen during training), and C = compute (total floating-point operations). The symbol ∝ means "proportional to," and the negative exponent means loss goes <em>down</em> as the quantity goes <em>up</em>.
 </p>
 
 <p>
-  Intuition: loss decreases as a power law when you increase
-  any of these three factors. On a log-log plot, these
-  relationships appear as straight lines, making performance
-  surprisingly predictable across orders of magnitude.
+  What makes power laws special: if you plot these on a log-log scale (both axes logarithmic), they appear as straight lines. That means the relationship holds across huge ranges. A pattern observed going from 1M to 100M parameters still predicts what happens at 100B. This predictability is what turned billion-dollar training runs from a gamble into a calculated investment.
 </p>
 
 <p>
-  <strong>Key finding</strong>: When not bottlenecked by the
-  others, scaling any single factor (N, D, or C) improves
-  loss predictably. But there's an optimal ratio.
+  <strong>Key finding</strong>: When not bottlenecked by the others, scaling any single factor (N, D, or C) improves loss predictably. But there's an optimal way to balance them, which brings us to Chinchilla.
 </p>
 
 <h3>Chinchilla Scaling Laws (Hoffmann et al., 2022)</h3>
 
 <p>
-  DeepMind revisited scaling laws and found prior work had
-  trained <em>undertrained</em> models. The key insight: for compute-optimal
-  training, parameters N and training tokens D should scale equally.
+  DeepMind revisited scaling laws and discovered something important: most existing models were <em>undertrained</em>. They were too big for the amount of data they saw. It's like building a massive factory but only running it for a day. The key insight: for a given compute budget, you get the best results when model size and training data scale together in balance.
 </p>
 
 <p>
-  <strong>Chinchilla's rule</strong>: For every doubling of
-  model size, double the training data.
+  <strong>Chinchilla's rule of thumb</strong>: For every doubling of model size, double the training data too.
 </p>
 
-<p>For a compute budget C (in FLOPs):</p>
+<p>Expressed mathematically, for a compute budget C (in FLOPs):</p>
 
 <MathBlock
   formula={"N_{\\text{opt}} \\propto C^{0.5}, \\quad D_{\\text{opt}} \\propto C^{0.5}"}
@@ -99,10 +88,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: the optimal number of parameters and the
-  optimal number of training tokens both grow as the square
-  root of your compute budget. If you 4x your compute, you
-  should 2x both model size and data.
+  In plain English: the optimal model size and the optimal amount of training data both grow as the square root of your compute budget. If you 4x your compute, you should 2x both model size and data (since √4 = 2). Spend it all on a bigger model? You'll get a big model that hasn't learned enough. Spend it all on more data with a small model? The model won't have the capacity to absorb it all.
 </p>
 
 <p>
@@ -113,7 +99,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <p>
-  Modern <GlossaryTooltip term="LLM" />s (LLaMA 3, Mistral, GPT-4) follow Chinchilla
+  Modern <GlossaryTooltip term="LLM" />s (LLaMA 4, Mistral Large, GPT-5.2) follow Chinchilla
   guidance: more data, not just more parameters.
 </p>
 
@@ -138,7 +124,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h2>Power Law Exponents: What Do They Mean?</h2>
 
-<p>Typical exponents α ≈ 0.05-0.10. This means:</p>
+<p>
+  The exponents in those power laws (typically α ≈ 0.05-0.10) tell you how steep the improvement curve is. A small exponent means you need a <em>lot</em> more resources for a modest improvement. For example:
+</p>
 
 <MathBlock
   formula={"L \\propto N^{-0.076} \\Rightarrow \\text{10× parameters} \\Rightarrow \\text{~40\\% loss reduction}"}
@@ -146,18 +134,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Diminishing returns set in, but predictably. This is why
-  frontier labs invest billions: improvements are
-  guaranteed, even if incremental.
+  Read this as: if you make the model 10 times larger, you reduce loss by roughly 40%. That's a real improvement, but you needed 10x the parameters to get it. And the next 40% reduction? Another 10x on top of that. This is the nature of diminishing returns with power laws. But the returns are <em>predictable</em>, which is why frontier labs invest billions: they know exactly what they'll get.
 </p>
 
 <h2>Emergent Abilities: Magic or Measurement?</h2>
 
 <p>
-  <strong>Emergent abilities</strong> are capabilities that appear
-  suddenly as models scale, absent in smaller models but present
-  in larger ones. Examples: few-shot prompting, chain-of-thought
-  reasoning, arithmetic.
+  As models got bigger, researchers noticed something curious: certain abilities seemed to appear out of nowhere. A model with 1B parameters can't do arithmetic, a model with 10B is shaky, and then a model with 100B just... does it. These sudden jumps are called <strong>emergent abilities</strong>: capabilities absent in smaller models that appear at larger scales. Other examples include few-shot learning (learning from just a few examples in the prompt) and chain-of-thought reasoning (solving problems step by step).
 </p>
 
 <h3>The Original Claim (Wei et al., 2022)</h3>
@@ -172,19 +155,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>The Debate: Are They Real?</h3>
 
 <p>
-  Schaeffer et al. (2023) argued emergent abilities might be <em
-    >measurement artifacts</em
-  >:
+  Schaeffer et al. (2023) made a compelling counterargument: emergent abilities might be <em>measurement artifacts</em>, not real phase transitions. The key insight is about how we measure:
 </p>
 <ul>
   <li>
-    If you measure with nonlinear metrics (accuracy) instead
-    of continuous metrics (log-probability), smooth
-    improvements appear sudden.
+    <strong>Accuracy is binary</strong>: a math problem is either right or wrong. If a model's internal probability of getting the answer right rises smoothly from 5% to 95% as it scales, accuracy will look flat at 0 for a while and then jump to 1. The improvement was gradual all along; the metric made it look sudden.
   </li>
   <li>
-    Changing the metric from accuracy → token edit distance
-    reveals gradual scaling, not sudden emergence.
+    <strong>Continuous metrics tell a different story</strong>: when researchers switched from accuracy to smoother metrics like token edit distance (how close the answer was), the "emergence" disappeared and scaling looked gradual.
   </li>
 </ul>
 
@@ -221,20 +199,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <h2>
-  Mixture of Experts (<GlossaryTooltip term="MoE" />): Scaling Without Proportional
-  Compute
+  Mixture of Experts (MoE): Scaling Without Proportional Compute
 </h2>
 
 <p>
-  Standard scaling hits a wall: a 1T parameter dense model
-  costs 1T FLOPs per token. MoE offers a solution.
+  So far, scaling means bigger models with more compute. But there's a practical problem: a dense model with 1 trillion parameters needs to run <em>all</em> of those parameters for every single token. That's enormously expensive at inference time. <GlossaryTooltip term="MoE" /> offers an elegant solution: what if the model had a trillion parameters but only used a small fraction of them for each input?
 </p>
 
 <h3>How MoE Works</h3>
 
 <p>
-  Replace dense feed-forward networks with <em>sparse</em> expert
-  networks:
+  Recall from the previous lesson that each transformer layer has a feed-forward network (FFN) that processes each token independently. In a standard (dense) model, every token passes through the same FFN. MoE replaces that single FFN with multiple smaller "expert" FFNs, and a gating network decides which experts each token should use:
 </p>
 
 <MathBlock
@@ -243,15 +218,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: instead of one large FFN, route each token
-  through a weighted combination of N smaller expert
-  networks. Each expert is a standard FFN, and the weights
-  determine which experts handle which inputs.
+  In plain English: for each token x, compute a weight w<sub>i</sub> for each expert (how relevant is this expert for this input?), then combine the outputs. Think of it like a company with specialist teams: instead of sending every task to one giant department, you route each task to the two or three specialists best suited to handle it.
 </p>
 
 <p>
-  A gating network computes weights w<sub>i</sub>(x), often
-  selecting only top-K experts (e.g., K=2). This means:
+  In practice, the gating network selects only the top-K experts (typically K=2) and zeros out the rest. This means:
 </p>
 <ul>
   <li>
@@ -267,30 +238,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Example: Mixtral 8x7B</h3>
 
 <p>
-  Mixtral has 8 experts per layer, activating top-2. Total
-  params: ~47B, but active params per token: ~13B (similar
-  cost to a 13B dense model).
-</p>
-
-<p>
-  <strong>Result</strong>: Performance matching much larger
-  dense models at a fraction of inference cost.
+  Mixtral has 8 experts per layer, but only activates the top 2 for each token. The total parameter count is ~47B (all 8 experts combined), but for any given token, only ~13B parameters are active. So it has the <em>knowledge</em> of a 47B model with the <em>inference cost</em> of a 13B model. In practice, it matched the performance of much larger dense models while being significantly cheaper to run.
 </p>
 
 <h3>Challenges</h3>
 <ul>
   <li>
-    <strong>Load balancing</strong>: Gating might favor a
-    few experts, underutilizing others. Requires auxiliary
-    losses to balance expert usage.
+    <strong>Load balancing</strong>: Left to its own devices, the gating network tends to send most tokens to just a few favorite experts while the rest sit idle. Training adds a special "auxiliary loss" that penalizes uneven expert usage, encouraging the model to spread the load.
   </li>
   <li>
-    <strong>Communication overhead</strong>: Experts are
-    distributed across devices; routing tokens between
-    devices adds latency.
+    <strong>Communication overhead</strong>: In large-scale training, different experts live on different GPUs. Routing tokens to the right expert means sending data between devices, which adds latency.
   </li>
   <li>
-    <strong>Training instability</strong>: MoE models are harder to train, requiring careful tuning.
+    <strong>Training instability</strong>: The combination of sparse routing and load-balancing losses makes MoE models trickier to train than dense models, requiring careful hyperparameter tuning.
   </li>
 </ul>
 
@@ -348,121 +308,130 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <Diagram
   diagramId="scaling-laws-viz"
   title="Scaling Law: Loss vs Compute (Log-Log Scale)"
+  autoplay={true}
+  animationDuration={4000}
 >
   <div class="w-full">
-    <svg viewBox="0 0 500 300" class="w-full h-auto">
+    <svg viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet" class="w-full h-auto">
       <!-- Axes -->
       <line
         x1="60"
         y1="250"
         x2="460"
         y2="250"
-        stroke="#334155"
+        stroke="hsl(var(--muted-foreground))"
         stroke-width="2"></line>
       <line
         x1="60"
         y1="250"
         x2="60"
         y2="30"
-        stroke="#334155"
+        stroke="hsl(var(--muted-foreground))"
         stroke-width="2"></line>
       <!-- Axis labels -->
       <text
         x="260"
         y="290"
         text-anchor="middle"
-        class="text-sm fill-[hsl(var(--foreground))]"
-        font-size="14">Log(Compute) →</text
+        font-size="14"
+        fill="hsl(var(--foreground))">Log(Compute)</text
       >
       <text
         x="20"
         y="140"
         text-anchor="middle"
-        class="text-sm fill-[hsl(var(--foreground))]"
         font-size="14"
-        transform="rotate(-90, 20, 140)">Log(Loss) →</text
+        fill="hsl(var(--foreground))"
+        transform="rotate(-90, 20, 140)">Log(Loss)</text
+      >
+      <!-- Subtitle -->
+      <text
+        x="260"
+        y="20"
+        text-anchor="middle"
+        font-size="13"
+        fill="hsl(var(--muted-foreground))"
+        font-weight="bold"
+        >Loss decreases as a power law with compute</text
       >
       <!-- Power law curve -->
       <path
         d="M 80 60 Q 150 100 200 150 Q 280 210 440 235"
         fill="none"
-        stroke="#6366f1"
+        stroke="hsl(var(--primary))"
         stroke-width="3"
-        data-animate></path>
+        data-animate
+        style="animation-delay: 0.3s"></path>
       <!-- Data points -->
       <circle
         cx="100"
         cy="80"
         r="5"
-        fill="#6366f1"
-        opacity="0.7"
-        data-animate></circle>
+        fill="hsl(var(--primary))"
+        data-animate
+        style="animation-delay: 0.6s"></circle>
       <circle
         cx="150"
         cy="115"
         r="5"
-        fill="#6366f1"
-        opacity="0.7"
-        data-animate></circle>
+        fill="hsl(var(--primary))"
+        data-animate
+        style="animation-delay: 0.9s"></circle>
       <circle
         cx="200"
         cy="150"
         r="5"
-        fill="#6366f1"
-        opacity="0.7"
-        data-animate></circle>
+        fill="hsl(var(--primary))"
+        data-animate
+        style="animation-delay: 1.2s"></circle>
       <circle
         cx="280"
         cy="195"
         r="5"
-        fill="#6366f1"
-        opacity="0.7"
-        data-animate></circle>
+        fill="hsl(var(--primary))"
+        data-animate
+        style="animation-delay: 1.5s"></circle>
       <circle
         cx="360"
         cy="220"
         r="5"
-        fill="#6366f1"
-        opacity="0.7"
-        data-animate></circle>
+        fill="hsl(var(--primary))"
+        data-animate
+        style="animation-delay: 1.8s"></circle>
       <circle
         cx="440"
         cy="235"
         r="5"
-        fill="#6366f1"
-        opacity="0.7"
-        data-animate></circle>
+        fill="hsl(var(--primary))"
+        data-animate
+        style="animation-delay: 2.1s"></circle>
       <!-- Annotations -->
       <text
         x="100"
         y="70"
         text-anchor="middle"
         font-size="11"
-        fill="#475569">Small</text
+        fill="hsl(var(--muted-foreground))"
+        data-animate
+        style="animation-delay: 0.6s">Small</text
       >
       <text
         x="280"
         y="185"
         text-anchor="middle"
         font-size="11"
-        fill="#475569">GPT-3</text
+        fill="hsl(var(--muted-foreground))"
+        data-animate
+        style="animation-delay: 1.5s">GPT-3</text
       >
       <text
         x="440"
         y="225"
         text-anchor="end"
         font-size="11"
-        fill="#475569">Chinchilla</text
-      >
-      <!-- Legend -->
-      <text
-        x="260"
-        y="20"
-        text-anchor="middle"
-        font-size="13"
-        fill="#334155"
-        font-weight="bold"
-        >Loss decreases as a power law with compute</text
+        fill="hsl(var(--muted-foreground))"
+        data-animate
+        style="animation-delay: 2.1s">Chinchilla</text
       >
     </svg>
   </div>

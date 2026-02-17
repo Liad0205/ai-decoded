@@ -9,11 +9,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
-    Understand why <GlossaryTooltip term="RNN" />s and <GlossaryTooltip
-      term="LSTM"
-    />s became bottlenecks for sequence modeling
+    Understand why RNNs and LSTMs became bottlenecks for
+    sequence modeling
   </li>
   <li>
     Derive scaled dot-product attention from first
@@ -27,10 +27,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h2>The Problem with RNNs and LSTMs</h2>
 <p>
-  Before transformers, sequence modeling relied on recurrent
-  architectures (RNNs, LSTMs, GRUs). While LSTMs solved
-  vanishing gradients via gating mechanisms, they suffered
-  from fundamental limitations:
+  Before transformers, the standard approach to processing sequences (text, audio, time series) was <strong>recurrent neural networks</strong> (<GlossaryTooltip term="RNN" />s). The idea: process tokens one at a time, passing a hidden state from each step to the next, like reading a sentence word by word and keeping a mental summary as you go. <GlossaryTooltip term="LSTM" />s improved on vanilla RNNs by adding gates that control what to remember and what to forget. But even with these improvements, recurrent architectures suffered from fundamental limitations:
 </p>
 
 <ul>
@@ -56,15 +53,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h2>Self-Attention: The Core Idea</h2>
 <p>
-  <strong>Self-attention</strong> allows each position in a sequence
-  to directly attend to all other positions, computing outputs
-  in parallel. No sequential dependency chain.
+  The transformer's key innovation is <strong>self-attention</strong>: instead of processing tokens one at a time, every token gets to look at every other token simultaneously. There's no chain of hidden states to pass through.
 </p>
 
 <p>
-  For each position i, self-attention computes a weighted
-  combination of all positions, where weights reflect how
-  much position i should "attend to" position j.
+  Think of it this way: in an RNN, the word "it" at position 50 can only learn about the word "cat" at position 3 if that information survived 47 sequential steps. With self-attention, "it" can look directly at "cat" in a single operation. For each token, self-attention computes a weighted combination of all tokens, where the weights reflect relevance: "how much should I pay attention to you?"
 </p>
 
 <h2>Scaled Dot-Product Attention: Full Derivation</h2>
@@ -164,38 +157,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Why Scale by √d_k?</h3>
 
 <p>
-  The scaling factor <MathBlock formula={"1/\\sqrt{d_k}"} /> is
-  critical. Here's why:
+  You might have noticed the <MathBlock formula={"1/\\sqrt{d_k}"} /> factor in the formula and wondered why it's there. It turns out this small detail is critical to making attention work at all.
 </p>
 
 <p>
-  Assume query and key vectors have zero mean, unit variance
-  entries. Their dot product <MathBlock
-    formula={"q^T k = \\sum_{i=1}^{d_k} q_i k_i"}
-  /> is a sum of <MathBlock formula="d_k" /> random variables.
-</p>
-
-<p>By the Central Limit Theorem:</p>
-<ul>
-  <li>Mean of <MathBlock formula="q^T k" />: 0</li>
-  <li>
-    Variance of <MathBlock formula="q^T k" />: <MathBlock
-      formula="d_k"
-    /> (sum of <MathBlock formula="d_k" /> unit-variance variables)
-  </li>
-</ul>
-
-<p>
-  As <MathBlock formula="d_k" /> grows, dot products grow in magnitude
-  proportionally to <MathBlock formula={"\\sqrt{d_k}"} />.
-  Large dot products push softmax into saturated regions
-  where gradients vanish.
+  The problem: dot products get bigger as vectors get longer. If your query and key vectors have 64 dimensions, the dot product is the sum of 64 multiplied pairs. More dimensions means a larger sum, which means the softmax sees bigger numbers.
 </p>
 
 <p>
-  Scaling by <MathBlock formula={"1/\\sqrt{d_k}"} /> keeps variance
-  at 1 regardless of <MathBlock formula="d_k" />,
-  stabilizing gradients.
+  Why that's bad: when softmax sees very large numbers, it collapses to a near-one-hot distribution (all the weight on one token, near-zero on everything else). In that regime, gradients vanish and the model stops learning.
+</p>
+
+<p>
+  The math behind this: if each entry in the query and key has mean 0 and variance 1, then the dot product <MathBlock formula={"q^T k = \\sum_{i=1}^{d_k} q_i k_i"} /> has variance equal to <MathBlock formula="d_k" />. Its typical magnitude grows proportionally to <MathBlock formula={"\\sqrt{d_k}"} />. Dividing by <MathBlock formula={"\\sqrt{d_k}"} /> normalizes the variance back to 1, keeping softmax in a healthy range regardless of how large the vectors are.
 </p>
 
 <div
@@ -324,14 +298,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Multi-Head Attention</h2>
 
 <p>
-  A single attention "head" focuses on one type of
-  relationship (e.g., syntactic, semantic). <strong
-    >Multi-head attention</strong
-  > runs multiple attention operations in parallel, each with
-  different learned projections.
+  A single attention head can only capture one kind of relationship at a time. But language is rich: the word "bank" relates to "river" through one type of association and to "money" through another. <strong>Multi-head attention</strong> solves this by running multiple attention operations in parallel, each with its own learned projections. Each head is free to specialize in a different type of relationship.
 </p>
 
-<p>For h heads:</p>
+<p>
+  Each head performs its own attention with smaller projection dimensions (splitting the total dimension across heads):
+</p>
 
 <MathBlock
   formula={"\\text{head}_i = \\text{Attention}(QW_i^Q, KW_i^K, VW_i^V)"}
@@ -339,10 +311,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  where each <MathBlock
-    formula={"W_i^Q, W_i^K, W_i^V \\in \\mathbb{R}^{d \\times d_k}"}
-  /> with <MathBlock formula="d_k = d/h" />. Concatenate
-  heads and project:
+  Then we concatenate all the head outputs and project them back to the original dimension:
 </p>
 
 <MathBlock
@@ -351,9 +320,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: run h separate attention operations in parallel
-  (each with its own learned projections), concatenate their
-  outputs, and project back to the original dimension.
+  The total computation stays the same because each head uses <MathBlock formula="d_k = d/h" /> dimensions. Eight heads with 64 dimensions each costs the same as one head with 512, but captures eight different types of relationships.
 </p>
 
 <p>

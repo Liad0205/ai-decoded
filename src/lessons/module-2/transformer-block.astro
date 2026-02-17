@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand layer normalization and why Pre-LN
@@ -32,12 +33,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Layer Normalization: Pre-LN vs Post-LN</h2>
 
 <p>
-  Neural networks are sensitive to the scale of their
-  inputs. Without normalization, activations can grow or
-  shrink across layers, making training unstable. Layer
-  normalization standardizes each activation vector to zero
-  mean and unit variance, giving the optimizer a smoother
-  loss landscape. Let's make this precise:
+  As data flows through a deep network, the numbers at each layer can drift: some neurons output very large values, others very small. This makes the optimizer's job harder because the "terrain" it's navigating keeps shifting. <strong>Layer normalization</strong> fixes this by recentering and rescaling the activations at each layer, keeping them in a well-behaved range.
+</p>
+
+<p>
+  The operation is straightforward: take the mean and standard deviation across the features of each token, normalize to zero mean and unit variance, then let the model learn a per-feature scale and shift:
 </p>
 
 <MathBlock
@@ -46,21 +46,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: subtract the mean, divide by the standard
-  deviation, then scale and shift by learned parameters.
-</p>
-
-<p>
-  Here, μ and σ are the mean and standard deviation computed
-  across features for each example independently, γ and β
-  are learned per-feature scale and shift parameters, and ε
-  is a small constant for numerical stability.
+  Here γ (scale) and β (shift) are learned parameters that let the model undo the normalization for features where large or small values are actually useful. The ε is a tiny constant to prevent division by zero.
 </p>
 
 <h3>Post-LN (Original Transformer)</h3>
 <p>
-  The original "Attention Is All You Need" paper used
-  Post-LN: apply normalization after residual addition.
+  The original "Attention Is All You Need" paper placed normalization <em>after</em> the sublayer and residual addition:
 </p>
 
 <MathBlock
@@ -69,15 +60,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  That is: first compute the sublayer output and add the
-  residual, then normalize the result. The normalization
-  happens on the "main path."
+  In this setup, "Sublayer" means either the attention or the FFN (the two main operations inside a transformer block). First compute the sublayer output, add the residual skip, then normalize.
 </p>
 
 <h3>Pre-LN (Modern Standard)</h3>
 <p>
-  Modern transformers use Pre-LN: normalize before each
-  sublayer.
+  Modern transformers flip the order: normalize <em>before</em> each sublayer.
 </p>
 
 <MathBlock
@@ -86,25 +74,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Here the input is normalized before entering the sublayer,
-  and the residual carries the raw (unnormalized)
-  activations. This means the residual path is a clean
-  "gradient highway" with no normalization in the way.
+  The difference is subtle but important. In Pre-LN, the residual path carries raw activations with nothing in the way. During backpropagation, gradients can flow straight through the residual connection without being distorted by normalization. Think of it as a clean highway for gradient flow.
 </p>
 
 <p>
-  <strong>Why Pre-LN won</strong>: Pre-LN stabilizes
-  training at scale. Post-LN suffers from gradient explosion
-  in very deep networks. Pre-LN ensures normalized inputs to
-  each sublayer, making gradient flow more stable. Critical
-  for training 100+ layer models.
+  <strong>Why Pre-LN won</strong>: Post-LN suffers from gradient instability in very deep networks and requires careful learning rate warmup to avoid divergence. Pre-LN eliminates these issues, making it practical to train models with 100+ layers. Nearly all modern transformers use Pre-LN.
 </p>
 
 <h2>Feed-Forward Network: The Transformer's Memory</h2>
 
 <p>
-  After self-attention, each position passes through an
-  identical feed-forward network (FFN) independently:
+  Attention lets tokens talk to each other, but it doesn't do much "thinking" about the information it gathers. That's the feed-forward network's job. After self-attention, each token independently passes through a small two-layer network:
 </p>
 
 <MathBlock
@@ -113,10 +93,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: project the input to a wider hidden dimension,
-  apply a nonlinearity (<GlossaryTooltip term="GELU" />), then project back down. This
-  is a standard two-layer <GlossaryTooltip term="MLP" /> applied independently to each
-  token position.
+  The first layer expands the token's representation to a wider dimension (typically 4x), applies a <GlossaryTooltip term="GELU" /> nonlinearity, and the second layer projects it back down. Each token gets the same network applied independently. This is where the bulk of the transformer's parameters live, and research suggests these layers function as a kind of knowledge store (more on that below).
 </p>
 
 <p>
@@ -182,10 +159,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h3>Ensemble Interpretation</h3>
 <p>
-  A network with residuals can be viewed as an ensemble of <MathBlock
-    formula="2^L"
-  /> paths of varying depths. At test time, the network implicitly
-  ensembles predictions from all these paths, improving robustness.
+  Here's a surprising way to think about residuals: at each layer, the data can either go through the sublayer <em>or</em> skip it via the residual. With L layers, that creates <MathBlock formula="2^L" /> possible paths through the network (each layer is either "used" or "skipped"). The network effectively acts like an ensemble of many shallow networks running simultaneously, which improves robustness.
 </p>
 
 <RevealSection
@@ -283,11 +257,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h3>Sinusoidal Positional Encoding (Original)</h3>
 <p>
-  The original transformer used fixed sinusoidal functions
-  at different frequencies to encode position. Each
-  dimension of the positional encoding uses a different
-  frequency, so the model can learn to attend to relative
-  positions. Mathematically:
+  The original transformer used sine and cosine waves at different frequencies. The idea is similar to how a clock encodes time: the seconds hand moves fast, the minutes hand moves slower, the hours hand slower still. By combining waves at many frequencies, each position gets a unique "fingerprint" that the model can learn to interpret:
 </p>
 
 <div class="equation-sequence">
@@ -302,41 +272,22 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </div>
 
 <p>
-  Intuition: for each position in the sequence, generate a
-  d-dimensional vector where even dimensions use sine waves
-  and odd dimensions use cosine waves, each at a different
-  frequency. These vectors are added to the token embeddings
-  before entering the transformer.
-</p>
-
-<p>
-  <strong>Advantages</strong>: No learned parameters, can
-  extrapolate to longer sequences. <strong
-    >Disadvantages</strong
-  >: Not as flexible as learned encodings.
+  Each pair of dimensions uses a sine and cosine at the same frequency, with frequencies decreasing across dimensions. These vectors are added directly to the token embeddings before entering the transformer. Because the encoding is deterministic (no learned parameters), it can generalize to sequence lengths not seen during training, though in practice this extrapolation is limited.
 </p>
 
 <h3>Learned Positional Embeddings</h3>
 <p>
-  Learn a separate embedding for each position (up to max
-  length). Used in <GlossaryTooltip term="BERT" />, <GlossaryTooltip
-    term="GPT"
-  />. Works well but can't extrapolate beyond training length.
+  The simplest alternative: learn a separate embedding vector for each position, just like word embeddings but for positions. Used in <GlossaryTooltip term="BERT" /> and early <GlossaryTooltip term="GPT" /> models. The tradeoff is straightforward: more flexible than sinusoids, but the model has never seen positions beyond its maximum training length and can't generalize to them.
 </p>
 
 <h3>RoPE (Rotary Position Embedding)</h3>
 <p>
-  Instead of adding position info, rotate Q and K vectors in
-  complex space. Used in LLaMA, PaLM. Advantages: relative
-  position encoding, better length extrapolation.
+  RoPE takes a different approach: instead of adding position information to the input, it rotates the query and key vectors by an angle proportional to their position. Two tokens that are 5 positions apart will always have the same relative rotation regardless of where they appear in the sequence. This naturally encodes relative distance and extrapolates better to longer sequences. Used in LLaMA and PaLM.
 </p>
 
 <h3>ALiBi (Attention with Linear Biases)</h3>
 <p>
-  Add a linear bias to attention scores based on distance:
-  closer tokens get higher scores. No position embeddings
-  needed. Excellent extrapolation to longer sequences. Used
-  in BLOOM, MPT.
+  ALiBi is the simplest scheme: don't encode positions in the embeddings at all. Instead, subtract a penalty from attention scores based on how far apart two tokens are. Nearby tokens get high scores, distant tokens get penalized. This requires no extra parameters and extrapolates well to longer sequences. Used in BLOOM and MPT.
 </p>
 
 <Quiz

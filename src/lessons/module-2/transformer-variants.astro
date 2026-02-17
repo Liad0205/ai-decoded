@@ -182,73 +182,104 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p><strong>Key models</strong>: T5, BART, mT5</p>
 
-<Diagram
-  diagramId="arch-comparison"
-  title="Attention Pattern Comparison"
-  autoplay={false}
->
-  <div
-    class="grid grid-cols-3 gap-4 p-4 bg-[hsl(var(--card))] rounded"
-  >
-    <div class="text-center">
-      <div class="font-semibold mb-2">
-        Encoder-Only (BERT)
-      </div>
-      <div class="grid grid-cols-4 gap-1">
-        {
-          [...Array(16)].map(() => {
-            return (
-              <div class="w-8 h-8 bg-[hsl(var(--diagram-indigo-solid))] rounded" />
-            );
-          })
-        }
-      </div>
-      <div class="text-xs mt-2 text-[hsl(var(--muted-foreground))]">
-        Bidirectional: all positions attend to all
+<div class="my-8 p-6 bg-[hsl(var(--card))] rounded-lg border border-[hsl(var(--border))]">
+  <h3 class="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">Attention Mask Patterns</h3>
+  <p class="text-sm text-[hsl(var(--muted-foreground))] mb-6">
+    Each grid shows which tokens can attend to which. Rows = the token computing attention (query), columns = tokens it can look at (keys). A colored cell means "allowed," a gray cell means "blocked."
+  </p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+    <!-- Encoder-Only (BERT) -->
+    <div>
+      <div class="font-semibold text-sm mb-1 text-center">Encoder-Only (BERT)</div>
+      <div class="text-xs text-[hsl(var(--muted-foreground))] mb-3 text-center">Every token sees every other token</div>
+      <!-- Axis labels -->
+      <div class="flex items-start gap-1">
+        <div class="flex flex-col items-center justify-between w-6 pt-1" style="height: 148px;">
+          <span class="text-[10px] text-[hsl(var(--muted-foreground))] -rotate-90 whitespace-nowrap">query →</span>
+        </div>
+        <div>
+          <div class="grid grid-cols-4 gap-1">
+            {
+              [...Array(16)].map(() => (
+                <div class="w-8 h-8 bg-[hsl(var(--diagram-indigo-solid))] rounded opacity-85" />
+              ))
+            }
+          </div>
+          <div class="text-[10px] text-[hsl(var(--muted-foreground))] text-center mt-1">key →</div>
+        </div>
       </div>
     </div>
 
-    <div class="text-center">
-      <div class="font-semibold mb-2">
-        Decoder-Only (GPT)
-      </div>
-      <div class="grid grid-cols-4 gap-1">
-        {
-          [...Array(16)].map((_, i) => {
-            const row = Math.floor(i / 4);
-            const col = i % 4;
-            const masked = col > row;
-            return (
-              <div
-                class={`w-8 h-8 rounded ${masked ? "bg-[hsl(var(--muted))]" : "bg-[hsl(var(--diagram-emerald-solid))]"}`}
-              />
-            );
-          })
-        }
-      </div>
-      <div class="text-xs mt-2 text-[hsl(var(--muted-foreground))]">
-        Causal: can't attend to future
+    <!-- Decoder-Only (GPT) -->
+    <div>
+      <div class="font-semibold text-sm mb-1 text-center">Decoder-Only (GPT)</div>
+      <div class="text-xs text-[hsl(var(--muted-foreground))] mb-3 text-center">Each token only sees past + itself</div>
+      <div class="flex items-start gap-1">
+        <div class="flex flex-col items-center justify-between w-6 pt-1" style="height: 148px;">
+          <span class="text-[10px] text-[hsl(var(--muted-foreground))] -rotate-90 whitespace-nowrap">query →</span>
+        </div>
+        <div>
+          <div class="grid grid-cols-4 gap-1">
+            {
+              [...Array(16)].map((_, i) => {
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+                const masked = col > row;
+                return (
+                  <div class={`w-8 h-8 rounded ${masked ? "bg-[hsl(var(--muted))] border border-dashed border-[hsl(var(--border))]" : "bg-[hsl(var(--diagram-emerald-solid))] opacity-85"}`} />
+                );
+              })
+            }
+          </div>
+          <div class="text-[10px] text-[hsl(var(--muted-foreground))] text-center mt-1">key →</div>
+        </div>
       </div>
     </div>
 
-    <div class="text-center">
-      <div class="font-semibold mb-2">Encoder-Decoder</div>
-      <div
-        class="text-xs text-[hsl(var(--muted-foreground))]"
-      >
-        Encoder: bidirectional
-      </div>
-      <div
-        class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
-      >
-        Decoder: causal + cross-attn
-      </div>
-      <div class="text-xs mt-2 italic">
-        Hybrid of both patterns
+    <!-- Encoder-Decoder (T5) -->
+    <div>
+      <div class="font-semibold text-sm mb-1 text-center">Encoder-Decoder (T5)</div>
+      <div class="text-xs text-[hsl(var(--muted-foreground))] mb-3 text-center">Encoder: full, Decoder: causal</div>
+      <div class="flex items-start gap-1">
+        <div class="flex flex-col items-center w-6 pt-1" style="height: 148px;">
+          <span class="text-[10px] text-[hsl(var(--muted-foreground))] -rotate-90 whitespace-nowrap">query →</span>
+        </div>
+        <div>
+          <!-- Top half: encoder (bidirectional) -->
+          <div class="grid grid-cols-4 gap-1">
+            {
+              [...Array(8)].map(() => (
+                <div class="w-8 h-[15px] bg-[hsl(var(--diagram-indigo-solid))] rounded-sm opacity-85" />
+              ))
+            }
+          </div>
+          <div class="h-px bg-[hsl(var(--border))] my-1"></div>
+          <!-- Bottom half: decoder (causal) -->
+          <div class="grid grid-cols-4 gap-1">
+            {
+              [...Array(8)].map((_, i) => {
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+                const masked = col > row;
+                return (
+                  <div class={`w-8 h-[15px] rounded-sm ${masked ? "bg-[hsl(var(--muted))] border border-dashed border-[hsl(var(--border))]" : "bg-[hsl(var(--diagram-emerald-solid))] opacity-85"}`} />
+                );
+              })
+            }
+          </div>
+          <div class="text-[10px] text-[hsl(var(--muted-foreground))] text-center mt-1">key →</div>
+        </div>
       </div>
     </div>
   </div>
-</Diagram>
+
+  <div class="flex flex-wrap gap-4 mt-5 pt-4 border-t border-[hsl(var(--border))] text-xs text-[hsl(var(--muted-foreground))]">
+    <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 bg-[hsl(var(--diagram-indigo-solid))] rounded-sm"></span> Bidirectional attention</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm"></span> Causal attention</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 bg-[hsl(var(--muted))] rounded-sm border border-dashed border-[hsl(var(--border))]"></span> Masked (blocked)</span>
+  </div>
+</div>
 
 <h2>KV-Cache: Making Generation Fast</h2>
 

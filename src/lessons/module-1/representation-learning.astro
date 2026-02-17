@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand the progression from hand-crafted features
@@ -148,7 +149,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     across all (word, context) pairs in the corpus.
   </p>
 
-  <p>where</p>
+  <p>
+    The probability of seeing context word <em>c</em> given target word <em>w</em> is computed using a softmax over all words in the vocabulary. In short: the more similar two word vectors are (high dot product), the higher the predicted probability:
+  </p>
 
   <MathBlock
     formula={"p(c \\mid w) = \\frac{\\exp(\\mathbf{v}_w \\cdot \\mathbf{v}_c)}{\\sum_{c' \\in V} \\exp(\\mathbf{v}_w \\cdot \\mathbf{v}_{c'})}"}
@@ -156,10 +159,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    The denominator sums over the entire vocabulary V, which
-    is computationally prohibitive. <strong
-      >Negative sampling</strong
-    > approximates this by sampling a few negative examples:
+    The problem: the denominator sums over the entire vocabulary (often 50,000+ words), which is far too expensive to compute for every training step. <strong>Negative sampling</strong> sidesteps this by turning the problem into a simpler binary task: "is this word a real context word, or a random one?"
   </p>
 
   <MathBlock
@@ -168,18 +168,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: maximize the dot product between the target
-    word and its true context word (first term), while
-    minimizing the dot product with k randomly sampled
-    "noise" words (second term).
+    The first term pushes the target word and its true context word closer together. The second term pushes the target word away from k randomly sampled "noise" words. This is much cheaper to compute and works surprisingly well in practice.
   </p>
-
-  <p>This makes training tractable on large corpora.</p>
 
   <h3>GloVe: Global Vectors</h3>
   <p>
-    <strong>GloVe</strong> (2014) takes a different approach:
-    factorize the co-occurrence matrix. The objective:
+    <strong>GloVe</strong> (2014) takes a different approach. Instead of predicting words from context one sentence at a time, it first counts how often every pair of words appears near each other across the entire corpus, then learns vectors that reproduce those counts:
   </p>
 
   <MathBlock
@@ -188,16 +182,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: learn word vectors whose dot products
-    approximate the log of how frequently those words
-    co-occur, weighted so that extremely common pairs do not
-    dominate the objective.
-  </p>
-
-  <p>
-    where <MathBlock formula="X_{ij}" /> is the co-occurrence
-    count of words i and j, and <MathBlock formula="f" /> is a
-    weighting function downweighting very common pairs.
+    The idea: if "ice" and "cold" co-occur frequently, their word vectors should have a high dot product. The weighting function <MathBlock formula="f" /> prevents extremely common pairs (like "the" + "of") from dominating. <MathBlock formula="X_{ij}" /> is simply the co-occurrence count of words <em>i</em> and <em>j</em>.
   </p>
 
   <h3>Remarkable Properties</h3>
@@ -300,221 +285,92 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   diagramId="embedding-space"
   title="2D Embedding Space Visualization"
   autoplay={false}
+  animationDuration={4000}
 >
-  <div
-    class="relative w-full h-80 bg-[hsl(var(--card))] rounded-lg"
-  >
-    <svg viewBox="0 0 400 320" class="w-full h-full">
+  <div class="w-full">
+    <div class="relative w-full bg-[hsl(var(--card))] rounded-lg overflow-hidden">
+    <svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid meet" class="w-full h-auto" style="max-height: 400px;">
       <!-- Axes -->
-      <line
-        x1="40"
-        y1="280"
-        x2="360"
-        y2="280"
-        stroke="#94a3b8"
-        stroke-width="2"></line>
-      <line
-        x1="40"
-        y1="280"
-        x2="40"
-        y2="40"
-        stroke="#94a3b8"
-        stroke-width="2"></line>
-      <text
-        x="380"
-        y="285"
-        class="text-xs fill-[hsl(var(--muted-foreground))]"
-        >Dimension 1</text
-      >
-      <text
-        x="10"
-        y="30"
-        class="text-xs fill-[hsl(var(--muted-foreground))]"
-        >Dim 2</text
-      >
+      <line x1="50" y1="310" x2="470" y2="310" stroke="hsl(var(--border))" stroke-width="1.5"></line>
+      <line x1="50" y1="310" x2="50" y2="30" stroke="hsl(var(--border))" stroke-width="1.5"></line>
+      <!-- Axis arrows -->
+      <polygon points="470,310 462,306 462,314" fill="hsl(var(--border))"></polygon>
+      <polygon points="50,30 46,38 54,38" fill="hsl(var(--border))"></polygon>
 
-      <!-- Cluster 1: Animals -->
-      <circle
-        cx="100"
-        cy="100"
-        r="6"
-        fill="#6366f1"
-        data-animate
-        style="animation-delay: 0.2s"></circle>
-      <text
-        x="100"
-        y="90"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 0.2s">dog</text
-      >
+      <!-- Vector arithmetic arrow: king - man + woman = queen -->
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="hsl(var(--primary))" opacity="0.5"></polygon>
+        </marker>
+      </defs>
+      <line x1="155" y1="100" x2="255" y2="80" stroke="hsl(var(--primary))" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.5" marker-end="url(#arrowhead)" data-animate style="animation-delay: 2.2s"></line>
+      <text x="195" y="75" text-anchor="middle" font-size="9" fill="hsl(var(--primary))" opacity="0.6" data-animate style="animation-delay: 2.2s">- man + woman</text>
 
-      <circle
-        cx="130"
-        cy="110"
-        r="6"
-        fill="#6366f1"
-        data-animate
-        style="animation-delay: 0.4s"></circle>
-      <text
-        x="130"
-        y="100"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 0.4s">cat</text
-      >
+      <!-- Cluster 1: Animals (top-left) -->
+      <g data-animate style="animation-delay: 0.2s">
+        <circle cx="120" cy="160" r="7" fill="#6366f1"></circle>
+        <text x="120" y="148" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">dog</text>
+      </g>
+      <g data-animate style="animation-delay: 0.4s">
+        <circle cx="160" cy="180" r="7" fill="#6366f1"></circle>
+        <text x="160" y="168" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">cat</text>
+      </g>
+      <g data-animate style="animation-delay: 0.6s">
+        <circle cx="135" cy="210" r="7" fill="#6366f1"></circle>
+        <text x="135" y="228" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">horse</text>
+      </g>
 
-      <circle
-        cx="115"
-        cy="130"
-        r="6"
-        fill="#6366f1"
-        data-animate
-        style="animation-delay: 0.6s"></circle>
-      <text
-        x="115"
-        y="145"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 0.6s">horse</text
-      >
+      <!-- Cluster 2: Food (bottom-right) -->
+      <g data-animate style="animation-delay: 0.8s">
+        <circle cx="350" cy="220" r="7" fill="#10b981"></circle>
+        <text x="350" y="208" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">apple</text>
+      </g>
+      <g data-animate style="animation-delay: 1s">
+        <circle cx="390" cy="245" r="7" fill="#10b981"></circle>
+        <text x="390" y="263" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">banana</text>
+      </g>
+      <g data-animate style="animation-delay: 1.2s">
+        <circle cx="355" cy="260" r="7" fill="#10b981"></circle>
+        <text x="355" y="278" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">orange</text>
+      </g>
 
-      <!-- Cluster 2: Food -->
-      <circle
-        cx="280"
-        cy="200"
-        r="6"
-        fill="#10b981"
-        data-animate
-        style="animation-delay: 0.8s"></circle>
-      <text
-        x="280"
-        y="190"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 0.8s">apple</text
-      >
-
-      <circle
-        cx="300"
-        cy="210"
-        r="6"
-        fill="#10b981"
-        data-animate
-        style="animation-delay: 1s"></circle>
-      <text
-        x="300"
-        y="225"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 1s">banana</text
-      >
-
-      <circle
-        cx="265"
-        cy="220"
-        r="6"
-        fill="#10b981"
-        data-animate
-        style="animation-delay: 1.2s"></circle>
-      <text
-        x="265"
-        y="235"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 1.2s">orange</text
-      >
-
-      <!-- Cluster 3: Royalty -->
-      <circle
-        cx="200"
-        cy="80"
-        r="6"
-        fill="#8b5cf6"
-        data-animate
-        style="animation-delay: 1.4s"></circle>
-      <text
-        x="200"
-        y="70"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 1.4s">king</text
-      >
-
-      <circle
-        cx="230"
-        cy="85"
-        r="6"
-        fill="#8b5cf6"
-        data-animate
-        style="animation-delay: 1.6s"></circle>
-      <text
-        x="230"
-        y="75"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 1.6s">queen</text
-      >
-
-      <circle
-        cx="215"
-        cy="105"
-        r="6"
-        fill="#8b5cf6"
-        data-animate
-        style="animation-delay: 1.8s"></circle>
-      <text
-        x="215"
-        y="120"
-        text-anchor="middle"
-        class="text-xs fill-[hsl(var(--foreground))]"
-        data-animate
-        style="animation-delay: 1.8s">prince</text
-      >
+      <!-- Cluster 3: Royalty (top-center) -->
+      <g data-animate style="animation-delay: 1.4s">
+        <circle cx="155" cy="100" r="7" fill="#8b5cf6"></circle>
+        <text x="140" y="93" text-anchor="end" font-size="12" fill="hsl(var(--foreground))">king</text>
+      </g>
+      <g data-animate style="animation-delay: 1.6s">
+        <circle cx="265" cy="80" r="7" fill="#8b5cf6"></circle>
+        <text x="280" y="73" text-anchor="start" font-size="12" fill="hsl(var(--foreground))">queen</text>
+      </g>
+      <g data-animate style="animation-delay: 1.8s">
+        <circle cx="210" cy="110" r="7" fill="#8b5cf6"></circle>
+        <text x="210" y="130" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">prince</text>
+      </g>
+      <g data-animate style="animation-delay: 2s">
+        <circle cx="100" cy="120" r="7" fill="#8b5cf6"></circle>
+        <text x="85" y="115" text-anchor="end" font-size="12" fill="hsl(var(--foreground))">man</text>
+      </g>
+      <g data-animate style="animation-delay: 2s">
+        <circle cx="210" cy="60" r="7" fill="#8b5cf6"></circle>
+        <text x="210" y="50" text-anchor="middle" font-size="12" fill="hsl(var(--foreground))">woman</text>
+      </g>
 
       <!-- Legend -->
-      <g transform="translate(40, 240)">
-        <circle cx="0" cy="0" r="4" fill="#6366f1"></circle>
-        <text
-          x="10"
-          y="4"
-          class="text-xs fill-[hsl(var(--muted-foreground))]"
-          >Animals</text
-        >
-        <circle cx="60" cy="0" r="4" fill="#10b981"
-        ></circle>
-        <text
-          x="70"
-          y="4"
-          class="text-xs fill-[hsl(var(--muted-foreground))]"
-          >Food</text
-        >
-        <circle cx="120" cy="0" r="4" fill="#8b5cf6"
-        ></circle>
-        <text
-          x="130"
-          y="4"
-          class="text-xs fill-[hsl(var(--muted-foreground))]"
-          >Royalty</text
-        >
+      <g transform="translate(270, 310)">
+        <circle cx="0" cy="15" r="4" fill="#6366f1"></circle>
+        <text x="10" y="19" font-size="11" fill="hsl(var(--muted-foreground))">Animals</text>
+        <circle cx="75" cy="15" r="4" fill="#10b981"></circle>
+        <text x="85" y="19" font-size="11" fill="hsl(var(--muted-foreground))">Food</text>
+        <circle cx="130" cy="15" r="4" fill="#8b5cf6"></circle>
+        <text x="140" y="19" font-size="11" fill="hsl(var(--muted-foreground))">Royalty</text>
       </g>
     </svg>
+    </div>
+    <p class="text-sm text-[hsl(var(--muted-foreground))] mt-3">
+      Similar words cluster together, and relationships are encoded as directions. The dashed arrow shows the famous "king - man + woman = queen" analogy. Real embeddings are 300-1024 dimensions, but the same clustering principle holds.
+    </p>
   </div>
-  <p
-    class="text-sm text-[hsl(var(--muted-foreground))] mt-2"
-  >
-    Embeddings cluster semantically related words. In
-    reality, embeddings are 300-1024 dimensions, but the
-    clustering principle holds.
-  </p>
 </Diagram>
 
 <section>
@@ -558,19 +414,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>The Information-Theoretic View</h3>
   <p>
-    Representations compress data while preserving
-    task-relevant information. Optimal representations
-    discard noise and task-irrelevant variation (lighting,
-    background) while retaining discriminative signal
-    (object shape, semantic meaning).
+    Good representations compress data: they throw away what doesn't matter (lighting conditions, background noise, irrelevant words) while keeping what does (object shape, semantic meaning, sentiment). Think of it like summarizing a book. A perfect summary preserves every important idea while discarding filler.
   </p>
 
   <p>
-    This aligns with the <strong
-      >Information Bottleneck</strong
-    > principle: representations should maximize mutual information
-    with the target while minimizing information about the input.
-    Self-supervised pretraining implicitly optimizes this trade-off.
+    This is formalized as the <strong>Information Bottleneck</strong> principle: representations should keep as much information as possible about the task you care about, while discarding as much raw input detail as possible. Self-supervised pretraining implicitly learns this trade-off, which is part of why pretrained representations transfer so well to new tasks.
   </p>
 </section>
 
@@ -585,11 +433,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Initialization Matters</h3>
   <p>
-    Neural network training is non-convex; the loss
-    landscape has many local minima. Random initialization
-    lands you at an arbitrary point. Pretrained
-    initialization, however, starts you near a "good" region
-    of the loss landscape.
+    Imagine the loss landscape as a hilly terrain, where lower elevation means better performance. Training a neural network means searching this terrain for the lowest valley. The catch: there are many valleys (local minima), and random initialization drops you at an arbitrary location. You might end up in a shallow dip instead of the deepest valley. Pretrained initialization, on the other hand, starts you near a known "good" region of the landscape.
   </p>
 
   <p>
@@ -603,17 +447,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Mode Connectivity and Basins</h3>
   <p>
-    Recent research shows that pretrained models and
-    fine-tuned variants often lie in the same "basin" of the
-    loss landscape, a region of low loss connected by paths
-    of similarly low loss.
+    Recent research shows that pretrained models and their fine-tuned variants often sit in the same "basin" of the loss landscape: a broad, low-loss valley. You can walk from one to the other without climbing over any hills.
   </p>
 
   <p>
-    This explains why fine-tuning is stable and effective:
-    you're performing a local search within a basin
-    discovered by pretraining, rather than a global search
-    over the entire landscape.
+    This explains why fine-tuning is stable and effective: you're exploring within a good valley that pretraining already discovered, rather than searching the entire terrain from scratch.
   </p>
 
   <h3>The Data Efficiency of Transfer</h3>
