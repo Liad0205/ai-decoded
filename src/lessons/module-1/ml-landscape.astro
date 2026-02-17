@@ -71,8 +71,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     (modeling the data distribution).
   </p>
   <p>
-    Traditional unsupervised methods like k-means, PCA, and
-    autoencoders have been augmented by modern techniques
+    Traditional unsupervised methods like <GlossaryTooltip term="k-means" />, <GlossaryTooltip term="PCA" />, and
+    <GlossaryTooltip term="Autoencoder" />s have been augmented by modern techniques
     like <GlossaryTooltip term="VAE" />s (variational
     autoencoders) and generative adversarial networks (<GlossaryTooltip
       term="GAN"
@@ -149,8 +149,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />s, decision trees, logistic regression). For image
     recognition, this meant hand-crafted features like <GlossaryTooltip
       term="SIFT"
-    /> descriptors or HOG features. For speech, mel-frequency
-    cepstral coefficients (MFCCs). For text, bag-of-words or TF-IDF
+    /> descriptors or HOG features. For speech, <GlossaryTooltip term="MFCC" />s (mel-frequency
+    cepstral coefficients). For text, bag-of-words or <GlossaryTooltip term="TF-IDF" />
     vectors.
   </p>
   <p>
@@ -204,13 +204,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ol>
   <p>
     This approach has proven remarkably effective across
-    modalities: language (GPT-4, Claude 3.5 Sonnet, Gemini
-    1.5 Pro, Llama 3), vision (<GlossaryTooltip
+    modalities: language (GPT-5.2, Claude Opus 4.6, Gemini
+    3 Pro, Llama 4), vision (<GlossaryTooltip
       term="CLIP"
-    />, ViT), multimodal (GPT-4V, Gemini Vision), audio
-    (Whisper), and more. Foundation models exhibit emergent
-    capabilities: abilities not explicitly trained for,
-    arising from scale.
+    />, <GlossaryTooltip term="ViT" />), audio (Whisper), and more. Today's frontier
+    models are natively multimodal, processing text, images,
+    and video within a single architecture rather than
+    bolting on separate vision modules. Foundation models
+    exhibit emergent capabilities: abilities not explicitly
+    trained for, arising from scale.
   </p>
   <p>
     The economic and research implications are profound:
@@ -266,9 +268,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     now exceed 90% on MMLU and achieve near-perfect scores
     on many traditional benchmarks. Modern evaluation
     focuses on more challenging tasks like SWE-bench
-    (software engineering), where top models resolve roughly
-    40-50% of real GitHub issues (scores vary across
-    evaluation setups and continue to improve). This raises
+    (software engineering), where top models now resolve
+    around 80% of curated GitHub issues on SWE-bench
+    Verified, up from under 50% just a year ago. This raises
     concerns:
   </p>
   <ul>
@@ -302,161 +304,49 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   autoplay={true}
   animationDuration={5000}
 >
-  <div
-    class="relative w-full h-96 bg-[hsl(var(--muted))] rounded-lg p-6"
-  >
-    <div
-      class="absolute left-0 right-0 top-1/2 h-1 bg-[hsl(var(--diagram-indigo-border))]"
-      data-animate
-    >
-    </div>
+  <div class="relative w-full bg-[hsl(var(--muted))] rounded-lg px-6 py-10">
+    <!-- Timeline grid: year row, line + dots row, label row -->
+    <div class="timeline-grid" data-animate>
+      <!-- Row 1: Years -->
+      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 0.5s">2012</div>
+      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 1s">2017</div>
+      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 1.5s">2020</div>
+      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 2s">2022</div>
+      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 2.5s">2024</div>
+      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 3s">2025-26</div>
 
-    <!-- Timeline points -->
-    <div
-      class="relative h-full flex justify-between items-center"
-    >
-      <div
-        class="flex flex-col items-center"
-        data-animate
-        style="animation-delay: 0.5s"
-      >
-        <div
-          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
-        >
-        </div>
-        <div class="text-center">
-          <div class="font-bold text-sm">2012</div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
-          >
-            AlexNet
-          </div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))]"
-          >
-            Deep Learning Era
-          </div>
-        </div>
+      <!-- Row 2: Dots on a continuous line -->
+      <div class="timeline-line-cell" data-animate style="animation-delay: 0.5s"><div class="timeline-dot"></div></div>
+      <div class="timeline-line-cell" data-animate style="animation-delay: 1s"><div class="timeline-dot"></div></div>
+      <div class="timeline-line-cell" data-animate style="animation-delay: 1.5s"><div class="timeline-dot"></div></div>
+      <div class="timeline-line-cell" data-animate style="animation-delay: 2s"><div class="timeline-dot"></div></div>
+      <div class="timeline-line-cell" data-animate style="animation-delay: 2.5s"><div class="timeline-dot"></div></div>
+      <div class="timeline-line-cell" data-animate style="animation-delay: 3s"><div class="timeline-dot"></div></div>
+
+      <!-- Row 3: Labels -->
+      <div class="text-center" data-animate style="animation-delay: 0.5s">
+        <div class="text-xs font-medium text-[hsl(var(--foreground))]">AlexNet</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Deep Learning Era</div>
       </div>
-
-      <div
-        class="flex flex-col items-center"
-        data-animate
-        style="animation-delay: 1s"
-      >
-        <div
-          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
-        >
-        </div>
-        <div class="text-center">
-          <div class="font-bold text-sm">2017</div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
-          >
-            Transformer
-          </div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))]"
-          >
-            Architecture Revolution
-          </div>
-        </div>
+      <div class="text-center" data-animate style="animation-delay: 1s">
+        <div class="text-xs font-medium text-[hsl(var(--foreground))]">Transformer</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Architecture Revolution</div>
       </div>
-
-      <div
-        class="flex flex-col items-center"
-        data-animate
-        style="animation-delay: 1.5s"
-      >
-        <div
-          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
-        >
-        </div>
-        <div class="text-center">
-          <div class="font-bold text-sm">2020</div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
-          >
-            GPT-3
-          </div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))]"
-          >
-            Few-Shot Learning
-          </div>
-        </div>
+      <div class="text-center" data-animate style="animation-delay: 1.5s">
+        <div class="text-xs font-medium text-[hsl(var(--foreground))]">GPT-3</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Few-Shot Learning</div>
       </div>
-
-      <div
-        class="flex flex-col items-center"
-        data-animate
-        style="animation-delay: 2s"
-      >
-        <div
-          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
-        >
-        </div>
-        <div class="text-center">
-          <div class="font-bold text-sm">2022</div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
-          >
-            ChatGPT
-          </div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))]"
-          >
-            <GlossaryTooltip term="RLHF" /> Alignment
-          </div>
-        </div>
+      <div class="text-center" data-animate style="animation-delay: 2s">
+        <div class="text-xs font-medium text-[hsl(var(--foreground))]">ChatGPT</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5"><GlossaryTooltip term="RLHF" /> Alignment</div>
       </div>
-
-      <div
-        class="flex flex-col items-center"
-        data-animate
-        style="animation-delay: 2.5s"
-      >
-        <div
-          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
-        >
-        </div>
-        <div class="text-center">
-          <div class="font-bold text-sm">2024</div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
-          >
-            GPT-4, Claude
-          </div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))]"
-          >
-            Multimodal Models
-          </div>
-        </div>
+      <div class="text-center" data-animate style="animation-delay: 2.5s">
+        <div class="text-xs font-medium text-[hsl(var(--foreground))]">GPT-4, Llama 3</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Open-Source Race</div>
       </div>
-
-      <div
-        class="flex flex-col items-center"
-        data-animate
-        style="animation-delay: 3s"
-      >
-        <div
-          class="w-4 h-4 bg-[hsl(var(--diagram-indigo-solid))] rounded-full mb-2"
-        >
-        </div>
-        <div class="text-center">
-          <div class="font-bold text-sm">2025-26</div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))] mt-1"
-          >
-            Frontier <GlossaryTooltip term="LLM" />s
-          </div>
-          <div
-            class="text-xs text-[hsl(var(--muted-foreground))]"
-          >
-            Agents & Reasoning
-          </div>
-        </div>
+      <div class="text-center" data-animate style="animation-delay: 3s">
+        <div class="text-xs font-medium text-[hsl(var(--foreground))]">Opus 4.6, GPT-5.2, Gemini 3</div>
+        <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Native Multimodal & Agents</div>
       </div>
     </div>
   </div>
@@ -464,7 +354,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <Quiz
   quizId="ml-paradigm"
-  question="Which ML paradigm is used to train large language models like GPT-4?"
+  question="Which ML paradigm is used to pretrain large language models like GPT-5.2 and Claude Opus 4.6?"
   options={[
     {
       id: "a",
@@ -591,5 +481,45 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   [data-animate].animating {
     animation: slideDown 0.8s ease-out forwards;
+  }
+
+  /* Timeline grid layout */
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: auto auto auto;
+    row-gap: 0.75rem;
+  }
+
+  /* Middle row: continuous line with dots centered on it */
+  .timeline-line-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+  }
+
+  /* Horizontal line spans across all cells */
+  .timeline-line-cell::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: hsl(var(--border));
+    transform: translateY(-50%);
+  }
+
+  /* Dot sits on the line */
+  .timeline-dot {
+    position: relative;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: hsl(var(--primary));
+    border: 2px solid hsl(var(--muted));
+    z-index: 1;
   }
 </style>
