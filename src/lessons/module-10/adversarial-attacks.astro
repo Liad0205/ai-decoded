@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand the threat model framework for adversarial
@@ -41,26 +42,28 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     In 2013, Szegedy et al. made a disturbing discovery:
-    neural networks that achieve superhuman accuracy on
+    <GlossaryTooltip term="NN">neural networks</GlossaryTooltip> that achieve superhuman accuracy on
     image classification can be fooled by <strong
       >imperceptible perturbations</strong
     >. Adding carefully crafted noise, invisible to the
     human eye, can cause a model to confidently misclassify
-    an image.
+    an image. Imagine a photo of a panda that, to your eyes,
+    looks completely unchanged, yet the model now insists
+    it is a gibbon with 99% confidence.
   </p>
 
   <p>
     This is not a minor curiosity. It reveals a fundamental
     gap between how neural networks and humans process
     information, and it has serious implications for any
-    safety-critical deployment of ML systems.
+    safety-critical deployment of <GlossaryTooltip term="ML" /> systems.
   </p>
 
   <p>
     Formally, the attacker's perturbation must stay within a
-    small budget <MathBlock formula={"\\epsilon"} /> &mdash; any
+    small budget <MathBlock formula={"\\epsilon"} /> (any
     change beyond this budget would be perceptible to a human
-    observer:
+    observer):
   </p>
 
   <MathBlock
@@ -69,7 +72,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    where <MathBlock formula="x" /> is the original input, <MathBlock
+    Read this as: the adversarial input x' equals the original input x plus a small
+    perturbation delta, where delta must be small enough (bounded by epsilon) to remain
+    invisible, yet large enough to flip the classifier's prediction.
+  </p>
+
+  <p>
+    Here <MathBlock formula="x" /> is the original input, <MathBlock
       formula={"\\delta"}
     /> is the adversarial perturbation bounded by <MathBlock
       formula={"\\epsilon"}
@@ -88,8 +97,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Threat Models</h2>
 
   <p>
-    Understanding adversarial attacks requires a precise
-    specification of the attacker's capabilities.
+    Before diving into specific attacks, you need to
+    understand the attacker's playbook. How much does the
+    attacker know about the model? This is called the
+    <strong>threat model</strong>, and it determines which
+    attacks are possible.
   </p>
 
   <h3>White-Box Attacks</h3>
@@ -122,7 +134,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     The attacker has no access to the target model but
     trains a <strong>surrogate model</strong> and generates adversarial
     examples on it, hoping they transfer. Surprisingly, this works
-    remarkably well - a critical finding we will explore in depth.
+    remarkably well, a critical finding you will explore later in this lesson.
   </p>
 
   <h3>Targeted vs. Untargeted</h3>
@@ -151,9 +163,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>FGSM: Fast Gradient Sign Method</h2>
 
   <p>
-    <strong>FGSM</strong> (Goodfellow
+    <GlossaryTooltip term="FGSM" /> (Goodfellow
     et al., 2014) is the simplest and most influential adversarial
-    attack. It generates perturbations in a single gradient step.
+    attack. Here is the key idea: if you know which direction in
+    input space makes the model's prediction <em>worse</em>, you
+    can nudge the input in that direction. FGSM does exactly this
+    in a single gradient step.
   </p>
 
   <h3>Derivation</h3>
@@ -174,19 +189,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: under an L-infinity constraint, the
+    In plain English: under an L-infinity constraint, the
     perturbation that maximizes the linear function is to
     push each dimension to its limit (+epsilon or -epsilon)
-    in the direction of the weight's sign.
+    in the direction of the weight's sign. Think of it like
+    a tug-of-war: you pull each rope as hard as you can in
+    whatever direction the weights tell you.
   </p>
 
   <p>
     FGSM exploits a key insight: neural
     networks are locally linear. Near any input, the loss function
-    can be approximated by a first-order Taylor expansion. The
-    adversary then takes a single step in the direction that maximizes
-    this linear approximation of the loss. Extending this to neural
-    networks via a linear approximation of the loss around x:
+    can be approximated by a first-order Taylor expansion. You might
+    wonder why this matters for complex neural networks. The answer
+    is that even deep networks behave like linear functions in a small
+    neighborhood around any point. The adversary takes a single step
+    in the direction that maximizes this linear approximation of the
+    loss. Extending this to neural networks via a linear approximation
+    of the loss around x:
   </p>
 
   <MathBlock
@@ -195,11 +215,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the loss at a nearby point is approximately
+    Read this as: the loss at a nearby point is approximately
     the original loss plus the dot product of the gradient
-    with the perturbation. This is just a first-order Taylor
-    expansion, the same linearization you would use to
-    approximate any smooth function near a point.
+    with the perturbation. If you have seen a first-order Taylor
+    expansion before, this is exactly that: the same linearization
+    you would use to approximate any smooth function near a point.
   </p>
 
   <p>
@@ -213,6 +233,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
+    In plain English: the perturbation is epsilon (the maximum allowed
+    change per pixel) times the sign of the gradient. Each pixel gets
+    nudged by exactly +epsilon or -epsilon, depending on which
+    direction increases the loss.
+  </p>
+
+  <p>
     The full FGSM adversarial example:
   </p>
 
@@ -222,7 +249,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: take the original input and add a
+    Read this as: take the original input and add a
     perturbation of magnitude epsilon in the direction that
     most increases the loss. The sign function ensures each
     pixel is perturbed by exactly +epsilon or -epsilon,
@@ -241,25 +268,27 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Theoretical insight</strong>: The "linear
-      hypothesis" - adversarial vulnerability is caused by
+      hypothesis," which says adversarial vulnerability is caused by
       models being too linear in high-dimensional spaces,
       not by overfitting or nonlinearity
     </li>
   </ul>
 
   <p>
-    The linear hypothesis is counterintuitive: we often
-    think of neural networks as highly nonlinear. But in
-    high dimensions, even small per-dimension perturbations
-    accumulate. For a d-dimensional input with each
-    dimension perturbed by <MathBlock
+    The linear hypothesis is counterintuitive: you probably
+    think of neural networks as highly nonlinear. But here is
+    the thing: in high dimensions, even tiny per-dimension
+    perturbations accumulate. For a d-dimensional input with
+    each dimension perturbed by <MathBlock
       formula={"\\epsilon"}
     />, the dot product <MathBlock
       formula={"w^T \\delta"}
     /> can change by <MathBlock
       formula={"O(\\epsilon \\cdot d)"}
-    /> - this becomes enormous when d is large (e.g., d = 784
-    for MNIST, d = 150,528 for ImageNet).
+    />. This becomes enormous when d is large (e.g., d = 784
+    for MNIST, d = 150,528 for ImageNet). It is like a crowd
+    of people each whispering a tiny nudge; individually
+    negligible, but together they become a roar.
   </p>
 </section>
 
@@ -267,10 +296,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>PGD: Projected Gradient Descent</h2>
 
   <p>
-    <strong>PGD</strong> (Madry et
-    al., 2017) is the iterative, multi-step extension of FGSM and is considered the strongest first-order adversarial
-    attack. It serves as the standard benchmark for evaluating
-    adversarial robustness.
+    If <GlossaryTooltip term="FGSM" /> is a single sledgehammer swing,
+    <GlossaryTooltip term="PGD" /> (Madry et al., 2017) is a series
+    of precise chisel strikes. It is the iterative, multi-step
+    extension of FGSM and is considered the strongest first-order
+    adversarial attack. It serves as the standard benchmark for
+    evaluating adversarial robustness.
   </p>
 
   <h3>Algorithm</h3>
@@ -283,13 +314,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     formula={"x^{(0)} = x + \\text{Uniform}(-\\epsilon, \\epsilon)"}
     display={true}
   />
+
+  <p>
+    Read this as: start from a random point near the original input.
+  </p>
+
   <MathBlock
     formula={"x^{(k+1)} = \\Pi_{B_\\epsilon(x)} \\left[ x^{(k)} + \\alpha \\cdot \\text{sign}(\\nabla_{x^{(k)}} \\mathcal{L}(f(x^{(k)}), y)) \\right]"}
     display={true}
   />
 
   <p>
-    where <MathBlock formula={"\\alpha"} /> is the step size (typically
+    In plain English: at each step, take a small FGSM-like step (of size
+    alpha) in the adversarial direction, then clip the result so you
+    stay inside the epsilon-ball.
+  </p>
+
+  <p>
+    Here <MathBlock formula={"\\alpha"} /> is the step size (typically
     <MathBlock
       formula={"\\alpha = \\epsilon / \\text{num\\_steps} \\cdot 2.5"}
     />), and <MathBlock formula={"\\Pi_{B_\\epsilon(x)}"} /> projects
@@ -303,7 +345,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: PGD is iterated FGSM -- take a small adversarial step, project back into the
+    Read this as: if any pixel drifts outside the allowed range
+    (original value plus or minus epsilon), clip it back to the
+    boundary. This is the "projection" step that keeps the
+    perturbation invisible.
+  </p>
+
+  <p>
+    In plain English: PGD is iterated FGSM. Take a small adversarial step, project back into the
     allowed perturbation ball, and repeat. It is the strongest
     first-order attack and the standard benchmark for adversarial
     robustness.
@@ -322,12 +371,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>PGD as a Benchmark</h3>
   <p>
     Madry et al. argued that PGD is
-    the "universal first-order attack": any defense that is robust
-    to PGD
-    should be robust to all first-order (gradient-based) attacks.
+    the "universal first-order attack": any defense that survives
+    PGD should survive all gradient-based attacks.
     This claim is empirical, not formally proven, but it has held
-    up in practice: PGD remains the
-    standard adversarial attack for robustness evaluation.
+    up remarkably well in practice. If you are evaluating whether
+    your model is robust, PGD is the first attack you should try.
   </p>
 </section>
 
@@ -347,7 +395,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         cy="150"
         r="100"
         fill="none"
-        stroke="#e2e8f0"
+        class="stroke-[hsl(var(--border))]"
         stroke-width="2"
         stroke-dasharray="5,5"
         data-animate
@@ -365,7 +413,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         cx="200"
         cy="150"
         r="6"
-        fill="#6366f1"
+        class="fill-[hsl(var(--diagram-indigo-solid))]"
         data-animate
         style="animation-delay: 0.4s"></circle>
       <text
@@ -381,7 +429,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         cx="230"
         cy="120"
         r="4"
-        fill="#f59e0b"
+        class="fill-[hsl(var(--diagram-amber-solid))]"
         data-animate
         style="animation-delay: 1s"></circle>
       <text
@@ -398,7 +446,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         y1="120"
         x2="255"
         y2="100"
-        stroke="#ef4444"
+        class="stroke-[hsl(var(--diagram-red-solid))]"
         stroke-width="2"
         data-animate
         style="animation-delay: 1.5s"></line>
@@ -406,7 +454,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         cx="255"
         cy="100"
         r="3"
-        fill="#ef4444"
+        class="fill-[hsl(var(--diagram-red-solid))]"
         data-animate
         style="animation-delay: 1.5s"></circle>
 
@@ -415,7 +463,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         y1="100"
         x2="270"
         y2="85"
-        stroke="#ef4444"
+        class="stroke-[hsl(var(--diagram-red-solid))]"
         stroke-width="2"
         data-animate
         style="animation-delay: 2s"></line>
@@ -423,7 +471,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         cx="270"
         cy="85"
         r="3"
-        fill="#ef4444"
+        class="fill-[hsl(var(--diagram-red-solid))]"
         data-animate
         style="animation-delay: 2s"></circle>
 
@@ -432,7 +480,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         y1="85"
         x2="280"
         y2="75"
-        stroke="#ef4444"
+        class="stroke-[hsl(var(--diagram-red-solid))]"
         stroke-width="2"
         data-animate
         style="animation-delay: 2.5s"></line>
@@ -442,7 +490,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         y1="75"
         x2="275"
         y2="80"
-        stroke="#10b981"
+        class="stroke-[hsl(var(--diagram-emerald-solid))]"
         stroke-width="2"
         stroke-dasharray="3,3"
         data-animate
@@ -451,7 +499,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         cx="275"
         cy="80"
         r="5"
-        fill="#ef4444"
+        class="fill-[hsl(var(--diagram-red-solid))]"
         data-animate
         style="animation-delay: 3s"></circle>
       <text
@@ -468,7 +516,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         y1="220"
         x2="350"
         y2="50"
-        stroke="#8b5cf6"
+        class="stroke-[hsl(var(--diagram-purple-solid))]"
         stroke-width="1"
         stroke-dasharray="8,4"
         data-animate
@@ -510,12 +558,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>C&W Attack: Optimization-Based Precision</h2>
 
   <p>
-    The <strong
-      >C&W attack</strong
-    > (2016) formulates adversarial example generation as a constrained
-    optimization problem, finding the <em>minimum</em> perturbation
-    needed to cause misclassification. It is slower than PGD but
-    produces smaller, more targeted perturbations.
+    The <GlossaryTooltip term="C&W">C&W attack</GlossaryTooltip>
+    (Carlini & Wagner, 2016) takes a different approach. Instead of
+    asking "how much damage can I do within a fixed budget?", it asks
+    "what is the <em>smallest</em> perturbation that fools the model?"
+    This makes it slower than PGD but capable of finding much smaller,
+    more surgical perturbations.
   </p>
 
   <h3>Formulation</h3>
@@ -532,11 +580,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: find the smallest perturbation that also
+    In plain English: find the smallest perturbation that also
     makes the attack succeed. The constant c controls the
-    tradeoff between perturbation size and attack confidence
-    -- think of it as a Lagrange multiplier balancing two
-    competing objectives.
+    tradeoff between perturbation size and attack confidence.
+    Think of it as a dial: turn c up and the optimizer cares
+    more about fooling the model; turn c down and it cares
+    more about keeping the perturbation tiny.
   </p>
 
   <p>
@@ -550,11 +599,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: g is negative (attack succeeds) when the
-    logit for the true class is lower than the highest logit
-    among all wrong classes, with kappa as a confidence
-    margin ensuring the misclassification is decisive rather
-    than borderline.
+    Read this as: g is negative (meaning the attack succeeds) when the
+    logit for the true class drops below the highest logit
+    among all wrong classes. The kappa term adds a confidence
+    margin, ensuring the misclassification is decisive rather
+    than a coin-flip at the decision boundary.
   </p>
 
   <p>
@@ -594,11 +643,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Transferability: The Most Concerning Property</h2>
 
   <p>
-    Perhaps the most alarming property of adversarial
-    examples is <strong>transferability</strong>:
-    adversarial examples crafted for one model often fool
-    completely different models, even with different
-    architectures, training data, and training procedures.
+    Here is the part that should keep you up at night if you
+    deploy ML systems: adversarial examples crafted for one
+    model often fool <em>completely different</em> models,
+    even with different architectures, training data, and
+    training procedures. This property is called
+    <strong>transferability</strong>.
   </p>
 
   <h3>Why Transfer Works</h3>
@@ -619,7 +669,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Non-robust features</strong>: Ilyas et al.
       (2019) showed that models rely on "non-robust
-      features" - patterns that are predictive but
+      features," patterns that are predictive but
       imperceptible to humans. These features are consistent
       across models.
     </li>
@@ -648,11 +698,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Physical Adversarial Examples</h2>
 
   <p>
-    Adversarial examples are not limited to digital
-    perturbations. Researchers have demonstrated attacks
-    that work in the <strong>physical world</strong>,
-    surviving changes in viewpoint, lighting, and camera
-    noise.
+    You might think adversarial examples are just a
+    digital curiosity, something that only works when you
+    can manipulate raw pixel values. Not so. Researchers
+    have demonstrated attacks that work in the
+    <strong>physical world</strong>, surviving changes in
+    viewpoint, lighting, and camera noise.
   </p>
 
   <h3>Notable Examples</h3>
@@ -717,10 +768,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    This produces perturbations that are robust across
-    conditions, because the expectation forces the
-    perturbation to work under many different physical
-    transforms simultaneously.
+    Read this as: find the perturbation that, on average,
+    maximizes the model's loss across many different physical
+    conditions (rotations, brightness shifts, camera noise, etc.).
+    Instead of optimizing for one perfect viewing angle, you
+    optimize for all of them at once. This produces perturbations
+    that are robust in the real world.
   </p>
 </section>
 

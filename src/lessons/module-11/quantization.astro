@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand why quantization is essential for practical
@@ -40,7 +41,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Why Quantization Matters</h2>
 
   <p>
-    A 70-billion parameter model stored in FP16 requires
+    Here's the problem you'll hit when deploying large models:
+    a 70-billion parameter model stored in FP16 requires
     approximately <strong>140 GB</strong> of GPU memory just for
     the weights. At inference time, you also need memory for the
     KV-cache, activations, and the serving framework overhead.
@@ -52,8 +54,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     weights (and optionally activations) with fewer bits.
     The core insight is that neural networks are remarkably <strong
       >tolerant of reduced precision</strong
-    > &mdash; most weights can be represented with far fewer bits
-    than FP32 or FP16 without meaningful quality loss.
+    >. Most weights can be represented with far fewer bits
+    than FP32 or FP16 without meaningful quality loss. Think of it
+    like compressing an image from PNG to JPEG: you lose some
+    information, but the result is still perfectly usable for
+    most purposes.
   </p>
 
   <p>The benefits of quantization are threefold:</p>
@@ -72,14 +77,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Cost reduction</strong>: Smaller models run on
-      cheaper hardware &mdash; consumer GPUs instead of data
-      center A100s, or even CPUs for edge deployment
+      cheaper hardware (consumer GPUs instead of data
+      center A100s, or even CPUs for edge deployment)
     </li>
   </ul>
 
   <p>
     To put this concretely: quantizing a 70B model from FP16
-    to INT4 reduces memory from 140 GB to ~35 GB -- the
+    to INT4 reduces memory from 140 GB to ~35 GB, which is the
     difference between needing a multi-GPU server and
     fitting on a single A100. A 13B model drops from ~26 GB
     (too large for a consumer 24 GB GPU) to ~6.5 GB (fits
@@ -87,9 +92,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <p>
-    The fundamental challenge is maintaining model quality.
-    Quantization introduces <strong>rounding errors</strong> that
-    accumulate across layers. The art of quantization research
+    The fundamental challenge, as you might expect, is maintaining
+    model quality. Quantization introduces <strong>rounding errors</strong>
+    that accumulate across layers. The art of quantization research
     is finding methods that minimize these errors while maximizing
     compression.
   </p>
@@ -99,10 +104,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Precision Formats: A Detailed Comparison</h2>
 
   <p>
-    Understanding precision formats is the foundation of
-    quantization. Each format represents numbers
-    differently, trading range and precision for storage
-    size.
+    Before you can choose a quantization strategy, you need to
+    understand the precision formats available. Each format
+    represents numbers differently, trading range and precision
+    for storage size.
   </p>
 
   <h3>FP32 (32-bit Floating Point)</h3>
@@ -123,7 +128,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     /> with ~3.3 decimal digits of precision. FP16 halves memory
     compared to FP32 but is prone to <strong
       >overflow</strong
-    > during training &mdash; loss scaling tricks are required.
+    > during training, so loss scaling tricks are required.
   </p>
 
   <h3>BF16 (Brain Floating Point)</h3>
@@ -133,7 +138,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       >same range as FP32</strong
     > (thanks to 8 exponent bits) but less precision (7 mantissa
     bits vs. 23). This makes it ideal for training and inference
-    &mdash; the wide range avoids overflow issues that plague
+    because the wide range avoids overflow issues that plague
     FP16, while the reduced precision rarely affects model quality.
     Most modern LLMs are trained
     in BF16.
@@ -154,11 +159,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: to recover the original floating-point value,
+    In plain English: to recover the original floating-point value,
     subtract the zero point (which centers the integer
     range) and multiply by the scale factor (which maps the
-    integer range back to the original value range). This is
-    a simple affine mapping between the integer grid and
+    integer range back to the original value range). Think of it
+    as a simple affine mapping between the integer grid and
     floating-point values.
   </p>
 
@@ -349,9 +354,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    There are two fundamental approaches to quantization,
-    differing in when the quantization is applied relative
-    to training.
+    There are two fundamental approaches to quantization, and
+    the key distinction is <em>when</em> you apply it relative
+    to training. Understanding this split will help you pick
+    the right strategy for your deployment.
   </p>
 
   <h3>Post-Training Quantization (PTQ)</h3>
@@ -361,8 +367,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     >. You take a trained FP16/BF16 model and convert its
     weights (and optionally activations) to lower precision
     using a calibration dataset (typically a few hundred
-    samples drawn from the training distribution or a
-    representative subset).
+    samples drawn from the training distribution). If you
+    just want to shrink a model and deploy it quickly, this
+    is your go-to approach.
   </p>
   <ul>
     <li>
@@ -398,7 +405,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: during the forward pass, weights are rounded
+    In plain English: during the forward pass, weights are rounded
     to their quantized values. During the backward pass, the
     rounding operation is treated as if it were the identity
     function (the "straight-through estimator"), letting
@@ -444,11 +451,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    <strong>GPTQ</strong> (Frantar
-    et al., 2022) is a one-shot post-training quantization method
-    that quantizes weights to 3 or 4 bits with minimal quality
-    loss. It is based on the Optimal Brain Quantization (OBQ)
-    framework but scales to billion-parameter models.
+    <strong><GlossaryTooltip term="GPTQ" /></strong> (Frantar
+    et al., 2022) is one of the most widely used quantization
+    methods you'll encounter. It is a one-shot post-training
+    quantization method that quantizes weights to 3 or 4 bits
+    with minimal quality loss, based on the Optimal Brain
+    Quantization (OBQ) framework but scaled to billion-parameter
+    models.
   </p>
 
   <h3>Core Idea</h3>
@@ -465,7 +474,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: find quantized weights that produce layer
+    Read this as: find quantized weights that produce layer
     outputs as close as possible to the original layer
     outputs on calibration data. The optimization is
     per-layer, minimizing the squared difference in the
@@ -497,11 +506,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: when you round one weight, spread the
+    In plain English: when you round one weight, spread the
     rounding error across the remaining unquantized weights
     in a way that minimizes the total output error. The
     inverse Hessian tells you exactly how to distribute this
-    compensation -- it encodes the sensitivity of each
+    compensation. It encodes the sensitivity of each
     remaining weight to the output.
   </p>
 
@@ -553,12 +562,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    <strong>AWQ</strong> (Lin et al.,
-    2023) takes a different approach from GPTQ. Instead of compensating for quantization errors via
+    <strong><GlossaryTooltip term="AWQ" /></strong> (Lin et al.,
+    2023) takes a different approach from <GlossaryTooltip term="GPTQ" />.
+    Instead of compensating for quantization errors via
     Hessian-based updates, AWQ identifies
     and protects
-    <strong>salient weights</strong> &mdash; the small fraction
+    <strong>salient weights</strong>, the small fraction
     of weights that matter most for model quality.
+    You might wonder: why not just keep the important weights
+    at higher precision? AWQ has a cleverer solution.
   </p>
 
   <h3>Key Insight: Not All Weights Are Equal</h3>
@@ -599,7 +611,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: scale up the important weights before
+    In plain English: scale up the important weights before
     quantization so they occupy more of the quantization
     grid (reducing their relative rounding error), then
     compensate by scaling down the corresponding
@@ -631,7 +643,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: search for the per-channel scaling factors
+    Read this as: search for the per-channel scaling factors
     that minimize the difference between the quantized
     layer's output and the original layer's output on
     calibration data. Since there is only one scalar per
@@ -669,10 +681,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>GGUF and llama.cpp: CPU and Edge Inference</h2>
 
   <p>
-    While GPTQ and AWQ target GPU inference, <strong>GGUF</strong> (GPT-Generated
+    What if you don't have a GPU at all? While GPTQ and AWQ target
+    GPU inference, <strong>GGUF</strong> (GPT-Generated
     Unified Format) is the file format used by
     <strong>llama.cpp</strong> for CPU-first inference. It has
-    become the de facto standard for running LLMs on consumer hardware without GPUs.
+    become the de facto standard for running <GlossaryTooltip term="LLM" />s
+    on consumer hardware without GPUs.
   </p>
 
   <h3>How GGUF Quantization Works</h3>
@@ -780,6 +794,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Quality vs. Speed vs. Memory Tradeoffs</h2>
 
   <p>
+    Now that you understand the methods, how do you choose?
     Choosing a quantization method requires balancing three
     competing objectives. Here are practical guidelines
     based on empirical results across a range of model
@@ -788,7 +803,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Model Size Matters</h3>
   <p>
-    Larger models are more tolerant of aggressive
+    Here's the thing: larger models are more tolerant of aggressive
     quantization. A 70B model quantized to 4-bit often
     outperforms a 13B model at full precision, because the
     larger model has more <strong>redundancy</strong> in its weight
@@ -805,18 +820,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <ul>
     <li>
       <strong>Low sensitivity</strong>: Simple
-      classification, sentiment analysis, basic Q&A &mdash;
+      classification, sentiment analysis, basic Q&A.
       4-bit quantization works well
     </li>
     <li>
       <strong>Medium sensitivity</strong>: Long-form
-      generation, summarization, translation &mdash; 4-bit
-      usually acceptable, 8-bit is safer
+      generation, summarization, translation. 4-bit
+      is usually acceptable, 8-bit is safer
     </li>
     <li>
       <strong>High sensitivity</strong>: Mathematical
-      reasoning, code generation, structured output &mdash;
-      quality degradation is more noticeable at 4-bit;
+      reasoning, code generation, structured output.
+      Quality degradation is more noticeable at 4-bit;
       consider 6-bit or 8-bit
     </li>
   </ul>
@@ -830,7 +845,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>GPU with limited VRAM</strong>: AWQ or GPTQ at
-      4-bit with group size 128 &mdash; the standard choice
+      4-bit with group size 128, the standard choice
       for most deployments
     </li>
     <li>
@@ -856,12 +871,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Weights
   </h3>
   <p>
-    While GPTQ and AWQ quantize only weights, <strong
+    You might wonder: can you quantize activations too, not just
+    weights? While GPTQ and AWQ quantize only weights, <strong
       >SmoothQuant</strong
     > (Xiao et al., 2022) enables INT8 quantization of <em
       >both</em
     > weights and activations. The challenge is that activations
-    contain <strong>outlier channels</strong> &mdash; a few channels
+    contain <strong>outlier channels</strong>, a few channels
     with values 100x larger than the rest. These outliers make
     per-tensor activation quantization fail.
   </p>
@@ -880,10 +896,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: insert a diagonal scaling matrix between the
+    In plain English: insert a diagonal scaling matrix between the
     activations and weights. This is a mathematically
     equivalent transformation of the matrix multiply that
-    redistributes the quantization difficulty -- shrinking
+    redistributes the quantization difficulty, shrinking
     the outlier activation channels while proportionally
     enlarging the corresponding weight channels.
   </p>

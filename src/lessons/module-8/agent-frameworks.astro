@@ -24,7 +24,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
   <h2>The Agent Framework Landscape</h2>
 
   <p>
-    Building agent systems from scratch requires implementing tool orchestration, memory management, error handling, conversation management, and more. Frameworks abstract away this infrastructure, letting you focus on the agent's logic and capabilities.
+    If you have ever built an agent from scratch, you know the pain: tool orchestration, memory management, error handling, conversation management, and more. Frameworks abstract away this infrastructure so you can focus on what your agent actually does rather than re-inventing plumbing.
 
   </p>
 
@@ -33,7 +33,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
     The most widely adopted <GlossaryTooltip term="LLM" /> application framework. LangChain provides a composable abstraction layer for building LLM-powered applications:
   </p>
   <ul>
-    <li><strong>Core concept</strong>: Chains -- sequences of operations (LLM calls, tool calls, data retrieval) composed together</li>
+    <li><strong>Core concept</strong>: Chains, which are sequences of operations (LLM calls, tool calls, data retrieval) composed together</li>
     <li><strong>Strengths</strong>: Massive ecosystem of integrations (100+ tool connectors), extensive documentation, large community</li>
     <li><strong>Weaknesses</strong>: Heavy abstraction can obscure what is happening, rapid API changes have caused migration pain, some abstractions add complexity without proportional value</li>
     <li><strong>Best for</strong>: Rapid prototyping, applications needing many integrations, teams wanting a batteries-included framework</li>
@@ -41,7 +41,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 
   <h3>LangGraph</h3>
   <p>
-    Built on top of LangChain, LangGraph models agent workflows as <strong>stateful graphs</strong> -- directed graphs where a shared state object (containing messages, intermediate results, and decisions) is passed between nodes and updated at each step. Each node in the graph is a function (LLM call, tool call, decision logic), and edges define the control flow:
+    Built on top of LangChain, LangGraph models agent workflows as <strong>stateful graphs</strong>: directed graphs where a shared state object (containing messages, intermediate results, and decisions) is passed between nodes and updated at each step. Each node in the graph is a function (LLM call, tool call, decision logic), and edges define the control flow:
   </p>
   <ul>
     <li><strong>Core concept</strong>: Directed graphs with state that flows between nodes. Supports cycles (loops), conditional branching, and parallel execution.</li>
@@ -93,7 +93,7 @@ const graph = new StateGraph(graphState)
 
   <h3>Direct API / Custom Implementation</h3>
   <p>
-    For many production applications, calling the LLM API directly with custom orchestration code is the most practical approach:
+    For many production applications, you do not need a framework at all. Calling the <GlossaryTooltip term="LLM" /> API directly with custom orchestration code is often the most practical approach:
   </p>
   <ul>
     <li><strong>Strengths</strong>: Full control, no framework dependencies, minimal abstraction overhead, easy to debug</li>
@@ -103,7 +103,7 @@ const graph = new StateGraph(graphState)
 
   <h3>Choosing a Framework</h3>
   <p>
-    The right choice depends on your needs:
+    So which framework should you pick? The right choice depends on your needs:
   </p>
   <ul>
     <li><strong>Prototyping quickly</strong>: LangChain (batteries included) or direct API (maximum simplicity)</li>
@@ -113,7 +113,7 @@ const graph = new StateGraph(graphState)
   </ul>
 
   <p>
-    A practical starting point: begin with the simplest approach that could work (often direct API calls with a basic loop), and only adopt a framework when you encounter orchestration complexity that justifies the abstraction overhead. Many successful production agents use fewer than 200 lines of custom orchestration code.
+    Here is a practical starting point: begin with the simplest approach that could work (often direct API calls with a basic loop), and only adopt a framework when you hit orchestration complexity that justifies the abstraction overhead. You might be surprised to learn that many successful production agents use fewer than 200 lines of custom orchestration code.
   </p>
 </section>
 
@@ -152,7 +152,7 @@ const graph = new StateGraph(graphState)
   <h2>Multi-Agent Systems</h2>
 
   <p>
-    Instead of one agent doing everything, <strong>multi-agent systems</strong> divide work among specialized agents that communicate and coordinate. This mirrors how human teams work: specialists collaborate better than generalists for complex tasks.
+    Instead of one agent doing everything, <strong>multi-agent systems</strong> divide work among specialized agents that communicate and coordinate. Think of it like a software engineering team: you would not ask one person to do design, frontend, backend, and QA. Specialists collaborate better than generalists for complex tasks, and the same principle applies to agents.
 
   </p>
 
@@ -188,7 +188,7 @@ const graph = new StateGraph(graphState)
   </p>
   <pre><code>Input --> [Researcher] --> [Analyzer] --> [Writer] --> [Editor] --> Output</code></pre>
   <p>
-    Simple and predictable, but no feedback loops -- errors propagate forward and cannot be corrected by earlier agents.
+    Simple and predictable, but there are no feedback loops. Errors propagate forward and cannot be corrected by earlier agents.
   </p>
 
   <h3>When to Use Multi-Agent Systems</h3>
@@ -208,7 +208,7 @@ const graph = new StateGraph(graphState)
 
 <Diagram diagramId="multi-agent-patterns" title="Multi-Agent Architecture Patterns" autoplay={true} animationDuration={5000}>
   <div class="bg-[hsl(var(--card))] p-4 rounded">
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
       <!-- Supervisor -->
       <div data-animate style="animation-delay: 0.5s">
         <div class="font-semibold text-sm mb-3 text-center">Supervisor</div>
@@ -262,7 +262,7 @@ const graph = new StateGraph(graphState)
   <h2>Human-in-the-Loop Patterns</h2>
 
   <p>
-    Fully autonomous agents are appropriate for low-stakes tasks, but most production systems need human oversight. <strong>Human-in-the-loop (HITL)</strong> patterns give humans control over critical decisions while letting the agent handle routine work.
+    Fully autonomous agents are fine for low-stakes tasks, but here is the thing: most production systems need human oversight. You would not let an automated script send emails to your clients without review, and the same logic applies to agents. <strong>Human-in-the-loop (HITL)</strong> patterns give humans control over critical decisions while letting the agent handle the routine work.
   </p>
 
   <h3>Approval Gates</h3>
@@ -327,7 +327,7 @@ else:
   <h2>Agent Failure Modes</h2>
 
   <p>
-    Understanding common failure modes is essential for building reliable agent systems. Most agent failures are not random -- they follow predictable patterns with known mitigations.
+    If you are going to build agents, you need to know how they break. The good news is that most agent failures are not random; they follow predictable patterns with known mitigations.
   </p>
 
   <h3>1. Infinite Loops</h3>
@@ -380,7 +380,7 @@ else:
   <h2>Agent Evaluation</h2>
 
   <p>
-    Evaluating agents is fundamentally harder than evaluating single LLM calls. The agent's behavior emerges from many decisions over many steps, and the same goal can be achieved through different valid paths.
+    You might wonder: how do you know if your agent is actually good? Evaluating agents is fundamentally harder than evaluating single <GlossaryTooltip term="LLM" /> calls. The agent's behavior emerges from many decisions over many steps, and the same goal can be achieved through different valid paths.
   </p>
 
   <h3>What to Evaluate</h3>
@@ -428,7 +428,7 @@ else:
 
   <h3>Building Your Own Eval</h3>
   <p>
-    For production agents, build custom evals that reflect your specific use cases:
+    Benchmarks are useful for comparing models, but for your own agents, you will want custom evals that reflect your specific use cases:
   </p>
   <ol>
     <li><strong>Collect real tasks</strong>: Log actual user requests and their expected outcomes</li>
@@ -485,7 +485,7 @@ else:
 
   <div data-reveal-step>
     <h4>Step 3: Build Mock Environment</h4>
-    <p>Create deterministic mock implementations of all tools. This ensures tests are reproducible -- real APIs introduce flakiness. Record real API responses to seed realistic mock data.</p>
+    <p>Create deterministic mock implementations of all tools. This ensures tests are reproducible, since real APIs introduce flakiness. Record real API responses to seed realistic mock data.</p>
     <button type="button" class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm" data-reveal-button="3">Next Step</button>
   </div>
 

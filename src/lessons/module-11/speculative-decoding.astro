@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand the autoregressive bottleneck and why <GlossaryTooltip term="LLM" />
@@ -41,16 +42,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Autoregressive Bottleneck</h2>
 
   <p>
-    As we explored in the previous lesson, the decode phase
-    of LLM inference generates tokens
+    As you saw in the previous lesson, the decode phase
+    of <GlossaryTooltip term="LLM" /> inference generates tokens
     <strong>one at a time</strong>. Each token requires a
     full forward pass through the model, loading all model
     weights from GPU memory. For a 70B model in FP16, that
-    is 140 GB of memory reads per token.
+    means 140 GB of memory reads per token. You might wonder: is there a way to batch this work? That is exactly the question speculative decoding answers.
   </p>
 
   <p>
-    The wall-clock time to generate a sequence of <MathBlock
+    Think of it like a factory assembly line: you pay a one-time setup cost (prefill), and then each token takes about the same fixed time to produce. The wall-clock time to generate a sequence of <MathBlock
       formula="N"
     /> tokens is:
   </p>
@@ -61,7 +62,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    where <MathBlock
+    Read this as: "total time equals the upfront prefill cost plus N tokens times the time per token." The key detail is that <MathBlock
       formula={"T_{\\text{decode\\_step}}"}
     /> is roughly constant (determined by the time to load model
     weights from memory). For a 70B model on a single A100, <MathBlock
@@ -71,11 +72,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <p>
-    Crucially, the GPU's floating-point units are <strong
+    Here's the thing: the GPU's floating-point units are <strong
       >vastly underutilized</strong
-    > during decode &mdash; typically below 5% utilization. The
+    > during decode, typically below 5% utilization. The
     GPU spends most of its time waiting for data to arrive from
-    memory. Speculative decoding exploits this idle compute by
+    memory, like a chef standing idle while ingredients are fetched from a distant pantry. Speculative decoding exploits this idle compute by
     running a smaller, faster model in parallel.
   </p>
 </section>
@@ -89,11 +90,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     autoregressive generation. "Exact" means it produces <strong
       >the same output distribution</strong
     > as running the target model alone, assuming both models
-    use the same temperature and sampling method &mdash; no quality
+    use the same temperature and sampling method, with no quality
     degradation whatsoever.
   </p>
 
-  <p>The core idea is simple:</p>
+  <p>The core idea is surprisingly simple. Imagine you have a junior colleague who writes fast drafts, and a senior editor who reviews them. The junior writes several sentences at once, and the senior checks them all in a single pass, accepting the good parts and fixing the rest:</p>
   <ol>
     <li>
       A small, fast <strong>draft model</strong> generates <MathBlock
@@ -199,16 +200,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       token is accepted with probability proportional to the
       ratio.
     </p>
-    <div class="bg-[hsl(var(--diagram-green-bg))] p-3 rounded-lg text-sm">
-      <p class="font-medium text-[hsl(var(--diagram-green-fg))]">
+    <div class="bg-[hsl(var(--diagram-emerald-bg))] p-3 rounded-lg text-sm">
+      <p class="font-medium text-[hsl(var(--diagram-emerald-fg))]">
         Token "The": p=0.8, q=0.7 &rarr; min(1, 0.8/0.7) =
         1.0 &rarr; ACCEPTED
       </p>
-      <p class="font-medium text-[hsl(var(--diagram-green-fg))]">
+      <p class="font-medium text-[hsl(var(--diagram-emerald-fg))]">
         Token "cat": p=0.6, q=0.5 &rarr; min(1, 0.6/0.5) =
         1.0 &rarr; ACCEPTED
       </p>
-      <p class="font-medium text-[hsl(var(--diagram-green-fg))]">
+      <p class="font-medium text-[hsl(var(--diagram-emerald-fg))]">
         Token "sat": p=0.3, q=0.4 &rarr; min(1, 0.3/0.4) =
         0.75 &rarr; (coin flip)
       </p>
@@ -224,10 +225,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <p
       class="text-[hsl(var(--muted-foreground))] mb-3"
     >
-      When a token is rejected at position i, sample a
-      replacement token from the <strong
+      When a token is rejected at position i, you need to pick a replacement that corrects for the draft model's mistake. You sample from the <strong
         >residual distribution</strong
-      >:
+      >, which captures the probability "gap" between the target and draft models:
     </p>
     <MathBlock
       formula={"x_i \\sim \\text{norm}\\left(\\max(0, p_i(x) - q_i(x))\\right)"}
@@ -236,7 +236,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <p
       class="text-[hsl(var(--muted-foreground))] mb-3"
     >
-      This corrected sampling ensures the final output
+      In plain English: sample a replacement token from the "leftover" probability that the target model assigns but the draft model missed. This corrected sampling ensures the final output
       follows <em>exactly</em> the target model's distribution.
       All tokens after position i are discarded (they were generated
       based on the now-rejected token). The process then restarts
@@ -299,11 +299,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Mathematical Guarantee</h2>
 
   <p>
-    The remarkable property of speculative decoding is that
+    You might be skeptical: how can using a smaller, less capable model not hurt quality at all? The remarkable property of speculative decoding is that
     it produces <strong
       >exactly the same distribution</strong
-    > as the target model alone. This is not an approximation
-    &mdash; it is a provable guarantee.
+    > as the target model alone. This is not an approximation; it is a provable guarantee.
   </p>
 
   <h3>Proof Sketch</h3>
@@ -320,13 +319,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: we accept the draft token if the target model
-    would have been at least as likely to generate it as the
-    draft model was. When the draft model is "too confident"
-    (assigns higher probability than the target), we accept
-    with probability equal to the target/draft ratio,
-    preserving the exact output distribution of the target
-    model.
+    In plain English: this formula has two parts. The first part captures the case where the draft token is accepted (the target model "agrees" with the draft). The second part captures the case where we reject and resample. Together, they guarantee the output matches the target model exactly. You can think of it as: "take the draft's suggestion when the big model would have said the same thing, and course-correct when it wouldn't."
   </p>
 
   <p>
@@ -348,7 +341,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     output distribution is always exactly <MathBlock
       formula={"p(x)"}
     /> (the target model's distribution). A bad draft model does
-    not hurt quality &mdash; it only reduces speedup (more rejections
+    not hurt quality; it only reduces speedup (more rejections
     mean fewer tokens per verification pass).
   </p>
 </section>
@@ -368,8 +361,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <ul>
     <li>
       <strong>Same-family smaller model</strong>: Use a
-      smaller model from the same family (e.g., Llama-3-8B
-      as draft for Llama-3-70B). These often have the
+      smaller model from the same family (e.g., Llama-4-8B
+      as draft for Llama-4-70B). These often have the
       highest acceptance rates because they share training
       data and tokenizer.
     </li>
@@ -432,9 +425,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     <strong>Knowledge distillation</strong> (Hinton et al., 2015)
     is the process of training a smaller "student" model to mimic
-    the behavior of a larger "teacher" model. Unlike quantization
-    (which compresses the representation), distillation creates
-    a genuinely smaller architecture that has learned from the
+    the behavior of a larger "teacher" model. If quantization is like compressing a photo to a smaller file size, distillation is like hiring a talented apprentice who learns to paint in the master's style. The result is
+    a genuinely smaller architecture that has absorbed the
     teacher's knowledge.
   </p>
 
@@ -442,11 +434,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     A trained teacher model's output distribution contains
     far more information than the hard labels in the
-    training data. When the teacher assigns probabilities
+    training data. Consider an image classifier: when the teacher assigns probabilities
     like [cat: 0.6, dog: 0.3, bear: 0.08, ...], the relative
     probabilities between wrong classes (dog vs. bear)
-    encode learned knowledge about class similarity. These
-    signals are called <strong>"dark knowledge"</strong> &mdash;
+    encode learned knowledge about class similarity. A dog is much more similar to a cat than a bear is, and those soft probabilities capture that nuance. These
+    signals are called <strong>"dark knowledge"</strong>,
     the fine-grained probability differences between incorrect
     classes that encode learned similarity structure. Dark knowledge
     is absent from hard labels (which would just say "cat").
@@ -466,13 +458,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the student learns from two signals -- the
-    ground-truth labels (task loss) and the teacher's soft
-    probability distribution (KL divergence). The
-    temperature T softens both distributions so that the
-    relative probabilities between wrong classes become
-    visible, exposing the "dark knowledge" the teacher has
-    learned.
+    Read this as: "the total loss blends two learning signals." The first term is the standard task loss (learning from correct answers). The second term is the distillation loss, which pushes the student to match the teacher's soft probability spread. The temperature <MathBlock formula="T" /> acts like a "zoom lens" that magnifies the subtle differences between wrong-answer probabilities, making the teacher's dark knowledge easier for the student to absorb.
   </p>
 
   <p>
@@ -503,7 +489,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Distilling large language models presents unique
     challenges due to their size and the diversity of their
-    capabilities.
+    capabilities. Here is how practitioners approach the problem in practice.
   </p>
 
   <h3>Logit Matching (Output Distillation)</h3>
@@ -520,11 +506,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: at every token position, minimize the KL
-    divergence between the teacher's and student's
-    next-token probability distributions. This forces the
-    student to match the teacher's full predictive behavior,
-    not just its top-1 prediction.
+    In plain English: at every token position, you minimize how different the student's next-token predictions are from the teacher's. This forces the student to match the teacher's full predictive behavior, not just its top-1 prediction.
   </p>
 
   <p>
@@ -549,21 +531,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: at selected intermediate layers, minimize the
-    distance between the student's hidden states (projected
-    to match dimensions) and the corresponding teacher
-    hidden states. This provides a richer training signal
-    than output-only distillation because the student learns
-    to match the teacher's internal representations, not
-    just its final predictions.
+    In plain English: at selected intermediate layers, you minimize the distance between how the student and teacher "think" internally. The projection matrix <MathBlock formula={"W_l"} /> handles the size mismatch (since the student has fewer dimensions). This provides a richer training signal than output-only distillation because the student learns to match the teacher's internal representations, not just its final predictions.
   </p>
 
   <p>
-    where <MathBlock formula={"W_l"} /> is a learned projection
-    matrix (since student and teacher layers may have different
-    dimensions) and <MathBlock formula={"f(l)"} /> maps student
-    layers to corresponding teacher layers. Feature matching provides
-    stronger training signal than output-only distillation.
+    Here <MathBlock formula={"f(l)"} /> maps student
+    layers to corresponding teacher layers (since they have different depths), and the squared L2 norm penalizes any mismatch in their internal representations.
   </p>
 
   <h3>Attention Transfer</h3>
@@ -591,7 +564,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>
-    <GlossaryTooltip term="ONNX" /> Runtime and Model Optimization
+    ONNX Runtime and Model Optimization
     Pipelines
   </h2>
 
@@ -607,7 +580,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     ONNX (Open Neural Network Exchange)
   </h3>
   <p>
-    ONNX is an open format for representing
+    <GlossaryTooltip term="ONNX" /> is an open format for representing
     machine learning models. Converting a model to ONNX format enables:
   </p>
   <ul>
@@ -688,8 +661,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Full Optimization Pipeline</h2>
 
   <p>
-    In practice, deploying an LLM efficiently
-    involves combining multiple optimization techniques in a pipeline:
+    In practice, deploying an <GlossaryTooltip term="LLM" /> efficiently
+    involves combining multiple optimization techniques in a pipeline. Think of it as layers of optimization, where each layer multiplies the gains of the ones before it:
   </p>
 
   <ol>
@@ -726,7 +699,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ol>
 
   <p>
-    Each layer of optimization multiplies with the others. A
+    Each layer of optimization multiplies with the others. If you apply all of these, a
     fully optimized deployment can be <strong
       >10-50x more efficient</strong
     > than a naive PyTorch implementation, in terms of both latency

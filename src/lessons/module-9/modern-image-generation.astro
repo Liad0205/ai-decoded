@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand Diffusion Transformers (<GlossaryTooltip
@@ -40,13 +41,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Diffusion Transformers (DiT): Replacing the U-Net</h2>
 
   <p>
-    The U-Net has been the default backbone for diffusion
-    models since <GlossaryTooltip term="DDPM" />. However,
+    If you have followed the diffusion story so far, you
+    know the U-Net has been the default backbone since
+    <GlossaryTooltip term="DDPM" />. But here is the thing:
     the <strong
       >Diffusion Transformer (<GlossaryTooltip
         term="DiT"
       />)</strong
-    > architecture (Peebles and Xie, 2023) demonstrated that plain
+    > architecture (Peebles and Xie, 2023) showed that plain
     vision transformers can match or exceed U-Net performance
     and, crucially, they scale more predictably with compute.
   </p>
@@ -119,17 +121,34 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     parameters are predicted from the conditioning:
   </p>
 
+  <p>
+    The following equation shows how conditioning information
+    gets converted into modulation parameters. Think of it as
+    a recipe: you take the timestep and prompt, blend them
+    together, and run them through a small network to produce
+    three "knobs" for each layer:
+  </p>
+
   <MathBlock
     formula={"\\gamma, \\beta, \\alpha = \\text{MLP}(\\text{emb}(t) + \\text{emb}(c))"}
     display={true}
   />
 
   <p>
-    First, the conditioning signals (timestep and
-    class/text) are combined and fed through an <GlossaryTooltip
+    <strong>Read this as:</strong> "Embed the timestep <em>t</em> and
+    the conditioning <em>c</em>, add them, and feed the
+    result through a small network to produce scale
+    (<MathBlock formula={"\\gamma"} />), shift
+    (<MathBlock formula={"\\beta"} />), and gate
+    (<MathBlock formula={"\\alpha"} />) values."
+  </p>
+
+  <p>
+    The conditioning signals (timestep and class/text) are
+    combined and fed through an <GlossaryTooltip
       term="MLP"
-    /> to produce per-layer modulation parameters. These parameters
-    then modulate each transformer block's layer normalization:
+    /> to produce per-layer modulation parameters. Once we have
+    those knobs, here is how they modify the layer normalization:
   </p>
 
   <MathBlock
@@ -138,12 +157,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: instead of using fixed normalization
-    statistics, each layer's normalization is dynamically
-    scaled and shifted based on the current timestep and
-    conditioning. This is how the network "knows" what noise
-    level it is denoising and what class or prompt to
-    target.
+    <strong>In plain English:</strong> normalize the hidden
+    state <em>h</em> as usual, then stretch it by
+    <MathBlock formula={"\\gamma"} /> and slide it by
+    <MathBlock formula={"\\beta"} />. Instead of using fixed
+    normalization statistics, each layer's normalization is
+    dynamically scaled and shifted based on the current
+    timestep and conditioning. This is how the network
+    "knows" what noise level it is denoising and what class
+    or prompt to target.
   </p>
 
   <p>
@@ -157,7 +179,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     acts as an identity function. adaLN-Zero's zero initialization
     of <MathBlock formula={"\\alpha"} /> ensures identity mappings
     early in training, stabilizing optimization of very deep networks
-    -- the same principle that makes <GlossaryTooltip term="ResNet" /> skip connections effective.
+    (the same principle that makes <GlossaryTooltip term="ResNet" /> skip connections effective).
   </p>
 
   <h3>Scaling Results</h3>
@@ -186,7 +208,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <div
     class="bg-[hsl(var(--card))] p-4 rounded"
   >
-    <div class="grid grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
       <!-- U-Net -->
       <div
         class="flex flex-col items-center"
@@ -302,9 +324,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>ControlNet: Adding Spatial Control</h2>
 
   <p>
-    Text prompts are inherently imprecise for spatial
-    layout. "A person standing on a bridge" gives no control
-    over pose, composition, or perspective. <strong
+    You might have noticed that text prompts are inherently
+    imprecise for spatial layout. Try typing "a person
+    standing on a bridge" and you get no control over pose,
+    composition, or perspective. <strong
       >ControlNet</strong
     > (Zhang et al., 2023) solves this by adding spatial conditioning
     (edges, poses, depth maps) to a pretrained diffusion model
@@ -315,9 +338,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     The Architecture: Trainable Copy with Zero Convolutions
   </h3>
   <p>
-    ControlNet's design is elegant: create a <strong
+    ControlNet's design is elegant. Imagine photocopying
+    the encoder half of the pretrained U-Net, then wiring
+    the copy back to the original through special
+    connections that start at zero. That is essentially what
+    happens: you create a <strong
       >trainable copy</strong
-    > of the encoding layers of the pretrained U-Net, connected
+    > of the encoding layers, connected
     to the frozen original via <strong
       >zero convolutions</strong
     > (1x1 convolution layers initialized to zero weights and
@@ -327,13 +354,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     signals through the trainable copy.
   </p>
 
+  <p>
+    The following equation captures this "frozen original +
+    trainable copy" design in a single line:
+  </p>
+
   <MathBlock
     formula={"y_c = \\mathcal{F}(x; \\Theta) + \\text{ZeroConv}(\\mathcal{F}(x + \\text{ZeroConv}(c); \\Theta_c))"}
     display={true}
   />
 
   <p>
-    In words: the output is the original frozen block's
+    <strong>In plain English:</strong> the output is the original frozen block's
     output plus a residual from the trainable copy. The
     trainable copy receives both the input and the spatial
     condition (e.g., a depth map), and its contribution is
@@ -413,13 +445,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>IP-Adapter: Image Prompt Conditioning</h2>
 
   <p>
-    While text describes what you want, sometimes you want
-    to condition on a <strong>reference image</strong>,
-    capturing style, subject identity, or aesthetic
-    qualities that are hard to articulate in words. <strong
-      >IP-Adapter</strong
-    > (Ye et al., 2023) enables image-based conditioning through
-    a lightweight adapter.
+    Sometimes words are not enough. You might want to show
+    the model a reference painting and say "generate
+    something in this style," or hand it a photo of a
+    specific character. <strong>IP-Adapter</strong> (Ye et al., 2023)
+    enables exactly this kind of image-based conditioning
+    through a lightweight adapter, letting you condition on
+    a <strong>reference image</strong> to capture style,
+    subject identity, or aesthetic qualities that are hard to
+    articulate in text.
   </p>
 
   <h3>Architecture: Decoupled Cross-Attention</h3>
@@ -433,22 +467,28 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     image encoder:
   </p>
 
+  <p>
+    First, the reference image is turned into an embedding
+    that the diffusion model can work with:
+  </p>
+
   <MathBlock
     formula={"c_{\\text{img}} = \\text{Projection}(\\text{CLIPImage}(x_{\\text{ref}}))"}
     display={true}
   />
 
   <p>
-    The reference image is passed through <GlossaryTooltip term="CLIP" />'s image
-    encoder to get a semantic representation, then projected
-    to match the dimensionality expected by the
-    cross-attention layers.
+    <strong>Read this as:</strong> "Take the reference image,
+    run it through CLIP's image encoder to get a semantic
+    representation, then project it to match the
+    dimensionality expected by the cross-attention layers."
   </p>
 
   <p>
-    In each cross-attention layer, the text and image
-    conditions are processed independently with separate
-    key/value projections:
+    The magic happens in each cross-attention layer, where
+    text and image information are blended together with
+    separate key/value projections. You can think of it as
+    the model reading two different books at the same time:
   </p>
 
   <MathBlock
@@ -457,12 +497,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the output is a sum of two independent
-    attention operations -- one reading from the text
-    prompt, the other reading from the reference image. The
-    weight <MathBlock formula={"\\lambda"} /> controls how much
-    the image condition influences the result, making it straightforward
-    to dial the image influence up or down at inference time.
+    <strong>In plain English:</strong> the output is a sum of
+    two independent attention operations: one reading from
+    the text prompt, the other reading from the reference
+    image. The weight <MathBlock formula={"\\lambda"} /> acts
+    like a volume dial that controls how much the image
+    condition influences the result, making it straightforward
+    to turn image influence up or down at inference time.
   </p>
 
   <p>
@@ -498,18 +539,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>LoRA for Diffusion: Efficient Personalization</h2>
 
   <p>
-    <strong
+    If you completed Module 4, you already know <strong
       ><GlossaryTooltip term="LoRA" /> (Low-Rank Adaptation)</strong
-    >, originally developed for language models (see Module
-    4), has become the dominant method for personalizing
-    diffusion models. It enables fine-tuning on specific
-    styles, characters, or concepts with minimal compute and
-    storage.
+    > from the language model world. The same technique has
+    become the dominant method for personalizing diffusion
+    models, letting you fine-tune on specific styles,
+    characters, or concepts with minimal compute and storage.
   </p>
 
   <h3>Applying LoRA to Diffusion U-Nets</h3>
   <p>
-    LoRA decomposes weight updates into low-rank matrices:
+    The core idea carries over directly. LoRA decomposes
+    weight updates into low-rank matrices:
   </p>
 
   <MathBlock
@@ -518,9 +559,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Instead of updating the full weight matrix (which could
-    have millions of parameters), LoRA expresses the update
-    as a product of two small matrices B and A. This
+    <strong>Read this as:</strong> "The new weight matrix is
+    the original weight plus a small correction, and that
+    correction is the product of two skinny matrices B and
+    A." Instead of updating the full weight matrix (which
+    could have millions of parameters), LoRA expresses the
+    update as a product of two small matrices B and A. This
     constrains the update to a low-rank subspace,
     dramatically reducing the number of trainable parameters
     while still allowing meaningful adaptation.
@@ -558,8 +602,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    The training process uses the standard diffusion loss,
-    but only updates the LoRA parameters:
+    The loss function is the familiar diffusion objective
+    you saw in Lesson 9.1, with one twist: only the LoRA
+    parameters are learnable:
   </p>
 
   <MathBlock
@@ -568,9 +613,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    This is the same noise-prediction MSE loss as standard
-    diffusion training, but the network weights are the
-    original model plus the LoRA delta. Only the LoRA
+    <strong>In plain English:</strong> "Sample a random
+    timestep, add noise, and measure how well the model
+    (original weights + LoRA correction) predicts that
+    noise." This is the same noise-prediction MSE loss as
+    standard diffusion training, but only the LoRA
     parameters are updated; the base model stays frozen.
   </p>
 
@@ -587,8 +634,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Composing Multiple LoRAs</h3>
   <p>
-    A powerful property of LoRA is composability. Multiple
-    LoRAs can be combined by adding their weight deltas:
+    Here is where LoRA gets really interesting. Because each
+    LoRA is just a small additive correction, you can stack
+    several of them on top of the same base model. Here is
+    what that looks like mathematically:
   </p>
 
   <MathBlock
@@ -597,11 +646,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Each LoRA contributes its own low-rank weight
-    adjustment, scaled by a mixing coefficient. Since LoRAs
-    are additive deltas to the base weights, stacking them
-    is as simple as summing the individual updates -- no
-    retraining needed.
+    <strong>Read this as:</strong> "Start with the original
+    weights, then add each LoRA's correction, scaled by its
+    own mixing coefficient." Since LoRAs are additive deltas
+    to the base weights, stacking them is as simple as
+    summing the individual updates, with no retraining needed.
   </p>
 
   <p>
@@ -697,7 +746,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Modern Image Generation Stack</h2>
 
   <p>
-    State-of-the-art image generation systems combine these
+    Now that you have seen each piece in isolation, let's
+    zoom out. Modern image generation systems combine these
     components into a modular, composable stack:
   </p>
 

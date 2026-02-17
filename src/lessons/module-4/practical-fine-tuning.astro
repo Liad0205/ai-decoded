@@ -11,6 +11,7 @@ import Diagram from "../../components/Diagram.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Prepare and format datasets for instruction
@@ -37,19 +38,24 @@ import Diagram from "../../components/Diagram.astro";
   <h2>Dataset Preparation</h2>
 
   <p>
-    The quality of your fine-tuning data matters far more
+    Here's the most important thing to remember about fine-tuning:
+    the quality of your data matters far more
     than the quantity. A model fine-tuned on 1,000
     high-quality examples consistently outperforms one
-    trained on 100,000 noisy examples. The LIMA paper
-    demonstrated that just 1,000 carefully curated
-    instruction-response pairs can produce a strong
-    instruction-following model.
+    trained on 100,000 noisy examples. Think of it like
+    learning a musical instrument: practicing 10 pieces
+    perfectly teaches you more than sloppily playing through
+    1,000. The LIMA paper demonstrated that just 1,000
+    carefully curated instruction-response pairs can produce
+    a strong instruction-following model.
   </p>
 
   <h3>Data Formats</h3>
   <p>
-    Fine-tuning data typically follows one of these formats
-    depending on the task:
+    Before you start training, you need your data in the right
+    shape. Fine-tuning data typically follows one of these
+    formats, depending on whether your task involves single
+    exchanges or multi-turn conversations:
   </p>
 
   <h4>Instruction Format (Single-Turn)</h4>
@@ -78,8 +84,11 @@ import Diagram from "../../components/Diagram.astro";
 
   <h4>Chat Templates</h4>
   <p>
+    You might wonder: why does formatting matter so much?
     Each model family uses its own special tokens to delimit
-    roles. You must match the model's expected template
+    roles, almost like a secret handshake. If you use the
+    wrong tokens, the model gets confused about who is
+    saying what. You must match the model's expected template
     exactly:
   </p>
   <pre
@@ -138,23 +147,27 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
     the <strong>assistant's response tokens</strong>, not on
     the instruction/input tokens. This is called <strong
       >loss masking</strong
-    > or "train-on-completion-only":
+    > or "train-on-completion-only." The idea is simple: you
+    only penalize the model for getting the <em>answer</em>
+    wrong, not for failing to predict the question (which
+    it was given as input anyway). Formally, the loss looks
+    like this:
   </p>
   <MathBlock
     formula={"\\mathcal{L} = -\\sum_{t \\in \\text{response}} \\log P(x_t | x_{<t})"}
     display={true}
   />
   <p>
-    This is the standard autoregressive language modeling
-    loss, but summed only over response token positions. For
-    each response token <MathBlock formula="x_t" />, we
-    maximize the log-probability of predicting it given all
-    preceding tokens. Instruction tokens are excluded from
-    the sum so the model focuses its learning capacity on
-    generating good responses. Without masking, the model
-    wastes capacity learning to predict the instruction
-    (which it already knows how to process from
-    pretraining).
+    In plain English: for each token in the assistant's
+    response, compute how surprised the model was by that
+    token (given everything before it), then sum up all that
+    surprise. This is the standard autoregressive language
+    modeling loss, but summed only over response token
+    positions. Instruction tokens are excluded from the sum
+    so the model focuses its learning capacity on generating
+    good responses. Without masking, the model wastes
+    capacity learning to predict the instruction (which it
+    already knows how to process from pretraining).
   </p>
 </section>
 
@@ -163,8 +176,11 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
 
   <p>
     Fine-tuning hyperparameters require different defaults
-    than pretraining. The model has already learned
-    representations -- you are making targeted adjustments.
+    than pretraining. The model has already learned good
+    representations, so you are making targeted adjustments
+    rather than teaching from scratch. Think of it like
+    adjusting the settings on a well-tuned instrument rather
+    than building one from raw materials.
   </p>
 
   <RevealSection
@@ -240,18 +256,21 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
     <div data-reveal-step>
       <h4>Batch Size and Gradient Accumulation</h4>
       <p>
-        With limited GPU memory, use gradient accumulation
-        to achieve larger effective batch sizes:
+        Your GPU can only fit a handful of examples at once,
+        but training works better with larger batches (more
+        stable gradients). The trick is <strong>gradient
+        accumulation</strong>: process several small batches,
+        accumulate their gradients, and then take one
+        optimizer step. The effective batch size is simply:
       </p>
       <MathBlock
         formula={"\\text{Effective batch size} = \\text{micro batch} \\times \\text{gradient accumulation steps}"}
         display={true}
       />
       <p>
-        Gradient accumulation simulates a large batch by
-        summing gradients over multiple small
-        forward/backward passes before performing a single
-        optimizer step. This lets you achieve stable
+        Read this as: if you process 4 examples per GPU pass
+        and accumulate over 8 steps, your effective batch
+        size is 32. This lets you achieve stable
         training with large effective batch sizes even when
         GPU memory only fits a few examples at a time.
       </p>
@@ -343,11 +362,17 @@ Quantum computing uses quantum mechanical phenomena...&lt;|im_end|&gt;`}
 
   <h3>Hugging Face PEFT + TRL</h3>
   <p>
-    The <strong>PEFT</strong> (Parameter-Efficient
-    Fine-Tuning) library provides LoRA, QLoRA, and other adapter
+    If you are just getting started with fine-tuning, this is
+    the most common stack you will encounter. The <strong
+    ><GlossaryTooltip term="PEFT" /></strong> (Parameter-Efficient
+    Fine-Tuning) library provides <GlossaryTooltip term="LoRA" />,
+    <GlossaryTooltip term="QLoRA" />, and other adapter
     implementations. <strong>TRL</strong> (Transformer Reinforcement
-    Learning) adds supervised fine-tuning (<GlossaryTooltip term="SFT" />Trainer) and <GlossaryTooltip term="RLHF" />
-    capabilities.
+    Learning) adds supervised fine-tuning
+    (<GlossaryTooltip term="SFT" />Trainer) and
+    <GlossaryTooltip term="RLHF" /> capabilities. Together, they
+    give you a complete pipeline from loading a model to training
+    and saving adapters.
   </p>
 
   <pre
@@ -401,11 +426,13 @@ trainer.train()`}
 
   <h3>Unsloth</h3>
   <p>
-    <strong>Unsloth</strong> provides optimized kernels that make
-    LoRA/QLoRA fine-tuning 2-5x faster than standard implementations,
-    with 60-80% less memory usage. It achieves this through custom
-    Triton kernels for the LoRA forward/backward pass and smart
-    memory management.
+    If training speed is a bottleneck for you (and it often is),
+    <strong>Unsloth</strong> is worth trying. It provides optimized
+    kernels that make <GlossaryTooltip term="LoRA" />/<GlossaryTooltip term="QLoRA" /> fine-tuning 2-5x faster
+    than standard implementations, with 60-80% less memory usage.
+    It achieves this through custom Triton kernels for the LoRA
+    forward/backward pass and smart memory management. The best
+    part: it uses the same SFTTrainer API, so switching is easy.
   </p>
 
   <pre
@@ -460,11 +487,13 @@ trainer.train()`}
   <h2>Evaluation: Beyond Training Loss</h2>
 
   <p>
-    Training loss alone does not tell you if your fine-tuned
-    model is actually better. A model can achieve low
-    training loss while generating worse outputs
-    (overfitting to the format rather than learning the
-    task).
+    You might be tempted to watch the training loss go down
+    and declare victory. Resist that urge. Training loss
+    alone does not tell you if your fine-tuned model is
+    actually better. A model can achieve low training loss
+    while generating worse outputs (overfitting to the
+    format rather than learning the task). You need a
+    multi-layered evaluation strategy.
   </p>
 
   <h3>Evaluation Framework</h3>
@@ -562,7 +591,7 @@ trainer.train()`}
             <div
               class="text-xs text-[hsl(var(--muted-foreground))]"
             >
-              GPT-4 scoring, Chatbot Arena, human preference
+              LLM scoring, Chatbot Arena, human preference
               ratings
             </div>
           </div>
@@ -573,8 +602,9 @@ trainer.train()`}
 
   <h3>1. Training Metrics</h3>
   <p>
-    Monitor training and validation loss curves. Key
-    signals:
+    Your first line of defense is monitoring training and
+    validation loss curves. Here are the key signals to
+    watch for:
   </p>
   <ul>
     <li>
@@ -587,15 +617,17 @@ trainer.train()`}
     </li>
     <li>
       <strong>Underfitting</strong>: Both losses remain high
-      -- increase rank, add more target modules, or train
-      longer
+      (try increasing rank, adding more target modules, or training
+      longer)
     </li>
   </ul>
 
   <h3>2. Automated Benchmarks</h3>
   <p>
-    Compare your model against standard benchmarks to check
-    for <strong>catastrophic forgetting</strong>:
+    Fine-tuning can accidentally erase general knowledge, a
+    problem called <strong>catastrophic forgetting</strong>.
+    To catch this, compare your model against standard
+    benchmarks before and after fine-tuning:
   </p>
   <ul>
     <li>
@@ -618,7 +650,12 @@ trainer.train()`}
   </p>
 
   <h3>3. Task-Specific Metrics</h3>
-  <p>Design metrics specific to your use case:</p>
+  <p>
+    Generic benchmarks tell you about general capability,
+    but you also need metrics tailored to what your model
+    will actually do. Design metrics specific to your use
+    case:
+  </p>
   <ul>
     <li>
       <strong>Classification</strong>: Accuracy, F1,
@@ -641,11 +678,13 @@ trainer.train()`}
   <h3>4. LLM-as-Judge</h3>
   <p>
     For open-ended generation, automated metrics are
-    insufficient. Using a strong LLM (GPT-4, Claude) to
-    evaluate outputs on criteria like helpfulness, accuracy,
-    and safety has become standard practice. The key is
-    writing detailed rubrics and using pairwise comparisons
-    (base model vs. fine-tuned).
+    insufficient. A growing practice is to use a strong
+    <GlossaryTooltip term="LLM" /> (such as GPT-5.2 or Claude
+    Opus 4.6) as an automated judge, evaluating outputs on
+    criteria like helpfulness, accuracy, and safety. The key
+    is writing detailed rubrics and using pairwise
+    comparisons (base model vs. fine-tuned) so the judge can
+    make relative quality assessments.
   </p>
 </section>
 
@@ -779,7 +818,7 @@ trainer.train()`}
       (the LIMA principle)
     </li>
     <li>
-      <strong>Match the chat template</strong> exactly -- wrong
+      <strong>Match the chat template</strong> exactly. Wrong
       special tokens cause garbled outputs and are the most common
       fine-tuning mistake
     </li>

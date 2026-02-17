@@ -52,12 +52,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Why Does CoT Work?</h3>
   <p>
-    The autoregressive nature of LLMs means each token is conditioned on all preceding
+    Here's the key insight: the autoregressive nature of LLMs means each token is conditioned on all preceding
     tokens. Without CoT, the
     model must compute a complex answer in a single "forward
     pass" from question to answer. With CoT, intermediate reasoning steps serve as <em
       >scratchpad computation</em
-    > -- each step produces tokens that inform subsequent steps.
+    >, where each step produces tokens that inform subsequent steps.
     Importantly, the model is still performing forward passes
     with CoT; the benefit is that
     the intermediate tokens serve as explicit context that
@@ -66,7 +66,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <p>
-    Consider a multi-step math problem. Without CoT, the model must compress the entire reasoning chain
+    Think of it like solving a math problem in your head versus on paper. Without CoT, the model must compress the entire reasoning chain
     into the implicit computation within its forward pass.
     With CoT, each intermediate
     result is explicitly written out, making it available
@@ -77,10 +77,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Zero-Shot CoT</h3>
   <p>
-    The simplest form: append <em
+    The simplest form is almost surprisingly easy: just append <em
       >"Let's think step by step"</em
-    > (or similar) to your prompt. Remarkably effective despite
-    its simplicity:
+    > (or similar) to your prompt. You might wonder how such a small change can matter, but it is remarkably effective:
   </p>
 
   <pre><code>Q: A store has 45 apples. They sell 12 in the morning and receive
@@ -159,7 +158,7 @@ A:</code></pre>
   <div
     class="bg-[hsl(var(--card))] p-4 rounded"
   >
-    <div class="grid grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
       <!-- Standard prompting -->
       <div data-animate style="animation-delay: 0.5s">
         <div class="font-semibold text-sm mb-3 text-center">
@@ -261,7 +260,8 @@ A:</code></pre>
   <h2>Self-Consistency</h2>
 
   <p>
-    <strong>Self-consistency</strong> (Wang et al., 2022) improves
+    What if you could ask the model the same question multiple times and pick the most popular answer?
+    That is exactly what <strong>self-consistency</strong> (Wang et al., 2022) does. It improves
     CoT reliability by sampling multiple
     reasoning paths and taking a majority vote on the final answer.
     The key insight: even if individual reasoning chains sometimes
@@ -288,8 +288,8 @@ A:</code></pre>
   <p>
     Different reasoning paths may make different errors, but
     correct reasoning paths tend to converge on the same
-    answer. This is analogous to ensemble methods in
-    classical <GlossaryTooltip term="ML" /> -- aggregating diverse
+    answer. Think of it like polling a room of people: individuals might make mistakes, but the crowd tends to get it right. This is analogous to ensemble methods in
+    classical <GlossaryTooltip term="ML" />, where aggregating diverse
     weak learners produces a stronger result.
   </p>
 
@@ -317,6 +317,7 @@ A:</code></pre>
   <h2>Tree of Thoughts (ToT)</h2>
 
   <p>
+    What if, instead of following a single reasoning path, the model could explore several directions and backtrack when it hits a dead end?
     <strong>Tree of Thoughts</strong> (Yao et al., 2023) generalizes
     CoT from a single linear chain
     to a tree of reasoning paths. At each step, the model generates
@@ -335,7 +336,7 @@ A:</code></pre>
       each step
     </li>
     <li>
-      <strong>Evaluate</strong> each thought using the LLM itself (or a separate evaluator) -- is this thought likely
+      <strong>Evaluate</strong> each thought using the LLM itself (or a separate evaluator), asking: is this thought likely
       to lead to a correct solution?
     </li>
     <li>
@@ -369,7 +370,7 @@ A:</code></pre>
   </ul>
   <p>
     For straightforward reasoning tasks, ToT's overhead is
-    not justified -- it may require 50-100 LLM calls per query due to branching and evaluation at each
+    not justified; it may require 50-100 LLM calls per query due to branching and evaluation at each
     step. CoT or self-consistency is
     usually sufficient.
   </p>
@@ -384,7 +385,7 @@ A:</code></pre>
   <div
     class="bg-[hsl(var(--card))] p-4 rounded"
   >
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
       <!-- Standard CoT -->
       <div data-animate style="animation-delay: 0.5s">
         <div class="font-semibold text-sm mb-3 text-center">
@@ -572,6 +573,7 @@ A:</code></pre>
   <h2>ReAct: Reasoning + Acting</h2>
 
   <p>
+    So far, all the techniques you have seen operate entirely inside the model's own "head." But what if the model could actually do things in the real world while it reasons?
     <strong><GlossaryTooltip term="ReAct" /></strong> (Yao et
     al., 2022) interleaves reasoning traces with actions (tool
     calls). Where CoT generates reasoning
@@ -715,9 +717,9 @@ Answer: The elevation is approximately 1,500 feet (457 meters).</code></pre>
   <h2>Structured Output Generation</h2>
 
   <p>
-    Many production applications require LLM outputs in structured formats: JSON, XML, SQL, function
+    If you are building production applications, you will quickly discover that free-form text is not enough. Many real systems require LLM outputs in structured formats: JSON, XML, SQL, function
     calls. Getting reliable structured output is one of the most
-    important practical prompting skills.
+    important practical prompting skills you can develop.
   </p>
 
   <h3>JSON Output</h3>
@@ -749,7 +751,7 @@ JSON:</code></pre>
   <p>
     Beyond prompting, many inference frameworks support <strong
       >constrained decoding</strong
-    > -- enforcing that the output conforms to a grammar or schema
+    >, which enforces that the output conforms to a grammar or schema
     at the token level. Libraries like Outlines, Guidance, and
     jsonformer mask out tokens that would produce invalid output:
   </p>
@@ -778,7 +780,7 @@ JSON:</code></pre>
     </p>
     <p class="text-sm">
       In Python production systems, don't just ask for
-      JSON—validate it with <strong>Pydantic</strong>.
+      JSON; validate it with <strong>Pydantic</strong>.
     </p>
     <pre
       class="mt-2 text-xs"><code>class UserIntent(BaseModel):
@@ -864,9 +866,9 @@ JSON:</code></pre>
   <h2>Combining Techniques</h2>
 
   <p>
-    Advanced prompting strategies are not mutually
-    exclusive. Production systems often layer multiple
-    techniques:
+    Here's the thing: these advanced prompting strategies are not mutually
+    exclusive. In practice, production systems often layer multiple
+    techniques together:
   </p>
 
   <ul>
@@ -899,7 +901,7 @@ JSON:</code></pre>
   </ul>
 
   <h3>The Prompting Decision Tree</h3>
-  <p>When selecting a prompting strategy:</p>
+  <p>When you need to select a prompting strategy, work through these questions in order:</p>
   <ol>
     <li>
       <strong

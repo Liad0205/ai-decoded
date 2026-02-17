@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand how contrastive learning produces
@@ -32,11 +33,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>What Are Embeddings and Why Do They Matter?</h2>
 
 <p>
-  An <strong>embedding</strong> is a learned mapping from discrete
-  or high-dimensional data into a continuous vector space where
-  geometric relationships (distance, angle) encode semantic similarity.
-  Unlike hand-crafted features, embeddings capture meaning through
-  training on large-scale data.
+  Think of an <strong>embedding</strong> as a way to give every piece of data
+  a set of coordinates in a meaningful space. Instead of representing a word as
+  a string of characters (which a computer can not reason about semantically),
+  you map it to a list of numbers where <em>position encodes meaning</em>.
+  Words with similar meanings end up near each other; unrelated words end up
+  far apart. Unlike hand-crafted features, embeddings learn these relationships
+  automatically from large-scale data.
 </p>
 
 <p>
@@ -50,26 +53,30 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: the embedding function takes any input from the
-  data space and maps it to a d-dimensional real-valued
-  vector.
+  Read this as: the function <MathBlock formula={"f_\\theta"} /> takes any input
+  (a word, sentence, or image) and produces a list of <em>d</em> real numbers.
+  You can think of it as assigning GPS coordinates, except in a high-dimensional
+  space rather than on a flat map.
 </p>
 
 <p>
-  The goal: semantically similar inputs should map to nearby
-  points in the embedding space, while dissimilar inputs
-  should be far apart. This property makes embeddings the
-  foundation of semantic search, recommendation systems, <GlossaryTooltip term="RAG" />
-  pipelines, and clustering.
+  The key property you want: semantically similar inputs should land at nearby
+  points in this space, while dissimilar inputs should be far apart. This is
+  what makes embeddings the foundation of semantic search, recommendation systems,
+  <GlossaryTooltip term="RAG" /> pipelines, and clustering.
 </p>
 
 <h2>Contrastive Learning: Learning by Comparison</h2>
 
 <p>
-  <strong>Contrastive learning</strong> trains embeddings by pulling
-  similar examples together and pushing dissimilar examples apart
-  in the embedding space. Rather than predicting labels, the model
-  learns a similarity function.
+  So how do you actually <em>train</em> an embedding model? The most
+  powerful approach is <strong>contrastive learning</strong>, which trains
+  embeddings by pulling similar examples together and pushing dissimilar
+  examples apart in the embedding space. Rather than predicting labels,
+  the model learns a similarity function. The intuition is simple: show
+  the model pairs of items and ask, "Are these similar or different?"
+  Over millions of comparisons, the model builds an increasingly nuanced
+  map of meaning.
 </p>
 
 <h3>The Setup</h3>
@@ -89,9 +96,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: the similarity between the anchor and its
-  positive example should be much larger than the similarity
-  between the anchor and any negative example.
+  In plain English: the anchor should be <em>much more similar</em> to its
+  matching partner than to any of the decoys. If you think of it like a
+  classroom seating chart, the model is learning to seat friends next to
+  each other and strangers far away.
 </p>
 
 <p>
@@ -104,9 +112,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Cosine similarity computes the dot product of two vectors
-  normalized by their magnitudes, yielding a value between
-  -1 (opposite) and +1 (identical direction).
+  Read this as: take the dot product of two vectors and divide by their
+  lengths. The result is a number between -1 (pointing in opposite directions)
+  and +1 (pointing the same way). You can think of it as measuring the angle
+  between the two arrows: a cosine similarity of 1 means they are perfectly
+  aligned, while 0 means they are perpendicular (unrelated).
 </p>
 
 <h3>The InfoNCE Loss</h3>
@@ -123,19 +133,22 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: InfoNCE is a softmax cross-entropy loss that
-  treats matching the correct positive as an N-way
-  classification problem. The numerator measures how similar
-  the anchor is to its positive; the denominator normalizes
-  over all candidates. The loss is minimized when the
-  positive pair's similarity dominates all others.
+  The temperature parameter <MathBlock
+    formula={"\\tau"}
+  /> controls the sharpness of the similarity distribution.
 </p>
 
 <p>
-  where the temperature parameter <MathBlock
-    formula={"\\tau"}
-  /> controls the sharpness of the similarity distribution. Key
-  properties:
+  In plain English: InfoNCE turns similarity matching into a multiple-choice
+  question. Given one anchor, the model must pick the correct positive out
+  of N total candidates. The numerator scores how similar the anchor is to its
+  true match; the denominator adds up scores for <em>all</em> candidates. The
+  loss drops to zero when the model is completely confident about the right
+  answer, and increases when it confuses the positive with negatives.
+</p>
+
+<p>
+  Key properties:
 </p>
 
 <ul>
@@ -188,19 +201,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Why In-Batch Negatives Work</h3>
 
 <p>
-  A crucial optimization: rather than sampling explicit
-  negatives, use other examples in the same mini-batch as
-  negatives. With batch size B, each anchor gets B-1
-  negatives "for free." This is why contrastive learning
+  Here is a clever trick that makes contrastive learning practical: rather
+  than explicitly sampling negative examples, you use the other examples
+  already in your mini-batch as negatives. With a batch size of B, each
+  anchor gets B-1 negatives "for free." This is why contrastive learning
   benefits enormously from large batch sizes (often 4K-65K).
 </p>
 
 <p>
-  The probability of false negatives (true positives treated
-  as negatives) is low in large, diverse corpora, though
-  this assumption weakens in specialized domains where
-  semantically similar items are common. In those settings,
-  hard negative mining becomes important.
+  You might wonder: what if two items in the same batch actually <em>are</em>
+  semantically similar, creating a false negative? In large, diverse corpora
+  this is unlikely, but the assumption weakens in specialized domains where
+  semantically similar items are common. In those settings, hard negative
+  mining becomes important.
 </p>
 
 <Diagram
@@ -212,7 +225,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <div
     class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
-    <div class="grid grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
       <!-- Before training -->
       <div data-animate style="animation-delay: 0.3s">
         <div class="text-center font-semibold text-sm mb-4">
@@ -329,9 +342,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Training Embedding Models: A Multi-Stage Pipeline</h2>
 
 <p>
-  Modern text embedding models (E5, BGE, GTE) follow a
-  multi-stage training pipeline that progressively refines
-  representations:
+  Now that you understand contrastive learning, let's look at how
+  modern text embedding models (E5, BGE, GTE) put it into practice.
+  They follow a multi-stage pipeline that progressively refines
+  representations, starting broad and getting more precise at each step:
 </p>
 
 <h3>Stage 1: Pre-training (Weakly Supervised)</h3>
@@ -361,7 +375,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   Scale matters enormously: E5 uses ~1B weakly supervised
   pairs; BGE uses even more. The quality filtering of these
   pairs significantly impacts downstream
-  performance---deduplication, language identification, and
+  performance. Deduplication, language identification, and
   removing near-duplicates via MinHash are standard
   practices, and aggressive filtering (retaining only the
   top 10-30% of pairs by a quality classifier) often
@@ -394,10 +408,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Stage 3: Hard Negative Mining</h3>
 
 <p>
-  Easy negatives (random documents) provide little learning
-  signal. <strong>Hard negatives</strong>---documents that
-  are superficially similar but not truly relevant---force
-  the model to learn fine-grained distinctions.
+  If you only show the model easy negatives (random, clearly unrelated documents),
+  it will not learn much. That would be like quizzing someone on "Is a cat more
+  similar to a dog or to a refrigerator?" The real learning comes from
+  <strong>hard negatives</strong> (documents that are superficially similar but
+  not truly relevant), which force the model to learn fine-grained distinctions.
 </p>
 
 <p>Common strategies:</p>
@@ -421,8 +436,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Bi-Encoder vs. Cross-Encoder</h3>
 
 <p>
-  Two fundamental architectures for measuring text
-  similarity:
+  Before diving into specific models, you need to understand the two
+  fundamental architectures for measuring text similarity:
 </p>
 
 <ul>
@@ -436,13 +451,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <strong>Cross-encoder</strong>: Concatenate query and
     document, process jointly through a transformer. More
     accurate (full cross-attention), but O(N) for N
-    candidates---too slow for retrieval, used for reranking.
+    candidates, which is too slow for retrieval. Instead, cross-encoders are used for reranking.
   </li>
 </ul>
 
 <p>
-  In practice, bi-encoders retrieve candidates, then
-  cross-encoders rerank the top results.
+  In practice, most systems use a two-stage approach: a bi-encoder quickly
+  retrieves a shortlist of candidates, then a cross-encoder carefully reranks
+  the top results. You get the best of both worlds.
 </p>
 
 <h3>
@@ -515,7 +531,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   OpenAI's <strong>CLIP</strong> (Contrastive Language-Image Pre-training)
-  extends contrastive learning to multimodal embeddings:
+  extends contrastive learning to multimodal embeddings. The idea: take an
+  image encoder and a text encoder, then train them together so that matching
+  image-caption pairs end up close in the same shared space. The loss function
+  applies InfoNCE in <em>both</em> directions:
 </p>
 
 <div class="equation-with-label">
@@ -529,10 +548,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </div>
 
 <p>
-  Intuition: for each image, maximize the similarity with
-  its matching caption while minimizing similarity with all
-  other captions, and vice versa for each caption. The two
-  terms make the loss symmetric across modalities.
+  In plain English: for each image, pick its matching caption out of all the
+  captions in the batch. Then flip it around: for each caption, pick its
+  matching image out of all the images. Average both directions. This symmetry
+  ensures that the image and text encoders learn to agree with each other.
 </p>
 
 <p>
@@ -547,10 +566,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Standard embeddings have a fixed dimensionality (e.g., 768
-  or 1024). <strong
+  or 1024). But what if you need a quick, rough similarity check and
+  do not want to compare all 768 numbers? <strong
     >Matryoshka Representation Learning</strong
-  > trains embeddings where any prefix of the full vector is itself
-  a valid, useful embedding---like nested Russian dolls.
+  > solves this by training embeddings where any prefix of the full
+  vector is itself a valid, useful embedding. Picture nested Russian
+  dolls: the outermost doll contains the full detail, but each
+  smaller doll inside still captures the essential shape.
 </p>
 
 <h3>How It Works</h3>
@@ -571,10 +593,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </div>
 
 <p>
-  Intuition: the Matryoshka loss sums the standard InfoNCE
-  contrastive loss computed at multiple truncation points
-  simultaneously, forcing every prefix of the embedding to
-  be independently useful.
+  Read this as: instead of computing the contrastive loss once on the
+  full 768-dimensional vector, you compute it at several truncation
+  points (32, 64, 128, and so on) and sum them up. This forces the
+  model to pack the most important information into the first few
+  dimensions, with each additional dimension adding finer detail.
 </p>
 
 <p>
@@ -613,9 +636,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Evaluation: The MTEB Benchmark</h2>
 
 <p>
+  With so many embedding models available, how do you choose the right one?
   The <strong
     >Massive Text Embedding Benchmark (MTEB)</strong
-  > provides standardized evaluation across 8 task categories:
+  > provides a standardized evaluation across 8 task categories, giving you
+  a single leaderboard to compare models:
 </p>
 
 <ul>
@@ -654,9 +679,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <p>
-  MTEB leaderboard scores guide model selection, but always
-  evaluate on your specific domain---general benchmarks may
-  not reflect specialized performance.
+  MTEB leaderboard scores are a great starting point for model selection, but
+  here is the thing: always evaluate on your specific domain too. A model that
+  tops the general leaderboard might underperform on legal documents or medical
+  records if it was not exposed to that vocabulary during training.
 </p>
 
 <Quiz
@@ -698,7 +724,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <ul>
     <li>
       <strong>Embeddings</strong> map data to vector spaces where
-      geometric proximity encodes semantic similarity---the foundation
+      geometric proximity encodes semantic similarity, forming the foundation
       of search, <GlossaryTooltip term="RAG" />, and recommendations
     </li>
     <li>

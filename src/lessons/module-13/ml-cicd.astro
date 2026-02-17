@@ -8,6 +8,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand why <GlossaryTooltip term="ML" /> requires specialized CI/CD pipelines
@@ -38,21 +39,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>ML Pipelines and Orchestration</h2>
 
 <p>
-  Traditional software CI/CD pipelines are triggered by code
-  changes: a developer pushes code, tests run, and the
-  artifact is deployed. ML systems are fundamentally
-  different because they have two axes of change: code and
-  data. A model may need retraining not because the code
-  changed, but because new training data arrived, the data
-  distribution shifted, or a scheduled retraining trigger
-  fired. This data dependency means ML systems require
-  specialized pipeline orchestration that understands data
-  freshness, training triggers, and model validation gates.
+  If you've worked with traditional CI/CD, you know the
+  drill: a developer pushes code, tests run, and the
+  artifact is deployed. <GlossaryTooltip term="ML" /> systems
+  break this model because they have two axes of change: code
+  and data. Think of it like a recipe that depends on both
+  the instructions and the ingredients. A model may need
+  retraining not because the code changed, but because new
+  training data arrived, the data distribution shifted, or a
+  scheduled retraining trigger fired. This data dependency
+  means ML systems require specialized pipeline orchestration
+  that understands data freshness, training triggers, and
+  model validation gates.
 </p>
 
 <h3>Why ML Needs Specialized Pipelines</h3>
 
-<p>The unique requirements of ML pipelines include:</p>
+<p>You might wonder: can't we just adapt our existing CI/CD
+  setup? Here's why that usually falls short:</p>
 
 <ul>
   <li>
@@ -60,8 +64,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     run when new data arrives or when data quality checks
     detect issues, not just when code changes. A fraud
     detection model may need retraining not because code
-    changed, but because fraudster tactics evolved -- a
-    trigger that traditional CI/CD does not handle.
+    changed, but because fraudster tactics evolved (a
+    trigger that traditional CI/CD does not handle).
   </li>
   <li>
     <strong>Long-running steps</strong>: Training a model
@@ -94,8 +98,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Airflow is the most widely adopted workflow orchestrator,
-  originally developed at Airbnb. It models workflows as
-  Directed Acyclic Graphs (DAGs) of tasks.
+  originally developed at Airbnb. If you've done any data
+  engineering, you've likely encountered it. It models
+  workflows as Directed Acyclic Graphs (DAGs) of tasks.
 </p>
 
 <ul>
@@ -140,9 +145,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <p>
   Dagster takes a fundamentally different approach: it is
   asset-centric rather than task-centric. Instead of
-  defining "run task A, then task B," you define the data
-  assets your system produces and the computations that
-  produce them.
+  telling the system "run task A, then task B," you describe
+  the data assets your system produces and the computations
+  that create them. Think of it as the difference between
+  giving step-by-step driving directions vs. specifying
+  destinations and letting the GPS figure out the route.
 </p>
 
 <ul>
@@ -183,9 +190,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Kubeflow Pipelines</h3>
 
 <p>
-  Kubeflow Pipelines is a Kubernetes-native ML workflow
-  platform. Each pipeline step runs in its own container,
-  providing complete environment isolation.
+  If your organization already runs on Kubernetes, Kubeflow
+  Pipelines will feel natural. It's a Kubernetes-native ML
+  workflow platform where each pipeline step runs in its own
+  container, providing complete environment isolation.
 </p>
 
 <ul>
@@ -225,8 +233,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Comparison of Orchestration Tools</h3>
 
 <p>
-  Choosing the right tool depends on your team's expertise
-  and requirements:
+  So which tool should you pick? It depends on your team's
+  expertise and requirements:
 </p>
 
 <ul>
@@ -262,22 +270,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   A feature store is a centralized repository for storing,
-  managing, and serving ML features. It addresses one of the
-  most common pain points in production ML: the
-  training-serving skew, where the feature computation logic
-  differs between training and serving, leading to silent
-  model degradation.
+  managing, and serving ML features. If you've ever
+  struggled to keep feature computation consistent between
+  your training notebooks and your production API, you've
+  felt the pain that feature stores solve. The core problem
+  is training-serving skew, where the feature computation
+  logic differs between training and serving, leading to
+  silent model degradation.
 </p>
 
 <h3>The Feature Store Concept</h3>
 
 <p>
-  Without a feature store, feature engineering is typically
-  ad hoc: data scientists write feature computation code in
-  notebooks for training, and ML engineers re-implement the
-  same logic in the serving pipeline (often in a different
-  language). This duplication introduces bugs and
-  inconsistencies. A feature store solves this by providing:
+  Without a feature store, here's what typically happens: data
+  scientists write feature computation code in notebooks for
+  training, and ML engineers re-implement the same logic in
+  the serving pipeline (often in a different language). This
+  duplication introduces bugs and inconsistencies. A feature
+  store solves this by providing:
 </p>
 
 <ul>
@@ -313,8 +323,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Online vs. Offline Feature Stores</h3>
 
 <p>
-  Feature stores typically have two storage layers optimized
-  for different access patterns:
+  Feature stores typically have two storage layers, each
+  optimized for a different access pattern. You can think of
+  this as a library with both an archive (for historical
+  research) and a quick-reference desk (for instant lookups):
 </p>
 
 <ul>
@@ -407,17 +419,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Data Versioning</h2>
 
 <p>
-  Git excels at versioning code but is unsuitable for large
-  data files (datasets, model weights). Data versioning
-  tools extend Git-like workflows to data assets, enabling
-  reproducible experiments and data lineage tracking.
+  You already use Git for versioning code, but Git is
+  unsuitable for large data files (datasets, model weights).
+  Data versioning tools extend Git-like workflows to data
+  assets, enabling reproducible experiments and data lineage
+  tracking. In other words, they give you the same "time
+  travel" capability for your data that Git gives you for
+  your code.
 </p>
 
 <h3>DVC (Data Version Control)</h3>
 
 <p>
-  DVC is the most popular data versioning tool, designed to
-  complement Git:
+  <GlossaryTooltip term="DVC" /> is the most popular data
+  versioning tool, designed to complement Git. If you're
+  comfortable with Git, you'll pick up DVC quickly:
 </p>
 
 <ul>
@@ -476,6 +492,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Data Validation</h3>
 
 <p>
+  Here's the thing: bad data in means bad predictions out.
   Data validation catches quality issues before they poison
   model training or corrupt predictions:
 </p>
@@ -696,10 +713,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Container Orchestration for ML</h2>
 
 <p>
-  Containers are the standard packaging format for ML
-  workloads. They solve the "works on my machine" problem by
-  bundling code, dependencies, and configuration into a
-  reproducible, portable unit.
+  If you've used Docker for web applications, you already
+  understand the core value proposition: containers bundle
+  code, dependencies, and configuration into a reproducible,
+  portable unit. For ML workloads, containers solve the
+  "works on my machine" problem, which is especially painful
+  when GPU drivers and ML frameworks are involved.
 </p>
 
 <h3>Docker for ML Environments</h3>
@@ -809,13 +828,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Cost Management and Resource Optimization</h2>
 
 <p>
-  GPU compute is the largest cost center for ML teams. A
-  single A100 GPU instance costs $3-5/hour on major cloud
-  providers, and training runs often use dozens or hundreds
-  of GPUs for days. Inference costs scale with traffic and
-  can quickly exceed training costs for popular models. Cost
-  optimization is not optional. It directly determines
-  whether an ML project is economically viable.
+  GPU compute is the largest cost center for ML teams, and
+  it can be eye-watering. A single A100 GPU instance costs
+  $3-5/hour on major cloud providers, and training runs
+  often use dozens or hundreds of GPUs for days. Inference
+  costs scale with traffic and can quickly exceed training
+  costs for popular models. Cost optimization is not
+  optional; it directly determines whether your ML project
+  is economically viable.
 </p>
 
 <h3>GPU Cost Optimization</h3>
@@ -914,7 +934,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h3>When to Use CPU vs. GPU for Inference</h3>
 
-<p>GPUs are not always the best choice for inference:</p>
+<p>You might assume that GPUs are always the right choice for
+  inference, but that's not the case:</p>
 
 <ul>
   <li>
@@ -947,9 +968,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Cloud Cost Monitoring and Budgeting</h3>
 
 <p>
-  Without visibility into costs, ML teams often discover
-  budget overruns weeks after they happen. Effective cost
-  management requires:
+  Without visibility into costs, you might discover budget
+  overruns weeks after they happen. Effective cost management
+  requires:
 </p>
 
 <ul>
@@ -1028,6 +1049,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Putting It All Together: The MLOps Maturity Model</h2>
 
 <p>
+  Where does your team fall on the MLOps maturity spectrum?
   Google's MLOps maturity framework defines three levels
   that organizations progress through:
 </p>
@@ -1061,7 +1083,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   Most teams should aim for Level 1 before attempting Level
   2. The jump from manual processes (Level 0) directly to
   full automation (Level 2) is almost always too ambitious.
-  Start with automating the training pipeline, add
+  If you take one thing from this section, let it be this:
+  start with automating the training pipeline, add
   monitoring, and then progressively automate the deployment
   and retraining loop.
 </p>

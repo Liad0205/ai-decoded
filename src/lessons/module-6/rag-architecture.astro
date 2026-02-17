@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand the core RAG architecture and why retrieval
@@ -32,10 +33,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Why RAG? The Limitations of Parametric Knowledge</h2>
 
 <p>
-  Large language models store knowledge <em
+  Here's the thing about large language models: they store knowledge <em
     >parametrically</em
-  >---encoded in their billions of weights during
-  pre-training. This approach has fundamental limitations:
+  >, encoded in their billions of weights during
+  pre-training. You can think of this like memorizing a textbook
+  rather than having the book on hand to look things up. This approach
+  has fundamental limitations:
 </p>
 
 <ul>
@@ -46,7 +49,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <li>
     <strong>Hallucination</strong>: Models confidently
     generate plausible but factually incorrect
-    information---more precisely, they <em>confabulate</em>,
+    information. More precisely, they <em>confabulate</em>,
     producing fluent text that is not grounded in any
     training evidence, rather than deliberately fabricating.
     This occurs most often when parametric knowledge is
@@ -54,7 +57,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
   <li>
     <strong>No source attribution</strong>: Parametric
-    knowledge has no provenance---you cannot verify or cite
+    knowledge has no provenance; you cannot verify or cite
     where the model learned something
   </li>
   <li>
@@ -74,22 +77,32 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       term="RAG"
     />)</strong
   > addresses these limitations by combining parametric knowledge
-  (the LLM) with non-parametric knowledge (an external retrieval
+  (the <GlossaryTooltip term="LLM" />) with non-parametric knowledge (an external retrieval
   system). Instead of relying solely on what the model "remembers,"
   RAG retrieves relevant information at inference time and provides
-  it as context.
+  it as context. If the parametric approach is like memorizing a textbook,
+  RAG is like having an open-book exam: you still need to understand
+  the material, but you can look up specifics when you need them.
 </p>
 
 <h2>The Core RAG Architecture</h2>
 
 <p>
-  RAG decomposes generation into two
+  At its heart, RAG decomposes generation into two
   phases: <strong>retrieve</strong> relevant documents, then <strong
     >generate</strong
   > a response conditioned on both the query and retrieved context.
+  You might wonder why this simple two-step process is so powerful.
+  The key insight is that it lets you separate "what the model knows how
+  to do" (reason, summarize, compose) from "what the model knows about"
+  (the facts it can access).
 </p>
 
-<p>Formally, for a query q, RAG computes:</p>
+<p>
+  Think of it like a librarian helping you answer a question: the librarian
+  first picks out the most relevant books, then you read through them to
+  compose your answer. Formally, for a query q, RAG computes:
+</p>
 
 <MathBlock
   formula={"p(y|q) = \\sum_{d \\in \\text{top-}k} p_{\\text{retriever}}(d|q) \\cdot p_{\\text{generator}}(y|q, d)"}
@@ -97,17 +110,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: the probability of generating answer y is a
-  weighted sum over the top-k retrieved documents, where
-  each document's contribution is its retrieval relevance
-  times the probability of generating the answer given that
-  document.
-</p>
-
-<p>
-  where the retriever scores documents by relevance and the
-  generator produces the answer conditioned on both the
-  query and retrieved documents.
+  Read this as: "The probability of generating answer <em>y</em> is a
+  weighted sum over the top-k retrieved documents. Each document's
+  contribution is its retrieval relevance score times the probability
+  of generating the answer given that document." In other words, the
+  retriever scores documents by relevance, and the generator produces
+  the answer conditioned on both the query and the retrieved context.
 </p>
 
 <Diagram
@@ -127,7 +135,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         >
           Indexing Phase (offline)
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <div
             class="px-3 py-2 bg-[hsl(var(--muted))] rounded text-xs text-center min-w-fit"
           >
@@ -161,7 +169,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         >
           Query Phase (online)
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <div
             class="px-3 py-2 bg-[hsl(var(--diagram-emerald-bg))] rounded text-xs text-center min-w-fit"
           >
@@ -209,8 +217,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>The Indexing Pipeline</h3>
 
 <p>
-  Before queries can be answered, documents must be
-  preprocessed and indexed:
+  Before your system can answer queries, you need to preprocess and
+  index your documents. Think of this as building the card catalog
+  for your library:
 </p>
 
 <ol>
@@ -233,6 +242,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ol>
 
 <h3>The Query Pipeline</h3>
+
+<p>
+  When a user asks a question, here is what happens behind the scenes:
+</p>
 
 <ol>
   <li>
@@ -262,8 +275,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Naive RAG</h3>
 
 <p>
-  The simplest RAG implementation follows
-  the pipeline above directly:
+  If you are building your first RAG system, you will likely start
+  with what practitioners call "naive RAG." It follows the pipeline
+  above directly:
 </p>
 
 <ul>
@@ -282,8 +296,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <p>
-  Naive RAG works surprisingly well for simple use cases but
-  has systematic failure modes:
+  Naive RAG works surprisingly well for simple use cases, and it is a
+  great starting point. However, it has systematic failure modes you
+  should be aware of:
 </p>
 
 <ul>
@@ -331,8 +346,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Each component adds complexity but addresses specific
-  failure modes. The art of RAG engineering
-  is choosing the right components for your use case.
+  failure modes. The art of <GlossaryTooltip term="RAG" /> engineering
+  is choosing the right components for your use case. You do not need
+  every enhancement; start with naive RAG and add complexity only
+  where you observe failures.
 </p>
 
 <h2>
@@ -340,8 +357,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </h2>
 
 <p>
-  Three approaches to grounding LLMs in specific knowledge.
-  They are complementary, not mutually exclusive:
+  You might wonder: "Can't I just fine-tune the model on my data, or
+  use a model with a massive context window?" Good question. There are
+  three approaches to grounding <GlossaryTooltip term="LLM" />s in specific knowledge,
+  and they are complementary, not mutually exclusive:
 </p>
 
 <h3>RAG</h3>
@@ -363,7 +382,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <p><strong>Limitations:</strong></p>
 <ul>
   <li>
-    Retrieval quality bottleneck---if relevant chunks are
+    Retrieval quality bottleneck: if relevant chunks are
     not retrieved, the model cannot use them
   </li>
   <li>Added latency from the retrieval step</li>
@@ -402,7 +421,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Cannot easily attribute knowledge to specific sources
   </li>
   <li>
-    Knowledge is "baked in"---no easy way to remove
+    Knowledge is "baked in," with no easy way to remove
     incorrect information
   </li>
 </ul>
@@ -412,15 +431,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <ul>
   <li>
     Small knowledge bases that fit within the context window
-    (e.g., 200K tokens for Claude 3.5 Sonnet, 128K for GPT-4
-    Turbo, up to 1M for Gemini 1.5 Pro)
+    (e.g., 200K tokens for Claude Opus 4.6, 128K for GPT-5.2,
+    up to 1M for Gemini 3 Pro)
   </li>
   <li>
     Tasks requiring holistic understanding across the entire
     corpus
   </li>
   <li>
-    Simpler engineering---no retrieval pipeline needed
+    Simpler engineering (no retrieval pipeline needed)
   </li>
 </ul>
 
@@ -440,11 +459,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h3>The Practical Decision Framework</h3>
 
-<p>A pragmatic approach to choosing:</p>
+<p>When you are faced with a new project, here is a pragmatic decision path:</p>
 <ol>
   <li>
     <strong>Does your knowledge base fit in context?</strong
-    > If yes, try long context first---simplest approach.
+    > If yes, try long context first; it is the simplest approach.
   </li>
   <li>
     <strong
@@ -468,8 +487,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>RAG Prompt Engineering</h2>
 
 <p>
-  The prompt template significantly impacts RAG quality. Key
-  principles:
+  You might be surprised how much the prompt template affects your
+  RAG system's output quality. Here are the key principles to keep
+  in mind:
 </p>
 
 <ul>
@@ -502,8 +522,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Common RAG Failure Modes</h2>
 
 <p>
-  Understanding failure modes is essential for building
-  robust RAG systems:
+  If you are going to build production RAG systems, understanding
+  how they fail is just as important as understanding how they work.
+  Here are the most common failure modes you will encounter:
 </p>
 
 <ul>

@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand the low-rank hypothesis: why weight updates
@@ -36,30 +37,33 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Low-Rank Hypothesis</h2>
 
   <p>
-    The key insight behind LoRA comes from an empirical
-    observation: <strong
+    Here is the question that motivates everything in this lesson:
+    if full fine-tuning works, why bother with anything else? The
+    answer starts with a surprising empirical observation: <strong
       >the weight changes during fine-tuning have low
       intrinsic rank</strong
-    >. In other words, the difference between pretrained
-    weights and fine-tuned weights, <MathBlock
+    >. When you compare pretrained weights to fine-tuned
+    weights, the difference <MathBlock
       formula={"\\Delta W = W_{\\text{fine-tuned}} - W_{\\text{pretrained}}"}
-    />, can be well-approximated by a low-rank matrix.
+    /> can be well-approximated by a low-rank matrix.
   </p>
 
   <p>
-    This is remarkable. A weight matrix in a 7B model might
+    Why is this remarkable? A weight matrix in a 7B model might
     have dimensions <MathBlock
       formula={"4096 \\times 4096"}
     /> with rank up to 4096. But the <em>change</em> needed for
     task adaptation might have an effective rank of just 4, 8,
-    or 16.
+    or 16. That means most of the "space" in the weight update is
+    redundant.
   </p>
 
   <h3>Why Low Rank?</h3>
   <p>
-    Pretrained models already encode rich representations.
+    You might wonder: why would the update be so simple?
+    Because pretrained models already encode rich representations.
     Fine-tuning for a specific task only needs to make a
-    small, structured adjustment -- like rotating the
+    small, structured adjustment, like rotating the
     representation space slightly to align with
     task-specific features. Such structured adjustments
     naturally have low rank.
@@ -111,7 +115,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>LoRA: The Core Idea</h2>
 
   <p>
-    Instead of learning <MathBlock
+    Now that you understand <em>why</em> the weight update is
+    low-rank, here is the trick that exploits it. Instead of
+    learning <MathBlock
       formula={"\\Delta W \\in \\mathbb{R}^{d \\times d}"}
     /> directly (which has <MathBlock formula="d^2" /> parameters),
     LoRA decomposes it into two smaller matrices:
@@ -120,21 +126,23 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <MathBlock formula={"\\Delta W = BA"} display={true} />
 
   <p>
-    where <MathBlock
+    Read this as: "the weight update equals the product of a tall,
+    thin matrix <MathBlock
       formula={"B \\in \\mathbb{R}^{d \\times r}"}
-    /> and <MathBlock
+    /> and a short, wide matrix <MathBlock
       formula={"A \\in \\mathbb{R}^{r \\times d}"}
-    />, with rank <MathBlock formula={"r \\ll d"} />.
+    />, where the bottleneck dimension <MathBlock formula={"r \\ll d"} />
+    is much smaller than the original."
   </p>
 
   <p>
-    Intuition: instead of updating the full weight matrix
-    (which can have millions of parameters), LoRA decomposes
+    Think of it this way: instead of updating the full weight matrix
+    (which can have millions of parameters), you factor
     the update into two small matrices whose product
     approximates the full update. The rank <MathBlock
       formula="r"
-    /> controls the expressiveness vs. efficiency tradeoff --
-    a rank-16 decomposition of a 4096 x 4096 matrix replaces 16.7M
+    /> controls the expressiveness vs. efficiency tradeoff.
+    A rank-16 decomposition of a 4096 x 4096 matrix replaces 16.7M
     parameters with just 131K.
   </p>
 
@@ -142,25 +150,29 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     To put the savings in concrete terms: for a weight
     matrix of size 4096 x 4096 (16.7M parameters), a rank-16
     LoRA adapter uses only 4096 x 16 + 16 x 4096 = 131K
-    parameters -- less than 1% of the original. Across all
+    parameters (less than 1% of the original). Across all
     attention layers in a 7B model, this typically means
     training ~10M parameters instead of 7B.
   </p>
 
-  <p>The modified forward pass becomes:</p>
+  <p>
+    So what happens during a forward pass? The adapted layer
+    computes:
+  </p>
 
   <MathBlock
     formula={"h = W'x = Wx + \\Delta Wx = Wx + BAx"}
     display={true}
   />
   <p>
-    That is, the output is the original pretrained
-    computation <MathBlock formula="Wx" /> plus a low-rank correction
-    <MathBlock formula="BAx" />. The base weights <MathBlock
-      formula="W"
-    /> stay frozen -- only <MathBlock formula="B" /> and <MathBlock
-      formula="A"
-    /> are trained.
+    In plain English: you take the original output (<MathBlock
+      formula="Wx" />) and add a small correction from the
+    LoRA path (<MathBlock formula="BAx" />). The base weights
+    <MathBlock formula="W" /> stay frozen; only <MathBlock
+      formula="B"
+    /> and <MathBlock formula="A" /> are trained. This means
+    you get all the benefits of adaptation without touching
+    the original model.
   </p>
 
   <Diagram
@@ -297,10 +309,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Parameter Savings</h3>
   <p>
-    The number of trainable parameters in the <GlossaryTooltip
+    Let's quantify exactly how much you save. The total number
+    of trainable parameters in the <GlossaryTooltip
       term="LoRA"
     />
-    decomposition:
+    decomposition is:
   </p>
   <div class="equation-with-label">
     <MathBlock
@@ -329,7 +342,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     This ratio tells you what fraction of the original
     parameters you actually train. It scales linearly with
-    rank and inversely with dimension -- so larger models
+    rank and inversely with dimension, so larger models
     get even better efficiency from LoRA.
   </p>
   <p>
@@ -345,6 +358,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Full LoRA Derivation</h2>
+
+  <p>
+    Now that you have the intuition, let's walk through the math
+    step by step. Each step builds on the previous one, so take
+    your time.
+  </p>
 
   <RevealSection
     revealId="lora-derivation"
@@ -383,11 +402,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         display={true}
       />
       <p>
-        This is equivalent to a bottleneck: input is
-        projected down to dimension <MathBlock
-          formula="r"
-        /> by <MathBlock formula="A" />, then projected back
-        up by <MathBlock formula="B" />.
+        Read this as: the weight update is forced to pass through
+        a bottleneck of dimension <MathBlock formula="r" />.
+        Matrix <MathBlock formula="A" /> projects the input down
+        to this small dimension, and <MathBlock formula="B" />
+        projects it back up. If you have worked with
+        autoencoders, this is the same compress-then-expand idea.
       </p>
       <button
         type="button"
@@ -401,20 +421,22 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 3: Initialization</h4>
       <p>
-        At the start of fine-tuning, <MathBlock
-          formula={"\\Delta W"}
-        /> should be zero (so the model starts from pretrained
-        behavior):
+        This is a clever detail. At the start of fine-tuning,
+        you want <MathBlock formula={"\\Delta W"} /> to be zero
+        so the model starts from its pretrained behavior
+        (not from some random perturbation):
       </p>
       <MathBlock
         formula={"A \\sim \\mathcal{N}(0, \\sigma^2), \\quad B = 0"}
         display={true}
       />
       <p>
-        <MathBlock formula="B" /> is initialized to zero so that
-        <MathBlock formula="BA = 0" /> at initialization. <MathBlock
-          formula="A"
-        /> uses a random Gaussian initialization (like Kaiming).
+        Read this as: <MathBlock formula="B" /> starts as all
+        zeros, which guarantees <MathBlock formula="BA = 0" /> at
+        the beginning of training. <MathBlock formula="A" /> uses
+        a random Gaussian initialization (like Kaiming) to break
+        symmetry. The result is that training begins from
+        exactly the pretrained model's behavior.
       </p>
       <button
         type="button"
@@ -440,14 +462,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         display={true}
       />
       <p>
-        The output is the frozen pretrained result plus a
-        scaled low-rank correction. The factor <MathBlock
+        Read this as: the output is the frozen pretrained result
+        plus a scaled low-rank correction. The factor <MathBlock
           formula={"\\alpha / r"}
         /> normalizes the update so its magnitude stays roughly
-        constant when changing rank -- think of it like a learning
-        rate specific to the LoRA path. Typical default: <MathBlock
-          formula={"\\alpha = r"}
-        /> (so the scaling is 1) or <MathBlock
+        constant when you change the rank. Think of it like a
+        learning rate specific to the LoRA path. Typical
+        defaults are <MathBlock formula={"\\alpha = r"} /> (so the
+        scaling factor is 1) or <MathBlock
           formula={"\\alpha = 2r"}
         />.
       </p>
@@ -471,16 +493,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <li>
           <MathBlock formula="W_Q" /> and <MathBlock
             formula="W_V"
-          /> -- the original LoRA paper's recommendation
+          /> (the original LoRA paper's recommendation)
         </li>
         <li>
-          <MathBlock formula="W_Q, W_K, W_V, W_O" /> -- all attention
+          <MathBlock formula="W_Q, W_K, W_V, W_O" />, all attention
           projections (common in practice)
         </li>
         <li>
           <GlossaryTooltip term="MLP" /> layers (<MathBlock
             formula={"W_{\\text{up}}, W_{\\text{down}}, W_{\\text{gate}}"}
-          />) -- sometimes included for higher capacity
+          />), sometimes included for higher capacity
         </li>
       </ul>
       <p
@@ -497,11 +519,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Rank Selection: The Key Hyperparameter</h2>
 
   <p>
-    The rank <MathBlock formula="r" /> is the most important <GlossaryTooltip
+    When you use LoRA in practice, the single most important
+    decision you will make is choosing the rank <MathBlock
+      formula="r" />. This is the main <GlossaryTooltip
       term="LoRA"
     />
-    hyperparameter. It controls the expressiveness vs. efficiency
-    tradeoff:
+    hyperparameter, and it controls the expressiveness vs.
+    efficiency tradeoff:
   </p>
 
   <ul>
@@ -522,7 +546,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>r = 128+</strong>: Approaches full fine-tuning
-      expressiveness. Diminishing returns -- at this point,
+      expressiveness. Diminishing returns; at this point,
       consider whether full fine-tuning is warranted.
     </li>
   </ul>
@@ -537,10 +561,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Memory Savings with LoRA</h3>
   <p>
-    Because only <MathBlock formula="B" /> and <MathBlock
-      formula="A"
-    /> are trained, the optimizer states and gradients are dramatically
-    reduced:
+    The parameter savings translate directly into memory savings,
+    which is often the real bottleneck. Because only <MathBlock
+      formula="B" /> and <MathBlock formula="A" /> are trained,
+    the optimizer states and gradients shrink dramatically:
   </p>
   <div class="equation-with-label">
     <MathBlock
@@ -571,12 +595,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </div>
   </div>
   <p>
-    That is 2 (matrices per layer) x 8 (rank) x 4096 (hidden
-    dim) x 4 (Q, K, V, O projections) x 32 (transformer
-    layers) = 8.4M trainable parameters. This is <strong
-      >0.12% of the 6.74B total parameters</strong
-    >. The optimizer states for 8.4M params in FP32 require
-    only ~67 MB instead of ~54 GB.
+    Breaking that down: 2 (matrices per layer) x 8 (rank) x
+    4096 (hidden dim) x 4 (Q, K, V, O projections) x 32
+    (transformer layers) = 8.4M trainable parameters. This is
+    <strong>0.12% of the 6.74B total parameters</strong>.
+    In practical terms, the optimizer states for 8.4M params in
+    FP32 require only ~67 MB instead of ~54 GB. That is the
+    difference between fitting on a single consumer GPU and
+    needing a multi-GPU cluster.
   </p>
 </section>
 
@@ -584,19 +610,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Merging: Zero-Overhead Inference</h2>
 
   <p>
-    One of LoRA's most elegant properties: <strong
-      >adapters can be merged back into the base weights at
-      inference time</strong
-    >. Since the forward pass computes:
+    Here is one of LoRA's most elegant properties, and one that
+    makes it especially practical for production. Since the
+    forward pass is just two additive terms, <strong
+      >you can merge the adapter back into the base weights
+      before deployment</strong
+    >:
   </p>
   <MathBlock
     formula="h = Wx + BAx = (W + BA)x"
     display={true}
   />
   <p>
-    By the distributive property, the base computation plus
-    the LoRA correction can be factored into a single matrix
-    multiply. We can precompute <MathBlock
+    In plain English: by the distributive property, the base
+    computation plus the LoRA correction can be factored into a
+    single matrix multiply. You precompute <MathBlock
       formula="W' = W + BA"
     /> and replace <MathBlock formula="W" /> entirely. The result:
   </p>
@@ -629,10 +657,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Unmerging for Continued Training</h3>
   <p>
-    If you need to continue fine-tuning, you can "unmerge"
-    by subtracting: <MathBlock formula="W = W' - BA" />.
-    This allows iterative refinement of adapters without
-    retraining from scratch.
+    What if you need to keep fine-tuning after merging? You can
+    always "unmerge" by subtracting: <MathBlock
+      formula="W = W' - BA" />. This allows you to iteratively
+    refine adapters without retraining from scratch.
   </p>
 </section>
 
@@ -697,7 +725,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Merged inference</strong>: <MathBlock
         formula="W' = W + BA"
-      /> gives zero-overhead inference -- the adapted model runs
+      /> gives zero-overhead inference, so the adapted model runs
       at the same speed as the base model
     </li>
   </ul>

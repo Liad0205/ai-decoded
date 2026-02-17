@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Distinguish <GlossaryTooltip term="BERT" />-style, <GlossaryTooltip
@@ -30,31 +31,27 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Three Transformer Architectures</h2>
 
 <p>
-  The original transformer had an encoder-decoder structure.
-  Modern models specialize into three main variants:
+  The original "Attention Is All You Need" transformer had both an encoder and a decoder working together. But researchers quickly discovered that you don't always need both halves. Depending on your task, you can strip the transformer down to just one side, or keep both. This led to three main variants, each with different strengths.
 </p>
 
-<h3>
-  1. Encoder-Only (<GlossaryTooltip term="BERT" />-Style)
-</h3>
+<h3>1. Encoder-Only (BERT-Style)</h3>
 
 <p>
-  Encoder-only models use just the encoder stack
-  (self-attention without causal masking). They see the
+  <GlossaryTooltip term="BERT" />-style encoder-only models use just the encoder stack
+  (self-attention without causal masking). Think of them as "reading comprehension" models: they see the
   entire input sequence at once (bidirectional context),
-  making them ideal for understanding tasks like
-  classification and sentiment analysis.
+  which makes them excellent at understanding tasks like
+  classification and sentiment analysis. They read the whole sentence before forming an opinion, rather than processing it word by word.
 </p>
 <p>
-  <strong>Architecture</strong>: Stack of transformer blocks
+  <strong>Architecture</strong>: A stack of transformer blocks
   with bidirectional attention. Each token can attend to all
-  other tokens (past and future).
+  other tokens, both past and future. This is a big advantage for understanding, because meaning often depends on what comes later in a sentence.
 </p>
 
 <p>
-  <strong>Training</strong>: Masked Language Modeling (MLM).
-  Randomly mask 15% of tokens, predict them from
-  bidirectional context:
+  <strong>Training</strong>: These models learn through Masked Language Modeling (MLM), a clever "fill in the blank" game.
+  You randomly mask 15% of tokens, and the model predicts the missing words using the surrounding context:
 </p>
 
 <MathBlock
@@ -63,41 +60,40 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
+  Read this as: "the probability of the masked token x_i, given all the tokens before it and after it, equals the softmax over vocabulary scores computed from its hidden representation h_i." It's essentially the model saying, "given the surrounding words, which word most likely goes here?"
+</p>
+
+<p>
   <strong>The <GlossaryTooltip term="CLS" /> token</strong>: A special token
-  prepended to sequences. Its final representation
-  aggregates sequence-level information, used for
-  classification tasks.
+  prepended to every input sequence. Its final hidden state acts as a summary of the entire sequence, which you can feed into a classifier for tasks like sentiment analysis.
 </p>
 
 <p>
   <strong>Use cases</strong>: Sentence classification, named
   entity recognition, question answering (extractive). Not
-  designed for generation.
+  designed for generation, since these models have no mechanism to produce text one token at a time.
 </p>
 
 <p>
   <strong>Key models</strong>: BERT, RoBERTa, ELECTRA
 </p>
 
-<h3>
-  2. Decoder-Only (<GlossaryTooltip term="GPT" />-Style)
-</h3>
+<h3>2. Decoder-Only (GPT-Style)</h3>
 
 <p>
-  Decoder-only models use just the decoder stack (masked
+  <GlossaryTooltip term="GPT" />-style decoder-only models use just the decoder stack (masked
   self-attention). They process tokens left-to-right,
-  predicting the next token. This causal structure makes
-  them perfect for text generation.
+  predicting the next token at each step. If encoder-only models are "readers," decoder-only models are "writers": their entire design revolves around generating text one token at a time.
 </p>
 <p>
-  <strong>Architecture</strong>: Stack of transformer blocks
-  with causal (unidirectional) attention. Token at position
-  i can only attend to positions ≤ i.
+  <strong>Architecture</strong>: A stack of transformer blocks
+  with causal (unidirectional) attention. The key constraint is that a token at position
+  i can only attend to positions at or before i, never peeking ahead. This is what makes generation possible: the model can produce tokens sequentially without needing to see what comes next.
 </p>
 
 <p>
-  <strong>Causal masking</strong> is implemented by adding a mask
-  to attention scores before softmax:
+  <strong>Causal masking</strong> enforces this "no peeking" rule. Here's how it works: you add a mask
+  to the attention scores before the softmax step. The mask is a simple rule:
 </p>
 
 <MathBlock
@@ -106,10 +102,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  The mask is 0 for positions the token is allowed to see
-  (current and past) and negative infinity for future
-  positions. Adding this to the attention scores before
-  softmax gives:
+  In plain English: if token i is looking at token j, and j comes after i (a future token), the mask adds negative infinity. If j is at or before position i, the mask adds 0 (no effect). The -infinity is a trick: when softmax sees -infinity, it outputs 0, effectively blocking that future token from influencing the current one. You then fold this mask into the standard attention formula:
 </p>
 
 <MathBlock
@@ -118,15 +111,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  The -∞ makes softmax output 0 for future tokens
-  (preventing information leakage).
+  Read this as: "the attention weight from token i to token j is the softmax of their scaled dot-product, plus the mask." For allowed tokens, the mask is 0 and attention works normally. For future tokens, the -infinity drives the attention weight to 0, preventing information leakage.
 </p>
 
 <p>
-  <strong>Training</strong>: Next-token prediction (language
-  modeling). Given prefix x<sub>1:t</sub>, predict x<sub
-    >t+1</sub
-  >:
+  <strong>Training</strong>: The training objective is beautifully simple: next-token prediction. Given a sequence of tokens, the model learns to predict what comes next at every position:
 </p>
 
 <MathBlock
@@ -134,38 +123,38 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   display={true}
 />
 
-<p><strong>Why GPT-style won for LLMs</strong>:</p>
+<p>
+  In plain English: "sum up the negative log-probabilities of each token given all preceding tokens." The model is rewarded for assigning high probability to the actual next token. This single objective turns out to be surprisingly powerful, because to predict the next word well, you need to understand grammar, facts, reasoning, and more.
+</p>
+
+<p><strong>Why GPT-style won for <GlossaryTooltip term="LLM" />s</strong>:</p>
 <ul>
-  <li>Unified pretraining and generation objective</li>
-  <li>Scales naturally with compute and data</li>
+  <li>The pretraining objective (next-token prediction) is the same as the generation task, so there's no mismatch</li>
+  <li>Scales naturally with more compute and data</li>
   <li>Simple to implement and train</li>
-  <li>Enables autoregressive sampling for generation</li>
+  <li>Enables autoregressive sampling for open-ended generation</li>
 </ul>
 
 <p>
-  <strong>Key models</strong>: GPT-2, GPT-3, GPT-4, GPT-4o, Llama 3, Claude 3.5 Sonnet, Gemini
-  1.5 Pro
+  <strong>Key models</strong>: GPT-2, GPT-3, GPT-4, GPT-5.2, Llama 4, Claude Opus 4.6, Gemini
+  3 Pro
 </p>
 
-<h3>
-  3. Encoder-Decoder (<GlossaryTooltip term="T5" />-Style)
-</h3>
+<h3>3. Encoder-Decoder (T5-Style)</h3>
 <p>
-  These models keep both stacks. The encoder processes the
-  input bidirectionally, and the decoder generates output
-  autoregressively. This is versatile for
+  What if you need both deep understanding of an input <em>and</em> the ability to generate output? <GlossaryTooltip term="T5" />-style models keep both stacks. The encoder reads the full input bidirectionally (like BERT), and the decoder generates output one token at a time (like GPT). This "best of both worlds" approach is versatile for
   sequence-to-sequence tasks like translation and
   summarization.
 </p>
 <p>
-  <strong>Architecture</strong>: Encoder (bidirectional)
-  processes input; decoder (causal) generates output while
-  cross-attending to encoder states.
+  <strong>Architecture</strong>: The encoder (bidirectional)
+  processes the input and builds rich representations; the decoder (causal) generates output while
+  cross-attending to those encoder representations. The cross-attention is the bridge between the two halves.
 </p>
 
 <p>
-  <strong>Cross-attention</strong>: Decoder queries attend
-  to encoder keys/values:
+  <strong>Cross-attention</strong> is how the decoder "looks back" at the encoder's understanding of the input. The decoder's queries attend
+  to the encoder's keys and values:
 </p>
 
 <MathBlock
@@ -174,10 +163,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
+  Read this as: "the decoder asks questions (queries) and finds answers in the encoder's stored information (keys and values)." For example, when translating "The cat sat" to French, the decoder generating "Le" would attend to the encoder's representation of "The" to determine the correct article.
+</p>
+
+<p>
   <strong>Use cases</strong>: Tasks with distinct
-  input/output (translation, summarization). Encoder-decoder
-  architectures shine when input ≠ output modality or
-  structure.
+  input and output (translation, summarization). Encoder-decoder
+  architectures shine when the input and output have different structures or even different modalities.
 </p>
 
 <p><strong>Key models</strong>: T5, BART, mT5</p>
@@ -284,17 +276,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>KV-Cache: Making Generation Fast</h2>
 
 <p>
-  Autoregressive generation is sequential: generate token t,
-  append to context, generate token t+1, etc. Naively, this
-  requires recomputing attention for all previous tokens at
-  each step: O(n²) operations.
+  Here's a practical problem you might not expect. Autoregressive generation is sequential: generate token 1, append it to the context, generate token 2, and so on. Without any optimization, every time you generate a new token, you'd have to recompute attention over all previous tokens from scratch. That's O(n<sup>2</sup>) operations total, and it gets painfully slow as sequences grow.
 </p>
 
 <p>
-  <strong>KV-cache optimization</strong>: Cache the key and
-  value vectors for all previous tokens. At step t, only
-  compute Q<sub>t</sub>, then reuse cached K<sub>1:t-1</sub
-  >, V<sub>1:t-1</sub>:
+  The insight behind the <strong>KV-cache</strong> is simple: the key and value vectors for previous tokens don't change as you generate new tokens. So why recompute them? Instead, you cache the K and V vectors for every token you've already processed. When generating the next token, you only compute the new token's query (Q<sub>t</sub>), then look it up against the cached keys and values:
 </p>
 
 <MathBlock
@@ -303,15 +289,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  This reduces per-token generation from O(n²) to O(n),
-  making real-time generation feasible.
+  Read this as: "at step t, compute attention using the new token's query against all previously cached keys and values, plus the current token's own K and V." The semicolons mean "concatenate," so you're just appending the new token's vectors to the cache.
+</p>
+
+<p>
+  This reduces per-token generation cost from O(n<sup>2</sup>) to O(n), which is the difference between a chatbot that takes seconds to respond and one that takes minutes.
 </p>
 
 <h3>Memory Implications</h3>
 
 <p>
-  For a model with h heads, d<sub>k</sub> = d/h, and L layers,
-  storing KV-cache for n tokens requires:
+  The KV-cache makes generation fast, but it eats memory. For a model with L layers and hidden dimension d,
+  storing the KV-cache for n tokens requires:
 </p>
 
 <MathBlock
@@ -320,62 +309,56 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  For GPT-3 (96 layers, d=12288, float16), caching 2048
-  tokens ≈ 4.7 GB. This limits batch size during generation.
+  The factor of 2 is because you store both K and V. To make this concrete: for GPT-3 (96 layers, d=12288) using float16, caching 2048 tokens requires roughly 4.7 GB. That's a significant chunk of GPU memory just for one request, which is why KV-cache size is often the bottleneck that limits how many users a model can serve simultaneously.
 </p>
 
 <h2>The Context Window Problem (and Solutions)</h2>
 
 <p>
-  Self-attention is O(n²) in sequence length. Early models
-  trained on 2k-8k tokens, but by 2026, context windows have
-  expanded dramatically through architectural innovations.
+  You might be wondering: if self-attention lets every token look at every other token, what's the catch? The catch is cost. Self-attention scales as O(n<sup>2</sup>) with sequence length, meaning doubling your context length quadruples the computation. Early models were limited to 2k-8k tokens, but by 2026, context windows have expanded dramatically through clever engineering.
 </p>
 
 <h3>Modern Context Windows (2026)</h3>
 <p>
-  Current frontier models support context windows of <strong
-    >up to 1-2M tokens</strong
-  > (Gemini 1.5 Pro at 1M, Claude 3.5 Sonnet at 200K) with context
-  lengths continuing to grow. This was achieved through:
+  Current frontier models support context windows of <strong>up to 1-2M tokens</strong> (Gemini 3 Pro at 1M+, Claude Opus 4.6 at 200K), with context lengths continuing to grow. How did we get here? Three key innovations:
 </p>
 <ul>
   <li>
-    <strong>FlashAttention-2</strong>: Memory-efficient
-    attention achieving 230 TFLOPs/s on A100 GPUs
+    <strong>FlashAttention-2</strong>: A memory-efficient
+    implementation of attention that avoids materializing the full n-by-n attention matrix, achieving 230 TFLOPs/s on A100 GPUs
   </li>
   <li>
     <strong>Sub-quadratic alternatives</strong>: State-space
     models (Mamba, RWKV) achieve O(n) complexity, offering
-    an alternative to full attention for long sequences
+    an alternative to full attention for very long sequences
   </li>
   <li>
     <strong>Improved positional encodings</strong>: RoPE
-    (Rotary Position Embedding) and ALiBi enable better
-    length generalization
+    (Rotary Position Embedding) and ALiBi enable models to generalize to sequence lengths longer than what they were trained on
   </li>
 </ul>
 
 <h3>Earlier Approaches (Historical)</h3>
 <p>
-  <strong>Sparse Attention</strong>: Longformer and BigBird
+  Before these breakthroughs, researchers tried to work around the O(n<sup>2</sup>) barrier more directly.
+  <strong>Sparse Attention</strong> (Longformer, BigBird)
   restricted attention to local windows or predefined
-  patterns, reducing complexity to O(n) but losing full
+  patterns, reducing complexity to O(n) but sacrificing full
   attention flexibility.
 </p>
 
 <p>
-  <strong>Sliding Window Attention</strong>: Each token
+  <strong>Sliding Window Attention</strong> took a simpler approach: each token
   attends only to a fixed window (e.g., 512 tokens
-  before/after). Used in models like MPT, CodeGen.
+  before and after). Used in models like MPT and CodeGen.
 </p>
 
 <h3>Alternatives: Retrieval-Augmented Generation</h3>
 <p>
-  Instead of extending context windows indefinitely,
-  retrieve relevant chunks from a database and pass them as
-  context. Still valuable for knowledge-intensive tasks even
-  with 1M+ token windows (covered in RAG module).
+  There's also a completely different strategy: instead of making the context window bigger,
+  retrieve only the relevant chunks from a database and pass them as
+  context. This <GlossaryTooltip term="RAG" /> approach remains valuable for knowledge-intensive tasks even
+  with 1M+ token windows (covered in the RAG module).
 </p>
 
 <Quiz

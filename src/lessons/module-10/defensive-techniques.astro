@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand adversarial training as a min-max
@@ -44,17 +45,22 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Adversarial Training: Learning to Resist Attacks</h2>
 
   <p>
-    <strong>Adversarial training</strong> is the most principled
+    Now that you've seen how adversarial attacks work, you might wonder:
+    can we train models to resist them? That's exactly what
+    <strong>adversarial training</strong> does, and it's the most principled
     defense against adversarial examples. The idea is straightforward:
     include adversarial examples in the training data so the model
-    learns to classify them correctly.
+    learns to classify them correctly. Think of it like a vaccine:
+    you expose the model to weakened versions of attacks so it builds up immunity.
   </p>
 
   <h3>Min-Max Formulation</h3>
   <p>
     Madry et al. (2017) formalized adversarial training as a <strong
       >min-max optimization problem</strong
-    >:
+    >. The core idea is a two-player game: one player (the attacker) tries to find the
+    worst possible perturbation, while the other player (the model) tries to learn to
+    handle even that worst case:
   </p>
 
   <MathBlock
@@ -63,8 +69,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    The inner maximization finds the worst-case adversarial
-    perturbation for each example (typically using PGD). The
+    In plain English: for each training example, first find the small perturbation
+    (delta) that causes the most damage, then update the model's weights so it gets that
+    worst-case example right. The inner maximization finds the worst-case adversarial
+    perturbation for each example (typically using <GlossaryTooltip term="PGD" />). The
     outer minimization trains the model to correctly
     classify even these worst-case inputs.
   </p>
@@ -92,7 +100,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>The Robustness-Accuracy Tradeoff</h3>
   <p>
-    A consistently observed phenomenon: adversarial training
+    Here's the thing: adversarial training isn't free.
+    A consistently observed phenomenon is that it
     improves robustness but <strong
       >reduces clean accuracy</strong
     >. As demonstrated by Tsipras et al. (2019), a standard
@@ -112,15 +121,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     discriminative.
   </p>
 
+  <p>
+    This relationship can be expressed as a constraint where both types of accuracy
+    compete for the same capacity:
+  </p>
+
   <MathBlock
     formula={"\\text{Standard accuracy} + \\text{Robust accuracy} \\leq \\text{Upper bound}"}
     display={true}
   />
 
   <p>
-    Intuition: there is a fixed budget shared between clean
-    accuracy and adversarial robustness -- improving one
-    comes at the cost of the other.
+    Read this as: there is a fixed budget shared between clean
+    accuracy and adversarial robustness. Improving one
+    comes at the cost of the other, much like a seesaw where
+    pushing down one side inevitably lifts the other.
   </p>
 
   <p>
@@ -131,19 +146,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Certified Defenses</h3>
   <p>
-    Unlike empirical defenses (which may be broken by
-    stronger attacks), <strong>certified defenses</strong> provide
+    You might wonder: can we go beyond "this worked in practice" and get
+    actual mathematical guarantees? Unlike empirical defenses (which may
+    be broken by stronger attacks), <strong>certified defenses</strong> provide
     mathematical guarantees of robustness within a specified radius.
   </p>
 
   <p>
     <strong>Randomized smoothing</strong> (Cohen et al., 2019)
-    is the most practical certified defense. For an input x, classify
+    is the most practical certified defense. Think of it like asking a
+    committee instead of a single person: for an input x, you classify
     the majority vote of <MathBlock
       formula={"f(x + \\epsilon)"}
     /> where <MathBlock
       formula={"\\epsilon \\sim \\mathcal{N}(0, \\sigma^2 I)"}
-    />. This provably certifies an <MathBlock
+    /> (random noise added to the input). This provably certifies an <MathBlock
       formula="L_2"
     /> robustness radius of:
   </p>
@@ -154,7 +171,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the certified radius grows with the noise
+    In plain English: the certified radius grows with the noise
     level sigma and with how confidently the smoothed
     classifier distinguishes its top two classes. A wider
     gap between the top-class and runner-up probabilities
@@ -173,9 +190,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Guardrails for LLM Applications</h2>
 
   <p>
-    For production LLM applications, <strong
+    If you're building an <GlossaryTooltip term="LLM" />-powered application, adversarial
+    training alone won't protect you. For production LLM applications, <strong
       >guardrails</strong
-    > are the primary defense layer. Guardrails are auxiliary
+    > are the primary defense layer. You can think of guardrails as
+    bouncers at a nightclub: they check everyone coming in and everyone
+    going out. More precisely, they are auxiliary
     systems that monitor, filter, and constrain LLM inputs and
     outputs to prevent unsafe behavior.
   </p>
@@ -423,10 +443,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Prompt Hardening</h2>
 
   <p>
-    <strong>Prompt hardening</strong> is the practice of writing
-    system prompts that are more resistant to injection and manipulation.
-    While no prompt is injection-proof, well-structured prompts
-    significantly raise the bar for attackers.
+    You might be surprised to learn that how you write your system prompt can
+    significantly affect security. <strong>Prompt hardening</strong> is the
+    practice of writing system prompts that are more resistant to injection
+    and manipulation. While no prompt is injection-proof, well-structured
+    prompts significantly raise the bar for attackers.
   </p>
 
   <h3>Techniques</h3>
@@ -526,11 +547,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Prompt hardening raises the bar but is not a security
     boundary. Sophisticated attacks can still bypass
     hardened prompts. For example, an attacker can use
-    multi-turn escalation &mdash; starting with innocuous
+    multi-turn escalation (starting with innocuous
     questions and gradually steering toward restricted
-    territory &mdash; or semantic tricks that rephrase a
-    forbidden request in benign-sounding language. It should
-    be one layer in a defense-in-depth strategy, not the
+    territory) or semantic tricks that rephrase a
+    forbidden request in benign-sounding language. Think of it as a lock on a door:
+    it deters casual intruders, but a determined attacker will find another way in.
+    It should be one layer in a defense-in-depth strategy, not the
     sole protection.
   </p>
 </section>
@@ -539,10 +561,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Red Teaming: Systematic Vulnerability Discovery</h2>
 
   <p>
-    <strong>Red teaming</strong> is the practice of systematically
+    So you've built guardrails and hardened your prompts. How do you know if
+    they actually work? That's where <strong>red teaming</strong> comes in.
+    It's the practice of systematically
     probing an AI system to discover vulnerabilities, unsafe behaviors,
     and failure modes before deployment. Borrowed from military
-    and cybersecurity practice, it has become a critical component
+    and cybersecurity practice (where "red teams" play the role of attackers),
+    it has become a critical component
     of responsible AI deployment.
   </p>
 
@@ -638,10 +663,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Constitutional AI and Alignment-Based Defenses</h2>
 
   <p>
-    Rather than building external guardrails around a
-    potentially unsafe model, <strong
+    All the techniques you've seen so far are external: they wrap around
+    the model like armor. But what if you could make the model itself
+    not want to produce harmful outputs? That's the goal of <strong
       >alignment-based defenses</strong
-    > aim to make the model itself intrinsically safer. Two major
+    >, which aim to make the model intrinsically safer. There are two major
     approaches:
   </p>
 
@@ -671,10 +697,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         display={true}
       />
       <p>
-        Intuition: maximize the reward (human preference
+        In plain English: maximize the reward (human preference
         score) while penalizing the model for drifting too
         far from its original behavior. The KL divergence
-        term acts as a regularizer -- without it, the model
+        term acts as a regularizer; without it, the model
         would exploit quirks in the reward model rather than
         genuinely improving.
       </p>
@@ -834,6 +860,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Emerging Defense Directions</h2>
+
+  <p>
+    The field of AI safety is evolving rapidly. Here are some of the
+    most promising directions that you should keep an eye on.
+  </p>
 
   <h3>Instruction Hierarchy</h3>
   <p>

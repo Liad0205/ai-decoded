@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand the evolution from separate vision/language
@@ -27,7 +28,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       Survey the capabilities of frontier multimodal models
-      (GPT-4V/4o, Gemini, Claude Vision)
+      (GPT-5.2, Gemini 3 Pro, Claude Opus 4.6)
     </li>
     <li>
       Understand multimodal embeddings and video
@@ -44,30 +45,35 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     For most of deep learning's history, vision and language
-    were separate disciplines. Computer vision researchers
+    lived in separate worlds. Computer vision researchers
     built <GlossaryTooltip term="CNN" />s and <GlossaryTooltip term="ViT" />s; <GlossaryTooltip term="NLP" /> researchers built transformers
-    and <GlossaryTooltip term="LLM" />s. The two communities had different datasets,
-    benchmarks, and architectural paradigms.
+    and <GlossaryTooltip term="LLM" />s. If you attended a computer vision conference
+    and then an NLP conference, you might not have recognized
+    the overlap. Different datasets, different benchmarks,
+    different architectural paradigms.
   </p>
 
   <p>
-    The emergence of <GlossaryTooltip term="CLIP" /> (2021) demonstrated that vision
-    and language could share a representation space. But
-    CLIP is a <em>retrieval</em> model. It can measure similarity
-    between images and text, but it cannot <em>generate</em> text
-    about images or engage in visual reasoning and dialogue. The
-    next frontier was building models that could truly <strong
+    Then <GlossaryTooltip term="CLIP" /> (2021) changed everything by demonstrating
+    that vision and language could share a representation space.
+    But here's the thing: CLIP is a <em>retrieval</em> model.
+    It can measure similarity between images and text, but it
+    cannot <em>generate</em> text about images or engage in
+    visual reasoning and dialogue. The next frontier was building
+    models that could truly <strong
       >understand images and reason about them in natural
       language</strong
     >.
   </p>
 
   <p>
-    The core challenge: how do you feed visual information
+    So here's the core challenge you should keep in mind
+    throughout this lesson: how do you feed visual information
     into a large language model? The LLM operates on a
     sequence of text tokens. An image is a grid of pixels.
-    Three architectural patterns have emerged to bridge this
-    gap, each with different tradeoffs.
+    Think of it like trying to explain a painting over the
+    phone. Three architectural patterns have emerged to bridge
+    this gap, each with different tradeoffs.
   </p>
 </section>
 
@@ -78,11 +84,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     DeepMind's <strong>Flamingo</strong> (2022) pioneered the
-    cross-attention approach. Instead of converting images into
-    the same token space as text, Flamingo adds <strong
+    cross-attention approach. You might wonder: why not just
+    convert images into the same token space as text? Flamingo
+    takes a different route. It adds <strong
       >cross-attention layers</strong
-    > that allow the <GlossaryTooltip term="LLM" /> to attend to visual features at specific
-    layers.
+    > that allow the <GlossaryTooltip term="LLM" /> to "peek" at visual features at specific
+    layers, like adding side windows to a building rather than
+    rebuilding the entire structure.
   </p>
 
   <h3>How Cross-Attention Works</h3>
@@ -157,10 +165,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    The <strong>LLaVA</strong> (Large Language-and-Vision Assistant)
-    approach is conceptually simpler: project visual features
-    directly into the LLM's input embedding space, so images become
-    "visual tokens" that are processed alongside text tokens.
+    If Flamingo's approach feels complex, you'll appreciate
+    <strong>LLaVA</strong> (Large Language-and-Vision Assistant).
+    The idea is refreshingly simple: project visual features
+    directly into the LLM's input embedding space, so images
+    become "visual tokens" that sit right alongside text tokens.
+    It's like translating a foreign language into English and
+    then feeding it to an English-speaking reader.
   </p>
 
   <h3>The LLaVA Architecture</h3>
@@ -370,12 +381,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    The most recent and powerful approach is <strong
-      >early fusion</strong
-    >: training a single transformer from scratch (or
-    near-scratch) on interleaved multimodal data, so the
-    model natively understands both vision and language
-    without bolted-on adapters.
+    Now for the approach that the biggest players in AI are
+    betting on. <strong>Early fusion</strong> means training
+    a single transformer from scratch (or near-scratch) on
+    interleaved multimodal data, so the model natively
+    understands both vision and language without bolted-on
+    adapters. Think of the difference between learning two
+    languages separately versus growing up bilingual.
   </p>
 
   <h3>Gemini's Approach</h3>
@@ -403,19 +415,20 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       multiple resolutions and aspect ratios
     </li>
     <li>
-      <strong>Long context</strong>: Gemini 1.5 Pro supports
-      up to 1M tokens, enabling processing of entire videos
+      <strong>Long context</strong>: Gemini 3 Pro supports
+      up to 2M tokens, enabling processing of entire videos
       (hours of footage as frame sequences)
     </li>
   </ul>
 
-  <h3>GPT-4V and GPT-4o</h3>
+  <h3>OpenAI's Multimodal Evolution: GPT-4V to GPT-5.2</h3>
 
   <p>
-    OpenAI's GPT-4V (Vision) added visual understanding to
+    OpenAI's GPT-4V (Vision) first added visual understanding to
     GPT-4, and GPT-4o extended this to a fully multimodal
-    model processing text, images, and audio natively. While
-    the exact architecture is not published, external
+    model processing text, images, and audio natively. The latest
+    iteration, GPT-5.2, pushes multimodal capabilities further.
+    While the exact architecture is not published, external
     analysis and behavior suggest early fusion:
   </p>
   <ul>
@@ -429,7 +442,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       (OCR)
     </li>
     <li>
-      GPT-4o can generate text, images, and audio outputs,
+      GPT-5.2 can generate text, images, and audio outputs,
       suggesting a unified architecture rather than
       bolted-on modules
     </li>
@@ -438,9 +451,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Claude Vision</h3>
 
   <p>
-    Anthropic's Claude models (from Claude 3 onward) include
-    strong vision capabilities. Claude demonstrates
-    particular strength in:
+    Anthropic's Claude models have included vision capabilities
+    since Claude 3, with the latest Claude Opus 4.6 representing
+    the current frontier. Claude demonstrates particular strength
+    in:
   </p>
   <ul>
     <li>
@@ -466,8 +480,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Early Fusion Advantages</h3>
   <p>
-    Why is early fusion the direction frontier models are
-    heading?
+    You might be wondering: why is early fusion the direction
+    that all frontier models are heading? Here are the key
+    reasons:
   </p>
   <ul>
     <li>
@@ -501,6 +516,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <Diagram
   diagramId="multimodal-architectures"
   title="Three Multimodal Architecture Patterns"
+  autoplay={true}
 >
   <div
     class="bg-[hsl(var(--card))] p-4 rounded"
@@ -508,11 +524,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div class="flex flex-col gap-6">
       <!-- Pattern 1: Cross-Attention -->
       <div
-        class="flex items-start gap-4"
+        class="flex flex-col sm:flex-row items-start gap-4"
         data-animate
         style="animation-delay: 0.2s"
       >
-        <div class="w-36 shrink-0">
+        <div class="w-full sm:w-36 sm:shrink-0">
           <div class="font-semibold text-sm text-[hsl(var(--diagram-rose-fg))]">
             Cross-Attention
           </div>
@@ -547,11 +563,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Pattern 2: Visual Token Projection -->
       <div
-        class="flex items-start gap-4"
+        class="flex flex-col sm:flex-row items-start gap-4"
         data-animate
         style="animation-delay: 0.7s"
       >
-        <div class="w-36 shrink-0">
+        <div class="w-full sm:w-36 sm:shrink-0">
           <div
             class="font-semibold text-sm text-[hsl(var(--diagram-indigo-fg))]"
           >
@@ -584,11 +600,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Pattern 3: Early Fusion -->
       <div
-        class="flex items-start gap-4"
+        class="flex flex-col sm:flex-row items-start gap-4"
         data-animate
         style="animation-delay: 1.2s"
       >
-        <div class="w-36 shrink-0">
+        <div class="w-full sm:w-36 sm:shrink-0">
           <div
             class="font-semibold text-sm text-[hsl(var(--diagram-emerald-fg))]"
           >
@@ -647,10 +663,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    While generative multimodal models focus on producing
-    text about images, <strong>multimodal embeddings</strong
-    > focus on creating unified vector representations that enable
-    cross-modal retrieval and understanding.
+    So far, you've seen generative multimodal models that
+    produce text about images. But there's another important
+    direction: <strong>multimodal embeddings</strong>, which
+    focus on creating unified vector representations that
+    enable cross-modal retrieval and understanding. If you've
+    worked with text embeddings for search, this will feel
+    familiar.
   </p>
 
   <h3>Beyond CLIP: Richer Embedding Spaces</h3>
@@ -719,17 +738,20 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    Video understanding is the next frontier for multimodal
-    AI. Videos combine spatial (image-like) and temporal
-    (sequence-like) information, creating unique challenges.
+    If images are hard, video is harder. Videos combine spatial
+    (image-like) and temporal (sequence-like) information,
+    creating unique challenges. Think about what it takes to
+    understand a cooking video: you need to recognize ingredients,
+    track actions over time, and understand causal sequences.
   </p>
 
   <h3>Frame Sampling Strategies</h3>
 
   <p>
-    A 1-minute video at 30fps contains 1,800 frames.
-    Processing all frames is computationally prohibitive.
-    Several strategies reduce this:
+    Consider the scale problem: a 1-minute video at 30fps
+    contains 1,800 frames. Processing all of them is
+    computationally prohibitive. So how do you decide which
+    frames matter? Several strategies help:
   </p>
   <ul>
     <li>
@@ -756,8 +778,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Temporal Modeling Approaches</h3>
 
   <p>
-    Once frames are sampled, how do we model temporal
-    relationships?
+    Once you've sampled your frames, the next question is:
+    how do you model temporal relationships between them?
   </p>
   <ul>
     <li>
@@ -778,7 +800,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <strong>LLM-based temporal reasoning</strong>: Feed
       frame-level visual tokens sequentially into an LLM and
       rely on its sequence modeling ability for temporal
-      understanding. This is how Gemini and <GlossaryTooltip term="GPT" />-4o handle
+      understanding. This is how Gemini 3 Pro and <GlossaryTooltip term="GPT" />-5.2 handle
       video.
     </li>
   </ul>
@@ -786,8 +808,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>The Long-Context Approach</h3>
 
   <p>
-    Gemini 1.5 Pro demonstrated a powerful approach: with a
-    1M token context window, it can ingest an entire movie
+    Gemini 3 Pro demonstrated a powerful approach: with a
+    2M token context window, it can ingest an entire movie
     as a sequence of frame tokens. Frames are encoded into
     patch tokens using a vision transformer, similar to
     image encoding. At 258 tokens per frame and ~1fps
@@ -812,9 +834,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Visual Instruction Tuning Data Pipeline</h2>
 
   <p>
-    A critical but often overlooked aspect of multimodal
-    models is the <strong>data</strong> used for instruction tuning.
-    LLaVA's data generation pipeline is illustrative:
+    Here's something you might not expect: one of the most
+    critical parts of building a multimodal model is not the
+    architecture, it's the <strong>data</strong> used for
+    instruction tuning. LLaVA's data generation pipeline is
+    a great example of creative engineering:
   </p>
 
   <h3>Generating Visual Instruction Data with GPT-4</h3>
@@ -856,25 +880,26 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ol>
 
   <p>
-    This "language-only bootstrapping" technique is
-    powerful: GPT-4 never sees the actual images, but
-    generates high-quality instruction data from the textual
-    descriptions. Later work (LLaVA-1.5, LLaVA-NeXT)
-    supplemented this with data from academic VQA
-    benchmarks, OCR datasets, and chart understanding
-    datasets.
+    Here's the surprising part of this "language-only
+    bootstrapping" technique: GPT-4 never sees the actual
+    images, yet it generates high-quality instruction data
+    from the textual descriptions alone. It's like writing
+    a detailed tour guide for a city you've only read about.
+    Later work (LLaVA-1.5, LLaVA-NeXT) supplemented this
+    with data from academic VQA benchmarks, OCR datasets,
+    and chart understanding datasets.
   </p>
 
   <h3>The Data Quality Lesson</h3>
 
   <p>
-    A recurring finding across multimodal model development: <strong
-      >data quality matters more than data quantity</strong
-    >. LLaVA-1.5 achieved competitive performance with just
-    665K instruction examples, orders of magnitude fewer
-    than the billions of image-text pairs used for
-    pretraining. High-quality, diverse instruction data with
-    well-crafted responses is worth far more than massive
+    If you take one practical lesson from this section, let
+    it be this: <strong>data quality matters more than data
+    quantity</strong>. LLaVA-1.5 achieved competitive
+    performance with just 665K instruction examples, orders of
+    magnitude fewer than the billions of image-text pairs used
+    for pretraining. High-quality, diverse instruction data
+    with well-crafted responses is worth far more than massive
     but noisy datasets.
   </p>
 </section>
@@ -918,8 +943,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Frontier Capabilities and Open Challenges</h2>
 
   <p>
-    Modern multimodal models demonstrate remarkable
-    capabilities, but significant challenges remain.
+    Let's take a step back and look at the big picture. Modern
+    multimodal models demonstrate remarkable capabilities, but
+    significant challenges remain. Understanding both sides
+    will help you make informed decisions about when and how to
+    use these models in your own work.
   </p>
 
   <h3>Current Capabilities</h3>
@@ -1024,7 +1052,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Video understanding</strong> adds temporal modeling
-      to vision. Long-context <GlossaryTooltip term="LLM" />s (Gemini 1.5 Pro with 1M tokens)
+      to vision. Long-context <GlossaryTooltip term="LLM" />s (Gemini 3 Pro with 2M tokens)
       can ingest hours of video by treating frames as token sequences.
     </li>
     <li>

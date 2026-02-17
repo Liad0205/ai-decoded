@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand the motivation for connecting vision and
@@ -42,21 +43,23 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Traditional computer vision models are trained to
     classify images into a <em>fixed set of categories</em>.
     An ImageNet-trained model knows 1,000 classes ("golden
-    retriever," "fire truck," "pizza"), but cannot recognize
+    retriever," "fire truck," "pizza"), but it cannot recognize
     anything outside this predefined taxonomy. If you need
     to detect "a person wearing a red hat near a bicycle,"
-    you need to collect labeled data, define the class, and
-    retrain.
+    you have to collect labeled data, define the class, and
+    retrain the whole thing.
   </p>
 
   <p>
-    This is fundamentally limiting. Humans don't learn
-    vision this way. We learn to see the world through rich,
-    open-ended descriptions, associating visual experiences
-    with language. A child who has never seen a "pangolin"
-    can still identify one after hearing "it looks like a
-    scaly anteater." Language provides an infinitely
-    flexible interface for describing visual concepts.
+    This is fundamentally limiting. Think about how
+    <em>you</em> learned to see the world. You didn't
+    memorize a fixed list of 1,000 categories. Instead,
+    you learned through rich, open-ended descriptions,
+    associating visual experiences with language. A child
+    who has never seen a "pangolin" can still identify one
+    after hearing "it looks like a scaly anteater." Language
+    provides an infinitely flexible interface for describing
+    visual concepts.
   </p>
 
   <p>
@@ -83,9 +86,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>CLIP Architecture: The Dual Encoder</h2>
 
   <p>
-    CLIP's architecture is elegant in its simplicity: two
-    separate encoders that map images and text into the same
-    embedding space.
+    Here's the thing: CLIP's architecture is elegant in its
+    simplicity. Imagine two translators working side by side,
+    one fluent in images and the other in text, both
+    converting their inputs into the same "universal
+    language" (an embedding space) so you can directly
+    compare any image with any piece of text.
   </p>
 
   <h3>Image Encoder</h3>
@@ -126,7 +132,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     Both encoders project their outputs into a shared
-    embedding space using linear projection layers:
+    embedding space using linear projection layers. The
+    formula below takes each encoder's raw output, multiplies
+    it by a learned projection matrix, and then normalizes
+    the result so every embedding has length 1:
   </p>
 
   <MathBlock
@@ -135,26 +144,29 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: each encoder's output is linearly projected
-    into the shared embedding space and then L2-normalized,
-    so that comparing any image embedding with any text
-    embedding via dot product gives their cosine similarity
-    directly.
+    Read this as: "Take the encoder output, multiply by a
+    learned weight matrix, then divide by the vector's length
+    to normalize it." Each encoder's output is linearly
+    projected into the shared embedding space and then
+    L2-normalized, so that comparing any image embedding with
+    any text embedding via a simple dot product gives their
+    cosine similarity directly.
   </p>
 
   <p>
-    The embeddings are L2-normalized to the unit
-    hypersphere, so the dot product equals the cosine
-    similarity. This normalization is important: it prevents
-    the model from "cheating" by scaling embeddings to
-    increase logits, forcing it to learn meaningful
-    directional relationships.
+    You might wonder why the normalization matters. By
+    constraining all embeddings to the unit hypersphere (so
+    the dot product equals cosine similarity), you prevent
+    the model from "cheating" by simply scaling embeddings
+    to inflate logits. Instead, it must learn meaningful
+    directional relationships between images and text.
   </p>
 </section>
 
 <Diagram
   diagramId="clip-architecture"
   title="CLIP Architecture: Dual Encoder with Contrastive Learning"
+  autoplay={true}
 >
   <div
     class="bg-[hsl(var(--card))] p-4 rounded"
@@ -162,13 +174,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div class="flex flex-col items-center gap-4">
       <!-- Input pair -->
       <div
-        class="flex items-center gap-16"
+        class="flex flex-col sm:flex-row items-center gap-4 sm:gap-16"
         data-animate
         style="animation-delay: 0.2s"
       >
         <div class="flex flex-col items-center">
           <div
-            class="w-16 h-16 bg-gradient-to-br from-sky-300 to-indigo-400 rounded-lg mb-2 flex items-center justify-center text-white text-lg"
+            class="w-16 h-16 bg-[hsl(var(--diagram-indigo-solid))] rounded-lg mb-2 flex items-center justify-center text-white text-lg"
           >
             img
           </div>
@@ -176,7 +188,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         </div>
         <div class="flex flex-col items-center">
           <div
-            class="w-48 h-10 bg-gradient-to-r from-emerald-200 to-teal-200 rounded-lg mb-2 flex items-center justify-center text-sm text-[hsl(var(--diagram-emerald-fg))]"
+            class="w-48 h-10 bg-[hsl(var(--diagram-emerald-bg))] rounded-lg mb-2 flex items-center justify-center text-sm text-[hsl(var(--diagram-emerald-fg))]"
           >
             "a photo of a cat"
           </div>
@@ -186,7 +198,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Encoders -->
       <div
-        class="flex items-center gap-16"
+        class="flex flex-col sm:flex-row items-center gap-4 sm:gap-16"
         data-animate
         style="animation-delay: 0.6s"
       >
@@ -248,133 +260,133 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         >
           Contrastive Loss Matrix (N x N)
         </div>
-        <div class="grid grid-cols-5 gap-1 w-52 mx-auto">
+        <div class="grid grid-cols-5 gap-1 max-w-52 w-full mx-auto">
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
 
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
+            class="h-8 bg-[hsl(var(--diagram-red-bg))] rounded-sm flex items-center justify-center text-[hsl(var(--diagram-red-fg))] text-xs"
           >
             -
           </div>
           <div
-            class="w-10 h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
+            class="h-8 bg-[hsl(var(--diagram-emerald-solid))] rounded-sm flex items-center justify-center text-white text-xs font-bold"
           >
             +
           </div>
@@ -397,7 +409,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     CLIP is trained on a massive dataset of <strong
       >400 million image-text pairs</strong
     > (the WebImageText / WIT dataset) scraped from the internet.
-    The training objective is <strong
+    That is a staggering amount of data, roughly one image-text
+    pair for every person in the United States. The training
+    objective is <strong
       >symmetric contrastive learning</strong
     > using InfoNCE loss.
   </p>
@@ -405,11 +419,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>How Contrastive Learning Works</h3>
 
   <p>
-    Given a batch of <MathBlock formula="N" /> image-text pairs,
-    CLIP computes all <MathBlock formula={"N^2"} /> pairwise similarities.
-    The N matched pairs (image_i, text_i) are <strong
-      >positives</strong
-    >, and the <MathBlock formula={"N^2 - N"} /> mismatched pairs
+    Think of it like a matching game. Given a batch of <MathBlock
+    formula="N" /> image-text pairs, CLIP computes all <MathBlock
+    formula={"N^2"} /> pairwise similarities. The N matched
+    pairs (image_i, text_i) are <strong>positives</strong>,
+    and the <MathBlock formula={"N^2 - N"} /> mismatched pairs
     are <strong>negatives</strong>. The model learns to
     maximize similarity for positive pairs while minimizing
     similarity for negative pairs.
@@ -419,7 +433,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     The similarity between image <MathBlock formula="i" /> and
-    text <MathBlock formula="j" /> is:
+    text <MathBlock formula="j" /> is computed by taking their
+    dot product and scaling it by a learned temperature. Think
+    of it like a "compatibility score" between an image and a
+    caption:
   </p>
 
   <MathBlock
@@ -428,9 +445,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the similarity logit between image i and text
-    j is their dot product (cosine similarity, since both
-    are normalized) scaled by a learned temperature.
+    In plain English: multiply the image embedding by the text
+    embedding (a dot product, which equals cosine similarity
+    since both are normalized), then scale by a learned
+    temperature parameter.
   </p>
 
   <p>
@@ -446,7 +464,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     CLIP learns to align images and text in a shared
     embedding space by training on image-caption pairs. The
     contrastive objective pushes matching image-text pairs
-    together and non-matching pairs apart. Mathematically:
+    together and non-matching pairs apart. The image loss
+    asks: "For each image, can the model pick out the
+    correct caption from all N captions in the batch?"
   </p>
 
   <MathBlock
@@ -454,10 +474,26 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     display={true}
   />
 
+  <p>
+    Read this as: "For each image i, compute a softmax over
+    its similarities with all N texts, and penalize the model
+    when the correct text doesn't get the highest score."
+    The text loss is the mirror image, asking each caption to
+    find its correct image:
+  </p>
+
   <MathBlock
     formula={"\\mathcal{L}_{\\text{text}} = -\\frac{1}{N} \\sum_{i=1}^{N} \\log \\frac{\\exp(s_{ii})}{\\sum_{j=1}^{N} \\exp(s_{ji})}"}
     display={true}
   />
+
+  <p>
+    Read this as: "For each text i, compute a softmax over
+    its similarities with all N images, and penalize the
+    model when the correct image doesn't get the highest
+    score." Finally, the total CLIP loss is just the average
+    of both directions:
+  </p>
 
   <MathBlock
     formula={"\\mathcal{L}_{\\text{CLIP}} = \\frac{1}{2}(\\mathcal{L}_{\\text{img}} + \\mathcal{L}_{\\text{text}})"}
@@ -465,19 +501,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    In words: for each image in the batch, maximize the
-    similarity with its correct caption while minimizing
-    similarity with all other captions (the image loss), and
-    vice versa for each caption (the text loss). The final
-    CLIP loss is the average of both directions.
+    In plain English: average the image-to-text loss and the
+    text-to-image loss. This symmetric design ensures the
+    model gets equally good at matching in both directions.
   </p>
 
   <p>
-    Each loss term is essentially a softmax cross-entropy
-    loss where the "correct class" is the matching pair.
-    With a batch size of 32,768 (as used by CLIP), each
-    positive pair is contrasted against 32,767 negatives,
-    providing an extraordinarily rich training signal.
+    If you've worked with classification before, you'll
+    recognize that each loss term is essentially a softmax
+    cross-entropy loss where the "correct class" is the
+    matching pair. With a batch size of 32,768 (as used by
+    CLIP), each positive pair is contrasted against 32,767
+    negatives, providing an extraordinarily rich training
+    signal.
   </p>
 
   <RevealSection
@@ -579,11 +615,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Zero-Shot Classification</h2>
 
   <p>
-    CLIP's most remarkable capability is <strong
-      >zero-shot image classification</strong
-    >: classifying images into arbitrary categories without
-    any training examples, using only natural language
-    descriptions.
+    Now for the payoff. CLIP's most remarkable capability is
+    <strong>zero-shot image classification</strong>:
+    classifying images into arbitrary categories without any
+    training examples, using only natural language
+    descriptions. You simply describe the categories you
+    care about in plain English, and CLIP does the rest.
   </p>
 
   <h3>How It Works</h3>
@@ -676,10 +713,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     While CLIP uses a softmax-based InfoNCE loss, <strong
-      >SigLIP</strong
+      ><GlossaryTooltip term="SigLIP" /></strong
     > (Sigmoid Loss for Language-Image Pre-training, Zhai et al.
     2023) replaces it with a simpler sigmoid loss that operates
-    on individual pairs:
+    on individual pairs. Instead of asking "which caption is the
+    best match?" (softmax over the batch), SigLIP asks each pair
+    independently: "do these match, yes or no?"
   </p>
 
   <MathBlock
@@ -688,11 +727,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: instead of a single softmax over the entire
-    batch, SigLIP applies an independent binary
-    classification (sigmoid) to each image-text pair, asking
-    "do these match or not?" This eliminates the need for
-    global normalization across the batch.
+    In plain English: for every possible image-text pair in
+    the batch, apply a sigmoid (binary yes/no) classifier to
+    decide whether they match. This eliminates the need for
+    global normalization across the entire batch.
   </p>
 
   <p>
@@ -707,10 +745,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     The softmax in InfoNCE requires computing over the <em
       >entire batch</em
     >, which creates a communication bottleneck in
-    distributed training. With 1000s of GPUs, gathering all
-    embeddings to compute the full softmax is expensive. The
-    sigmoid loss operates on <em>independent pairs</em>,
-    eliminating this global synchronization:
+    distributed training. Imagine coordinating 1,000s of
+    GPUs just to compute one softmax denominator. The
+    sigmoid loss sidesteps this entirely by operating on
+    <em>independent pairs</em>, eliminating the need for
+    global synchronization:
   </p>
   <ul>
     <li>
@@ -750,9 +789,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     OpenAI released the CLIP model weights but not the
-    training code or data. The <strong>OpenCLIP</strong> project
-    (Ilharco et al.) reproduced CLIP training and open-sourced
-    both the code and trained models. Key contributions:
+    training code or data. If you wanted to reproduce or
+    build on CLIP, you were out of luck. The <strong
+    >OpenCLIP</strong> project (Ilharco et al.) changed that
+    by reproducing CLIP training and open-sourcing both the
+    code and trained models. Key contributions:
   </p>
   <ul>
     <li>
@@ -780,8 +821,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>CLIP's Role in the Generative AI Ecosystem</h3>
 
   <p>
-    CLIP's influence extends far beyond classification. It
-    is a foundational component in:
+    You might be surprised by how far CLIP's influence
+    extends beyond classification. It is a foundational
+    component in:
   </p>
   <ul>
     <li>
@@ -801,7 +843,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Multimodal models</strong>: Many
       vision-language models use CLIP or SigLIP as their
-      vision encoder (LLaVA, GPT-4V, Gemini)
+      vision encoder (LLaVA, GPT-5.2, Gemini)
     </li>
     <li>
       <strong>CLIP-guided optimization</strong>: Using CLIP
@@ -850,7 +892,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Limitations and Failure Modes</h2>
 
   <p>
-    Understanding CLIP's limitations is crucial for using it
+    Before you reach for CLIP in your next project,
+    understanding its limitations is crucial for using it
     effectively:
   </p>
 

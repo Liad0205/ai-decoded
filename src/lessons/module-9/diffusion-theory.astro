@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand the forward and reverse diffusion processes
@@ -46,18 +47,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </h2>
 
   <p>
-    Diffusion models are built on a striking idea: learning
+    Diffusion models are built on a beautifully simple idea: learning
     to generate data by learning to <strong
       >reverse a gradual corruption process</strong
     >. Imagine dropping ink into water. The ink slowly
     diffuses until the water is uniformly colored, becoming
-    pure noise. If we could train a neural network to
-    reverse this process, we could start from uniform noise
-    and reconstruct the original ink pattern.
+    pure noise. Now, if you could train a neural network to
+    reverse this process, you could start from uniform noise
+    and reconstruct the original ink pattern. That's the entire concept.
   </p>
 
   <p>
-    More formally, diffusion models define two processes:
+    More formally, diffusion models define two complementary processes:
   </p>
   <ol>
     <li>
@@ -74,7 +75,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     This framework has several remarkable properties:
-    training is stable (no adversarial dynamics like GANs),
+    training is stable (no adversarial dynamics like <GlossaryTooltip term="GAN" />s),
     the objective has a clean mathematical derivation, and
     the generated samples achieve state-of-the-art quality
     across images, audio, video, and 3D content.
@@ -88,7 +89,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Starting from a data sample <MathBlock
       formula={"x_0 \\sim q(x_0)"}
     />, the forward process defines a Markov chain that
-    progressively adds Gaussian noise over T timesteps:
+    progressively adds Gaussian noise over T timesteps. Each step takes the slightly noisy image from the previous step and makes it a little noisier:
   </p>
 
   <div class="equation-sequence">
@@ -98,10 +99,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />
 
     <p>
-      Here <MathBlock formula={"\\beta_t \\in (0, 1)"} /> is the
+      Read this as: "the noisy version at step t is a Gaussian centered on a slightly shrunken version of the previous step, with noise controlled by <MathBlock formula={"\\beta_t"} />." Here <MathBlock formula={"\\beta_t \\in (0, 1)"} /> is the
       <strong>noise schedule</strong>, controlling how much
-      noise is added at each step. The full forward process
-      is:
+      noise you add at each step. The full forward process
+      is just the chain of all T such steps:
     </p>
 
     <MathBlock
@@ -111,27 +112,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </div>
 
   <p>
-    Intuition: each step takes the previous image, shrinks
+    Think of it this way: each step takes the previous image, shrinks
     it slightly (by <MathBlock
       formula={"\\sqrt{1 - \\beta_t}"}
     />), and adds a small amount of Gaussian noise. The
     noise schedule <MathBlock formula={"\\beta_t"} /> controls
-    the shrink-vs-noise tradeoff at each step. The full forward
-    process is simply the chain of all T such steps applied in
-    sequence.
+    the shrink-vs-noise tradeoff at each step. The product formula above simply says "apply all T of these steps in sequence." Don't worry about memorizing the exact form; the key idea is that each step nudges the image a little closer to pure static.
   </p>
 
   <h3>The Reparameterization Trick: Direct Sampling</h3>
 
   <p>
-    A critical property: we can sample <MathBlock
+    Here's the good news: you don't actually need to run all T steps one by one. You can jump directly to any noisy version <MathBlock
       formula="x_t"
-    /> directly from <MathBlock formula="x_0" /> without iterating
-    through all intermediate steps. Define <MathBlock
+    /> from the clean image <MathBlock formula="x_0" /> in a single shot. Define <MathBlock
       formula={"\\alpha_t = 1 - \\beta_t"}
-    /> and <MathBlock
+    /> (the fraction of signal kept at step t) and <MathBlock
       formula={"\\bar{\\alpha}_t = \\prod_{s=1}^{t} \\alpha_s"}
-    />. Then:
+    /> (the cumulative signal remaining after t steps). Then:
   </p>
 
   <div class="equation-sequence">
@@ -141,7 +139,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />
 
     <p>
-      Or equivalently, using the reparameterization trick
+      In plain English: the noisy image at step t is a Gaussian centered on the original image (scaled down) with variance determined by how much total noise has accumulated. Or equivalently, using the reparameterization trick
       with <MathBlock
         formula={"\\epsilon \\sim \\mathcal{N}(0, I)"}
       />:
@@ -153,6 +151,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />
   </div>
 
+  <p>
+    Read this as: "the noisy image equals some fraction of the original clean image plus some fraction of random noise." The two fractions always add up (in a squared sense) so the total magnitude stays controlled.
+  </p>
+
   <ul>
     <li>
       <MathBlock formula={"\\alpha_t = 1 - \\beta_t"} /> is the
@@ -161,7 +163,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <MathBlock
         formula={"\\bar{\\alpha}_t = \\prod_{s=1}^{t} \\alpha_s"}
-      /> is the cumulative product -- the fraction of original
+      /> is the cumulative product, representing the fraction of original
       signal surviving after t steps
     </li>
     <li>
@@ -172,18 +174,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    This closed-form expression means we can jump directly
+    This closed-form expression means you can jump directly
     to any noisy version <MathBlock formula="x_t" /> without simulating
-    all intermediate steps -- a key efficiency win for training,
+    all intermediate steps. This is a key efficiency win for training,
     since each training iteration only needs a single random timestep.
   </p>
 
   <p>
-    This is simply a weighted mixture of the original data
+    The core idea is that this is simply a weighted mixture of the original data
     and pure noise. As <MathBlock formula={"t \\to T"} />, <MathBlock
       formula={"\\bar{\\alpha}_t \\to 0"}
     />, so <MathBlock formula={"x_T \\approx \\epsilon"} /> (the
-    signal is completely destroyed).
+    signal is completely destroyed). You start with a recognizable photo and end with TV static.
   </p>
 
   <RevealSection
@@ -219,6 +221,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         formula={"x_t = \\sqrt{\\alpha_t \\alpha_{t-1}}\\, x_{t-2} + \\sqrt{\\alpha_t \\beta_{t-1}}\\, \\epsilon_{t-1} + \\sqrt{\\beta_t}\\, \\epsilon_t"}
         display={true}
       />
+      <p>In plain English: we now express the noisy image in terms of two steps back, with two separate noise terms.</p>
       <button
         type="button"
         class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
@@ -231,14 +234,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div data-reveal-step>
       <h4>Step 3: Combining Gaussian Noise</h4>
       <p>
-        The sum of two independent Gaussians <MathBlock
+        A handy property of Gaussians: the sum of two independent Gaussians <MathBlock
           formula={"\\mathcal{N}(0, \\sigma_1^2 I) + \\mathcal{N}(0, \\sigma_2^2 I) = \\mathcal{N}(0, (\\sigma_1^2 + \\sigma_2^2) I)"}
-        />. The combined noise variance is:
+        />. This lets us merge the two noise terms into one. The combined noise variance is:
       </p>
       <MathBlock
         formula={"\\alpha_t \\beta_{t-1} + \\beta_t = \\alpha_t(1 - \\alpha_{t-1}) + (1 - \\alpha_t) = 1 - \\alpha_t \\alpha_{t-1}"}
         display={true}
       />
+      <p>Read this as: the total noise after two steps depends only on the product of the two signal-keeping fractions.</p>
       <button
         type="button"
         class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
@@ -404,12 +408,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     The noise schedule <MathBlock
       formula={"\\{\\beta_t\\}_{t=1}^T"}
     /> controls the rate of diffusion and significantly affects
-    both training and generation quality.
+    both training and generation quality. You might wonder: does the exact schedule matter much? As it turns out, yes, it matters a lot.
   </p>
 
   <h3>Linear Schedule (DDPM, 2020)</h3>
   <p>
-    The original DDPM used a linear schedule from <MathBlock
+    The original <GlossaryTooltip term="DDPM" /> used a linear schedule from <MathBlock
       formula={"\\beta_1 = 10^{-4}"}
     /> to <MathBlock formula={"\\beta_T = 0.02"} /> over T = 1000
     steps. This was chosen empirically, but has a weakness: at
@@ -428,9 +432,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Nichol and Dhariwal proposed the <strong
       >cosine schedule</strong
-    >, defined via <MathBlock
+    >, which defines the cumulative signal <MathBlock
       formula={"\\bar{\\alpha}_t"}
-    /> directly:
+    /> directly using a cosine curve. The idea is that a cosine shape produces a smooth, S-shaped decay of signal, avoiding the "too much noise too fast" problem of the linear schedule:
   </p>
 
   <MathBlock
@@ -439,18 +443,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    where s = 0.008 is a small offset preventing <MathBlock
+    In plain English: the signal remaining at step t follows a cosine curve from 1 (all signal) to 0 (all noise). The small offset s = 0.008 prevents <MathBlock
       formula={"\\beta_t"}
-    /> from being too small near t = 0. The cosine schedule produces
-    a more gradual noise level increase, preserving more structure
+    /> from being too small near t = 0. Don't worry about memorizing this formula; the key takeaway is that the cosine schedule produces
+    a more gradual noise increase, preserving more structure
     at intermediate timesteps and improving sample quality.
   </p>
 
   <h3>Signal-to-Noise Ratio (SNR) Perspective</h3>
   <p>
-    The noise schedule can be analyzed through the <strong
+    A useful way to think about any noise schedule is through the <strong
       >signal-to-noise ratio</strong
-    >:
+    >. This tells you how much original signal remains relative to how much noise has been added:
   </p>
 
   <MathBlock
@@ -459,12 +463,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
+    Read this as: "signal fraction divided by noise fraction." When SNR is high, the image is mostly clean; when SNR is near zero, it's mostly noise.
+  </p>
+
+  <p>
     A good schedule ensures SNR decreases monotonically from
     high (clean data) to near-zero (pure noise), with the
     rate of decrease distributing learning signal evenly
-    across timesteps. A uniform distribution of SNR in
-    log-space matters because the model must learn to
-    denoise at every noise level: if certain SNR ranges are
+    across timesteps. Why does this matter? Because the model must learn to
+    denoise at every noise level. If certain SNR ranges are
     over-represented, the model wastes capacity on those
     levels while under-learning others. The cosine schedule
     achieves a more uniform distribution of SNR in log-space
@@ -478,10 +485,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Reverse Process and Training Objective</h2>
 
   <p>
-    The reverse process is where learning happens. We want
+    The reverse process is where the real learning happens. We want
     to learn <MathBlock
       formula={"p_\\theta(x_{t-1} \\mid x_t)"}
-    /> that reverses the forward corruption. The key theoretical
+    />, which reverses the forward corruption. Here's the key theoretical
     result: if the forward steps are small enough, the reverse
     transitions are also approximately Gaussian:
   </p>
@@ -492,12 +499,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Each reverse step is a Gaussian with a learned mean <MathBlock
+    Read this as: "each denoising step outputs a Gaussian distribution, and a neural network predicts its mean <MathBlock
       formula={"\\mu_\\theta"}
     /> and covariance <MathBlock
       formula={"\\Sigma_\\theta"}
-    />, both predicted by a neural network conditioned on
-    the current noisy image and the timestep.
+    />." The network takes in the current noisy image along with a timestep indicator, and outputs its best guess at what a slightly-less-noisy version looks like.
   </p>
 
   <p>
@@ -514,26 +520,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     In words: start from pure noise and apply the learned
     denoising step T times. The full generative model is the
-    product of all these individual reverse steps -- a long
+    product of all these individual reverse steps, forming a long
     Markov chain from noise to data.
   </p>
 
   <h3>Deriving the ELBO</h3>
 
   <p>
-    Our goal is to train the reverse process to maximize the
-    probability that generated data looks like real data --
-    formally, to maximize the log-likelihood <MathBlock
+    Our goal is to train the reverse process so that generated data looks like real data. Formally, we want to maximize the log-likelihood <MathBlock
       formula={"\\log p_\\theta(x_0)"}
     />. But computing this directly requires marginalizing
     over all possible denoising paths from <MathBlock
       formula="x_T"
-    /> to <MathBlock formula="x_0" /> -- an intractable integral
-    over a T-dimensional space.
+    /> to <MathBlock formula="x_0" />, which is an intractable integral
+    over a T-dimensional space. You can't just sum over every possible way noise could have been removed.
   </p>
 
   <p>
-    The standard solution in variational inference: derive a
+    The standard solution in variational inference is to derive a
     tractable lower bound on the log-likelihood that we <em
       >can</em
     > optimize. This is the <strong
@@ -542,7 +546,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />)</strong
     >. Maximizing the ELBO pushes up the true
     log-likelihood, since the ELBO is always less than or
-    equal to it. Let's make this precise:
+    equal to it. Let's make this precise. The log-likelihood can be written as an integral over all possible denoising trajectories:
   </p>
 
   <MathBlock
@@ -551,12 +555,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    This integral is intractable because it sums over all
-    possible denoising trajectories. We introduce the
+    This integral is intractable, but we can get around it. We introduce the
     forward process <MathBlock
       formula={"q(x_{1:T} \\mid x_0)"}
     /> as a variational distribution and apply Jensen's inequality
-    to move the log inside the expectation:
+    to move the log inside the expectation, giving us a bound we can actually compute:
   </p>
 
   <MathBlock
@@ -565,12 +568,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    In words: the ELBO measures how well the learned reverse
+    In plain English: the ELBO measures how well the learned reverse
     process <MathBlock formula={"p_\\theta"} /> matches the forward
     process <MathBlock formula="q" />, averaged over noising
-    trajectories. It is a lower bound on the true
-    log-likelihood, and any improvement to the ELBO
-    guarantees improvement to the likelihood.
+    trajectories. The inequality symbol tells you it's a lower bound on the true
+    log-likelihood, so any improvement to the ELBO
+    guarantees improvement to the actual likelihood. Think of it as a "floor" that you keep raising.
   </p>
 
   <RevealSection
@@ -579,11 +582,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   >
     <div data-reveal-step>
       <h4>Step 1: Expand the Joint Distributions</h4>
-      <p>Substituting the Markov factorizations:</p>
+      <p>Since both the forward and reverse processes are Markov chains, we can factor them into products of individual steps:</p>
       <MathBlock
         formula={"\\text{ELBO} = \\mathbb{E}_q\\left[\\log \\frac{p(x_T) \\prod_{t=1}^{T} p_\\theta(x_{t-1} \\mid x_t)}{\\prod_{t=1}^{T} q(x_t \\mid x_{t-1})}\\right]"}
         display={true}
       />
+      <p>Read this as: the ratio of the reverse process (numerator) to the forward process (denominator), summed across all timesteps.</p>
       <button
         type="button"
         class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
@@ -606,6 +610,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         formula={"\\text{ELBO} = \\mathbb{E}_q\\Big[\\underbrace{\\log p_\\theta(x_0 \\mid x_1)}_{L_0} - \\underbrace{D_{\\text{KL}}(q(x_T \\mid x_0) \\| p(x_T))}_{L_T} - \\sum_{t=2}^{T} \\underbrace{D_{\\text{KL}}(q(x_{t-1} \\mid x_t, x_0) \\| p_\\theta(x_{t-1} \\mid x_t))}_{L_{t-1}}\\Big]"}
         display={true}
       />
+      <p>The core idea: the ELBO breaks into T separate terms, one per timestep. Each term asks "how well does the learned reverse step match the ideal reverse step at this noise level?"</p>
       <button
         type="button"
         class="mt-2 px-3 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded text-sm"
@@ -663,7 +668,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           Forward Posterior Distribution
         </p>
       </div>
-      <p>where:</p>
+      <p>where the mean is a weighted combination of the original data and the current noisy image:</p>
       <div class="equation-with-label">
         <MathBlock
           formula={"\\tilde{\\mu}_t = \\frac{\\sqrt{\\bar{\\alpha}_{t-1}} \\beta_t}{1 - \\bar{\\alpha}_t} x_0 + \\frac{\\sqrt{\\alpha_t}(1 - \\bar{\\alpha}_{t-1})}{1 - \\bar{\\alpha}_t} x_t"}
@@ -673,6 +678,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           Mean of Posterior
         </p>
       </div>
+      <p>And the variance depends only on the noise schedule (no learned parameters needed):</p>
       <div class="equation-with-label">
         <MathBlock
           formula={"\\tilde{\\beta}_t = \\frac{(1 - \\bar{\\alpha}_{t-1})}{(1 - \\bar{\\alpha}_t)} \\beta_t"}
@@ -708,7 +714,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Since <MathBlock
       formula={"x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1 - \\bar{\\alpha}_t}\\, \\epsilon"}
-    />, we can express the mean as:
+    />, you can rearrange to express the denoising mean in terms of the predicted noise:
   </p>
 
   <MathBlock
@@ -717,15 +723,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    In words: to compute the denoised mean, take the current
+    Think of it this way: to compute the denoised mean, take the current
     noisy input <MathBlock formula="x_t" />, subtract out
-    the predicted noise (scaled by the noise schedule), then
+    the predicted noise (scaled appropriately by the noise schedule), then
     rescale. This converts the abstract task of "predict the
-    denoised distribution" into the concrete task of
+    denoised distribution" into the concrete, intuitive task of
     "predict what noise was added."
   </p>
 
-  <p>The full ELBO reduces to a remarkably simple loss:</p>
+  <p>Here's the thing that makes diffusion models so elegant. The full ELBO reduces to a remarkably simple loss:</p>
 
   <MathBlock
     formula={"\\mathcal{L}_{\\text{simple}} = \\mathbb{E}_{t, x_0, \\epsilon}\\left[\\| \\epsilon - \\epsilon_\\theta(x_t, t) \\|^2\\right]"}
@@ -733,12 +739,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: sample a random timestep and random noise,
+    In plain English: sample a random timestep and random noise,
     create a noisy version of the training image, and train
     the network to predict the noise that was added. The
     loss is just mean squared error between the true noise
-    and the predicted noise -- as simple as training a
-    denoiser.
+    and the predicted noise. It's as simple as training a
+    denoiser. If you've ever implemented an MSE loss in PyTorch, you already know the hardest part of the code.
   </p>
 
   <p>
@@ -775,8 +781,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     This simplicity is remarkable: diffusion training
     reduces to supervised denoising. No adversarial
-    training, no posterior collapse, no mode collapse. The
-    training signal is clean and consistent at every step.
+    training, no posterior collapse, no mode collapse. If you've
+    trained a supervised model before, you already understand
+    the training loop. The training signal is clean and consistent at every step.
   </p>
 
   <h3>Equivalent Parameterizations</h3>
@@ -812,9 +819,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>DDIM: Accelerating Sampling</h2>
 
   <p>
-    DDPM requires T = 1000 sequential denoising steps for
-    generation, which is slow for practical use. <strong
-      >DDIM</strong
+    <GlossaryTooltip term="DDPM" /> requires T = 1000 sequential denoising steps for
+    generation, which is painfully slow. Generating a single image means running the neural network 1,000 times in sequence. <strong
+      ><GlossaryTooltip term="DDIM" /></strong
     > (Denoising Diffusion Implicit Models, Song et al. 2020)
     breaks this bottleneck by deriving a non-Markovian generalization
     of the forward process.
@@ -824,16 +831,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     DDPM's training objective depends only on the marginals <MathBlock
       formula={"q(x_t \\mid x_0)"}
-    />, not the full Markov chain. DDIM exploits this:
+    />, not the full Markov chain. DDIM exploits this cleverly:
     define a different (non-Markovian) forward process that
-    preserves the same marginals but enables faster
-    sampling.
+    preserves the same marginals but enables you to skip steps during sampling.
   </p>
 
   <p>
-    The DDIM update rule, for a subsequence of timesteps <MathBlock
+    The DDIM update rule works over a subsequence of timesteps <MathBlock
       formula={"\\tau_1, \\tau_2, \\ldots, \\tau_S"}
-    /> where <MathBlock formula={"S \\ll T"} />:
+    /> where <MathBlock formula={"S \\ll T"} /> (for example, 50 steps instead of 1000). This formula looks intimidating, but it has a clean three-part structure:
   </p>
 
   <MathBlock
@@ -842,16 +848,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    The structure of this update has three parts: (1) use
-    the noise prediction to estimate the clean image <MathBlock
+    Don't worry about memorizing this. The three parts are: (1) use
+    the noise prediction to estimate what the clean image <MathBlock
       formula="x_0"
-    />, (2) re-noise it to the target noise level for the
+    /> looks like (the underbrace), (2) re-noise that estimate to the target noise level for the
     next step, and (3) optionally add fresh stochastic noise
     controlled by <MathBlock formula={"\\sigma"} />.
   </p>
 
   <p>
-    where <MathBlock formula={"\\sigma"} /> controls stochasticity:
+    The parameter <MathBlock formula={"\\sigma"} /> controls the stochasticity:
   </p>
   <ul>
     <li>
@@ -892,9 +898,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Score-Based Perspective: Connecting to SDEs</h2>
 
   <p>
-    An alternative but equivalent viewpoint: diffusion
-    models learn the <strong>score function</strong> (gradient
-    of the log-density):
+    There's an alternative but equivalent way to think about diffusion
+    models: they learn the <strong>score function</strong>, which is the gradient
+    of the log-density. The score tells you, at any point in noise-space, which direction leads toward more realistic data:
   </p>
 
   <MathBlock
@@ -903,17 +909,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the score function points in the direction of
-    higher data density. At any noisy point, it answers
+    Think of it this way: imagine you're standing in a foggy landscape. The score function is like a compass that always points toward the nearest hilltop (where the data lives). At any noisy point, it answers
     "which direction should I move to make this look more
-    like real data?" Learning the score is equivalent to
+    like real data?" Learning the score is mathematically equivalent to
     learning to denoise.
   </p>
 
   <p>
     Song et al. (2021) showed that the forward and reverse
     processes can be described by continuous-time stochastic
-    differential equations (SDEs):
+    differential equations (SDEs). This is the continuous-time version of the discrete steps you saw earlier:
   </p>
 
   <div class="equation-sequence">
@@ -923,10 +928,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />
 
     <p>
-      The forward SDE drifts data toward noise. The reverse
+      In plain English: the forward SDE describes how data drifts toward noise over continuous time. The reverse
       SDE undoes this by subtracting a term proportional to
-      the score -- the gradient of the log-density at the
-      current noise level:
+      the score (the gradient of the log-density at the
+      current noise level):
     </p>
 
     <MathBlock
@@ -934,7 +939,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       display={true}
     />
 
-    <p>The connection to noise prediction is direct:</p>
+    <p>
+      Read this as: "to reverse the noising, drift in the direction indicated by the score." And here's where it all connects back to the noise prediction approach you already know:
+    </p>
 
     <MathBlock
       formula={"\\nabla_{x_t} \\log q(x_t \\mid x_0) = -\\frac{\\epsilon}{\\sqrt{1 - \\bar{\\alpha}_t}} \\approx -\\frac{\\epsilon_\\theta(x_t, t)}{\\sqrt{1 - \\bar{\\alpha}_t}}"}
@@ -942,23 +949,27 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />
 
     <p>
-      That is, the score is just the predicted noise
+      In plain English: the score is just the predicted noise
       (negated and rescaled). A network trained to predict
-      noise is implicitly learning the score function.
+      noise is implicitly learning the score function. These are two views of the same thing.
     </p>
   </div>
 
   <p>
     This unification is powerful: epsilon-prediction, score
     matching, and SDE-based generation are all equivalent
-    formulations. It enables using ODE solvers (probability
-    flow ODE) for fast, deterministic sampling. This is a
+    formulations. It also enables using ODE solvers (probability
+    flow ODE) for fast, deterministic sampling, which is essentially a
     continuous-time generalization of DDIM.
   </p>
 </section>
 
 <section>
   <h2>Comparison with Other Generative Models</h2>
+
+  <p>
+    You might be wondering how diffusion models stack up against other approaches you may have heard of. Let's look at the two most important comparisons.
+  </p>
 
   <h3>Diffusion vs. GANs</h3>
   <ul>

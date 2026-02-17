@@ -9,6 +9,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>Understand why most <GlossaryTooltip term="ML" /> models never make it to production and the gap between research and deployment</li>
   <li>Detect and measure data drift and concept drift using statistical tests</li>
@@ -21,7 +22,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h2>The Gap Between ML Research and Production</h2>
 
 <p>
-  Building an ML model that performs well on a held-out test set is only a fraction of the work required to deliver value in production. Google's seminal paper on technical debt in ML systems estimated that the actual ML code in a production system represents perhaps 5% of the total codebase. The remaining 95% is infrastructure: data collection, feature extraction, data verification, configuration management, monitoring, serving, and process management.
+  If you have ever trained a model that nails its test set and thought "we're done," you are in good company. But here's the thing: getting a model to perform well on a held-out test set is only a fraction of the work required to deliver value in production. Google's seminal paper on technical debt in ML systems estimated that the actual ML code in a production system represents perhaps 5% of the total codebase. The remaining 95% is infrastructure: data collection, feature extraction, data verification, configuration management, monitoring, serving, and process management. Think of it like building a car: the engine (your model) matters, but without the chassis, brakes, fuel system, and dashboard, you are not going anywhere.
 </p>
 
 <PaperReference
@@ -32,8 +33,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 />
 
 <p>
-  The failure modes in production are fundamentally different from those in research. In research, you worry about underfitting and overfitting on a static dataset. In production, the data distribution changes continuously, the infrastructure can fail silently, and the consequences of bad predictions affect real users and real revenue. Organizations frequently cite the following challenges:
-
+  The failure modes in production are fundamentally different from those in research. In research, you worry about underfitting and overfitting on a static dataset. In production, the data distribution changes continuously, the infrastructure can fail silently, and the consequences of bad predictions affect real users and real revenue. You might wonder: what exactly goes wrong? Organizations frequently cite the following challenges:
 </p>
 
 <ul>
@@ -51,13 +51,13 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h2>Model Monitoring Fundamentals</h2>
 
 <p>
-  Monitoring is the first line of defense against production failures. Unlike traditional software where you monitor latency, error rates, and throughput, ML systems require all the traditional monitoring (latency, error rates, throughput) plus additional ML-specific dimensions: input data quality, prediction distributions, and model performance metrics. The key insight is that an ML model can be "up" and serving predictions while silently producing garbage.
+  Monitoring is your first line of defense against production failures. Unlike traditional software where you monitor latency, error rates, and throughput, ML systems require all of those traditional metrics plus additional ML-specific dimensions: input data quality, prediction distributions, and model performance metrics. Here's the key insight: an ML model can be "up" and serving predictions while silently producing garbage. It is like a factory that keeps running but starts producing defective parts; nothing crashes, but the output is wrong.
 </p>
 
 <h3>Data Drift: When Input Distributions Change</h3>
 
 <p>
-  <strong>Data drift</strong> (also called covariate shift) occurs when the distribution of input features changes between training and serving time. This happens for many reasons: user demographics shift, seasonal patterns emerge, upstream data pipelines introduce bugs, or the product itself changes how it collects data.
+  <strong>Data drift</strong> (also called covariate shift) occurs when the distribution of input features changes between training and serving time. Imagine you trained a model on summer weather data and then deployed it in winter; the inputs your model sees look nothing like what it learned from. This happens for many reasons: user demographics shift, seasonal patterns emerge, upstream data pipelines introduce bugs, or the product itself changes how it collects data.
 </p>
 
 <p>
@@ -67,13 +67,17 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h4>Population Stability Index (PSI)</h4>
 
 <p>
-  PSI measures the difference between two distributions by binning the data and comparing the proportion of observations in each bin. Given a reference distribution (training data) and a test distribution (production data), PSI is calculated as:
+  PSI measures the difference between two distributions by binning the data and comparing the proportion of observations in each bin. Think of it like dividing a histogram into buckets and asking: "Did the shape of the histogram change?" Given a reference distribution (training data) and a test distribution (production data), PSI is calculated as:
 </p>
 
 <MathBlock formula={"\\text{PSI} = \\sum_{i=1}^{N} (p_i - q_i) \\cdot \\ln\\left(\\frac{p_i}{q_i}\\right)"} display={true} />
 
 <p>
-  where <MathBlock formula={"p_i"} /> is the proportion in bin <MathBlock formula={"i"} /> for the test distribution and <MathBlock formula={"q_i"} /> is the proportion for the reference distribution. Interpretation thresholds are commonly:
+  <strong>In plain English:</strong> for each bin, you take the difference in proportions between the test and reference distributions, multiply it by the log of their ratio, and sum the results. If the two distributions are identical, PSI is zero. The more they diverge, the larger the PSI value.
+</p>
+
+<p>
+  Here, <MathBlock formula={"p_i"} /> is the proportion in bin <MathBlock formula={"i"} /> for the test distribution and <MathBlock formula={"q_i"} /> is the proportion for the reference distribution. Interpretation thresholds are commonly:
 </p>
 
 <ul>
@@ -89,10 +93,14 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h4>Kolmogorov-Smirnov (KS) Test</h4>
 
 <p>
-  The KS test is a non-parametric test that compares two distributions by finding the maximum difference between their cumulative distribution functions:
+  The KS test is a non-parametric test that compares two distributions by finding the maximum difference between their cumulative distribution functions. Imagine plotting both CDFs on the same graph and measuring the biggest vertical gap between them:
 </p>
 
 <MathBlock formula={"D = \\sup_x |F_{\\text{ref}}(x) - F_{\\text{test}}(x)|"} display={true} />
+
+<p>
+  <strong>Read this as:</strong> D is the largest absolute difference between the reference CDF and the test CDF across all possible values of x. A small D means the distributions are similar; a large D means they have diverged.
+</p>
 
 <p>
   The KS test provides a p-value: a low p-value (typically &lt; 0.05) indicates statistically significant drift. Unlike PSI, the KS test does not require binning and works well for continuous features.
@@ -101,19 +109,23 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h4>KL Divergence</h4>
 
 <p>
-  Kullback-Leibler divergence measures how one probability distribution diverges from a reference distribution:
+  Kullback-Leibler divergence measures how one probability distribution diverges from a reference distribution. You can think of it as asking: "How surprised would I be if I thought the data came from distribution Q, but it actually came from distribution P?"
 </p>
 
 <MathBlock formula={"D_{\\text{KL}}(P \\| Q) = \\sum_{x} P(x) \\ln\\left(\\frac{P(x)}{Q(x)}\\right)"} display={true} />
 
 <p>
-  KL divergence is asymmetric (<MathBlock formula={"D_{\\text{KL}}(P \\| Q) \\neq D_{\\text{KL}}(Q \\| P)"} />), which can be unintuitive. The Jensen-Shannon divergence (a symmetrized version) is often preferred for monitoring. KL divergence is unbounded and equals zero only when the distributions are identical.
+  <strong>In plain English:</strong> for each possible outcome x, you weight the log-ratio of the two distributions' probabilities by the probability under P, then sum up. If P and Q are identical, every ratio is 1 (log of 1 is 0), so the divergence is zero. The more they differ, the larger the value.
+</p>
+
+<p>
+  One thing to watch out for: KL divergence is asymmetric (<MathBlock formula={"D_{\\text{KL}}(P \\| Q) \\neq D_{\\text{KL}}(Q \\| P)"} />), which can be unintuitive. The Jensen-Shannon divergence (a symmetrized version) is often preferred for monitoring. KL divergence is unbounded and equals zero only when the distributions are identical.
 </p>
 
 <h3>Concept Drift: When Relationships Change</h3>
 
 <p>
-  <strong>Concept drift</strong> is more insidious than data drift. Even if the input distribution remains stable, the underlying relationship between inputs and outputs can change. For example:
+  <strong>Concept drift</strong> is more insidious than data drift. Even if the input distribution remains stable, the underlying relationship between inputs and outputs can change. Think of it this way: the exam questions look the same, but the correct answers have changed. For example:
 </p>
 
 <ul>
@@ -147,50 +159,60 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
   <li><strong>Infrastructure metrics</strong>: Latency, throughput, error rates, GPU utilization, memory usage. These are standard SRE metrics but are equally critical for ML systems.</li>
 </ul>
 
-<Diagram diagramId="ml-lifecycle-diagram" title="The ML Production Lifecycle">
+<Diagram diagramId="ml-lifecycle-diagram" title="The ML Production Lifecycle" autoplay={true}>
   <div class="bg-[hsl(var(--card))] p-6 rounded w-full">
     <svg viewBox="0 0 500 400" class="w-full max-w-lg mx-auto" xmlns="http://www.w3.org/2000/svg">
       <!-- Circular arrows -->
       <defs>
         <marker id="arrowhead-lc" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" fill="#6366f1" />
+          <polygon points="0 0, 8 3, 0 6" class="fill-[hsl(var(--diagram-indigo-solid))]" />
         </marker>
       </defs>
 
       <!-- Train -->
-      <rect x="190" y="20" width="120" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-      <text x="250" y="50" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e40af">Train</text>
+      <g data-animate="fade-up" style="--delay: 0ms">
+        <rect x="190" y="20" width="120" height="50" rx="8" class="fill-[hsl(var(--diagram-blue-bg))] stroke-[hsl(var(--diagram-blue-border))]" stroke-width="2"/>
+        <text x="250" y="50" text-anchor="middle" font-size="14" font-weight="bold" class="fill-[hsl(var(--diagram-blue-fg))]">Train</text>
+      </g>
 
       <!-- Validate -->
-      <rect x="370" y="130" width="120" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
-      <text x="430" y="160" text-anchor="middle" font-size="14" font-weight="bold" fill="#92400e">Validate</text>
+      <g data-animate="fade-up" style="--delay: 150ms">
+        <rect x="370" y="130" width="120" height="50" rx="8" class="fill-[hsl(var(--diagram-amber-bg))] stroke-[hsl(var(--diagram-amber-border))]" stroke-width="2"/>
+        <text x="430" y="160" text-anchor="middle" font-size="14" font-weight="bold" class="fill-[hsl(var(--diagram-amber-fg))]">Validate</text>
+      </g>
 
       <!-- Deploy -->
-      <rect x="330" y="290" width="120" height="50" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
-      <text x="390" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="#065f46">Deploy</text>
+      <g data-animate="fade-up" style="--delay: 300ms">
+        <rect x="330" y="290" width="120" height="50" rx="8" class="fill-[hsl(var(--diagram-emerald-bg))] stroke-[hsl(var(--diagram-emerald-border))]" stroke-width="2"/>
+        <text x="390" y="320" text-anchor="middle" font-size="14" font-weight="bold" class="fill-[hsl(var(--diagram-emerald-fg))]">Deploy</text>
+      </g>
 
       <!-- Monitor -->
-      <rect x="50" y="290" width="120" height="50" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
-      <text x="110" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="#9d174d">Monitor</text>
+      <g data-animate="fade-up" style="--delay: 450ms">
+        <rect x="50" y="290" width="120" height="50" rx="8" class="fill-[hsl(var(--diagram-rose-bg))] stroke-[hsl(var(--diagram-rose-border))]" stroke-width="2"/>
+        <text x="110" y="320" text-anchor="middle" font-size="14" font-weight="bold" class="fill-[hsl(var(--diagram-rose-fg))]">Monitor</text>
+      </g>
 
       <!-- Retrain -->
-      <rect x="10" y="130" width="120" height="50" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
-      <text x="70" y="160" text-anchor="middle" font-size="14" font-weight="bold" fill="#5b21b6">Retrain</text>
+      <g data-animate="fade-up" style="--delay: 600ms">
+        <rect x="10" y="130" width="120" height="50" rx="8" class="fill-[hsl(var(--diagram-purple-bg))] stroke-[hsl(var(--diagram-purple-border))]" stroke-width="2"/>
+        <text x="70" y="160" text-anchor="middle" font-size="14" font-weight="bold" class="fill-[hsl(var(--diagram-purple-fg))]">Retrain</text>
+      </g>
 
       <!-- Arrows: Train -> Validate -->
-      <line x1="310" y1="55" x2="375" y2="130" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <line data-animate="fade-up" style="--delay: 750ms" x1="310" y1="55" x2="375" y2="130" class="stroke-[hsl(var(--diagram-indigo-solid))]" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
       <!-- Validate -> Deploy -->
-      <line x1="430" y1="180" x2="410" y2="290" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <line data-animate="fade-up" style="--delay: 850ms" x1="430" y1="180" x2="410" y2="290" class="stroke-[hsl(var(--diagram-indigo-solid))]" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
       <!-- Deploy -> Monitor -->
-      <line x1="330" y1="315" x2="170" y2="315" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <line data-animate="fade-up" style="--delay: 950ms" x1="330" y1="315" x2="170" y2="315" class="stroke-[hsl(var(--diagram-indigo-solid))]" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
       <!-- Monitor -> Retrain -->
-      <line x1="80" y1="290" x2="70" y2="180" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <line data-animate="fade-up" style="--delay: 1050ms" x1="80" y1="290" x2="70" y2="180" class="stroke-[hsl(var(--diagram-indigo-solid))]" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
       <!-- Retrain -> Train -->
-      <line x1="100" y1="130" x2="195" y2="65" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
+      <line data-animate="fade-up" style="--delay: 1150ms" x1="100" y1="130" x2="195" y2="65" class="stroke-[hsl(var(--diagram-indigo-solid))]" stroke-width="2" marker-end="url(#arrowhead-lc)"/>
 
       <!-- Center label -->
-      <text x="250" y="195" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Continuous</text>
-      <text x="250" y="212" text-anchor="middle" font-size="12" fill="#475569" font-style="italic">Improvement</text>
+      <text data-animate="fade-up" style="--delay: 1250ms" x="250" y="195" text-anchor="middle" font-size="12" class="fill-[hsl(var(--muted-foreground))]" font-style="italic">Continuous</text>
+      <text data-animate="fade-up" style="--delay: 1250ms" x="250" y="212" text-anchor="middle" font-size="12" class="fill-[hsl(var(--muted-foreground))]" font-style="italic">Improvement</text>
     </svg>
     <p class="text-sm text-[hsl(var(--muted-foreground))] text-center mt-3">The ML lifecycle is circular: models are trained, validated, deployed, monitored, and retrained as data and requirements change.</p>
   </div>
@@ -199,7 +221,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h2>A/B Testing for ML Models</h2>
 
 <p>
-  A/B testing is the gold standard for evaluating whether a new ML model actually improves business outcomes in production. Offline evaluation metrics (accuracy, AUC, BLEU) are necessary but not sufficient. They do not capture the full picture of how a model interacts with users in a live environment.
+  A/B testing is the gold standard for evaluating whether a new ML model actually improves business outcomes in production. You might have great offline evaluation metrics (accuracy, AUC, BLEU), but those are necessary and not sufficient. They do not capture the full picture of how a model interacts with users in a live environment. The only way to truly know if your model is better is to put it in front of real users and measure what happens.
 </p>
 
 <h3>Statistical Foundations</h3>
@@ -253,7 +275,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h2>Experiment Tracking</h2>
 
 <p>
-  Experiment tracking tools record everything needed to reproduce and compare ML experiments: hyperparameters, metrics, code versions, data versions, and artifacts.
+  If you have ever tried to reproduce an ML experiment from three months ago and found yourself asking "which version of the data did I use?" or "what learning rate was that?", you already understand why experiment tracking matters. Experiment tracking tools record everything needed to reproduce and compare ML experiments: hyperparameters, metrics, code versions, data versions, and artifacts.
 </p>
 
 <h3>Weights &amp; Biases (W&amp;B)</h3>
@@ -286,7 +308,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h3>Tracking Reproducibility</h3>
 
 <p>
-  A truly reproducible experiment requires tracking five dimensions:
+  A truly reproducible experiment requires tracking five dimensions. Miss any one of them, and you may find yourself unable to recreate your best result:
 </p>
 
 <ul>
@@ -300,7 +322,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h2>Model Registries and Versioning</h2>
 
 <p>
-  A model registry is the bridge between experimentation and production. It provides a central catalog of trained models with metadata, versioning, and lifecycle management.
+  A model registry is the bridge between experimentation and production. Think of it as a library catalog for your models: it provides a central catalog of trained models with metadata, versioning, and lifecycle management. Without one, you end up with model files scattered across file systems and S3 buckets, and nobody knows which version is actually running in production.
 </p>
 
 <h3>Staging to Production Promotion</h3>
@@ -331,7 +353,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h2>Deployment Strategies</h2>
 
 <p>
-  Deploying a new ML model is inherently risky. Unlike traditional software deployments where a bug typically produces an error, a bad ML model silently produces incorrect predictions. Deployment strategies manage this risk by controlling the exposure of new models to production traffic.
+  Deploying a new ML model is inherently risky, and if you have ever shipped a buggy software release, you know the feeling. But here is what makes ML deployments even trickier: unlike traditional software where a bug typically produces an error, a bad ML model silently produces incorrect predictions. Deployment strategies manage this risk by controlling the exposure of new models to production traffic.
 </p>
 
 <h3>Canary Deployments</h3>
@@ -371,7 +393,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h3>Shadow Deployments</h3>
 
 <p>
-  In shadow mode, the new model receives a copy of production traffic and generates predictions, but its predictions are never served to users. Instead, its predictions are logged and compared to the current production model.
+  Shadow deployments are like a dress rehearsal for your model. In shadow mode, the new model receives a copy of production traffic and generates predictions, but its predictions are never served to users. Instead, its predictions are logged and compared to the current production model.
 </p>
 
 <ul>
@@ -399,7 +421,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <h2>Putting It All Together: The Monitoring Stack</h2>
 
 <p>
-  A production ML monitoring stack typically integrates the following layers:
+  Now that you understand the individual pieces, let's see how they fit together. A production ML monitoring stack typically integrates the following layers:
 </p>
 
 <ul>

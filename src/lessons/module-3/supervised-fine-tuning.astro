@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand why base models need supervised fine-tuning
@@ -33,27 +34,23 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </h2>
 
 <p>
-  A pretrained base model is a powerful text completor.
-  Given "The capital of France is", it will likely complete
-  with "Paris." But it doesn't behave like an assistant. Ask
-  it "What is the capital of France?" and it might generate
-  more questions, continue in a different style, or produce
-  unstructured text.
+  Imagine you've just finished pretraining a massive language model. It's absorbed billions of words from books, websites, and code. It's a powerful text completor: give it "The capital of France is" and it will likely continue with "Paris." But try asking it "What is the capital of France?" as a question, and something odd happens. It might generate more questions, continue in a completely different style, or produce rambling, unstructured text. It doesn't know it's supposed to be an assistant.
 </p>
 
 <p>
-  <strong>The fundamental problem</strong>: The pretraining
+  <strong>Here's the fundamental problem</strong>: the pretraining
   distribution is internet text, not helpful conversations.
-  The model learns to mimic the statistical patterns of web
-  pages, books, and code rather than following instructions
-  or being helpful.
+  The model learned to mimic the statistical patterns of web
+  pages, books, and code. Nobody told it to follow instructions
+  or be helpful.
 </p>
 
 <p>
-  Supervised fine-tuning (SFT) bridges this gap by training the
+  Supervised fine-tuning (<GlossaryTooltip term="SFT" />) bridges this gap. You train the
   model on curated examples of desired input-output
-  behavior: (instruction, response) pairs that demonstrate
-  how an ideal assistant should respond.
+  behavior, specifically (instruction, response) pairs that demonstrate
+  how an ideal assistant should respond. Think of it as teaching a
+  brilliant but unruly student how to behave in a conversation.
 </p>
 
 <h2>The SFT Process</h2>
@@ -61,11 +58,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Training Objective</h3>
 
 <p>
-  SFT uses the same next-token prediction objective as
-  pretraining, but only computes loss on the <strong
-    >response tokens</strong
-  >, not the prompt tokens. Given a prompt-response pair (x,
-  y):
+  Here's a key insight that might surprise you: SFT uses the <em>same</em> next-token prediction objective as pretraining. The only difference? You only compute loss on the <strong>response tokens</strong>, not the prompt tokens. Given a prompt-response pair (x, y), the model is penalized only for how well it predicts the response:
 </p>
 
 <MathBlock
@@ -74,39 +67,30 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: the loss is the standard next-token prediction
-  objective, but computed only over the response tokens. The
-  prompt tokens provide context but do not contribute to the
-  loss.
-</p>
-
-<p>
-  The prompt tokens are fed through the model (providing
-  context), but their loss is masked: we don't want the
-  model to learn to generate prompts, only to generate
-  appropriate responses.
+  Read this as: "Sum up how surprised the model is at each response token, given everything that came before it." The lower this number, the better the model predicts the demonstration responses. The prompt tokens still flow through the model (providing context), but their loss is masked. You don't want the model learning to generate prompts, only to generate appropriate responses.
 </p>
 
 <h3>Practical Training Details</h3>
+<p>
+  Compared to pretraining, SFT is a much lighter process. Here are the key hyperparameters you need to know:
+</p>
 <ul>
   <li>
     <strong>Learning rate</strong>: Typically 1-2 orders of
     magnitude smaller than pretraining (e.g., 1e-5 to 2e-5
-    vs. 3e-4 for pretraining).
+    vs. 3e-4 for pretraining). You're making gentle adjustments, not rewriting the model's knowledge.
   </li>
   <li>
-    <strong>Epochs</strong>: Usually 2-5 epochs over the <GlossaryTooltip
-      term="SFT"
-    /> dataset. Too many epochs causes overfitting to the
-    small SFT dataset.
+    <strong>Epochs</strong>: Usually 2-5 epochs over the SFT dataset. Too many epochs causes overfitting to the
+    small dataset, and the model starts memorizing responses rather than learning the style.
   </li>
   <li>
-    <strong>Batch size</strong>: Smaller than pretraining.
-    Fine-tuning is less compute-intensive.
+    <strong>Batch size</strong>: Smaller than pretraining,
+    since fine-tuning is less compute-intensive.
   </li>
   <li>
     <strong>Duration</strong>: SFT is fast compared to
-    pretraining, typically hours to days on a few GPUs,
+    pretraining: typically hours to days on a few GPUs,
     versus weeks to months on thousands of GPUs for
     pretraining.
   </li>
@@ -115,10 +99,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Constructing SFT Datasets</h2>
 
 <p>
-  The quality of SFT data matters far more than the
-  quantity. Research consistently shows that a small number
-  of high-quality examples outperforms a large number of
-  low-quality ones.
+  If there's one thing the research community agrees on, it's this: the quality of SFT data matters far more than the quantity. A small number of high-quality examples consistently outperforms a large number of sloppy ones. So where does this data come from?
 </p>
 
 <h3>Data Sources</h3>
@@ -131,9 +112,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
   <li>
     <strong>Distillation from stronger models</strong>: Use
-    a frontier model (<GlossaryTooltip term="GPT" />-4, Claude) to generate responses,
-    then fine-tune a smaller model on these outputs. Alpaca
-    used 52K examples generated by <GlossaryTooltip term="GPT" />-3.5. This is cheaper
+    a frontier model (like <GlossaryTooltip term="GPT" />-5.2 or Claude) to generate responses,
+    then fine-tune a smaller model on these outputs. As an early example, Alpaca
+    used 52K examples generated by <GlossaryTooltip term="GPT" />-3.5. This approach is cheaper
     but raises concerns about data contamination and ceiling
     effects.
   </li>
@@ -232,7 +213,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h3>Dataset Scale: How Much Data?</h3>
 
-<p>The required dataset size depends on the goal:</p>
+<p>You might be wondering: how many examples do you actually need? The answer depends on what you're trying to achieve:</p>
 <ul>
   <li>
     <strong>Instruction following</strong>: As few as
@@ -255,8 +236,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Instruction Tuning vs. SFT</h2>
 
 <p>
-  These terms are often used interchangeably, but there's a
-  subtle distinction:
+  You'll see these terms used interchangeably in blog posts and papers, but there's a
+  subtle distinction worth knowing:
 </p>
 <ul>
   <li>
@@ -277,39 +258,35 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <p>
-  In the context of <GlossaryTooltip term="LLM" /> alignment, "<GlossaryTooltip
+  In practice, when people in the <GlossaryTooltip term="LLM" /> world say "<GlossaryTooltip
     term="SFT"
-  />" typically means multi-task instruction tuning on
-  demonstration data: the first stage of the alignment
+  />," they almost always mean multi-task instruction tuning on
+  demonstration data. This is the first stage of the alignment
   pipeline, followed by preference optimization (<GlossaryTooltip
     term="DPO"
   /> or <GlossaryTooltip term="RLHF" />/<GlossaryTooltip
     term="PPO"
-  />).
+  />). You'll see this full pipeline in the next lesson.
 </p>
 
 <h2>Catastrophic Forgetting</h2>
 
 <p>
-  When fine-tuning on a narrow dataset, the model may lose
-  capabilities it acquired during pretraining. This is <strong
-    >catastrophic forgetting</strong
-  >: the model overwrites pretrained representations to fit
-  the fine-tuning distribution.
+  Here's the catch with fine-tuning: when you train on a narrow dataset, the model can <em>lose</em>
+  capabilities it acquired during pretraining. This phenomenon is called <strong>catastrophic forgetting</strong>, and it's exactly as dramatic as it sounds. The model overwrites pretrained representations to fit
+  the fine-tuning distribution, sacrificing breadth for specialization.
 </p>
 
 <h3>Why It Happens</h3>
 
 <p>
-  Neural networks learn by adjusting weights to minimize
-  loss on the current training data. Fine-tuning on a small,
-  narrow dataset shifts the weight distribution away from
-  the pretrained optimum. Mathematically, the fine-tuned
-  parameters <MathBlock formula={"\\theta_{\\text{SFT}}"} /> move
+  Think of it this way: neural networks learn by adjusting weights to minimize
+  loss on whatever data you're currently training on. When you fine-tune on a small,
+  narrow dataset, you're pulling the weights toward a new optimum that's great for your SFT data but may be far from where pretraining left them. The fine-tuned
+  parameters <MathBlock formula={"\\theta_{\\text{SFT}}"} /> drift
   away from the pretrained parameters <MathBlock
     formula={"\\theta_{\\text{PT}}"}
-  /> in the direction that minimizes SFT loss, potentially increasing
-  pretraining loss:
+  /> in the direction that minimizes SFT loss. Here's what that looks like as a single gradient step:
 </p>
 
 <MathBlock
@@ -318,18 +295,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: fine-tuning updates the pretrained weights by
-  stepping in the direction that reduces the SFT loss. If
-  this direction conflicts with what was learned during
-  pretraining, some pretrained capabilities may degrade.
-</p>
-
-<p>
-  If the SFT gradient direction conflicts with preserving
-  pretrained capabilities, those capabilities degrade.
+  In plain English: "Start from the pretrained weights, then take a step (scaled by learning rate <MathBlock formula={"\\eta"} />) in the direction that reduces the SFT loss." The problem? If that direction conflicts with what was learned during pretraining, some of those hard-won capabilities degrade. It's like retraining a multilingual translator exclusively on English conversations; they might get better at English chat but start forgetting their French.
 </p>
 
 <h3>Symptoms of Catastrophic Forgetting</h3>
+<p>How do you know it's happening? Watch for these warning signs:</p>
 <ul>
   <li>
     Degraded performance on tasks not covered by SFT data
@@ -350,7 +320,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <h3>Mitigation Strategies</h3>
-
+<p>Fortunately, there are several proven techniques to keep forgetting in check:</p>
 <ul>
   <li>
     <strong>Low learning rate</strong>: A small learning
@@ -379,9 +349,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     majority of pretrained representations.
   </li>
   <li>
-    <strong>Elastic Weight Consolidation (EWC)</strong>: Add
+    <strong>Elastic Weight Consolidation (EWC)</strong>: This is a more sophisticated approach. The idea is to add
     a regularization term that penalizes changes to
-    parameters that were important for pretraining:
+    parameters that were important for pretraining. Think of it like putting rubber bands on the most critical weights, pulling them back toward their pretrained values:
   </li>
 </ul>
 
@@ -391,17 +361,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: add a penalty that discourages changing
-  parameters that were important for pretraining. Parameters
-  with high Fisher information (high impact on pretraining
-  loss) are anchored more strongly to their pretrained
-  values.
-</p>
-
-<p>
-  where <MathBlock formula="F_i" /> is the Fisher information
-  for parameter i, measuring its importance for the pretrained
-  task.
+  Read this as: "The total loss is the SFT loss plus a penalty for moving each weight away from its pretrained value." The penalty is weighted by <MathBlock formula="F_i" /> (the Fisher information for parameter i), which measures how important that parameter was for the pretrained task. Parameters with high Fisher information are anchored more strongly to their pretrained values. Don't worry about memorizing the formula; the core idea is that you let less-important weights change freely while protecting the crucial ones.
 </p>
 
 <Quiz
@@ -442,9 +402,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Multi-Turn SFT and Chat Formatting</h2>
 
 <p>
-  Production chat models are fine-tuned on multi-turn
-  conversations, not just single-turn (instruction,
-  response) pairs. This teaches the model to:
+  So far, we've talked about single-turn examples: one instruction, one response. But real conversations don't work that way. Production chat models are fine-tuned on multi-turn
+  conversations, which teaches the model to:
 </p>
 <ul>
   <li>Maintain context across multiple exchanges</li>
@@ -456,7 +415,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ul>
 
-<p>A typical training example in ChatML format:</p>
+<p>Here's what a typical training example looks like in ChatML format:</p>
 
 <pre
   class="bg-[hsl(var(--muted))] p-4 rounded-lg text-sm overflow-x-auto my-4"><code>&lt;|system|&gt;You are a helpful assistant.&lt;|end|&gt;
@@ -466,9 +425,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 &lt;|assistant|&gt;Natural photosynthesis converts about 1-2% of...&lt;|end|&gt;</code></pre>
 
 <p>
-  Loss is computed only on assistant response tokens. System
-  and user tokens provide context but are not training
-  targets.
+  Notice that loss is computed only on the assistant response tokens (the parts after <code>&lt;|assistant|&gt;</code>). The system and user tokens provide context but are not training targets. This way, the model learns <em>how to respond</em>, not how to write user messages.
 </p>
 
 <KeyTakeaway>

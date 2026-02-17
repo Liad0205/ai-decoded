@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand why <GlossaryTooltip term="SFT" /> alone is insufficient
@@ -37,8 +38,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </h2>
 
 <p>
-  SFT teaches a model to imitate human
-  demonstrations, but imitation has fundamental limitations:
+  In the previous lesson, you saw how <GlossaryTooltip term="SFT" /> teaches a model to imitate human
+  demonstrations. But here's the thing: imitation has fundamental limitations.
 </p>
 <ul>
   <li>
@@ -62,13 +63,20 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <p>
-  RLHF (Reinforcement Learning from
-  Human Feedback) addresses these limitations by training the
-  model to optimize for human preferences rather than imitating
-  demonstrations.
+  <GlossaryTooltip term="RLHF" /> (Reinforcement Learning from
+  Human Feedback) addresses these limitations by flipping the script: instead
+  of asking "what would a human write?", it asks "which response would a human
+  <em>prefer</em>?" This turns out to be a much more powerful training signal.
 </p>
 
 <h2>The RLHF Pipeline</h2>
+
+<p>
+  The RLHF pipeline has three stages, each building on the previous one. Think of it as a
+  three-step recipe: first you teach the model the basics (SFT), then you build a "taste tester"
+  that can judge quality (reward model), and finally you let the model practice and improve
+  using that taste tester's feedback (RL optimization).
+</p>
 
 <Diagram
   diagramId="rlhf-pipeline"
@@ -79,7 +87,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <div
     class="bg-[hsl(var(--card))] p-4 rounded w-full"
   >
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <!-- Stage 1 -->
       <div
         class="text-center p-3 rounded-lg border-2 border-[hsl(var(--diagram-blue-border))] bg-[hsl(var(--diagram-blue-bg))]"
@@ -163,8 +171,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Stage 2: Reward Modeling</h3>
 
 <p>
-  The reward model learns to predict which responses humans
-  prefer. The process:
+  This is where things get interesting. You need a way to automatically score responses
+  based on human preferences, so you don't need a human in the loop for every single
+  training step. The solution: train a <strong>reward model</strong> that learns to predict
+  which responses humans would prefer. Here's how it works:
 </p>
 <ol>
   <li>
@@ -185,14 +195,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h4>The Bradley-Terry Model</h4>
 
 <p>
-  Given a prompt x and two responses <MathBlock
+  You might wonder: how do you turn pairwise comparisons ("I prefer A over B") into
+  a trainable objective? The answer is the <strong>Bradley-Terry model</strong>, a classic
+  probabilistic framework. Given a prompt x and two responses, <MathBlock
     formula="y_w"
-  /> (preferred) and <MathBlock formula="y_l" /> (dispreferred),
+  /> (preferred, the "winner") and <MathBlock formula="y_l" /> (dispreferred, the "loser"),
   the reward model <MathBlock formula={"R_\\phi"} /> is trained
   to assign higher reward to the preferred response. The core
   idea is that the probability of preferring one response over
   another depends only on the <em>difference</em> in their reward
-  scores, passed through a sigmoid to produce a probability. Mathematically:
+  scores, passed through a sigmoid to produce a probability:
 </p>
 
 <div class="equation-with-label">
@@ -206,9 +218,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </div>
 
 <p>
-  where <MathBlock formula={"\\sigma"} /> is the sigmoid function.
-  Intuition: the larger the reward gap between two responses,
-  the more confidently the model predicts the higher-scored one
+  Read this as: "the probability that response <MathBlock formula="y_w" /> beats
+  response <MathBlock formula="y_l" /> equals the sigmoid of their reward difference."
+  Here <MathBlock formula={"\\sigma"} /> is the sigmoid function, which squashes any
+  number into a probability between 0 and 1. The larger the reward gap between
+  two responses, the more confidently the model predicts the higher-scored one
   is preferred.
 </p>
 
@@ -226,7 +240,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </p>
 
 <p>
-  The training objective maximizes the log-likelihood of
+  Now that you know how to model a single preference, you need a training objective
+  that works across the entire dataset. The goal: maximize the log-likelihood of all
   observed preferences:
 </p>
 
@@ -274,18 +289,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ul>
 
-<h3>
-  Stage 3: RL Optimization with <GlossaryTooltip
-    term="PPO"
-  />
-</h3>
+<h3>Stage 3: RL Optimization with PPO</h3>
 
 <p>
-  With a trained reward model, we optimize the language
+  With a trained reward model in hand, you can now optimize the language
   model policy <MathBlock formula={"\\pi_\\theta"} /> to maximize
-  expected reward while staying close to the <GlossaryTooltip
+  expected reward. But there's a catch: if you simply told the model "maximize
+  your reward score," it would quickly learn to game the reward model rather
+  than genuinely improving. So you add a leash: a KL divergence penalty that
+  keeps the policy close to the <GlossaryTooltip
     term="SFT"
-  /> policy. The objective:
+  /> policy. The full objective balances these two forces:
 </p>
 
 <MathBlock
@@ -294,10 +308,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  The KL divergence penalty <MathBlock
+  In plain English: "maximize the reward score of generated responses, but don't stray
+  too far from the original SFT model." The first term pushes quality up; the
+  second term, the KL divergence penalty <MathBlock
     formula={"\\beta \\cdot D_{\\text{KL}}"}
-  /> is critical: it prevents the model from drifting too far
-  from the SFT policy. Without it,
+  />, acts as a tether back to the SFT policy. The hyperparameter <MathBlock
+    formula={"\\beta"}
+  /> controls the strength of this tether. Without it,
   the model would exploit the reward model rather than genuinely
   improving.
 </p>
@@ -305,7 +322,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h4>Why PPO?</h4>
 
 <p>
-  Standard policy gradient methods can make catastrophically
+  You might wonder: why not just use basic gradient descent? The problem is that
+  standard policy gradient methods can make catastrophically
   large updates when a single batch happens to produce
   unusually large gradients. <strong
     >Proximal Policy Optimization (<GlossaryTooltip
@@ -314,7 +332,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   > prevents this by clipping the probability ratio between the
   new and old policy: if the new policy strays too far from the
   old one on any given action, the gradient is zeroed out, acting
-  like a guardrail on update size. Mathematically:
+  like a guardrail on update size. Here's the formal objective:
 </p>
 
 <MathBlock
@@ -323,11 +341,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  where <MathBlock
+  This looks dense, so let's break it down piece by piece. <MathBlock
     formula={"r_t(\\theta) = \\pi_\\theta(a_t|s_t) / \\pi_{\\text{old}}(a_t|s_t)"}
   /> is the probability ratio between the updated policy and the
   previous policy for action <MathBlock formula={"a_t"} /> in
-  state <MathBlock formula={"s_t"} />, <MathBlock
+  state <MathBlock formula={"s_t"} />. If this ratio is 1.0, the policy hasn't changed
+  at all; if it's 2.0, the new policy is twice as likely to pick this action. <MathBlock
     formula={"\\hat{A}_t"}
   /> is the advantage estimate (how much better this action was
   than expected), and <MathBlock formula={"\\epsilon"} /> is the
@@ -364,7 +383,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 </div>
 
-<p>In the <GlossaryTooltip term="LLM" /> context:</p>
+<p>If you're wondering how RL concepts map to language generation, here's the translation for the <GlossaryTooltip term="LLM" /> context:</p>
 <ul>
   <li>
     <strong>State</strong>: The prompt + tokens generated so
@@ -412,35 +431,30 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <li>Repeat.</li>
 </ol>
 
-<h2>
-  Direct Preference Optimization (<GlossaryTooltip
-    term="DPO"
-  />)
-</h2>
+<h2>Direct Preference Optimization (DPO)</h2>
 
 <p>
-  RLHF with <GlossaryTooltip
-    term="PPO"
-  /> is effective but complex: it requires training a separate
+  If the RLHF pipeline above seems complicated, you're not wrong. It requires training a separate
   reward model, running RL optimization with a critic network,
-  carefully tuning PPO
+  carefully tuning <GlossaryTooltip term="PPO" />
   hyperparameters, and managing four models in memory simultaneously
-  (policy, reference, reward, critic).
+  (policy, reference, reward, critic). That's a lot of moving parts.
 </p>
 
 <p>
-  <strong>DPO</strong> eliminates the
+  <strong><GlossaryTooltip term="DPO" /></strong> offers an elegant shortcut: it eliminates the
   reward model and RL entirely by showing that the optimal policy
-  can be derived in closed form from the preference data.
+  can be derived in closed form directly from the preference data. No reward model,
+  no RL loop, no critic network. Just supervised learning with a clever loss function.
 </p>
 
 <h3>The DPO Insight</h3>
 
 <p>
-  Starting from the RLHF objective,
-  Rafailov et al. showed that the optimal policy under the KL-constrained
-  reward maximization has a closed-form relationship to the reward
-  function:
+  Here's the key mathematical insight. Starting from the RLHF objective you saw earlier,
+  Rafailov et al. showed that if you solve for the optimal policy under KL-constrained
+  reward maximization, you get a closed-form relationship between the reward
+  function and the policy:
 </p>
 
 <div class="equation-with-label">
@@ -454,15 +468,22 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </div>
 
 <p>
+  In plain English: the reward of a response is proportional to how much more likely the
+  optimal policy is to generate it compared to the reference policy. This is powerful because
+  it means you don't need to learn the reward explicitly; it's already captured in the
+  policy itself!
+</p>
+
+<p>
   Substituting this into the Bradley-Terry preference model
   and canceling the partition function <MathBlock
     formula="Z(x)"
-  />, we get the DPO loss. The key
-  intuition: DPO is a classification
+  />, you get the DPO loss. The key
+  intuition: DPO is really a classification
   loss in disguise. It increases the log-probability of preferred
   responses and decreases the log-probability of dispreferred
   ones, with the reference model acting as a regularizer to prevent
-  the policy from straying too far. Mathematically:
+  the policy from straying too far:
 </p>
 
 <div class="equation-with-label">
@@ -487,24 +508,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   /> controls regularization strength. Each log-ratio term <MathBlock
     formula={"\\log \\frac{\\pi_\\theta(y|x)}{\\pi_{\\text{ref}}(y|x)}"}
   /> measures how much the policy has shifted relative to the
-  reference for a given response -- think of it as an "implicit
-  reward."
+  reference for a given response (think of it as an "implicit
+  reward").
 </p>
 
 <p>
-  Intuition: the loss drives the policy to assign higher
+  Think of it this way: the loss drives the policy to assign higher
   probability to preferred responses (relative to the
-  reference) and lower probability to dispreferred ones. The
-  sigmoid and log structure mean the gradient is strongest
+  reference) and lower probability to dispreferred ones. The gradient is strongest
   when the model's implicit ranking disagrees with the human
-  preference data.
+  preference data, so it focuses training effort where the model is most "wrong."
 </p>
 
-<h3>
-  DPO vs. <GlossaryTooltip
-    term="PPO"
-  />: Trade-offs
-</h3>
+<h3>DPO vs. PPO: Trade-offs</h3>
+
+<p>
+  So which should you use? As with most things in engineering, it depends. Here's how
+  the two approaches compare:
+</p>
 
 <ul>
   <li>
@@ -588,7 +609,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <p>
   The field continues to evolve beyond vanilla <GlossaryTooltip
     term="DPO"
-  />:
+  />. Here are some notable directions you'll encounter in recent papers:
 </p>
 <ul>
   <li>
@@ -667,12 +688,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h2>Failure Modes and Challenges</h2>
 
+<p>
+  RLHF and DPO are powerful, but they come with some tricky failure modes you should know about.
+  Understanding these helps you evaluate alignment claims critically and appreciate
+  why this remains an active area of research.
+</p>
+
 <h3>Reward Hacking</h3>
 
 <p>
-  The model finds ways to exploit the reward model rather
-  than genuinely improving. The reward model is an imperfect
-  proxy for human preferences, and the policy optimizer will
+  Here's a frustrating reality: models are very good at finding loopholes. The reward model is an imperfect
+  proxy for human preferences, and given enough optimization pressure, the policy will
   find its blind spots.
 </p>
 <ul>
@@ -708,27 +734,30 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <p>
   Over-optimization of the reward can cause the model to
   collapse to a narrow set of high-reward but repetitive
-  responses. Diversity decreases as the model converges on
-  "safe" outputs that reliably score well.
+  responses. Imagine a model that always responds in the same "safe" template
+  because it reliably scores well. The outputs are technically fine, but
+  the diversity and creativity you'd expect are gone.
 </p>
 
 <p>
   The KL penalty mitigates this by keeping the policy close
   to the diverse SFT distribution,
-  but too-low <MathBlock formula={"\\beta"} /> allows collapse
+  but it's a balancing act: too-low <MathBlock formula={"\\beta"} /> allows collapse,
   while too-high <MathBlock formula={"\\beta"} /> prevents meaningful
-  improvement.
+  improvement. Finding the right <MathBlock formula={"\\beta"} /> is often
+  the most important hyperparameter decision in RLHF.
 </p>
 
 <h3>Alignment Tax</h3>
 
 <p>
-  RLHF can reduce raw capability on
-  some benchmarks. The "alignment tax" reflects the trade-off
-  between helpfulness and safety: a model that refuses harmful
-  requests may also refuse ambiguous-but-benign requests. Research
-  aims to minimize this tax through better reward modeling and
-  training.
+  RLHF can sometimes reduce raw capability on
+  certain benchmarks. This "alignment tax" reflects a real trade-off
+  between helpfulness and safety: a model that learns to refuse harmful
+  requests may also become overly cautious and refuse ambiguous-but-benign requests.
+  You've probably experienced this yourself if you've ever had a chatbot refuse a
+  perfectly reasonable request. Ongoing research aims to minimize this tax through better
+  reward modeling and more nuanced training.
 </p>
 
 <h3>
@@ -737,15 +766,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </h3>
 
 <p>
-  Modern alignment approaches iterate: train a model,
+  In practice, alignment isn't a one-shot process. Modern approaches iterate: train a model,
   collect new preference data from it, retrain. Anthropic's <strong
     >Constitutional AI (CAI)</strong
-  > replaces some human feedback with AI feedback, allowing the
+  > takes this further by replacing some human feedback with AI feedback, allowing the
   model to critique its own outputs according to a set of principles
   (a "constitution") and generate preference pairs for <GlossaryTooltip
     term="DPO"
   />/RLHF
-  training.
+  training. This makes alignment more scalable, since you don't need
+  human annotators for every iteration.
 </p>
 
 <KeyTakeaway>

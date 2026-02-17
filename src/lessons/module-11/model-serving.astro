@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand why <GlossaryTooltip term="LLM" /> serving is fundamentally different
@@ -38,28 +39,35 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Unique Challenge of LLM Serving</h2>
 
   <p>
-    Serving large language models is fundamentally different
-    from serving traditional <GlossaryTooltip term="ML" /> models (image classifiers,
-    recommendation models, etc.). The core challenge stems
+    If you have ever deployed a traditional <GlossaryTooltip term="ML" /> model (an image classifier,
+    a recommendation model), you might expect <GlossaryTooltip term="LLM" /> serving to work the same way.
+    It does not. The core challenge stems
     from the <strong>autoregressive generation</strong> process:
     LLMs generate tokens one at a time, where each new token depends
     on all previously generated tokens.
   </p>
 
-  <p>This creates several unique problems:</p>
+  <p>This creates several unique problems that you will need to understand before building a serving stack:</p>
 
   <h3>The Memory-Bound Bottleneck</h3>
   <p>
-    During generation, each token requires loading the
+    Here is the thing that surprises most engineers: during generation,
+    each token requires loading the
     model's entire weight matrix from GPU memory. For a 70B
     parameter model in FP16, that is 140 GB of data read for <em
       >every single token</em
     >. Modern GPUs have ~2-3 TB/s of memory bandwidth,
     meaning the absolute theoretical maximum is about 15-20
-    tokens per second per GPU &mdash; regardless of the
+    tokens per second per GPU, regardless of the
     GPU's compute capability. LLM generation is
     overwhelmingly <strong>memory-bandwidth bound</strong>,
     not compute-bound.
+  </p>
+
+  <p>
+    You can express this ceiling as a simple ratio: how fast can
+    you read data from memory, divided by how much data you need
+    to read per token?
   </p>
 
   <MathBlock
@@ -68,7 +76,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the maximum token generation rate is limited
+    In plain English: the maximum token generation rate is limited
     by how fast you can read the model weights from memory.
     Each token requires one full read of all weights, so you
     divide the memory bandwidth by the model size to get the
@@ -79,7 +87,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     For example, a 70B parameter model in FP16 occupies ~140
     GB. On an A100 with ~2 TB/s bandwidth, the theoretical
     single-request maximum is roughly 2,000 / 140 ≈ 14
-    tokens per second &mdash; each token requires reading
+    tokens per second, since each token requires reading
     the entire 140 GB of weights from memory.
   </p>
 
@@ -125,7 +133,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: for each transformer layer, you store a key
+    Read this as: for each transformer layer, you store a key
     vector and a value vector at every sequence position for
     every KV head. The total memory is proportional to
     context length, model depth, and the number of KV heads.
@@ -143,9 +151,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Two Phases of LLM Inference</h2>
 
   <p>
-    LLM inference has two distinct computational phases with
-    very different characteristics. Understanding these is
-    essential for optimizing serving performance.
+    To make sense of the optimization strategies that follow,
+    you first need to understand the two distinct computational
+    phases of LLM inference. They have very different
+    characteristics, and each one calls for a different
+    optimization approach.
   </p>
 
   <h3>Prefill (Prompt Processing) Phase</h3>
@@ -155,7 +165,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     upfront, so the computation can be heavily parallelized
     using matrix-matrix multiplications. This phase is <strong
       >compute-bound</strong
-    > &mdash; meaning the GPU's compute units are fully utilized
+    >, meaning the GPU's compute units are fully utilized
     and memory bandwidth is not the bottleneck.
   </p>
   <ul>
@@ -170,7 +180,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     In the decode phase, the model generates output tokens
     one at a time. Each step produces exactly one token and
     appends its key-value vectors to the KV-cache. This
-    phase is <strong>memory-bandwidth bound</strong> &mdash; each
+    phase is <strong>memory-bandwidth bound</strong>, since each
     step loads the full model weights but only processes a single
     token (matrix-vector multiplication).
   </p>
@@ -188,7 +198,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    The key optimization insight: since the decode phase
+    Here is the key optimization insight: since the decode phase
     vastly underutilizes GPU compute, you can <strong
       >batch multiple requests together</strong
     >. Processing 32 requests simultaneously costs almost
@@ -211,8 +221,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     >.
   </p>
   <p>
-    If a batch contains requests generating 10, 50, 200, and
-    1,000 tokens, the first three requests sit idle
+    Imagine a restaurant that seats everyone at the same time
+    and refuses to seat new diners until the slowest eater
+    finishes. If your batch contains requests generating 10, 50,
+    200, and 1,000 tokens, the first three requests sit idle
     (occupying GPU memory) while the 1,000-token request
     finishes. This wastes both memory and compute, and
     dramatically increases latency for shorter requests.
@@ -274,7 +286,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         height="160"
         rx="4"
         fill="none"
-        stroke="#e2e8f0"
+        class="stroke-[hsl(var(--border))]"
         stroke-width="1"
         data-animate
         style="animation-delay: 0.3s"></rect>
@@ -286,7 +298,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="60"
         height="25"
         rx="3"
-        fill="#6366f1"
+        class="fill-[hsl(var(--diagram-indigo-solid))]"
         data-animate
         style="animation-delay: 0.5s"></rect>
       <text
@@ -302,7 +314,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="180"
         height="25"
         rx="0"
-        fill="#e2e8f0"
+        class="fill-[hsl(var(--muted))]"
         data-animate
         style="animation-delay: 0.5s"></rect>
       <text
@@ -319,7 +331,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="140"
         height="25"
         rx="3"
-        fill="#8b5cf6"
+        class="fill-[hsl(var(--diagram-purple-solid))]"
         data-animate
         style="animation-delay: 0.8s"></rect>
       <text
@@ -335,7 +347,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="100"
         height="25"
         rx="0"
-        fill="#e2e8f0"
+        class="fill-[hsl(var(--muted))]"
         data-animate
         style="animation-delay: 0.8s"></rect>
       <text
@@ -352,7 +364,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="240"
         height="25"
         rx="3"
-        fill="#a78bfa"
+        class="fill-[hsl(var(--diagram-blue-solid))]"
         data-animate
         style="animation-delay: 1.1s"></rect>
       <text
@@ -369,7 +381,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="100"
         height="25"
         rx="3"
-        fill="#c4b5fd"
+        class="fill-[hsl(var(--diagram-teal-solid))]"
         data-animate
         style="animation-delay: 1.4s"></rect>
       <text
@@ -385,7 +397,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="140"
         height="25"
         rx="0"
-        fill="#e2e8f0"
+        class="fill-[hsl(var(--muted))]"
         data-animate
         style="animation-delay: 1.4s"></rect>
       <text
@@ -403,7 +415,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="60"
         height="20"
         rx="3"
-        fill="#fbbf24"
+        class="fill-[hsl(var(--diagram-amber-solid))]"
         opacity="0.5"
         data-animate
         style="animation-delay: 1.6s"></rect>
@@ -434,7 +446,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         height="160"
         rx="4"
         fill="none"
-        stroke="#e2e8f0"
+        class="stroke-[hsl(var(--border))]"
         stroke-width="1"
         data-animate
         style="animation-delay: 2.6s"></rect>
@@ -446,7 +458,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="60"
         height="25"
         rx="3"
-        fill="#6366f1"
+        class="fill-[hsl(var(--diagram-indigo-solid))]"
         data-animate
         style="animation-delay: 2.8s"></rect>
       <text
@@ -462,7 +474,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="80"
         height="25"
         rx="3"
-        fill="#fbbf24"
+        class="fill-[hsl(var(--diagram-amber-solid))]"
         data-animate
         style="animation-delay: 3.6s"></rect>
       <text
@@ -478,13 +490,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="90"
         height="25"
         rx="3"
-        fill="#34d399"
+        class="fill-[hsl(var(--diagram-emerald-solid))]"
         data-animate
         style="animation-delay: 4.2s"></rect>
       <text
         x="485"
         y="62"
-        class="text-[10px] fill-[hsl(var(--diagram-green-fg))] font-medium"
+        class="text-[10px] fill-[hsl(var(--diagram-emerald-fg))] font-medium"
         data-animate
         style="animation-delay: 4.2s">Req 6</text
       >
@@ -495,7 +507,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="140"
         height="25"
         rx="3"
-        fill="#8b5cf6"
+        class="fill-[hsl(var(--diagram-purple-solid))]"
         data-animate
         style="animation-delay: 3.0s"></rect>
       <text
@@ -511,7 +523,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="95"
         height="25"
         rx="3"
-        fill="#f472b6"
+        class="fill-[hsl(var(--diagram-red-solid))]"
         data-animate
         style="animation-delay: 4.4s"></rect>
       <text
@@ -528,7 +540,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="240"
         height="25"
         rx="3"
-        fill="#a78bfa"
+        class="fill-[hsl(var(--diagram-blue-solid))]"
         data-animate
         style="animation-delay: 3.2s"></rect>
       <text
@@ -545,7 +557,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="100"
         height="25"
         rx="3"
-        fill="#c4b5fd"
+        class="fill-[hsl(var(--diagram-teal-solid))]"
         data-animate
         style="animation-delay: 3.4s"></rect>
       <text
@@ -561,7 +573,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         width="135"
         height="25"
         rx="3"
-        fill="#fb923c"
+        class="fill-[hsl(var(--diagram-amber-solid))]"
         data-animate
         style="animation-delay: 4.0s"></rect>
       <text
@@ -577,7 +589,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="450"
         y="215"
         text-anchor="middle"
-        class="text-xs fill-[hsl(var(--diagram-green-fg))] font-semibold"
+        class="text-xs fill-[hsl(var(--diagram-emerald-fg))] font-semibold"
         data-animate
         style="animation-delay: 5s"
         >No wasted GPU slots!</text
@@ -597,7 +609,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         x="450"
         y="240"
         text-anchor="middle"
-        class="text-xs fill-[hsl(var(--diagram-green-fg))] font-medium"
+        class="text-xs fill-[hsl(var(--diagram-emerald-fg))] font-medium"
         data-animate
         style="animation-delay: 5.5s"
         >~90%+ GPU utilization</text
@@ -653,12 +665,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>The Virtual Memory Solution</h3>
   <p>
-    PagedAttention borrows the idea of <strong
+    If you have worked with operating systems, this will sound
+    familiar: PagedAttention borrows the idea of <strong
       >virtual memory paging</strong
-    > from operating systems. Instead of storing each request's
+    >. Instead of storing each request's
     KV-cache contiguously, it divides the cache into fixed-size
     <strong>blocks</strong> (typically storing 16 tokens each)
-    that can be stored anywhere in GPU memory.
+    that can be stored anywhere in GPU memory, just as an OS
+    scatters virtual pages across physical RAM.
   </p>
   <ul>
     <li>
@@ -719,8 +733,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Serving Frameworks Comparison</h2>
 
   <p>
-    Several mature serving frameworks have emerged, each
-    with different design priorities and strengths.
+    When you are ready to deploy, you will find several mature
+    serving frameworks, each with different design priorities
+    and strengths. Here is a quick tour of the major options.
   </p>
 
   <h3>vLLM</h3>
@@ -795,7 +810,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Triton Inference Server</h3>
   <p>
     NVIDIA's general-purpose model serving platform. Unlike
-    the others, Triton is not LLM-specific &mdash; it can
+    the others, Triton is not LLM-specific. It can
     serve any model type. For LLMs, it integrates with
     TensorRT-LLM as a backend.
   </p>
@@ -817,10 +832,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>KV-Cache Management Strategies</h2>
 
   <p>
-    As models serve longer contexts and more concurrent
+    As you push models toward longer contexts and more concurrent
     requests, KV-cache management becomes the primary
-    bottleneck. Several strategies help manage this critical
-    resource.
+    bottleneck. Here are the main strategies you can reach for.
   </p>
 
   <h3>KV-Cache Quantization</h3>
@@ -916,8 +930,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Latency vs. Throughput Optimization</h2>
 
   <p>
-    Production serving requires different optimization
-    strategies depending on whether you prioritize <strong
+    You might wonder: should you optimize for speed or volume?
+    The answer depends on whether you prioritize <strong
       >latency</strong
     > (how fast a single request completes) or <strong
       >throughput</strong
@@ -956,7 +970,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     For batch processing (document summarization, data
     extraction, evaluation), the goal is maximizing total
-    tokens generated per second across all requests:
+    tokens generated per second across all requests. Think
+    of it like lanes on a highway: the more lanes (batch size)
+    you have, the more cars (tokens) get through per unit time.
   </p>
 
   <MathBlock
@@ -965,12 +981,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: total throughput equals the number of
+    In plain English: total throughput equals the number of
     concurrent requests multiplied by the per-request
     generation speed. Since each decode step loads model
     weights once for the entire batch, increasing batch size
     improves throughput nearly linearly (up to the memory
-    limit) because the dominant cost -- reading weights --
+    limit) because the dominant cost (reading weights)
     is amortized across all requests.
   </p>
 
@@ -1009,10 +1025,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Cost Analysis: Tokens Per Second Per Dollar</h2>
 
   <p>
-    The ultimate metric for production LLM serving is <strong
-      >cost efficiency</strong
-    >: how many tokens can you serve per dollar of
-    infrastructure cost?
+    At the end of the day, what matters most in production is
+    <strong>cost efficiency</strong>: how many tokens can you
+    serve per dollar of infrastructure cost? Let's look at the
+    numbers.
   </p>
 
   <h3>Key Cost Factors</h3>
@@ -1063,7 +1079,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     serve a 70B model at ~1,000 output tokens per second per
     A100 GPU. At $3/hr for an A100, that is approximately <strong
       >$0.008 per 1,000 output tokens</strong
-    > &mdash; competitive with commercial API pricing.
+    >, competitive with commercial API pricing.
   </p>
 </section>
 

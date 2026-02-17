@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand convolution, pooling, and hierarchical
@@ -40,24 +41,26 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>CNN Fundamentals Refresher</h2>
 
   <p>
-    Convolutional Neural Networks (<GlossaryTooltip
+    If you've ever wondered how your phone recognizes faces or how
+    self-driving cars see the road, the answer (at least until recently)
+    has been Convolutional Neural Networks (<GlossaryTooltip
       term="CNN"
-    />s) have been the dominant architecture for computer
-    vision since AlexNet's breakthrough in 2012. Before
-    exploring modern architectures, let's revisit the core
-    operations that make CNNs work.
+    />s). They've dominated computer vision since AlexNet's
+    breakthrough in 2012. Before exploring modern architectures,
+    let's revisit the core operations that make CNNs work.
   </p>
 
   <h3>The Convolution Operation</h3>
 
   <p>
-    A convolution slides a small filter across the image,
-    computing a dot product at each position. This is the
-    key operation that gives CNNs their two superpowers:
-    translation invariance (the same feature detector works
-    everywhere in the image) and parameter sharing (one
-    small filter instead of a full connection matrix). For
-    an input feature map <MathBlock formula="X" /> and a kernel
+    Think of a convolution as sliding a small magnifying glass
+    across an image. At each position, it asks: "does this local
+    patch match the pattern I'm looking for?" Technically, it
+    computes a dot product between the filter and each patch. This
+    gives CNNs two superpowers: translation invariance (the same
+    feature detector works everywhere in the image) and parameter
+    sharing (one small filter instead of a full connection matrix).
+    For an input feature map <MathBlock formula="X" /> and a kernel
     <MathBlock formula="W" /> of size <MathBlock
       formula={"k \\times k"}
     />, the output at position <MathBlock
@@ -71,10 +74,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: each output pixel is the weighted sum of a
+    In plain English: each output pixel is the weighted sum of a
     small local patch of input pixels, using the filter
     weights, plus a bias term. The same filter slides across
-    every position in the image.
+    every position in the image, like a stamp being pressed
+    at every location on a page.
   </p>
 
   <p>
@@ -125,14 +129,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Hierarchical Feature Learning</h3>
 
   <p>
-    The most remarkable property of CNNs is <strong
+    Here's the thing that makes CNNs truly remarkable: <strong
       >hierarchical feature extraction</strong
-    >. Early layers learn low-level features (edges,
-    textures, colors), middle layers compose these into
+    >. Imagine building a face recognizer by hand. You might start
+    with edge detectors, then combine edges into eyes and noses, then
+    combine those into faces. CNNs do exactly this, but they learn
+    each level automatically. Early layers learn low-level features
+    (edges, textures, colors), middle layers compose these into
     parts (eyes, wheels, windows), and deep layers recognize
-    high-level concepts (faces, cars, buildings). This
-    hierarchy emerges naturally from training, without
-    explicit supervision on intermediate features.
+    high-level concepts (faces, cars, buildings). This hierarchy
+    emerges naturally from training, without anyone telling the
+    network what intermediate features to look for.
   </p>
 
   <p>
@@ -151,10 +158,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The CNN Architecture Evolution</h2>
 
   <p>
-    The evolution of CNN architectures from 2012 to 2019
-    represents a systematic exploration of depth, width, and
-    connectivity patterns. Each generation solved a specific
-    bottleneck that limited the previous one.
+    The evolution of CNN architectures from 2012 to 2019 is a
+    fascinating story of researchers asking "what if we went
+    deeper?" and solving each new bottleneck that appeared. Each
+    generation tackled a specific limitation of the previous one.
   </p>
 
   <h3>AlexNet (2012): The Deep Learning Revolution</h3>
@@ -220,7 +227,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <h3>
-    <GlossaryTooltip term="ResNet" /> (2015): Skip Connections
+    ResNet (2015): Skip Connections
     and Extreme Depth
   </h3>
 
@@ -229,7 +236,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       >degrades</em
     > performance beyond a certain depth, even on training data.
     This "degradation problem" is not overfitting; it's an optimization
-    difficulty. Their solution: <strong
+    difficulty. Their solution with <GlossaryTooltip term="ResNet" />: <strong
       >residual connections</strong
     > (skip connections).
   </p>
@@ -245,15 +252,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <MathBlock formula={"y = F(x) + x"} display={true} />
 
   <p>
-    Intuition: the output is the input plus a learned
+    Read this as: the output is the input plus a learned
     correction. If the optimal transformation is identity,
     the network just needs to learn F(x) = 0, which is much
-    easier than learning H(x) = x from scratch.
+    easier than learning H(x) = x from scratch. Think of it
+    like editing a document: it's easier to mark up small
+    changes than to rewrite the whole thing from scratch.
   </p>
 
   <p>
-    This is profound: if the optimal transformation is close
-    to identity, the network only needs to learn a small
+    This idea is surprisingly powerful. If the optimal transformation
+    is close to identity, the network only needs to learn a small
     perturbation. Gradients flow directly through the skip
     connection, preventing vanishing gradients. <GlossaryTooltip
       term="ResNet"
@@ -285,10 +294,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: center and scale each activation to zero mean
+    In plain English: center and scale each activation to zero mean
     and unit variance using batch statistics, then let the
     network learn an optimal scale and shift via the
-    parameters gamma and beta.
+    parameters gamma and beta. You can think of it like
+    re-centering a wobbly spinning top after each layer so
+    it stays balanced.
   </p>
 
   <p>
@@ -320,11 +331,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: all three network dimensions (depth, width,
+    In plain English: all three network dimensions (depth, width,
     resolution) are scaled by the same compound coefficient
     phi, with fixed ratios alpha, beta, and gamma
     determining how much each dimension grows relative to
-    the others.
+    the others. It's like enlarging a photograph: you scale width
+    and height proportionally rather than stretching just one axis.
   </p>
 
   <p>
@@ -350,6 +362,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <Diagram
   diagramId="cnn-evolution"
   title="CNN Architecture Evolution: Key Milestones"
+  autoplay={true}
 >
   <div
     class="bg-[hsl(var(--card))] p-4 rounded"
@@ -391,15 +404,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
           2014
         </div>
         <div
-          class="flex-1 bg-[hsl(var(--diagram-green-bg))] border border-[hsl(var(--diagram-green-border))] rounded-lg p-3"
+          class="flex-1 bg-[hsl(var(--diagram-emerald-bg))] border border-[hsl(var(--diagram-emerald-border))] rounded-lg p-3"
         >
-          <div class="font-semibold text-[hsl(var(--diagram-green-fg))]">
+          <div class="font-semibold text-[hsl(var(--diagram-emerald-fg))]">
             VGGNet
           </div>
-          <div class="text-xs text-[hsl(var(--diagram-green-fg))]">
+          <div class="text-xs text-[hsl(var(--diagram-emerald-fg))]">
             19 layers | 138M params | 7.3% top-5 error
           </div>
-          <div class="text-xs text-[hsl(var(--diagram-green-fg))] mt-1">
+          <div class="text-xs text-[hsl(var(--diagram-emerald-fg))] mt-1">
             Uniform 3x3 convolutions, deeper is better
           </div>
         </div>
@@ -489,8 +502,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Vision Transformer (ViT): Transformers for Images</h2>
 
   <p>
-    In 2020, Dosovitskiy et al. posed a provocative
-    question: <em
+    You might wonder: if transformers work so well for text,
+    could they work for images too? In 2020, Dosovitskiy et al.
+    posed exactly this question: <em
       >can we apply the transformer architecture directly to
       images, without any convolutions?</em
     > The answer was yes, and the result (the <strong
@@ -504,10 +518,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     Transformers operate on sequences of tokens. For text,
-    tokens are words or subwords. For images, ViT creates
-    tokens by splitting the image into fixed-size <strong
-      >patches</strong
-    >. An image of size <MathBlock
+    tokens are words or subwords. But what's a "token" for an
+    image? ViT's clever solution is to chop the image into a
+    grid of fixed-size <strong>patches</strong>, like cutting a
+    photograph into squares. An image of size <MathBlock
       formula={"H \\times W"}
     /> with channels <MathBlock formula="C" /> is divided into
     a grid of patches, each of size <MathBlock
@@ -521,8 +535,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the number of patches (tokens) is simply the
-    image area divided by the patch area.
+    Read this as: the number of patches (tokens) is simply the
+    total image area divided by the area of one patch. Just
+    count how many squares fit in the grid.
   </p>
 
   <p>
@@ -544,10 +559,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: each patch's initial representation is its
+    In plain English: each patch's initial representation is its
     pixel values linearly projected into D dimensions, plus
     a position embedding that tells the model where in the
-    image this patch came from.
+    image this patch came from. Without position embeddings,
+    the model would have no idea whether a patch came from the
+    top-left or bottom-right corner.
   </p>
 
   <p>
@@ -575,10 +592,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Intuition: the final class prediction is produced by
+    In plain English: the final class prediction is produced by
     normalizing the [CLS] token's representation from the
     last transformer layer and feeding it through a
-    classification MLP.
+    classification head. The [CLS] token acts as a "summary
+    reporter" that gathers information from all patches
+    during self-attention.
   </p>
 
   <p>The full ViT forward pass:</p>
@@ -624,6 +643,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <Diagram
   diagramId="vit-architecture"
   title="Vision Transformer (ViT) Architecture"
+  autoplay={true}
 >
   <div
     class="bg-[hsl(var(--card))] p-4 rounded"
@@ -729,7 +749,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Transformer layers -->
       <div
-        class="flex flex-col gap-2 w-72"
+        class="flex flex-col gap-2 w-full sm:w-72"
         data-animate
         style="animation-delay: 1.2s"
       >
@@ -791,13 +811,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>ViT vs. CNN: Tradeoffs and Insights</h2>
 
   <p>
-    The ViT paper revealed a fascinating dataset-size
-    dependency: ViT underperforms CNNs when trained on
-    mid-sized datasets (ImageNet-1K, 1.3M images) but <em
+    Here's where things get interesting. The ViT paper revealed a
+    surprising dataset-size dependency: ViT actually
+    <em>underperforms</em> CNNs when trained on mid-sized datasets
+    (ImageNet-1K, 1.3M images) but <em
       >significantly outperforms</em
     > them when pretrained on large datasets (ImageNet-21K with
-    14M, or JFT-300M with 300M images). Understanding why requires
-    examining their different inductive biases.
+    14M, or JFT-300M with 300M images). Why? Understanding this
+    requires examining their different inductive biases.
   </p>
 
   <h3>Inductive Biases</h3>
@@ -822,10 +843,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    These biases act as a strong prior about visual data,
-    reducing the amount of data needed to learn good
-    representations. However, they also limit the model's
-    flexibility.
+    Think of these biases as "cheat codes" for visual data. They
+    reduce the amount of training data needed because the architecture
+    already "knows" something about how images work. However, they
+    also limit the model's flexibility.
   </p>
 
   <p>
@@ -849,14 +870,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    With sufficient data, ViT's flexibility is an advantage:
+    With sufficient data, ViT's flexibility becomes an advantage:
     it can learn any attention pattern, including local
     patterns that resemble convolution <em>and</em> long-range
-    patterns that CNNs cannot capture. Interestingly, Dosovitskiy
-    et al. observed that lower ViT layers learn localized attention
-    patterns (similar to convolutions), while higher layers attend
-    globally. The model rediscovers the CNN inductive bias and
-    then goes beyond it.
+    patterns that CNNs simply cannot capture. Here's a fascinating
+    detail: Dosovitskiy et al. observed that lower ViT layers
+    learn localized attention patterns (similar to convolutions),
+    while higher layers attend globally. In other words, the model
+    rediscovers the CNN inductive bias on its own, and then goes
+    beyond it.
   </p>
 
   <h3>Data Efficiency vs. Scalability</h3>
@@ -922,8 +944,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Hybrid Architectures: Best of Both Worlds</h2>
 
   <p>
-    Several architectures combine CNN and transformer
-    strengths:
+    You might be thinking: why not combine the best parts of CNNs
+    and transformers? That's exactly what several research teams
+    have done.
   </p>
 
   <h3>Swin Transformer (2021)</h3>
@@ -986,9 +1009,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Object Detection: From YOLO to DETR</h2>
 
   <p>
-    Object detection requires not just classifying what's in
-    an image but <em>where</em>, predicting bounding boxes
-    around objects. Two paradigms dominate.
+    So far, you've seen models that classify entire images. But
+    what if you need to know not just <em>what's</em> in an image
+    but <em>where</em> it is? That's the job of object detection,
+    which predicts bounding boxes around objects. Two paradigms
+    dominate.
   </p>
 
   <h3>
@@ -1064,10 +1089,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ol>
 
   <p>
-    DETR's elegance is its simplicity: no anchors, no NMS,
-    no proposal networks. Later variants (Deformable DETR,
-    DINO-DETR) improved convergence speed and accuracy to
-    surpass traditional detectors.
+    <GlossaryTooltip term="DETR" />'s elegance lies in its simplicity:
+    no anchors, no NMS, no proposal networks. If you've ever dealt with
+    the complexity of tuning anchor boxes, you can appreciate how
+    refreshing this approach is. Later variants (Deformable DETR,
+    DINO-DETR) improved convergence speed and accuracy to surpass
+    traditional detectors.
   </p>
 
   <PaperReference
@@ -1083,10 +1110,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Segmentation: The Segment Anything Model (SAM)</h2>
 
   <p>
-    While object detection produces bounding boxes, <strong
+    Bounding boxes are useful, but sometimes you need something more
+    precise. Imagine trying to remove a person from a photo: a
+    rectangle won't cut it. That's where <strong
       >segmentation</strong
-    > produces pixel-level masks. The Segment Anything Model (SAM)
-    from Meta AI represents a foundation model approach to segmentation.
+    > comes in, producing pixel-level masks that trace the exact
+    outline of objects. The Segment Anything Model (SAM) from
+    Meta AI represents a foundation model approach to segmentation.
   </p>
 
   <h3>SAM Architecture and Training</h3>

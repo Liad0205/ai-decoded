@@ -24,22 +24,22 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
   <h2>What Makes an Agent?</h2>
 
   <p>
-    An <strong>LLM agent</strong> is a system that uses a language model as its core reasoning engine to autonomously pursue goals by observing its environment, making decisions, and taking actions. The key distinction from a simple LLM application:
+    If you've ever used ChatGPT or Claude in a chat window, you've interacted with an <GlossaryTooltip term="LLM" /> directly. But an <strong>LLM agent</strong> is something more: a system that uses a language model as its core reasoning engine to autonomously pursue goals by observing its environment, making decisions, and taking actions. Here's the key distinction from a simple LLM application:
   </p>
 
   <ul>
-    <li><strong>Simple LLM application</strong>: User sends prompt, model responds, interaction ends. The model is reactive -- it does exactly what is asked in a single turn.</li>
+    <li><strong>Simple LLM application</strong>: User sends prompt, model responds, interaction ends. The model is purely reactive, doing exactly what is asked in a single turn.</li>
     <li><strong>LLM agent</strong>: The model operates in a loop, choosing which actions to take, observing results, and deciding next steps autonomously. It can pursue multi-step goals that require multiple tool calls, error recovery, and adaptive planning.</li>
   </ul>
 
   <p>
-    The spectrum from "simple app" to "autonomous agent" is continuous, not binary. A chatbot with web search sits somewhere in the middle. A coding agent that can read files, write code, run tests, and iterate on failures sits near the autonomous end.
+    You might wonder where exactly the line is between a "simple app" and an "agent." The truth is, the spectrum is continuous, not binary. A chatbot with web search sits somewhere in the middle. A coding agent that can read files, write code, run tests, and iterate on failures sits near the autonomous end.
   </p>
 
   <h3>The Three Pillars of Agency</h3>
   <ol>
     <li><strong>Autonomy</strong>: The agent decides what to do next, rather than following a rigid script. The LLM acts as the controller, not just a text generator.</li>
-    <li><strong>Tool access</strong>: The agent can take actions that affect the world -- searching the web, executing code, calling APIs, modifying files.</li>
+    <li><strong>Tool access</strong>: The agent can take actions that affect the world, such as searching the web, executing code, calling APIs, and modifying files.</li>
     <li><strong>Feedback loops</strong>: The agent observes the results of its actions and adapts its approach. It can recover from errors, try alternative strategies, and refine its plan.</li>
   </ol>
 </section>
@@ -47,7 +47,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 <Diagram diagramId="agent-loop" title="The Perception-Reasoning-Action Loop" autoplay={true} animationDuration={6000}>
   <div class="bg-[hsl(var(--card))] p-6 rounded">
     <div class="flex items-center justify-center">
-      <div class="relative w-80 h-80">
+      <div class="relative w-full max-w-80 aspect-square">
         <!-- Central LLM -->
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-[hsl(var(--diagram-indigo-bg))] border-2 border-[hsl(var(--diagram-indigo-solid))] rounded-xl flex items-center justify-center" data-animate style="animation-delay: 0.3s">
           <div class="text-center">
@@ -81,20 +81,20 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
         </div>
 
         <!-- Arrows -->
-        <svg class="absolute inset-0 w-full h-full" data-animate style="animation-delay: 5s">
+        <svg class="absolute inset-0 w-full h-auto" viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet" data-animate style="animation-delay: 5s">
           <defs>
             <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+              <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--diagram-indigo-solid))" />
             </marker>
           </defs>
           <!-- Perceive to Reason -->
-          <path d="M 200 40 Q 260 40 260 120" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+          <path d="M 200 40 Q 260 40 260 120" stroke="hsl(var(--diagram-indigo-solid))" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
           <!-- Reason to Act -->
-          <path d="M 260 200 Q 260 260 200 270" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+          <path d="M 260 200 Q 260 260 200 270" stroke="hsl(var(--diagram-indigo-solid))" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
           <!-- Act to Observe -->
-          <path d="M 120 270 Q 60 260 60 200" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+          <path d="M 120 270 Q 60 260 60 200" stroke="hsl(var(--diagram-indigo-solid))" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
           <!-- Observe to Perceive -->
-          <path d="M 60 120 Q 60 40 120 40" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+          <path d="M 60 120 Q 60 40 120 40" stroke="hsl(var(--diagram-indigo-solid))" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
         </svg>
       </div>
     </div>
@@ -108,12 +108,12 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
   <h2>Memory Systems</h2>
 
   <p>
-    A vanilla LLM has no persistent memory -- each conversation starts from a blank slate (beyond what is encoded in the model's weights). Agent memory systems address this limitation through explicit storage and retrieval mechanisms.
+    If you've ever wished a chatbot could remember what you told it last week, you've already felt the pain of the memory problem. A vanilla <GlossaryTooltip term="LLM" /> has no persistent memory. Each conversation starts from a blank slate (beyond what is encoded in the model's weights). Agent memory systems address this limitation through explicit storage and retrieval mechanisms.
   </p>
 
   <h3>Working Memory (Context Window)</h3>
   <p>
-    The model's context window serves as <strong>working memory</strong>: the active scratch space for the current task. Everything the agent is currently "thinking about" must fit in the context window.
+    Think of the model's context window as <strong>working memory</strong>: the active scratch space for the current task. Just like you can only hold a few things in your head at once, everything the agent is currently "thinking about" must fit in the context window.
   </p>
   <ul>
     <li><strong>Capacity</strong>: 4K to 200K+ tokens depending on the model</li>
@@ -123,7 +123,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 
   <h3>Short-Term Memory (Conversation History)</h3>
   <p>
-    Maintaining conversation history across turns within a session. Implementation approaches:
+    Short-term memory is about maintaining conversation history across turns within a session. You have several implementation approaches to choose from:
   </p>
   <ul>
     <li><strong>Full history</strong>: Append every message to the context. Simple but hits context limits quickly.</li>
@@ -134,7 +134,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
 
   <h3>Long-Term Memory (Persistent Storage)</h3>
   <p>
-    Information that persists across sessions and can be retrieved when relevant:
+    This is the agent equivalent of writing things down in a notebook. Long-term memory stores information that persists across sessions and can be retrieved when relevant:
   </p>
   <ul>
     <li><strong>Vector store memory</strong>: Store key observations, decisions, and learnings as embeddings. Retrieve relevant memories via semantic search when encountering similar situations.</li>
@@ -165,7 +165,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
   options={[
     {
       id: "a",
-      text: "Use a larger context window model -- more tokens solves the problem",
+      text: "Use a larger context window model, since more tokens solves the problem",
       correct: false,
       explanation: "Larger context windows help but don't fundamentally solve the problem. Even with 200K tokens, the 'lost in the middle' effect means information from turn 3 may not be effectively attended to. And context window costs scale linearly with size."
     },
@@ -185,7 +185,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
       id: "d",
       text: "Store all turns in a vector database and retrieve all of them for every new turn",
       correct: false,
-      explanation: "Retrieving all 30 turns for every new turn defeats the purpose of memory management -- you'd still be putting everything in context. Selective retrieval (only relevant turns) is the key insight."
+      explanation: "Retrieving all 30 turns for every new turn defeats the purpose of memory management; you'd still be putting everything in context. Selective retrieval (only relevant turns) is the key insight."
     }
   ]}
 />
@@ -194,12 +194,12 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
   <h2>Planning and Reasoning</h2>
 
   <p>
-    Planning is what transforms an LLM from a tool that responds to individual queries into an agent that can pursue complex, multi-step goals.
+    Here's the thing that really sets agents apart: planning is what transforms an <GlossaryTooltip term="LLM" /> from a tool that responds to individual queries into an agent that can pursue complex, multi-step goals.
   </p>
 
   <h3>Task Decomposition</h3>
   <p>
-    The most fundamental planning strategy: break a complex goal into simpler sub-tasks that can be executed sequentially or in parallel.
+    The most fundamental planning strategy is one you already use every day as a software engineer: break a complex goal into simpler sub-tasks that can be executed sequentially or in parallel.
   </p>
 
   <pre><code>Goal: "Create a competitive analysis report for our product"
@@ -222,12 +222,12 @@ Decomposition:
 
   <h4>Plan-and-Execute</h4>
   <p>
-    Create a complete plan upfront, then execute steps one by one. Simple and predictable, but brittle -- if early steps fail or reveal new information, the entire plan may need revision.
+    Create a complete plan upfront, then execute steps one by one. Simple and predictable, but brittle; if early steps fail or reveal new information, the entire plan may need revision.
   </p>
 
   <h4>Iterative Planning (Replan)</h4>
   <p>
-    Plan only the next few steps, execute them, observe results, then plan the next steps. More adaptive but potentially less efficient -- the agent may not see the full picture.
+    Plan only the next few steps, execute them, observe results, then plan the next steps. More adaptive but potentially less efficient, since the agent may not see the full picture.
   </p>
 
   <h4>Hierarchical Planning</h4>
@@ -237,7 +237,7 @@ Decomposition:
 
   <h3>Reflection and Self-Correction</h3>
   <p>
-    Effective agents reflect on their actions and adjust. Reflection can be triggered:
+    This is where agents start to feel surprisingly human. Effective agents reflect on their actions and adjust, much like how you might pause mid-task and ask yourself, "Is this approach actually working?" Reflection can be triggered:
   </p>
   <ul>
     <li><strong>After errors</strong>: "That tool call failed. Why? What should I try differently?"</li>
@@ -287,12 +287,12 @@ Decomposition:
   <h2>Agent Architectures</h2>
 
   <p>
-    Different architectures trade off between simplicity, autonomy, and reliability.
+    Now that you understand the core components (memory, planning, reasoning), let's look at how they're assembled. Different architectures trade off between simplicity, autonomy, and reliability.
   </p>
 
   <h3>Simple Loop (ReAct-Style)</h3>
   <p>
-    A single LLM in a thought-action-observation loop. The model decides when to act, when to think, and when to produce a final answer. Most agents start here.
+    The simplest architecture is a single <GlossaryTooltip term="LLM" /> in a <GlossaryTooltip term="ReAct" />-style thought-action-observation loop. The model decides when to act, when to think, and when to produce a final answer. If you're building your first agent, this is where to start.
   </p>
   <ul>
     <li><strong>Pros</strong>: Simple to implement, easy to debug, single point of reasoning</li>
@@ -310,7 +310,7 @@ Decomposition:
 
   <h3>Router Architecture</h3>
   <p>
-    A lightweight model classifies the task and routes to specialized sub-agents. For example, a customer service agent might route to: billing specialist, technical support specialist, or returns specialist.
+    Think of this like a phone menu that actually works well. A lightweight model classifies the task and routes to specialized sub-agents. For example, a customer service agent might route to: billing specialist, technical support specialist, or returns specialist.
   </p>
   <ul>
     <li><strong>Pros</strong>: Specialized prompts for each domain, fast routing decisions</li>
@@ -350,7 +350,7 @@ Decomposition:
 
   <h3>Orchestrator-Workers (Swarm)</h3>
   <p>
-    An evolution of the Router pattern where a central "Orchestrator" maintains the global state and plan, delegating specific sub-tasks to "Worker" agents. Workers report back to the Orchestrator, which then updates the plan.
+    If you've worked with microservices, this pattern will feel familiar. An "Orchestrator" maintains the global state and plan, delegating specific sub-tasks to "Worker" agents. Workers report back to the Orchestrator, which then updates the plan.
   </p>
   <ul>
     <li><strong>Pros</strong>: Highly scalable, handles complex dependencies, workers can be smaller/cheaper models.</li>

@@ -9,13 +9,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Apply query transformation techniques (decomposition,
     HyDE, step-back prompting) to improve retrieval
   </li>
   <li>
-    Understand Self-<GlossaryTooltip term="RAG" /> and how
+    Understand Self-RAG and how
     adaptive retrieval decisions improve answer quality
   </li>
   <li>
@@ -36,8 +37,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </h2>
 
 <p>
-  A core insight of advanced RAG: the user's query is often
-  a poor search query. Query transformation rewrites,
+  Here's a core insight of advanced <GlossaryTooltip term="RAG" />: the user's query is often
+  a poor search query. Think about it: you ask a question in natural
+  language, but your knowledge base stores information as structured
+  passages. Query transformation rewrites,
   decomposes, or augments the query before retrieval to
   bridge the gap between how users ask questions and how
   information is stored.
@@ -46,11 +49,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Query Decomposition</h3>
 
 <p>
-  Complex questions---multi-hop ("Who founded the company
-  that acquired X?"), comparative ("How does A compare to B
-  on metric Y?"), and aggregation ("What are the main themes
-  across these reports?")---often require information from
-  multiple sources. <strong>Query decomposition</strong> breaks
+  Complex questions often require information from
+  multiple sources. Think multi-hop questions ("Who founded the company
+  that acquired X?"), comparative questions ("How does A compare to B
+  on metric Y?"), and aggregation questions ("What are the main themes
+  across these reports?"). <strong>Query decomposition</strong> breaks
   a complex query into simpler sub-queries, retrieves for each
   independently, then synthesizes:
 </p>
@@ -72,7 +75,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ol>
 
 <p>
-  Each sub-query retrieves independently, and the LLM synthesizes a comparative answer from all retrieved
+  Each sub-query retrieves independently, and the <GlossaryTooltip term="LLM" /> synthesizes a comparative answer from all retrieved
   contexts. This typically improves recall by 10-25% for
   multi-faceted questions compared to single-query
   retrieval, with the largest gains on comparative and
@@ -82,9 +85,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>HyDE: Hypothetical Document Embeddings</h3>
 
 <p>
-  <strong>HyDE</strong> addresses the query-document asymmetry
-  problem: queries are short questions, but documents are long
-  passages. Their embeddings may not align well in vector space.
+  You might wonder: why don't question embeddings always match
+  document embeddings well? <strong>HyDE</strong> addresses exactly
+  this query-document asymmetry problem. Queries are short questions,
+  but documents are long passages. Their embeddings may not align
+  well in vector space, like trying to match a postcard to a
+  full letter by comparing their shapes.
 </p>
 
 <p>The HyDE process:</p>
@@ -110,10 +116,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: generate a hypothetical answer with the LLM,
-  embed that answer instead of the query, and use it for
+  Read this as: ask the LLM to draft a hypothetical answer,
+  then embed that draft instead of the original question and use it for
   retrieval. The hypothesis is linguistically closer to
-  actual documents than a short question is.
+  actual documents than a short question is. It's like asking
+  a friend to describe the kind of document you're looking for, then
+  searching for that description.
 </p>
 
 <p>
@@ -123,7 +131,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   the LLM has reasonable background knowledge to generate
   plausible hypotheses. <strong>When it hurts</strong>: When
   the LLM generates a confidently wrong hypothesis,
-  retrieval may be misdirected---this is particularly
+  retrieval may be misdirected. This is particularly
   problematic for highly specialized or proprietary domains
   where the LLM lacks training
   data. HyDE also adds latency (one extra LLM call) and can reduce precision when the
@@ -136,7 +144,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Step-Back Prompting</h3>
 
 <p>
-  Instead of searching for the specific question, generate a
+  Sometimes your query is too specific to find a match. Instead of
+  searching for the exact question, you generate a
   more general "step-back" question that is more likely to
   match stored knowledge:
 </p>
@@ -159,8 +168,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Multi-Query Retrieval</h3>
 
 <p>
-  Generate multiple alternative phrasings of the same query,
-  retrieve for each, then merge results:
+  Here's a simple but effective idea: generate multiple alternative
+  phrasings of the same query, retrieve for each, then merge results.
+  Different phrasings cast a wider net:
 </p>
 
 <ol>
@@ -203,7 +213,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       </div>
 
       <div
-        class="grid grid-cols-3 gap-3"
+        class="grid grid-cols-1 sm:grid-cols-3 gap-3"
         data-animate
         style="animation-delay: 1.5s"
       >
@@ -272,7 +282,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Standard RAG always retrieves,
-  even when unnecessary (e.g., "What is 2+2?").
+  even when it's unnecessary (e.g., "What is 2+2?"). That's like
+  going to the library every time someone asks you your own name.
   <strong>Self-RAG</strong> trains
   the LLM to decide <em>when</em> to retrieve, <em>what</em> to retrieve,
   and to <em>critique</em> its own outputs.
@@ -336,10 +347,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: select the candidate output that scores highest
+  In plain English: pick the candidate output that scores highest
   on a weighted combination of relevance, support
-  (groundedness), and usefulness, allowing runtime control
-  over the quality-creativity tradeoff.
+  (groundedness), and usefulness. You can think of this as a
+  judging panel where each judge (relevance, support, usefulness)
+  casts a weighted vote, and the candidate with the highest total
+  score wins.
 </p>
 
 <p>
@@ -373,6 +386,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Corrective RAG (CRAG)</h2>
 
 <p>
+  What happens when your retriever returns garbage? Instead of letting
+  the LLM hallucinate from irrelevant context,
   <strong>CRAG</strong> adds a lightweight retrieval evaluator
   that assesses retrieved document quality and triggers corrective
   actions:
@@ -405,10 +420,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Standard RAG treats documents as
-  flat, independent chunks. <strong
+  flat, independent chunks, like a pile of index cards with no
+  connections between them. <strong
     >Graph RAG</strong
   > builds a knowledge graph from the corpus and leverages its
-  structure for retrieval and reasoning.
+  structure for retrieval and reasoning. Think of it as upgrading
+  from a stack of notes to a mind map where concepts are visibly linked.
 </p>
 
 <h3>How Graph RAG Works</h3>
@@ -470,7 +487,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     entity/relation extraction, plus additional calls for
     community summarization. For a corpus of 10,000 chunks,
     this can mean 20,000-50,000 LLM calls at indexing
-    time---roughly 10-50x the cost of standard RAG indexing
+    time, roughly 10-50x the cost of standard RAG indexing
     and often the dominant expense in the pipeline
   </li>
   <li>
@@ -488,7 +505,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   For complex questions, a single retrieve-and-generate
-  cycle may be insufficient. <strong>Iterative RAG</strong> performs
+  cycle may be insufficient. It's like trying to answer a research
+  question by reading just one source. <strong>Iterative RAG</strong> performs
   multiple retrieval rounds, each informed by the previous:
 </p>
 
@@ -519,9 +537,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Agentic RAG</h3>
 
 <p>
-  Takes iterative RAG further by
+  Agentic RAG takes iterative RAG further by
   giving the LLM tool-use
-  capabilities. The LLM acts as an agent that can:
+  capabilities. Instead of following a fixed pipeline, the LLM
+  acts as a research assistant that can:
 </p>
 
 <ul>
@@ -555,9 +574,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>RAG Evaluation with RAGAS</h2>
 
 <p>
+  How do you know if your RAG system is actually working well?
   <strong>RAGAS</strong> (Retrieval-Augmented Generation Assessment)
   provides a principled framework for evaluating RAG systems without
-  requiring ground-truth answers for every query.
+  requiring ground-truth answers for every query. Think of RAGAS
+  as a health check-up for your pipeline.
 </p>
 
 <h3>RAGAS Metrics</h3>
@@ -573,10 +594,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: faithfulness is the fraction of the answer's
+  In plain English: faithfulness is the fraction of the answer's
   claims that are backed by the retrieved context. A score
   of 1.0 means every claim in the answer can be traced to
-  the source material.
+  the source material. If the answer makes 10 claims and 9 are
+  supported, faithfulness is 0.9.
 </p>
 
 <p>
@@ -601,10 +623,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: generate questions the answer would plausibly
+  Read this as: generate hypothetical questions the answer would plausibly
   address, then measure how similar those questions are to
   the original query. High similarity means the answer is
-  on-topic.
+  on-topic. It's a clever reverse check: if the answer is truly relevant,
+  you should be able to reconstruct the original question from it.
 </p>
 
 <p>
@@ -625,9 +648,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: of all the facts needed to produce the correct
+  In plain English: of all the facts needed to produce the correct
   answer, what fraction did the retrieval system actually
-  find?
+  find? If you needed 5 facts and the retriever found 3 of them,
+  recall is 0.6.
 </p>
 
 <p>
@@ -647,9 +671,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: an average precision score that rewards placing
+  Read this as: an average precision score that rewards placing
   relevant chunks earlier in the ranking. High precision
-  means less noise in the context sent to the LLM.
+  means less noise in the context sent to the LLM. If your top 5
+  results are all relevant, precision is perfect; if only the last
+  one is relevant, precision is low.
 </p>
 
 <p>
@@ -789,7 +815,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       text: "The LLM is hallucinating information not in the retrieved context",
       correct: false,
       explanation:
-        "High faithfulness (0.95) means the answer closely reflects the retrieved context---hallucination is not the issue here.",
+        "High faithfulness (0.95) means the answer closely reflects the retrieved context, so hallucination is not the issue here.",
     },
     {
       id: "b",

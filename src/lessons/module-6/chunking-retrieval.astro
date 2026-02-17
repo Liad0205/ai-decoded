@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Compare chunking strategies and understand their impact
@@ -35,22 +36,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Chunking: The Most Underrated RAG Decision</h2>
 
 <p>
-  Chunking---how you split documents into pieces for
-  embedding and retrieval---has an outsized impact on RAG quality. Poor chunking leads to retrieval failures
-  regardless of how good your embedding model or <GlossaryTooltip
+  Here's the thing: chunking (how you split documents into pieces for
+  embedding and retrieval) has an outsized impact on <GlossaryTooltip term="RAG" /> quality. You can have the best embedding model and the most powerful <GlossaryTooltip
     term="LLM"
-  /> is.
+  /> on the planet, but poor chunking will still lead to retrieval failures.
 </p>
 
-The fundamental tension: <strong>smaller chunks</strong> enable
-precise retrieval (less noise) but may lose surrounding context.
-Smaller chunks can also suffer from embedding ambiguity if they
-lack self-contained meaning---a two-sentence chunk like "It increased
-significantly. The board approved the proposal." is nearly impossible
-to embed meaningfully without surrounding context. <strong
-  >Larger chunks</strong
-> preserve context but dilute the embedding signal and consume
-more of the LLM's context window.
+<p>
+  Think of it like a Goldilocks problem. <strong>Smaller chunks</strong> enable
+  precise retrieval (less noise) but may lose surrounding context.
+  They can also suffer from embedding ambiguity if they
+  lack self-contained meaning. For example, a two-sentence chunk like "It increased
+  significantly. The board approved the proposal." is nearly impossible
+  to embed meaningfully without surrounding context. <strong>Larger chunks</strong> preserve context but dilute the embedding signal and consume
+  more of the LLM's context window. You need to find the size that's just right.
+</p>
 
 <div
   class="bg-[hsl(var(--diagram-red-bg))] p-4 rounded-lg my-4 grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -92,7 +92,7 @@ more of the LLM's context window.
 <h3>Fixed-Size Chunking</h3>
 
 <p>
-  The simplest approach: split text into fixed-length
+  This is the simplest approach you can take: split text into fixed-length
   segments (e.g., 512 tokens) with optional overlap.
 </p>
 
@@ -117,7 +117,7 @@ more of the LLM's context window.
 <h3>Recursive Character/Token Splitting</h3>
 
 <p>
-  A better default: split on natural boundaries in order of
+  A better default, and the one you'll likely reach for first: split on natural boundaries in order of
   preference:
 </p>
 
@@ -141,7 +141,7 @@ more of the LLM's context window.
 
 <h3>Semantic Chunking</h3>
 
-<p>Use embedding similarity to detect topic boundaries:</p>
+<p>You might wonder: can we let the content itself decide where the boundaries should go? That's exactly what semantic chunking does. It uses embedding similarity to detect topic boundaries:</p>
 
 <ol>
   <li>Embed each sentence in the document</li>
@@ -162,7 +162,7 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: insert a chunk boundary whenever the similarity
+  <strong>In plain English:</strong> insert a chunk boundary whenever the similarity
   between consecutive sentences drops significantly below
   the document's average, indicating a topic shift.
 </p>
@@ -216,7 +216,7 @@ more of the LLM's context window.
 <h3>Parent-Child (Hierarchical) Chunking</h3>
 
 <p>
-  A powerful pattern that decouples the retrieval unit from
+  This is a powerful pattern that you'll see in many production RAG systems. It decouples the retrieval unit from
   the context unit:
 </p>
 
@@ -330,11 +330,15 @@ more of the LLM's context window.
 
 <h2>Dense vs. Sparse Retrieval</h2>
 
+<p>
+  Once you've chunked your documents, you need a way to find the right chunks at query time. There are two fundamentally different approaches, and understanding their tradeoffs will help you build better retrieval systems.
+</p>
+
 <h3>Dense Retrieval</h3>
 
 <p>
-  Uses embedding models to map queries and documents to the
-  same vector space:
+  Dense retrieval uses embedding models to map queries and documents into the
+  same vector space, then finds matches by proximity:
 </p>
 
 <MathBlock
@@ -343,7 +347,7 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: score a query-document pair by embedding each
+  <strong>Read this as:</strong> score a query-document pair by embedding each
   independently and computing their similarity (typically
   cosine) in the shared vector space.
 </p>
@@ -389,9 +393,9 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: BM25 scores each document by summing, for each
+  <strong>In plain English:</strong> BM25 scores each document by summing, for each
   query term, a weight based on how rare the term is
-  globally (IDF) and how frequently it appears in the
+  globally (<GlossaryTooltip term="TF-IDF" />) and how frequently it appears in the
   document, with diminishing returns for repetition and a
   length normalization factor.
 </p>
@@ -399,7 +403,7 @@ more of the LLM's context window.
 <p><strong>Strengths</strong>:</p>
 <ul>
   <li>
-    Excellent exact term matching---crucial for names, IDs,
+    Excellent exact term matching, crucial for names, IDs,
     technical terms
   </li>
   <li>No training required, works out of the box</li>
@@ -425,8 +429,8 @@ more of the LLM's context window.
 <h3>Hybrid Retrieval: The Best of Both</h3>
 
 <p>
-  Combining dense and sparse retrieval consistently
-  outperforms either alone. Two primary fusion methods:
+  If you take one thing away from this section, let it be this: combining dense and sparse retrieval consistently
+  outperforms either alone. There are two primary fusion methods you should know:
 </p>
 
 <p><strong>Linear score fusion</strong>:</p>
@@ -436,7 +440,7 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: blend the normalized dense and sparse scores
+  <strong>Read this as:</strong> blend the normalized dense and sparse scores
   using a tunable weight alpha. Higher alpha favors semantic
   matching; lower alpha favors keyword matching.
 </p>
@@ -454,7 +458,7 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: score each document by summing reciprocal rank
+  <strong>In plain English:</strong> score each document by summing reciprocal rank
   contributions from each retriever. Documents ranked highly
   by multiple retrievers rise to the top without any need to
   normalize raw scores.
@@ -470,9 +474,8 @@ more of the LLM's context window.
 <h2>Reranking: The Precision Stage</h2>
 
 <p>
-  Retrieval is a <em>recall-oriented</em> stage: cast a wide net.
-  <strong>Reranking</strong> is a <em>precision-oriented</em
-  > stage: from the retrieved candidates, select the most relevant.
+  Think of retrieval like fishing with a net: you cast wide to maximize <em>recall</em>.
+  <strong>Reranking</strong> is the <em>precision</em> stage where you sort through your catch and keep only the best fish. From the retrieved candidates, you select the most relevant.
 </p>
 
 <h3>Cross-Encoder Reranking</h3>
@@ -488,8 +491,8 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: concatenate the query and document as a single
-  input to BERT, allowing full cross-attention between their
+  <strong>Read this as:</strong> concatenate the query and document as a single
+  input to <GlossaryTooltip term="BERT" />, allowing full cross-attention between their
   tokens, and produce a single relevance score via a
   sigmoid.
 </p>
@@ -526,8 +529,8 @@ more of the LLM's context window.
 <h3>Late Interaction Models (ColBERT)</h3>
 
 <p>
-  <strong>ColBERT</strong> offers a middle ground between bi-encoders
-  and cross-encoders:
+  You might wonder: is there a middle ground between bi-encoders
+  and cross-encoders? That's exactly what <strong>ColBERT</strong> provides:
 </p>
 
 <ol>
@@ -551,7 +554,7 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: for each query token, find the single most
+  <strong>In plain English:</strong> for each query token, find the single most
   similar document token and take that similarity. Sum these
   best-match scores across all query tokens. This captures
   fine-grained, token-level relevance while still allowing
@@ -570,8 +573,8 @@ more of the LLM's context window.
 <h2>Multi-Vector Retrieval</h2>
 
 <p>
-  Instead of a single embedding per chunk, store multiple
-  embeddings to capture different aspects:
+  Instead of representing each chunk with a single embedding, you can store multiple
+  embeddings to capture different aspects. This gives your retrieval system more angles of attack:
 </p>
 
 <ul>
@@ -598,7 +601,7 @@ more of the LLM's context window.
 <h2>Practical Retrieval Pipeline Design</h2>
 
 <p>
-  A production retrieval pipeline typically has 3-4 stages:
+  Now that you understand the building blocks, let's see how they fit together. A production retrieval pipeline typically has 3-4 stages:
 </p>
 
 <Diagram
@@ -707,8 +710,7 @@ more of the LLM's context window.
 <h3>Evaluation Metrics</h3>
 
 <p>
-  Measure retrieval quality independently of generation
-  quality:
+  When something goes wrong in your RAG system, you need to know whether the problem is retrieval or generation. These metrics help you measure retrieval quality independently:
 </p>
 
 <ul>
@@ -734,7 +736,7 @@ more of the LLM's context window.
 />
 
 <p>
-  Intuition: nDCG measures ranking quality by giving higher
+  <strong>In plain English:</strong> nDCG measures ranking quality by giving higher
   credit to relevant documents ranked near the top,
   normalized against the ideal (perfect) ranking so the
   score falls between 0 and 1.
@@ -787,7 +789,7 @@ more of the LLM's context window.
     <li>
       <strong>Parent-child chunking</strong> decouples retrieval
       precision (small child chunks) from generation context (large
-      parent chunks)---one of the highest-impact RAG improvements
+      parent chunks), one of the highest-impact RAG improvements
     </li>
     <li>
       <strong>Contextual retrieval</strong> prepends LLM-generated context to chunks before embedding, solving

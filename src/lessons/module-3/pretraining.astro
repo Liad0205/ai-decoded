@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand the pretraining data pipeline: sourcing,
@@ -33,14 +34,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   Pretraining is where an <GlossaryTooltip term="LLM" /> acquires its broad knowledge
-  of language, facts, and reasoning patterns. The quality
+  of language, facts, and reasoning patterns. Think of it as the foundation
+  of a building: everything the model will later do (follow instructions,
+  write code, answer questions) rests on what it absorbs here. The quality
   and scale of pretraining data fundamentally determine what
   the model can learn.
 </p>
 
 <h3>Data Sources</h3>
 <p>
-  Modern LLMs train on trillions of tokens from diverse
+  You might be surprised by just how much text goes into training a modern
+  LLM. We're talking trillions of tokens from diverse
   sources:
 </p>
 <ul>
@@ -75,8 +79,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h3>Data Quality Filtering</h3>
 <p>
-  Raw web text is noisy. Filtering is critical and typically
-  involves multiple stages:
+  Here's the thing: raw web text is incredibly noisy. Think spam, boilerplate,
+  duplicated pages, and plenty of content you wouldn't want a model learning from.
+  Filtering is critical and typically involves multiple stages:
 </p>
 <ul>
   <li>
@@ -106,8 +111,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <h3>Data Mixing</h3>
 <p>
-  Not all data sources are equal. Training mixes are
-  carefully tuned:
+  Not all data sources are equal, and this is where things get interesting.
+  Training mixes are carefully tuned, like a recipe where the proportions matter
+  as much as the ingredients:
 </p>
 <ul>
   <li>
@@ -120,15 +126,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
   <li>
     The optimal mix is an active research area. Models like
-    <GlossaryTooltip term="GPT" />-4 and Claude use proprietary data mixtures that are
+    <GlossaryTooltip term="GPT" />-5.2 and Claude use proprietary data mixtures that are
     closely guarded.
   </li>
 </ul>
 
 <h3>Tokenization</h3>
 <p>
-  Raw text must be converted into a sequence of discrete
-  tokens. Modern LLMs use subword tokenization:
+  Before a model can process text, it needs to break it into pieces. But how do
+  you split text into units? Whole words? Individual characters? Modern LLMs use
+  a clever middle ground called <strong>subword tokenization</strong>, which splits
+  text into chunks that balance vocabulary size against sequence length:
 </p>
 <ul>
   <li>
@@ -164,14 +172,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   The core training objective is deceptively simple: given a
-  sequence of tokens, predict the next one.
+  sequence of tokens, predict the next one. That's it. No labeled data,
+  no human annotations. Just billions of pages of text and one question
+  over and over: "What word comes next?"
 </p>
 
 <p>
-  Given a sequence <MathBlock
+  More formally, given a sequence <MathBlock
     formula={"x_1, x_2, \\ldots, x_T"}
   />, the model learns to maximize the probability of each
-  token given all preceding tokens:
+  token given all preceding tokens. The loss function captures
+  how surprised the model is by the actual next token:
 </p>
 
 <MathBlock
@@ -180,25 +191,28 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: sum the negative log-probability of each token
-  given everything before it. The model is penalized for
-  being surprised by the next token, so it learns to predict
-  accurately.
+  Read this as: for each position in the sequence, measure how well the model
+  predicted the actual next token (using log-probability), then sum up all those
+  scores. The negative sign means a higher probability (better prediction) produces
+  a lower loss. In other words, the model is penalized for being surprised,
+  so it learns to predict as accurately as possible.
 </p>
 
 <p>
-  This is the <strong>causal language modeling</strong> objective,
-  also called autoregressive modeling. The model processes the
-  entire sequence in one forward pass using a causal attention
-  mask that prevents position t from attending to positions t+1,
-  t+2, ... This enables efficient parallel training despite the
+  This is called <strong>causal language modeling</strong> (also known as
+  autoregressive modeling). The key trick: during training, the model processes
+  the entire sequence in one forward pass using a causal attention mask that
+  prevents each position from peeking at future tokens. It's like covering up
+  the rest of a sentence and asking "what comes next?" at every position
+  simultaneously. This enables efficient parallel training despite the
   sequential nature of generation.
 </p>
 
 <h3>Why Next-Token Prediction Works So Well</h3>
 
 <p>
-  Predicting the next token in internet text requires an
+  You might wonder: how can something so simple produce such capable models?
+  The answer is that predicting the next token in internet text requires an
   incredibly broad set of capabilities:
 </p>
 <ul>
@@ -236,9 +250,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   The training loss is the cross-entropy between the model's
-  predicted distribution and the true next token. <strong
-    >Perplexity</strong
-  > is the exponentiated average cross-entropy loss:
+  predicted distribution and the true next token. But raw loss numbers
+  are hard to interpret. That's where <strong>perplexity</strong> comes in.
+  It converts the loss into something more intuitive by exponentiating the
+  average cross-entropy:
 </p>
 
 <MathBlock
@@ -247,17 +262,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: perplexity exponentiates the average per-token
-  loss. It represents the effective number of equally likely
-  choices the model faces at each step.
+  In plain English: perplexity tells you how many equally likely choices the
+  model is effectively picking from at each step. If the perplexity is 10,
+  it's as if the model is choosing between 10 equally likely options every time
+  it predicts the next token.
 </p>
 
 <p>
-  Perplexity has an intuitive interpretation: a perplexity
-  of k means the model is, on average, as uncertain as if it
-  were choosing uniformly among k options at each step.
-  Lower is better. State-of-the-art LLMs achieve
-  perplexities around 5-10 on typical web text.
+  Lower is better. A perplexity of 1 would mean perfect prediction (the model
+  always knows exactly what comes next). State-of-the-art LLMs achieve
+  perplexities around 5-10 on typical web text, which is remarkably good
+  considering the diversity of language.
 </p>
 
 <Diagram
@@ -272,7 +287,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <div class="flex flex-col gap-4 items-center">
       <!-- Stage 1: Data -->
       <div
-        class="flex gap-3 items-center w-full justify-center"
+        class="flex flex-wrap gap-3 items-center w-full justify-center"
         data-animate
         style="animation-delay: 0.3s"
       >
@@ -307,7 +322,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 2: Filtering -->
       <div
-        class="px-4 py-2 bg-[hsl(var(--diagram-amber-bg))] rounded text-xs text-center font-medium w-64"
+        class="px-4 py-2 bg-[hsl(var(--diagram-amber-bg))] rounded text-xs text-center font-medium w-full sm:w-64"
         data-animate
         style="animation-delay: 1.2s"
       >
@@ -323,7 +338,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 3: Training -->
       <div
-        class="px-4 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center font-medium w-64"
+        class="px-4 py-2 bg-[hsl(var(--diagram-indigo-bg))] rounded text-xs text-center font-medium w-full sm:w-64"
         data-animate
         style="animation-delay: 2.0s"
       >
@@ -339,7 +354,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
       <!-- Stage 4: Output -->
       <div
-        class="px-4 py-3 bg-[hsl(var(--diagram-emerald-bg))] rounded text-sm text-center font-semibold w-64"
+        class="px-4 py-3 bg-[hsl(var(--diagram-emerald-bg))] rounded text-sm text-center font-semibold w-full sm:w-64"
         data-animate
         style="animation-delay: 3.0s"
       >
@@ -361,18 +376,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Distributed Training</h2>
 
 <p>
-  Training a frontier LLM requires thousands of GPUs working
-  in concert. A single GPU cannot hold the model parameters,
-  optimizer states, gradients, and activations
-  simultaneously. Distributed training strategies address
-  this by partitioning the work across devices.
+  So far we've talked about <em>what</em> to train on and <em>what</em> the
+  objective is. But there's a practical challenge: modern LLMs are enormous.
+  Training a frontier model requires thousands of GPUs working
+  in concert. A single GPU simply cannot hold the model parameters,
+  optimizer states, gradients, and activations all at once. Distributed
+  training strategies solve this by partitioning the work across many devices.
 </p>
 
 <h3>Data Parallelism (DP)</h3>
 
 <p>
-  The simplest strategy: replicate the full model on each
-  GPU, split the batch across GPUs, and average gradients.
+  Let's start with the simplest strategy. The idea: put a complete copy of the
+  model on each GPU, give each GPU a different slice of the training batch, and
+  average the gradients at the end. It's like giving each worker the same recipe
+  but different ingredients to test.
 </p>
 <ul>
   <li>Each GPU processes a different mini-batch shard.</li>
@@ -393,7 +411,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>ZeRO: Zero Redundancy Optimizer</h3>
 
 <p>
-  ZeRO (DeepSpeed) partitions optimizer states, gradients,
+  Data parallelism's memory problem seems hard to avoid, but ZeRO (from DeepSpeed)
+  offers an elegant solution. The core insight: why should every GPU store a copy
+  of <em>everything</em>? Instead, ZeRO partitions optimizer states, gradients,
   and parameters across GPUs to eliminate redundancy:
 </p>
 <ul>
@@ -454,9 +474,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Tensor Parallelism (TP)</h3>
 
 <p>
-  Split individual weight matrices across GPUs. For a linear
-  layer <MathBlock formula="Y = XW" />, split the weight
-  matrix <MathBlock formula="W" /> column-wise across N GPUs:
+  While data parallelism splits the <em>data</em>, tensor parallelism splits
+  the <em>model's weight matrices themselves</em> across GPUs. Consider a linear
+  layer <MathBlock formula="Y = XW" />. Instead of one GPU holding the entire
+  weight matrix <MathBlock formula="W" />, we slice it column-wise across N GPUs:
 </p>
 
 <MathBlock
@@ -465,14 +486,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: split each weight matrix into N column-wise
-  shards, one per GPU. Each GPU multiplies the input by its
-  shard, then the partial results are combined.
-</p>
-
-<p>
-  Each GPU computes <MathBlock formula="Y_i = XW_i" />, then
-  results are combined via all-reduce. This is commonly
+  Think of it this way: if you had a huge multiplication table and four friends,
+  you could give each friend one quarter of the columns. Each friend computes their
+  portion, and then you combine the results. That's exactly what happens here: each
+  GPU computes <MathBlock formula="Y_i = XW_i" />, then
+  the partial results are combined via all-reduce. This is commonly
   applied to the attention and FFN layers.
 </p>
 
@@ -486,8 +504,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Pipeline Parallelism (PP)</h3>
 
 <p>
-  Assign different layers to different GPUs. GPU 0 runs
-  layers 1-10, GPU 1 runs layers 11-20, etc.
+  The third strategy takes yet another approach: instead of splitting data or
+  weight matrices, you split the model <em>vertically</em> by layers. GPU 0 runs
+  layers 1-10, GPU 1 runs layers 11-20, and so on, like an assembly line where
+  each station handles one stage of production.
 </p>
 <ul>
   <li>
@@ -516,9 +536,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>3D Parallelism in Practice</h3>
 
 <p>
-  Frontier models combine all three: TP within a node, PP
-  across nodes, and DP (with ZeRO) across replicas. For
-  example, training a 175B model on 1024 GPUs might use:
+  In practice, frontier models don't pick just one strategy. They combine all three,
+  which is why this is called <strong>3D parallelism</strong>: TP within a node
+  (where GPUs have fast interconnects), PP across nodes, and DP (with ZeRO) across
+  replicas. For example, training a 175B model on 1024 GPUs might use:
 </p>
 <ul>
   <li>TP = 8 (within each 8-GPU node)</li>
@@ -530,12 +551,18 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>Mixed-Precision Training</h2>
 
 <p>
-  Training in full FP32 precision is wasteful. Modern
-  training uses mixed precision: FP16 or BF16 for most
-  operations, FP32 for critical accumulations.
+  Now let's talk about a different kind of efficiency. Every number in a neural
+  network (weights, gradients, activations) takes up memory and compute time.
+  Training in full FP32 precision (32 bits per number) works, but it's wasteful.
+  Modern training uses <strong>mixed precision</strong>: FP16 or BF16 for most
+  operations, FP32 only where it really matters.
 </p>
 
 <h3>FP16 vs BF16</h3>
+<p>
+  Both FP16 and BF16 use 16 bits, but they allocate those bits differently.
+  This trade-off matters more than you might expect:
+</p>
 <ul>
   <li>
     <strong>FP16</strong> (half precision): 1 sign, 5 exponent,
@@ -552,9 +579,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>The Mixed-Precision Recipe</h3>
 
 <p>
-  The key insight: forward and backward passes can use
-  reduced precision (BF16), but certain operations need FP32
-  for numerical stability:
+  So how do you actually use these reduced-precision formats without sacrificing
+  model quality? The key insight: forward and backward passes can use
+  BF16, but certain operations need FP32 for numerical stability.
+  Here's the recipe:
 </p>
 <ul>
   <li>
@@ -576,16 +604,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ul>
 
+<p>
+  The weight update rule captures how these precisions interact. The model
+  keeps a "master copy" of the weights in full precision:
+</p>
+
 <MathBlock
   formula={"\\theta_{t+1}^{\\text{FP32}} = \\theta_t^{\\text{FP32}} - \\eta \\cdot g_t^{\\text{BF16} \\to \\text{FP32}}"}
   display={true}
 />
 
 <p>
-  Intuition: gradients are computed in BF16 for speed, then
-  cast to FP32 before updating the master copy of the
-  weights. This preserves the precision of small gradient
-  updates that would be lost in half-precision.
+  Read this as: take the current FP32 weights, subtract the learning rate times
+  the gradient (which was computed in BF16 and then cast back to FP32). The
+  crucial point is that the master weights live in FP32, so tiny gradient
+  updates that would vanish in half-precision are properly accumulated over time.
 </p>
 
 <p>
@@ -597,11 +630,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Activation Checkpointing</h3>
 
 <p>
-  During the forward pass, all intermediate activations must
-  be stored for the backward pass. For large models, this
-  dominates memory usage. <strong
-    >Activation checkpointing</strong
-  > (gradient checkpointing) trades compute for memory:
+  There's one more memory-saving trick worth knowing about. During the forward
+  pass, the model has to store all intermediate activations (the outputs of
+  every layer) because they're needed during the backward pass to compute
+  gradients. For large models, this dominates memory usage.
+  <strong>Activation checkpointing</strong> (also called gradient checkpointing)
+  offers a clever trade-off, spending a bit more compute to save a lot of memory:
 </p>
 <ul>
   <li>

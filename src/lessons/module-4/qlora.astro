@@ -11,6 +11,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Understand quantization: how floating-point numbers
@@ -37,18 +38,29 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>The Quantization Landscape</h2>
 
   <p>
-    <strong>Quantization</strong> reduces the precision of numerical
-    representations, trading a small amount of accuracy for dramatic
-    memory savings. In the context of LLMs, we quantize model
-    weights from their native precision (FP32 or BF16) to lower-bit
-    formats.
+    In the previous lesson, you saw how <GlossaryTooltip term="LoRA" /> slashes the number of
+    trainable parameters. But even with LoRA, you still need to load the
+    full base model into GPU memory, and for a 7B+ model that can be
+    14 GB or more. What if you could shrink those weights dramatically
+    before they even hit the GPU?
+  </p>
+
+  <p>
+    That is what <strong>quantization</strong> does. Think of it like
+    converting a high-resolution photo to a smaller JPEG: you lose some
+    fine detail, but the file takes up far less space. In the context of
+    <GlossaryTooltip term="LLM" />s, we quantize model weights from their native precision (FP32 or
+    BF16) to lower-bit formats, trading a small amount of accuracy for
+    dramatic memory savings.
   </p>
 
   <h3>Number Formats in Deep Learning</h3>
 
   <p>
-    Each format uses a different number of bits to represent
-    values:
+    Before diving into the quantization math, it helps to see what
+    you are compressing <em>from</em> and <em>to</em>. Each number
+    format allocates a different number of bits to represent values.
+    Fewer bits means less memory, but also less precision:
   </p>
 
   <Diagram
@@ -209,7 +221,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         </div>
       </div>
       <div
-        class="mt-3 flex gap-4 text-xs text-[hsl(var(--muted-foreground))] justify-center"
+        class="mt-3 flex flex-wrap gap-4 text-xs text-[hsl(var(--muted-foreground))] justify-center"
         data-animate
         style="animation-delay: 2.4s"
       >
@@ -237,9 +249,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>How Quantization Works</h3>
   <p>
-    The simplest quantization scheme maps a range of
-    floating-point values to a fixed set of integer levels.
-    For <MathBlock formula="b" />-bit quantization:
+    The core idea is straightforward: take a range of floating-point
+    values and map them onto a small, fixed set of integer levels.
+    Imagine you have a ruler with 256 possible marks (8-bit) or
+    just 16 marks (4-bit). You stretch the ruler across the range
+    of your values, then snap each value to the nearest mark.
+    For <MathBlock formula="b" />-bit quantization, the formula is:
   </p>
   <div class="equation-with-label">
     <MathBlock
@@ -251,16 +266,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </div>
   </div>
   <p>
-    Intuition: shift each value so the minimum maps to 0,
-    then divide by the step size <MathBlock formula="s" /> and
+    Read this as: shift each value so the minimum maps to 0,
+    divide by the step size <MathBlock formula="s" />, and
     round to the nearest integer. The scale factor <MathBlock
       formula="s"
-    /> divides the value range into <MathBlock
+    /> divides the full value range into <MathBlock
       formula={"2^b - 1"}
-    /> equal steps, where <MathBlock formula="b" /> is the bit
-    width. The quantized integer <MathBlock formula="x_q" /> is
-    what gets stored. Dequantization recovers the approximate
-    value:
+    /> equal steps (for example, 15 steps with 4-bit, 255 steps
+    with 8-bit). The resulting integer <MathBlock formula="x_q" />
+    is what actually gets stored in memory. To get back to
+    a usable floating-point value, you dequantize:
   </p>
   <div class="equation-with-label">
     <MathBlock
@@ -272,10 +287,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </div>
   </div>
   <p>
-    This reverses the process: multiply the stored integer
-    by the step size and add back the offset. The result is
-    an approximation of the original value, with error
-    bounded by half the step size.
+    In plain English: multiply the stored integer by the step size
+    and add back the offset you subtracted earlier. You get back an
+    approximation of the original value, not an exact copy. The
+    maximum error is half a step size, which is usually small enough
+    that the model barely notices.
   </p>
   <p>
     This introduces <strong>quantization error</strong>
@@ -289,20 +305,23 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>NF4: Quantization Designed for Neural Networks</h2>
 
   <p>
-    Standard uniform quantization allocates equal spacing
-    between quantization levels. But neural network weights
-    are not uniformly distributed -- they follow a roughly <strong
-      >normal distribution</strong
-    > centered around zero. This means most weights cluster near
-    zero, with few large outliers.
+    The quantization formula above spaces its levels evenly across the
+    value range. That works fine if your values are spread evenly too.
+    But here is the thing: neural network weights are <em>not</em>
+    evenly spread. They follow a roughly <strong>normal
+    distribution</strong> centered around zero, meaning most weights
+    cluster near zero, with only a few large outliers in the tails.
+    Equal spacing wastes precious quantization levels on the sparse
+    tails while under-serving the crowded center.
   </p>
 
   <p>
     <strong>NormalFloat4 (NF4)</strong>, introduced in the
-    QLoRA paper, exploits this by placing quantization
-    levels at the <strong
-      >quantiles of the standard normal distribution</strong
-    >:
+    <GlossaryTooltip term="QLoRA" /> paper, fixes this mismatch.
+    Instead of spacing levels evenly, it places them at the
+    <strong>quantiles of the standard normal distribution</strong>.
+    Think of slicing the bell curve into 16 equal-area slices and
+    putting one quantization level in the center of each slice:
   </p>
 
   <MathBlock
@@ -311,15 +330,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    Each quantization level <MathBlock formula="q_i" /> is placed
-    at the point where a fixed fraction of a normal distribution's
-    probability mass falls. <MathBlock
-      formula={"\\Phi^{-1}"}
-    /> is the inverse CDF (probit function) of the standard normal
-    -- it converts a uniform probability into the corresponding
-    z-score. For 4-bit (16 levels), this places levels more densely
-    near zero (where most weights are) and more sparsely in the
-    tails.
+    Read this as: for each of the <MathBlock formula={"2^b"} />
+    levels, find the point on the bell curve where a fraction
+    <MathBlock formula={"(i + 0.5) / 2^b"} /> of the total area
+    falls to the left. <MathBlock formula={"\\Phi^{-1}"} /> is the
+    inverse CDF (probit function) of the standard normal
+    (it converts a uniform probability into the corresponding
+    z-score). For 4-bit (16 levels), the result is that levels
+    cluster densely near zero, where most weights live, and spread
+    out in the tails where values are rare.
   </p>
 
   <p>
@@ -392,19 +411,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Double Quantization</h2>
 
   <p>
-    Block-wise quantization introduces one scale factor per
-    block of 64 weights. For a 7B model, that is roughly <MathBlock
+    You might wonder: if each block of 64 weights needs its own FP32
+    scale factor, how much overhead does that add? For a 7B model,
+    that is roughly <MathBlock
       formula={"7 \\times 10^9 / 64 \\approx 109\\text{M}"}
-    /> FP32 scale factors, consuming ~437 MB. This overhead partially
-    offsets the memory savings of 4-bit quantization.
+    /> FP32 scale factors, consuming ~437 MB. That is a lot of
+    bookkeeping, partially eating into the savings you just worked
+    so hard to get.
   </p>
 
   <p>
-    <strong>Double quantization</strong> addresses this by quantizing
-    the scale factors themselves. The quantization constants from
-    the first quantization are gathered into groups of 256, and
-    each group is quantized to 8-bit precision with a single FP32
-    scale factor:
+    <strong>Double quantization</strong> solves this with a clever
+    trick: quantize the scale factors themselves. The quantization
+    constants from the first round are gathered into groups of 256,
+    and each group is compressed to 8-bit precision with a single
+    FP32 scale factor. It is quantization all the way down:
   </p>
 
   <div class="equation-sequence">
@@ -419,13 +440,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     />
 
     <p class="mt-2">
-      Each weight costs 4 bits for its quantized value, plus
-      an amortized fraction of the two levels of scale
-      factors. The first-level INT8 scale is shared across
-      64 weights (0.125 bits each), and the second-level
-      FP32 scale is shared across 64 x 256 = 16,384 weights
-      (negligible per weight). Compare this to single
-      quantization:
+      In plain English: each weight costs 4 bits for its
+      quantized NF4 value. On top of that, you pay a tiny
+      fraction for the bookkeeping: the first-level INT8 scale
+      is shared across 64 weights (adding 0.125 bits each),
+      and the second-level FP32 scale is shared across
+      64 x 256 = 16,384 weights (essentially free). Compare
+      this to single quantization, where you pay much more
+      overhead:
     </p>
     <MathBlock
       formula={"\\text{Single quantization} = 4 + \\frac{32}{64} = 4.5 \\text{ bits per weight}"}
@@ -435,7 +457,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     With single quantization, each FP32 scale factor costs
-    0.5 bits per weight -- a significant overhead on top of
+    0.5 bits per weight, a significant overhead on top of
     the 4-bit weight itself. Double quantization saves <MathBlock
       formula="0.373"
     /> bits per parameter. For a 7B model: <MathBlock
@@ -448,8 +470,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>QLoRA: Putting It All Together</h2>
 
   <p>
-    <strong>QLoRA</strong> combines three innovations to enable
-    fine-tuning a 65B parameter model on a single 48 GB GPU:
+    Now you have all the pieces. <strong><GlossaryTooltip term="QLoRA" /></strong>
+    stacks three innovations together, and the combination is
+    what makes it possible to fine-tune a 65B parameter model
+    on a single 48 GB GPU:
   </p>
 
   <ol>
@@ -467,22 +491,28 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
   </ol>
 
-  <p>The forward pass with QLoRA:</p>
+  <p>
+    Here is how the forward pass works. The base model's frozen
+    weights live in 4-bit NF4 format, while the small
+    <GlossaryTooltip term="LoRA" /> adapter matrices stay in
+    full BF16 precision. During each forward pass, the two
+    contributions are summed:
+  </p>
   <MathBlock
     formula={"h = \\text{dequant}(W_{\\text{NF4}}) \\cdot x + \\frac{\\alpha}{r} BAx"}
     display={true}
   />
 
   <p>
-    The output is the sum of two terms: the base model's
-    computation (using dequantized 4-bit weights) plus the
-    LoRA adapter's low-rank correction (in full BF16
-    precision). During the forward pass, NF4 weights are
-    dequantized to BF16 on-the-fly for matrix
-    multiplication. Only the LoRA matrices <MathBlock
-      formula="B"
-    /> and <MathBlock formula="A" /> receive gradient updates.
-    The quantized base weights are never modified.
+    Read this as: the output <MathBlock formula="h" /> has two
+    parts. First, the NF4 weights are dequantized back to BF16
+    on-the-fly and multiplied by the input <MathBlock formula="x" />.
+    Second, the LoRA adapter computes its low-rank correction
+    <MathBlock formula="BAx" />, scaled by <MathBlock
+      formula={"\\alpha / r"}
+    />. Only the LoRA matrices <MathBlock formula="B" /> and
+    <MathBlock formula="A" /> receive gradient updates during
+    training. The quantized base weights are never modified.
   </p>
 
   <h3>Paged Optimizers</h3>
@@ -512,13 +542,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Memory Comparison</h2>
 
   <p>
-    To see the impact in concrete terms: a 7B parameter
-    model in FP16 requires 14 GB of GPU memory just to hold
-    the weights. With QLoRA's 4-bit quantization, the base
-    model shrinks to ~3.5 GB, plus ~100 MB for the LoRA
-    adapters and optimizer -- fitting comfortably on a
-    single 8 GB consumer GPU. The following breakdown shows
-    exactly where memory goes under each approach.
+    All of these techniques sound promising in theory, but do
+    the numbers actually work out? Let's put concrete figures
+    on it. A 7B parameter model in FP16 requires 14 GB of GPU
+    memory just to hold the weights. With QLoRA's 4-bit
+    quantization, the base model shrinks to ~3.5 GB, plus
+    ~100 MB for the LoRA adapters and optimizer, fitting
+    comfortably on a single 8 GB consumer GPU. The following
+    breakdown shows exactly where memory goes under each
+    approach.
   </p>
 
   <RevealSection
@@ -659,16 +691,20 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Quality: Does Quantization Hurt?</h2>
 
   <p>
-    The QLoRA paper's key finding: <strong
-      >4-bit QLoRA matches 16-bit full fine-tuning
-      performance</strong
-    > on a wide range of benchmarks. The authors fine-tuned LLaMA-65B
-    using QLoRA on the OASST1 dataset and achieved state-of-the-art
-    chatbot performance (at the time), surpassing all previous
-    models on the Vicuna benchmark.
+    At this point you might be skeptical: crushing weights down to 4
+    bits sounds aggressive. Surely quality must suffer? The QLoRA
+    paper's key finding says otherwise: <strong>4-bit QLoRA matches
+    16-bit full fine-tuning performance</strong> on a wide range of
+    benchmarks. The authors fine-tuned LLaMA-65B using QLoRA on the
+    OASST1 dataset and achieved state-of-the-art chatbot performance
+    (at the time), surpassing all previous models on the Vicuna
+    benchmark.
   </p>
 
-  <p>Why does extreme quantization work? Two reasons:</p>
+  <p>
+    Why does extreme quantization work so well? Two complementary
+    reasons:
+  </p>
   <ul>
     <li>
       <strong>LoRA compensates</strong>: The BF16 LoRA

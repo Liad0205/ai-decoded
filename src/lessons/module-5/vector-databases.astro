@@ -9,6 +9,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 ---
 
 <h2>Learning Objectives</h2>
+<p>After completing this lesson, you will be able to:</p>
 <ul>
   <li>
     Understand why exact nearest neighbor search is
@@ -37,11 +38,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>The Nearest Neighbor Problem at Scale</h2>
 
 <p>
-  Given a query vector <MathBlock
+  Imagine you have a library of millions of documents, each represented as a vector (an embedding). When a user types a query, you need to find the handful of documents most similar to it. Formally, given a query vector <MathBlock
     formula={"q \\in \\mathbb{R}^d"}
   /> and a database of N vectors <MathBlock
     formula={"\\{v_1, v_2, \\ldots, v_N\\}"}
-  />, find the k vectors most similar to q:
+  />, you want to find the k vectors most similar to q:
 </p>
 
 <MathBlock
@@ -50,43 +51,47 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: find the subset of k vectors whose total
-  distance to the query is minimized.
+  In plain English: find the subset of k vectors whose total
+  distance to the query is minimized. Think of it like finding
+  the k closest coffee shops to your location on a map, except the
+  "map" has 768 dimensions instead of two.
 </p>
 
 <p>
   <strong>Exact search</strong> requires computing distances to
   all N vectors: O(Nd) per query. With N = 100M vectors and d
-  = 768 using float32 arithmetic, this means ~76 billion floating-point
-  operations per query. At 1ms per query target, this is infeasible.
+  = 768 using float32 arithmetic, that is roughly 76 billion floating-point
+  operations per query. If your latency budget is 1ms, this is
+  completely infeasible. You need a shortcut.
 </p>
 
 <h3>Distance Metrics</h3>
 
 <p>
-  The choice of distance metric determines how similarity is
-  measured:
+  Before you can find the "nearest" vectors, you need to decide
+  what "near" means. The choice of distance metric determines how
+  similarity is measured:
 </p>
 
 <ul>
   <li>
     <strong>Cosine similarity</strong>: <MathBlock
       formula={"\\text{cos}(u,v) = \\frac{u \\cdot v}{\\|u\\|\\|v\\|}"}
-    /> --- measures the angle between vectors, ignoring magnitude.
+    />. Measures the angle between vectors, ignoring magnitude.
     Useful when only direction (topic/meaning) matters, not scale.
     Most common for text embeddings.
   </li>
   <li>
     <strong>Euclidean (L2) distance</strong>: <MathBlock
       formula={"\\|u - v\\|_2 = \\sqrt{\\sum_i (u_i - v_i)^2}"}
-    /> --- measures absolute distance in space, penalizing differences
+    />. Measures absolute distance in space, penalizing differences
     in both direction and magnitude. Equivalent to cosine for
     normalized vectors.
   </li>
   <li>
     <strong>Inner product (dot product)</strong>: <MathBlock
       formula={"u \\cdot v = \\sum_i u_i v_i"}
-    /> --- combines directional alignment with magnitude, so larger
+    />. Combines directional alignment with magnitude, so larger
     vectors contribute more. Used when vector magnitudes carry
     meaning (e.g., popularity-weighted embeddings).
   </li>
@@ -110,26 +115,36 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </div>
 
 <p>
-  In other words, when vectors are normalized to unit
+  Read this as: when your vectors are normalized to unit
   length, squared L2 distance is just a linear rescaling of
-  the dot product, so all three metrics produce identical
-  nearest-neighbor rankings.
+  the dot product. All three metrics produce identical
+  nearest-neighbor rankings, so the choice is purely a matter
+  of convention. In practice, most embedding models normalize
+  their outputs, which means you can pick whichever metric your
+  database supports best.
 </p>
 
 <h2>Approximate Nearest Neighbor (ANN) Algorithms</h2>
 
 <p>
-  ANN algorithms sacrifice some recall (they may miss some
-  true nearest neighbors) for dramatic speedups. The key
-  metric is <strong>recall@k</strong>: the fraction of true
-  k-nearest neighbors returned by the approximate algorithm.
+  Here's the core tradeoff: if you can accept occasionally missing
+  a true nearest neighbor, you can search orders of magnitude
+  faster. <GlossaryTooltip term="ANN" /> algorithms make exactly this
+  bargain. The key metric is <strong>recall@k</strong>, the fraction
+  of true k-nearest neighbors returned by the approximate algorithm.
+  A recall@10 of 0.95 means you find 95% of the true top-10 results,
+  which is good enough for most applications.
 </p>
 
 <h3>IVF (Inverted File Index)</h3>
 
 <p>
-  IVF partitions the vector space into clusters, then only
-  searches relevant clusters at query time.
+  The idea behind <GlossaryTooltip term="IVF" /> is intuitive: instead
+  of searching every vector in the database, group similar vectors
+  into clusters and only search the clusters that are close to your
+  query. Think of it like a filing cabinet where related documents
+  are stored in the same drawer. You only open the drawers that look
+  promising.
 </p>
 
 <p><strong>Index construction:</strong></p>
@@ -174,24 +189,28 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 />
 
 <p>
-  Intuition: IVF search cost scales linearly with the
-  fraction of clusters probed, so searching 1% of clusters
-  costs roughly 1% of brute-force.
+  In plain English: IVF search cost scales linearly with the
+  fraction of clusters you probe. If you search 1% of clusters,
+  you pay roughly 1% of the brute-force cost. That is a 100x
+  speedup for giving up a small amount of accuracy.
 </p>
 
 <h3>HNSW (Hierarchical Navigable Small World)</h3>
 
 <p>
-  <strong>HNSW</strong> is the most widely used ANN algorithm
-  in production. It builds a multi-layer graph where each node
-  connects to its approximate nearest neighbors.
+  <GlossaryTooltip term="HNSW" /> is the most widely used ANN algorithm
+  in production, and for good reason. It builds a multi-layer graph
+  where each node connects to its approximate nearest neighbors,
+  creating a structure you can navigate very quickly.
 </p>
 
 <p>
-  <strong>Key insight:</strong> Inspired by skip lists. Higher
-  layers have sparse, long-range connections for coarse navigation;
-  lower layers have dense, short-range connections for fine-grained
-  search.
+  If you have seen skip lists in a data structures course, the
+  intuition is the same. Higher layers have sparse, long-range
+  connections that let you take big jumps across the space (like
+  an express train). Lower layers have dense, short-range connections
+  for fine-grained search (like walking the last few blocks to
+  your destination).
 </p>
 
 <p><strong>Index construction:</strong></p>
@@ -214,13 +233,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ol>
 
 <p>
-  HNSW decides which layers a node appears in using a
-  randomized formula. Higher layers are sparser, forming an
-  "express lane" for coarse search, while lower layers are
-  dense for fine-grained navigation---directly analogous to
-  skip lists. The formula controls this sparsity by making
-  it exponentially unlikely for a node to reach higher
-  layers. Mathematically:
+  You might wonder: how does HNSW decide which layers a node
+  appears in? It uses a randomized formula that makes it
+  exponentially unlikely for a node to reach higher layers.
+  Most nodes only live on the bottom layer, a few make it to
+  the middle, and very few reach the top. Here is the math:
 </p>
 
 <MathBlock
@@ -249,12 +266,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <p>
-  Intuition: draw a random number, take its negative log
-  (which follows an exponential distribution), scale it, and
-  floor the result. Most draws produce 0, so most nodes live
-  only on the bottom layer. The probability of reaching
-  layer L decreases exponentially, giving HNSW its
-  hierarchical structure.
+  Read this as: draw a random number between 0 and 1, take its
+  negative log (which follows an exponential distribution), scale
+  it, and round down. Most draws produce 0, so most nodes live
+  only on the bottom layer. The probability of reaching layer L
+  decreases exponentially, which is exactly what gives HNSW its
+  hierarchical structure. Think of it like a corporate org chart
+  where there are many employees, fewer managers, and very few
+  executives.
 </p>
 
 <p><strong>Query processing:</strong></p>
@@ -384,12 +403,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <p><strong>HNSW complexity:</strong></p>
 <ul>
   <li>
-    <strong>Query time</strong>: O(log N) average case ---
+    <strong>Query time</strong>: O(log N) average case,
     logarithmic scaling with database size
   </li>
   <li><strong>Index build time</strong>: O(N log N)</li>
   <li>
-    <strong>Memory</strong>: O(N * M * d) --- stores all
+    <strong>Memory</strong>: O(N * M * d), stores all
     vectors plus M edges per node per layer
   </li>
 </ul>
@@ -415,10 +434,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h3>Product Quantization (PQ)</h3>
 
 <p>
-  When memory is the bottleneck, <strong
-    >Product Quantization</strong
-  > compresses vectors by splitting them into subvectors and quantizing
-  each independently:
+  At billion-scale, you face a different problem: memory. Storing
+  a billion 768-dimensional float32 vectors takes about 2.9 TB of RAM.
+  <strong>Product Quantization</strong> is a clever compression
+  technique that makes this manageable by splitting each vector into
+  subvectors and quantizing each independently:
 </p>
 
 <ol>
@@ -436,10 +456,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ol>
 
-A 768-dim float32 vector (3072 bytes) compressed to m = 96
-subvectors requires only 96 bytes --- a <strong
-  >32x compression</strong
->.
+<p>
+  Here is where the savings get dramatic: a 768-dim float32 vector
+  (3072 bytes) compressed to m = 96 subvectors requires only 96
+  bytes, a <strong>32x compression</strong>.
+</p>
 
 <div
   class="bg-[hsl(var(--diagram-emerald-bg))] p-4 rounded-lg my-4"
@@ -475,10 +496,12 @@ subvectors requires only 96 bytes --- a <strong
 />
 
 <p>
-  Intuition: approximate the full distance by summing the
-  distances between each subvector of the query and the
-  corresponding codebook centroid assigned to the stored
-  vector.
+  In plain English: instead of computing the full distance
+  between two high-dimensional vectors, you break the problem
+  into smaller pieces. For each subvector of the query, look up
+  how far it is from the codebook centroid assigned to the stored
+  vector's corresponding subvector, then sum those partial distances.
+  It is an approximation, but a surprisingly good one.
 </p>
 
 <p>
@@ -488,16 +511,21 @@ subvectors requires only 96 bytes --- a <strong
 </p>
 
 <p>
-  IVF + PQ (IVFPQ) combines both: cluster-based pruning with
-  compressed vectors. This is the backbone of FAISS at
-  billion-scale.
+  The real power comes from combining these two techniques.
+  IVFPQ uses cluster-based pruning (IVF) with compressed vectors
+  (PQ), giving you both fast search and low memory usage. This is
+  the backbone of FAISS at billion-scale, and it is what makes it
+  practical to search a billion vectors on a single machine.
 </p>
 
 <h2>Vector Database Landscape</h2>
 
 <p>
-  Vector databases add persistence, filtering, replication,
-  and API layers on top of ANN algorithms:
+  So far we have been talking about algorithms. In practice, you
+  do not implement HNSW or IVF from scratch. Vector databases wrap
+  these algorithms in a full-featured system with persistence,
+  metadata filtering, replication, and API layers. Here is the
+  current landscape:
 </p>
 
 <h3>Purpose-Built Vector Databases</h3>
@@ -555,7 +583,10 @@ subvectors requires only 96 bytes --- a <strong
 
 <h3>Selection Criteria</h3>
 
-<p>When choosing a vector database, consider:</p>
+<p>
+  With so many options, how do you choose? Here are the key
+  factors to weigh:
+</p>
 <ul>
   <li>
     <strong>Scale</strong>: Millions of vectors? pgvector is
@@ -587,8 +618,11 @@ subvectors requires only 96 bytes --- a <strong
 <h2>Hybrid Search: Combining Dense and Sparse Retrieval</h2>
 
 <p>
-  Dense (embedding-based) and sparse (keyword-based)
-  retrieval have complementary strengths:
+  Here is a pattern you will encounter frequently in production:
+  using embeddings alone is not always enough. Dense
+  (embedding-based) and sparse (keyword-based) retrieval have
+  complementary strengths, and combining them outperforms either
+  approach on its own:
 </p>
 
 <ul>
@@ -607,6 +641,12 @@ subvectors requires only 96 bytes --- a <strong
 
 <h3>BM25: The Sparse Retrieval Baseline</h3>
 
+<p>
+  BM25 is the classic keyword-based ranking function, and it has
+  been the backbone of search engines for decades. The formula
+  looks intimidating, but the idea is simple:
+</p>
+
 <div class="equation-with-label">
   <div class="text-sm font-medium text-[hsl(var(--foreground))] mb-2">
     BM25 Score
@@ -618,11 +658,13 @@ subvectors requires only 96 bytes --- a <strong
 </div>
 
 <p>
-  Intuition: for each query term, BM25 scores how important
-  that term is globally (IDF) scaled by how frequently it
-  appears in the document, with diminishing returns for
-  repeated occurrences and a length normalization penalty so
-  longer documents do not get an unfair advantage.
+  In plain English: for each query term, BM25 asks two questions.
+  First, how rare is this term across all documents? (Rare terms
+  are more informative, which is the IDF part.) Second, how often
+  does it appear in this specific document? The formula adds
+  diminishing returns for repeated occurrences and a length
+  normalization penalty so longer documents do not get an unfair
+  advantage.
 </p>
 
 <p>
@@ -636,8 +678,10 @@ subvectors requires only 96 bytes --- a <strong
 <h3>Fusion Strategies</h3>
 
 <p>
-  <strong>Score-level fusion</strong> combines normalized scores
-  from both systems:
+  Once you have results from both a dense retriever and a sparse
+  retriever, you need to merge them into a single ranked list.
+  <strong>Score-level fusion</strong> is the simplest approach,
+  combining normalized scores from both systems:
 </p>
 
 <div class="equation-with-label">
@@ -651,9 +695,11 @@ subvectors requires only 96 bytes --- a <strong
 </div>
 
 <p>
-  Intuition: the hybrid score is a weighted average of the
-  dense (semantic) score and the sparse (keyword) score,
-  blended by the parameter alpha.
+  Read this as: the hybrid score is a weighted average of the
+  dense (semantic) score and the sparse (keyword) score. The
+  parameter alpha controls the blend. Set alpha closer to 1 to
+  lean more on semantic understanding, or closer to 0 to lean
+  more on exact keyword matching.
 </p>
 
 <p>
@@ -679,10 +725,12 @@ subvectors requires only 96 bytes --- a <strong
 </div>
 
 <p>
-  Intuition: for each document, sum up a score contribution
+  In plain English: for each document, sum up a score contribution
   from each ranker based on the document's rank position.
-  Documents ranked highly by multiple rankers accumulate a
-  high combined score.
+  Documents that appear near the top of multiple ranked lists
+  accumulate a high combined score. The beauty of RRF is that
+  you never need to normalize or calibrate raw scores across
+  different systems.
 </p>
 
 <p>
@@ -694,11 +742,13 @@ subvectors requires only 96 bytes --- a <strong
 <h3>Learned Sparse Representations (SPLADE)</h3>
 
 <p>
-  <strong>SPLADE</strong> bridges dense and sparse by learning
-  sparse representations through a transformer. The model outputs
-  a sparse vector over the entire vocabulary, where weights represent
-  term importance. This captures semantic meaning in a sparse
-  format amenable to inverted index search.
+  You might wonder: can we get the best of both worlds without
+  maintaining two separate systems? <strong>SPLADE</strong> is one
+  answer. It uses a transformer to produce a sparse vector over the
+  entire vocabulary, where the weights represent learned term
+  importance. Because the output is sparse, you can search it with
+  a traditional inverted index, but the weights capture semantic
+  meaning that raw keyword counts miss.
 </p>
 
 <Quiz
@@ -740,7 +790,7 @@ subvectors requires only 96 bytes --- a <strong
   <ul>
     <li>
       <strong>Exact nearest neighbor search</strong> is O(Nd)
-      per query---infeasible at scale. ANN algorithms trade a
+      per query, which is infeasible at scale. ANN algorithms trade a
       small amount of recall for orders-of-magnitude speedups.
     </li>
     <li>
@@ -748,7 +798,7 @@ subvectors requires only 96 bytes --- a <strong
       and searches only nearby clusters; <strong
         >HNSW</strong
       > builds a multi-layer navigable graph with O(log N) query
-      time---the dominant algorithm in production.
+      time, the dominant algorithm in production.
     </li>
     <li>
       <strong>Product Quantization</strong> compresses vectors

@@ -40,19 +40,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>How Function Calling Works</h2>
 
   <p>
-    <strong>Function calling</strong> (also called "tool use")
-    enables <GlossaryTooltip term="LLM" />s to interact with external systems by generating
-    structured function invocations. Rather than producing free-text
-    that you parse, the model outputs structured data (function
-    name + arguments) that your code can directly execute.
+    On their own, <GlossaryTooltip term="LLM" />s can only generate text. But what if
+    you want them to check the weather, query a database, or send an email?
+    That is where <strong>function calling</strong> (also called "tool use") comes in.
+    Instead of producing free-text that you have to parse and hope is correct,
+    the model outputs structured data (a function name plus arguments)
+    that your code can directly execute. Think of it like giving the model
+    a menu of capabilities it can order from.
   </p>
 
   <h3>The Function Calling Lifecycle</h3>
+  <p>
+    Here is the back-and-forth dance that happens every time a model uses a tool:
+  </p>
   <ol>
     <li>
       <strong>Define tools</strong>: You provide the model
-      with a set of tool definitions -- name, description,
-      and parameter schema (typically JSON Schema)
+      with a set of tool definitions (name, description,
+      and parameter schema, typically JSON Schema)
     </li>
     <li>
       <strong>Model decides</strong>: Based on the user's
@@ -175,21 +180,6 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         </div>
         <div class="flex-1">
           <div class="flex gap-3 items-center">
-            // 110: <div class="text-[hsl(var(--diagram-indigo-fg))]">
-              &larr;
-            </div>
-            // 126: <div class="text-[hsl(var(--diagram-indigo-fg))]">
-              &rarr;
-            </div>
-            // 142: <div class="text-[hsl(var(--diagram-indigo-fg))]">
-              &rarr;
-            </div>
-            // 386: <div class="text-[hsl(var(--diagram-indigo-fg))]">
-              &rarr;
-            </div>
-            // 389: <div class="text-[hsl(var(--diagram-indigo-fg))]">
-              &larr;
-            </div>
             <div
               class="px-3 py-2 bg-[hsl(var(--diagram-blue-bg))] border border-[hsl(var(--diagram-blue-border))] rounded text-sm flex-1"
             >
@@ -272,9 +262,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h2>Designing Effective Tools</h2>
 
   <p>
-    Tool design is as important as prompt design. A
-    well-designed tool interface reduces model errors,
-    improves reliability, and makes debugging easier.
+    Here is the thing: tool design is just as important as prompt design.
+    You might have the most powerful model in the world, but if your tools
+    have vague names, missing descriptions, or unconstrained parameters,
+    the model will get confused. A well-designed tool interface reduces
+    model errors, improves reliability, and makes debugging far easier.
   </p>
 
   <h3>Principles of Good Tool Design</h3>
@@ -309,7 +301,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Use this when the user asks a question about product features,
     troubleshooting, or company policies. Returns up to 5 matching
     articles with titles, snippets, and relevance scores.
-    Does NOT search order history or account information --
+    Does NOT search order history or account information;
     use get_order_history for those."
 &#125;</code></pre>
 
@@ -356,10 +348,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
   </ul>
   <p>
-    However, there is a practical limit: too many tools
-    (50+) can degrade the model's tool selection accuracy.
-    Group related operations when the tool count becomes
-    unwieldy.
+    However, you might wonder: can you have too many tools?
+    Yes. Once you go past roughly 50 tools, the model's ability
+    to pick the right one starts to degrade. If you hit that limit,
+    group related operations together.
   </p>
 
   <h4>5. Informative Return Values</h4>
@@ -406,7 +398,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     },
     {
       id: "d",
-      text: "No tools -- include all database information in the system prompt so the model can answer from context",
+      text: "No tools: include all database information in the system prompt so the model can answer from context",
       correct: false,
       explanation:
         "This only works for static, small datasets. Real applications need to query live data, and putting entire databases in the prompt is impractical. Tools provide dynamic data access.",
@@ -416,6 +408,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Tool Orchestration Patterns</h2>
+
+  <p>
+    A single tool call is useful, but real tasks often require
+    multiple tools working together. There are three main patterns
+    you will encounter in practice.
+  </p>
 
   <h3>Sequential Tool Calls</h3>
   <p>
@@ -499,16 +497,17 @@ Main Agent receives: structured competitive analysis report</code></pre>
   <h2>The Model Context Protocol (MCP)</h2>
 
   <p>
-    The <strong>Model Context Protocol (MCP)</strong>, introduced by Anthropic, is an open standard
-    for connecting LLMs to external
-    tools and data sources. It
-    addresses the fragmentation problem: without a standard,
-    every tool integration requires custom code for each
-    model provider.
+    Imagine you build a great tool integration for one LLM provider.
+    Then a customer wants to use a different provider, and you have
+    to rewrite everything from scratch. That is the fragmentation problem.
+    The <strong>Model Context Protocol (<GlossaryTooltip term="MCP" />)</strong>,
+    introduced by Anthropic, is an open standard that solves this. It provides
+    a universal way to connect LLMs to external tools and data sources,
+    so you write the integration once and it works everywhere.
   </p>
 
   <h3>The Problem MCP Solves</h3>
-  <p>Before MCP, integrating tools with LLMs meant:</p>
+  <p>Before MCP existed, if you wanted to connect tools to LLMs, you were in for a rough time:</p>
   <ul>
     <li>
       Writing custom adapter code for each tool-model
@@ -528,7 +527,11 @@ Main Agent receives: structured competitive analysis report</code></pre>
   </ul>
 
   <h3>MCP Architecture</h3>
-  <p>MCP follows a client-server architecture:</p>
+  <p>
+    If you have ever used a web browser (client) to talk to a web server,
+    the MCP architecture will feel familiar. It follows a client-server pattern
+    with three main pieces:
+  </p>
   <ul>
     <li>
       <strong>MCP Server</strong>: Exposes tools (and
@@ -559,7 +562,7 @@ Main Agent receives: structured competitive analysis report</code></pre>
     </li>
     <li>
       <strong>Resources</strong>: Data the model can read
-      (files, database records, API responses) -- similar to
+      (files, database records, API responses), similar to
       a read-only file system
     </li>
     <li>
@@ -575,13 +578,12 @@ Main Agent receives: structured competitive analysis report</code></pre>
 
   <h3>Practical Impact</h3>
   <p>
-    MCP enables a growing ecosystem
-    of pre-built tool servers. Instead of writing custom
-    integration code, developers can connect to existing
-    MCP servers for
-    common services: file systems, databases, GitHub, Slack,
-    and more. This dramatically reduces the integration
-    burden for building agent applications.
+    Why should you care about MCP? Because it enables a growing ecosystem
+    of pre-built tool servers that you can plug into your application
+    without writing custom integration code. Need file system access?
+    There is an MCP server for that. Database queries? GitHub? Slack? All
+    covered. This dramatically reduces the integration burden when you are
+    building agent applications.
   </p>
 </section>
 
@@ -674,6 +676,13 @@ Main Agent receives: structured competitive analysis report</code></pre>
 <section>
   <h2>Tool Security and Error Handling</h2>
 
+  <p>
+    Giving an LLM the ability to take actions in the real world is powerful,
+    but it also means you need to think carefully about what could go wrong.
+    An unchecked agent with access to a database is like giving a toddler
+    the car keys.
+  </p>
+
   <h3>Security Principles</h3>
 
   <h4>Least Privilege</h4>
@@ -720,9 +729,10 @@ function deleteUser(args) &#123;
 
   <h3>Error Handling</h3>
   <p>
-    Tools will fail. Networks time out, APIs return errors,
-    inputs are invalid. How you surface errors to the model
-    determines whether the agent can recover:
+    Tools <em>will</em> fail. That is not a pessimistic take; it is a certainty.
+    Networks time out, APIs return errors, inputs turn out to be invalid.
+    The key question is: when something breaks, can your agent recover
+    gracefully? That depends entirely on how you surface errors back to the model:
   </p>
   <ul>
     <li>
