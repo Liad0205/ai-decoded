@@ -591,7 +591,7 @@ trainer.train()`}
             <div
               class="text-xs text-[hsl(var(--muted-foreground))]"
             >
-              LLM scoring, Chatbot Arena, human preference
+              LLM scoring, pairwise arena-style evals, human preference
               ratings
             </div>
           </div>
@@ -679,8 +679,7 @@ trainer.train()`}
   <p>
     For open-ended generation, automated metrics are
     insufficient. A growing practice is to use a strong
-    <GlossaryTooltip term="LLM" /> (such as GPT-5.2 or Claude
-    Opus 4.6) as an automated judge, evaluating outputs on
+    <GlossaryTooltip term="LLM" /> as an automated judge, evaluating outputs on
     criteria like helpfulness, accuracy, and safety. The key
     is writing detailed rubrics and using pairwise
     comparisons (base model vs. fine-tuned) so the judge can

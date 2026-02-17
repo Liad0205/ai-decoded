@@ -63,7 +63,7 @@ import GlossaryTooltip from '../../components/GlossaryTooltip.astro';
   <ul>
     <li><strong>Primacy and recency effects</strong>: Information at the very beginning and very end of the context tends to receive more attention. Critical instructions placed in the middle of a long prompt may be overlooked, a phenomenon documented as the "lost in the middle" effect.</li>
     <li><strong>Explicit structure helps</strong>: Headers, numbered lists, and clear delimiters help the model's attention focus on relevant sections.</li>
-    <li><strong>Context window capacity</strong>: Modern models support context windows from 128K to 1M+ tokens (e.g., <GlossaryTooltip term="GPT" />-5.2 at 128K, Claude Opus 4.6 at 200K, Gemini 3 Pro at 1M), though very long contexts increase cost and can degrade performance on information retrieval ("lost in the middle" becomes more pronounced).</li>
+    <li><strong>Context window capacity</strong>: Modern models support context windows from tens of thousands to around a million tokens depending on provider/model class, though very long contexts increase cost and can degrade performance on information retrieval ("lost in the middle" becomes more pronounced).</li>
   </ul>
 </section>
 
@@ -361,7 +361,7 @@ User: My query is running slowly on a table with 10M rows...</code></pre>
 
 ## Vulnerabilities Found
 1. [SEVERITY: HIGH/MEDIUM/LOW] [Vulnerability name]
-   - Location: [file:line]
+   - Location: <file:line>
    - Description: [one sentence]
    - Fix: [one sentence]
 

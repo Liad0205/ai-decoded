@@ -136,8 +136,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 </ul>
 
 <p>
-  <strong>Key models</strong>: GPT-2, GPT-3, GPT-4, GPT-5.2, Llama 4, Claude Opus 4.6, Gemini
-  3 Pro
+  <strong>Key models</strong>: GPT-family models, Llama-family models, Claude-family models, and Gemini-family models
 </p>
 
 <h3>3. Encoder-Decoder (T5-Style)</h3>
@@ -315,12 +314,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 <h2>The Context Window Problem (and Solutions)</h2>
 
 <p>
-  You might be wondering: if self-attention lets every token look at every other token, what's the catch? The catch is cost. Self-attention scales as O(n<sup>2</sup>) with sequence length, meaning doubling your context length quadruples the computation. Early models were limited to 2k-8k tokens, but by 2026, context windows have expanded dramatically through clever engineering.
+  You might be wondering: if self-attention lets every token look at every other token, what's the catch? The catch is cost. Self-attention scales as O(n<sup>2</sup>) with sequence length, meaning doubling your context length quadruples the computation. Early models were limited to 2k-8k tokens, but modern production systems now support much longer contexts through architectural and systems advances.
 </p>
 
-<h3>Modern Context Windows (2026)</h3>
+<h3>Modern Context Windows</h3>
 <p>
-  Current frontier models support context windows of <strong>up to 1-2M tokens</strong> (Gemini 3 Pro at 1M+, Claude Opus 4.6 at 200K), with context lengths continuing to grow. How did we get here? Three key innovations:
+  Current frontier models can reach very long context windows (hundreds of thousands to around a million tokens in some systems), with context lengths continuing to grow. How did we get here? Three key innovations:
 </p>
 <ul>
   <li>

@@ -211,7 +211,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     This linear structure emerges from the training
     objective without explicit supervision, a striking
-    example of unsupervised representation learning.
+    example of self-supervised (distributional)
+    representation learning.
   </p>
 
   <h3>Limitations of Static Embeddings</h3>
@@ -368,7 +369,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </svg>
     </div>
     <p class="text-sm text-[hsl(var(--muted-foreground))] mt-3">
-      Similar words cluster together, and relationships are encoded as directions. The dashed arrow shows the famous "king - man + woman = queen" analogy. Real embeddings are 300-1024 dimensions, but the same clustering principle holds.
+      Similar words cluster together, and relationships are encoded as directions. The dashed arrow shows the famous "king - man + woman = queen" analogy. Real embeddings range from hundreds to several thousand dimensions, but the same clustering principle holds.
     </p>
   </div>
 </Diagram>
@@ -398,8 +399,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     Surprisingly, modern foundation models (<GlossaryTooltip
       term="CLIP"
-    /> for vision, GPT for language) often achieve near-SOTA performance
-    with linear probing alone. This suggests:
+    /> for vision, and frozen language models with simple
+    heads in NLP) can achieve strong performance with linear
+    probing alone. This suggests:
   </p>
   <ul>
     <li>
@@ -442,7 +444,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     beneficial <em>inductive bias</em> (a built-in preference
     toward certain solutions) for optimization. Fine-tuning from
     pretrained weights converges faster and to better generalization
-    than training from scratch, even when sufficient data exists.
+    than training from scratch in many practical settings,
+    especially when labeled data is limited.
   </p>
 
   <h3>Mode Connectivity and Basins</h3>
@@ -464,8 +467,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </p>
 
   <p>
-    Quantitatively, transfer learning can reduce the sample
-    complexity of a task by 10-100×. This has democratized
+    In practice, transfer learning often substantially reduces
+    the labeled data needed for a new task. This has democratized
     ML: many problems that previously required massive
     labeled datasets can now be solved with thousands, or
     even hundreds, of examples via fine-tuning.
@@ -481,7 +484,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       text: "They produce embeddings that are too high-dimensional",
       correct: false,
       explanation:
-        "Dimensionality isn't the core issue, Word2Vec typically uses 300 dimensions, similar to BERT's layers.",
+        "Dimensionality isn't the core issue; the bigger limitation is that static embeddings ignore context.",
     },
     {
       id: "b",

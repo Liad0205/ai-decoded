@@ -28,7 +28,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       Survey the capabilities of frontier multimodal models
-      (GPT-5.2, Gemini 3 Pro, Claude Opus 4.6)
+      (GPT-family, Gemini-family, and Claude-family systems)
     </li>
     <li>
       Understand multimodal embeddings and video
@@ -377,7 +377,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>
-    Architecture Pattern 3: Early Fusion (Gemini, GPT-4o)
+    Architecture Pattern 3: Early Fusion
   </h2>
 
   <p>
@@ -415,19 +415,19 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       multiple resolutions and aspect ratios
     </li>
     <li>
-      <strong>Long context</strong>: Gemini 3 Pro supports
-      up to 2M tokens, enabling processing of entire videos
-      (hours of footage as frame sequences)
+      <strong>Long context</strong>: Some frontier models support
+      very long contexts (hundreds of thousands to millions of tokens),
+      enabling large multimodal inputs such as long videos sampled into frames
     </li>
   </ul>
 
-  <h3>OpenAI's Multimodal Evolution: GPT-4V to GPT-5.2</h3>
+  <h3>OpenAI's Multimodal Evolution: GPT-4V Onward</h3>
 
   <p>
     OpenAI's GPT-4V (Vision) first added visual understanding to
     GPT-4, and GPT-4o extended this to a fully multimodal
-    model processing text, images, and audio natively. The latest
-    iteration, GPT-5.2, pushes multimodal capabilities further.
+    model processing text, images, and audio natively. Newer
+    generations continue pushing multimodal capabilities further.
     While the exact architecture is not published, external
     analysis and behavior suggest early fusion:
   </p>
@@ -442,9 +442,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       (OCR)
     </li>
     <li>
-      GPT-5.2 can generate text, images, and audio outputs,
-      suggesting a unified architecture rather than
-      bolted-on modules
+      Modern GPT-family multimodal systems can handle multiple
+      output modalities (always text, and in some product modes
+      image/audio), suggesting increasing architectural unification
+      rather than bolted-on modules
     </li>
   </ul>
 
@@ -452,8 +453,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     Anthropic's Claude models have included vision capabilities
-    since Claude 3, with the latest Claude Opus 4.6 representing
-    the current frontier. Claude demonstrates particular strength
+    since Claude 3. Claude-family systems demonstrate particular strength
     in:
   </p>
   <ul>
@@ -481,7 +481,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>Early Fusion Advantages</h3>
   <p>
     You might be wondering: why is early fusion the direction
-    that all frontier models are heading? Here are the key
+    many frontier models are heading? Here are the key
     reasons:
   </p>
   <ul>
@@ -611,7 +611,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
             Early Fusion
           </div>
           <div class="text-xs text-[hsl(var(--diagram-emerald-fg))]">
-            (Gemini, GPT-4o)
+            (e.g., Gemini-style and GPT-4o-style systems)
           </div>
         </div>
         <div
@@ -800,16 +800,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <strong>LLM-based temporal reasoning</strong>: Feed
       frame-level visual tokens sequentially into an LLM and
       rely on its sequence modeling ability for temporal
-      understanding. This is how Gemini 3 Pro and <GlossaryTooltip term="GPT" />-5.2 handle
-      video.
+      understanding. This is a common strategy in long-context
+      multimodal systems.
     </li>
   </ul>
 
   <h3>The Long-Context Approach</h3>
 
   <p>
-    Gemini 3 Pro demonstrated a powerful approach: with a
-    2M token context window, it can ingest an entire movie
+    A powerful approach is to use very long context windows so
+    the model can ingest an entire movie
     as a sequence of frame tokens. Frames are encoded into
     patch tokens using a vision transformer, similar to
     image encoding. At 258 tokens per frame and ~1fps
@@ -1023,7 +1023,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Three architecture patterns</strong> for vision-language
       models: cross-attention (Flamingo), visual token projection
-      (LLaVA), and early fusion (Gemini, GPT-4o). The trend is
+      (LLaVA), and early fusion (used by several frontier model families). The trend is
       toward deeper integration.
     </li>
     <li>
@@ -1034,7 +1034,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       remarkable simplicity.
     </li>
     <li>
-      <strong>Early fusion models</strong> (Gemini, GPT-4o) train
+      <strong>Early fusion models</strong> train
       on interleaved multimodal data from the start, achieving
       the deepest cross-modal integration but requiring massive
       compute
@@ -1052,7 +1052,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     </li>
     <li>
       <strong>Video understanding</strong> adds temporal modeling
-      to vision. Long-context <GlossaryTooltip term="LLM" />s (Gemini 3 Pro with 2M tokens)
+      to vision. Long-context <GlossaryTooltip term="LLM" />s
       can ingest hours of video by treating frames as token sequences.
     </li>
     <li>

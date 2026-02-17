@@ -1,5 +1,5 @@
 ---
-// Module 1, Lesson 1.1: The ML Landscape Through Early 2026
+// Module 1, Lesson 1.1: The Modern ML Landscape
 import KeyTakeaway from "../../components/KeyTakeaway.astro";
 import PaperReference from "../../components/PaperReference.astro";
 import Diagram from "../../components/Diagram.astro";
@@ -116,12 +116,13 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     RL has achieved remarkable successes in games (AlphaGo,
     Dota 2, StarCraft) and robotics. In the <GlossaryTooltip
       term="LLM"
-    /> context, preference-based alignment techniques like Direct
-    Preference Optimization (<GlossaryTooltip
-      term="DPO"
-    />), which is increasingly used alongside <GlossaryTooltip
+    /> context, alignment methods include <GlossaryTooltip
       term="RLHF"
-    />/<GlossaryTooltip term="PPO" /> approaches, fine-tune language
+    /> (often optimized with <GlossaryTooltip
+      term="PPO"
+    />) and direct preference methods like <GlossaryTooltip
+      term="DPO"
+    />. These methods fine-tune language
     models to produce outputs aligned with human preferences,
     a critical step in making models like ChatGPT useful and safe.
   </p>
@@ -204,11 +205,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ol>
   <p>
     This approach has proven remarkably effective across
-    modalities: language (GPT-5.2, Claude Opus 4.6, Gemini
-    3 Pro, Llama 4), vision (<GlossaryTooltip
+    modalities: language (modern GPT, Claude, Gemini, and Llama
+    model families), vision (<GlossaryTooltip
       term="CLIP"
-    />, <GlossaryTooltip term="ViT" />), audio (Whisper), and more. Today's frontier
-    models are natively multimodal, processing text, images,
+    />, <GlossaryTooltip term="ViT" />), audio (Whisper), and more. Many frontier
+    models are now natively multimodal, processing text, images,
     and video within a single architecture rather than
     bolting on separate vision modules. Foundation models
     exhibit emergent capabilities: abilities not explicitly
@@ -265,12 +266,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <h3>The Benchmark Saturation Problem</h3>
   <p>
     As models improve, benchmarks saturate. Frontier models
-    now exceed 90% on MMLU and achieve near-perfect scores
-    on many traditional benchmarks. Modern evaluation
-    focuses on more challenging tasks like SWE-bench
-    (software engineering), where top models now resolve
-    around 80% of curated GitHub issues on SWE-bench
-    Verified, up from under 50% just a year ago. This raises
+    now achieve very high scores on MMLU and near-ceiling
+    performance on several traditional benchmarks. Modern
+    evaluation therefore emphasizes more challenging tasks
+    like SWE-bench (software engineering), longer-horizon
+    reasoning, and agent benchmarks. This raises
     concerns:
   </p>
   <ul>
@@ -291,8 +291,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     The field is evolving toward more robust evaluation:
     longer-horizon reasoning tasks, human preference
-    evaluations (Chatbot Arena, LMSYS leaderboard),
-    real-world task completion (SWE-bench, agent
+    evaluations (for example, pairwise arena
+    evaluations), real-world task completion (SWE-bench, agent
     benchmarks), and task-specific evals for production use
     cases.
   </p>
@@ -313,7 +313,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 1.5s">2020</div>
       <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 2s">2022</div>
       <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 2.5s">2024</div>
-      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 3s">2025-26</div>
+      <div class="font-mono text-sm font-semibold text-[hsl(var(--foreground))] text-center" data-animate style="animation-delay: 3s">Recent</div>
 
       <!-- Row 2: Dots on a continuous line -->
       <div class="timeline-line-cell" data-animate style="animation-delay: 0.5s"><div class="timeline-dot"></div></div>
@@ -345,7 +345,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Open-Source Race</div>
       </div>
       <div class="text-center" data-animate style="animation-delay: 3s">
-        <div class="text-xs font-medium text-[hsl(var(--foreground))]">Opus 4.6, GPT-5.2, Gemini 3</div>
+        <div class="text-xs font-medium text-[hsl(var(--foreground))]">GPT, Claude, Gemini, Llama</div>
         <div class="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Native Multimodal & Agents</div>
       </div>
     </div>
@@ -354,7 +354,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <Quiz
   quizId="ml-paradigm"
-  question="Which ML paradigm is used to pretrain large language models like GPT-5.2 and Claude Opus 4.6?"
+  question="Which ML paradigm is used to pretrain modern LLM families like GPT, Claude, Gemini, and Llama?"
   options={[
     {
       id: "a",
@@ -459,6 +459,14 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     authors="Hendrycks et al."
     year="2021"
     url="https://arxiv.org/abs/2009.03300"
+    type="paper"
+  />
+
+  <PaperReference
+    title="SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"
+    authors="Jimenez et al."
+    year="2024"
+    url="https://arxiv.org/abs/2310.06770"
     type="paper"
   />
 </section>

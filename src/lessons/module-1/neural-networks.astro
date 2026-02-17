@@ -286,13 +286,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     0 for all inputs, stopping gradient flow.
   </p>
 
-  <h3>GELU: The Transformer Standard</h3>
+  <h3>GELU: A Common Transformer Activation</h3>
   <p>
     <strong>GELU (Gaussian Error Linear Unit)</strong> has become
-    the default in transformers (<GlossaryTooltip
+    common in many transformer families (<GlossaryTooltip
       term="BERT"
-    />, <GlossaryTooltip term="GPT" />, etc.). It improves
-    on ReLU in several ways:
+    />, early <GlossaryTooltip term="GPT" /> variants, etc.).
+    Newer LLMs also frequently use SiLU-based gated MLPs
+    (for example, SwiGLU), but the same high-level advantages
+    over plain ReLU still apply:
   </p>
   <ul>
     <li>
@@ -351,8 +353,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     SiLU shares GELU's smoothness properties and is used in
     some vision models and newer architectures (e.g.,
-    LLaMA's feed-forward layers). It's slightly cheaper to
-    compute since it avoids the Gaussian CDF.
+    LLaMA-family feed-forward blocks via SwiGLU). It's slightly
+    cheaper to compute since it avoids the Gaussian CDF.
   </p>
 </section>
 
@@ -384,7 +386,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    This clean form makes optimization stable and efficient. The model gets a strong signal when it's confidently wrong and a gentle nudge when it's close.
+    This clean form makes optimization stable and efficient. The model gets a strong signal when it's confidently wrong and a gentle nudge when it's close. (This exact form assumes the usual softmax-over-logits setup with one-hot targets; label smoothing introduces a small modification to <MathBlock formula="y" />.)
   </p>
 
   <h3>Contrastive Losses</h3>
@@ -442,14 +444,16 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <p>
     SGD with momentum uses the same learning rate for every
     parameter, but not all parameters need the same step
-    size. Parameters with consistently large gradients
-    (e.g., bias terms) can tolerate bigger steps, while
-    parameters with noisy or sparse gradients need smaller
-    ones.
+    size. Different parameters can experience gradients with
+    very different scales and noise levels, so a single global
+    step size is often inefficient.
   </p>
 
   <p>
-    <strong>Adam</strong> (Adaptive Moment Estimation) solves this by keeping two running averages for each parameter: (1) the average gradient direction (like momentum), and (2) the average gradient magnitude. It then divides the first by the second, so parameters with stable, consistent gradients get larger steps, while parameters with noisy, erratic gradients get smaller ones.
+    <strong>Adam</strong> (Adaptive Moment Estimation) solves this by keeping two running averages for each parameter: (1) the average gradient direction (like momentum), and (2) the average gradient magnitude.
+  </p>
+  <p>
+    Intuitively, Adam normalizes updates by the recent second moment. Parameters with consistently large second-moment estimates get smaller effective steps, while parameters with smaller or infrequent gradients can get relatively larger effective updates.
   </p>
 
   <p>
@@ -560,9 +564,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       gradient computation through reuse
     </li>
     <li>
-      <strong>GELU has replaced ReLU</strong> in transformers
-      due to its smoothness, leading to better optimization dynamics
-      at scale
+      <strong>Smooth activations (GELU/SiLU-family)</strong>
+      are standard in modern transformers, generally outperforming
+      plain ReLU at scale
     </li>
     <li>
       <strong>Cross-entropy + softmax</strong> combine mathematically

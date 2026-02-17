@@ -94,17 +94,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     professional law and medicine.
   </li>
   <li>
-    <strong>Frontier scores</strong>: <GlossaryTooltip
-      term="GPT"
-    />-4 achieved ~86%,
-    Claude 3 Opus ~86%. Human expert average varies by
-    subject but is roughly 89%.
+    <strong>Frontier scores</strong>: Strong modern models
+    perform very well on MMLU (often in the high-80s to 90s,
+    depending on variant and evaluation protocol). Human
+    expert performance also varies by subject and setup.
   </li>
   <li>
     <strong>Limitations</strong>: The multiple-choice format
     doesn't test generation quality, and many questions can be
     answered through pattern matching rather than deep
-    understanding. Modern frontier models have largely saturated this benchmark.
+    understanding. Modern frontier models are pushing this benchmark
+    toward saturation.
   </li>
 </ul>
 
@@ -145,9 +145,10 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     974 crowd-sourced problems as a complementary code benchmark.
   </li>
   <li>
-    <strong>Frontier scores</strong>: GPT-4 achieved ~67%
-    pass@1 on HumanEval (zero-shot); more recent models and code-specialized systems
-    have pushed well past 90%.
+    <strong>Frontier scores</strong>: Recent models and
+    code-specialized systems have made large gains on
+    HumanEval, but results vary significantly by prompting and
+    evaluation setup.
   </li>
 </ul>
 
@@ -178,9 +179,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     demonstrating that explicit reasoning traces help LLMs.
   </li>
   <li>
-    <strong>Frontier scores</strong>: GPT-4 scored ~92% and Claude 3
-    Opus ~95%. Today's frontier models have largely saturated this
-    benchmark, pushing past 95%.
+    <strong>Frontier scores</strong>: Strong models now score very
+    highly on GSM8K, and the benchmark is approaching saturation.
   </li>
 </ul>
 
@@ -200,9 +200,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     answer (often a numerical value or expression).
   </li>
   <li>
-    <strong>Frontier scores</strong>: GPT-4 scored ~42% and Claude 3
-    Opus ~60% when they launched. Newer reasoning-focused models (like o1 and Claude Opus 4.6) have pushed
-    scores significantly higher, but the hardest problems remain challenging.
+    <strong>Frontier scores</strong>: Reasoning-focused models
+    have improved MATH performance substantially, but the hardest
+    problems remain challenging.
   </li>
 </ul>
 
@@ -210,7 +210,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <p>
   <strong>HellaSwag</strong> tests something that feels almost too simple: commonsense reasoning through
-  sentence completion. Humans nail it at ~95% accuracy, but early models struggled badly. Today's frontier models have caught up, scoring 95%+ and approaching saturation. This is a good example of how benchmarks have a limited shelf life.
+  sentence completion. Humans perform very strongly, early models
+  struggled, and modern frontier models are now near ceiling.
+  This is a good example of how benchmarks have a limited shelf life.
 </p>
 
 <p>
@@ -237,7 +239,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </li>
 </ul>
 
-<h3>MT-Bench and Chatbot Arena</h3>
+<h3>MT-Bench and Arena-Style Evaluation</h3>
 
 <p>
   Multiple-choice tests and coding challenges only tell part of the story. What about how a model feels to actually <em>talk to</em>? Static benchmarks can't capture that, so the field developed two complementary approaches:
@@ -249,11 +251,11 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       1-10 scale.
     </li>
     <li>
-      <strong>Chatbot Arena</strong> (LMSYS): Users chat with
+      <strong>Public pairwise chat arenas (e.g., Chatbot Arena)</strong>: Users chat with
       two anonymous models side-by-side and vote for the better
       response. ELO ratings emerge from thousands of pairwise
-      comparisons. This is widely considered the most reliable
-      evaluation of real-world conversational quality.
+      comparisons. These are among the strongest available
+      signals of real-world conversational quality.
     </li>
   </ul>
 
@@ -327,9 +329,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         <strong>MT-Bench</strong> (<GlossaryTooltip
           term="LLM"
         />-judged multi-turn), <strong
-          >Chatbot Arena</strong
+          >arena-style pairwise chat evals (e.g., Chatbot Arena)</strong
         > (human ELO ratings). Test real-world usefulness in interactive
-        settings. Chatbot Arena is widely seen as the gold standard.
+        settings.
       </p>
     </div>
   </RevealSection>
@@ -396,7 +398,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   <ul>
     <li>
       <strong>Private held-out sets</strong>: Keep test data
-      unpublished. Chatbot Arena achieves this by using
+      unpublished. Arena-style evaluation (e.g., Chatbot Arena) helps by using
       live, novel conversations rather than fixed datasets.
     </li>
     <li>
@@ -417,7 +419,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <p>
     If you've ever tried to evaluate hundreds of model outputs by hand, you know the pain: human evaluation is the gold standard but it's expensive,
-    slow, and doesn't scale. So the field came up with a clever shortcut: use a strong <GlossaryTooltip term="LLM" /> (such as GPT-5.2 or Claude Opus 4.6) as
+    slow, and doesn't scale. So the field came up with a clever shortcut: use a strong <GlossaryTooltip term="LLM" /> as
     an automated judge.
   </p>
 
@@ -460,8 +462,8 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     <li>
       <strong>Correlation with humans</strong>: Strong LLM
       judges agree with human preferences at rates
-      comparable to inter-human agreement (~80% on
-      MT-Bench).
+      often comparable to inter-human agreement on
+      representative benchmarks.
     </li>
   </ul>
 
@@ -498,7 +500,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <Quiz
-    question="A new LLM achieves 95% on MMLU, significantly outperforming GPT-4's 86%. What is the most important follow-up question before concluding this model is superior?"
+    question="A new LLM reports a large jump on MMLU. What is the most important follow-up question before concluding this model is superior?"
     quizId="benchmark-critical-thinking"
     options={[
       {
@@ -517,7 +519,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
       },
       {
         id: "c",
-        text: "How large is the model compared to GPT-4?",
+        text: "How large is the model compared to prior baselines?",
         correct: false,
         explanation:
           "Model size is relevant for efficiency comparisons but doesn't explain a dramatic performance gap. A smaller model could genuinely outperform a larger one on specific benchmarks.",
@@ -597,7 +599,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         Comprehensive evaluation requires testing knowledge
         (MMLU), reasoning (GSM8K, MATH), code (HumanEval),
         safety (TruthfulQA), and conversational quality
-        (Chatbot Arena)
+        (arena-style pairwise chat evals, e.g., Chatbot Arena)
       </li>
       <li>
         <strong>Benchmark contamination</strong> is a pervasive
@@ -612,9 +614,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
         that must be mitigated
       </li>
       <li>
-        <strong>Chatbot Arena</strong> (ELO from blind pairwise
-        comparisons) is the closest to measuring real-world conversational
-        quality
+        <strong>Arena-style human pairwise evaluation (e.g., Chatbot Arena)</strong>
+        (ELO from blind comparisons) is one of the closest
+        available proxies for real-world conversational quality
       </li>
       <li>
         <strong
