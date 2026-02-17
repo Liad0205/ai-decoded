@@ -10,6 +10,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
 <section>
   <h2>Learning Objectives</h2>
+  <p>After completing this lesson, you will be able to:</p>
   <ul>
     <li>
       Derive backpropagation from first principles using the
@@ -141,17 +142,17 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
+    In plain terms: the chain rule lets us break a complex derivative into a product of simpler ones. If changing weight <em>w</em> affects intermediate value <em>z</em>, which in turn affects the loss, we can compute the total effect by multiplying those two pieces together.
+  </p>
+
+  <p>
     <strong>Key insight</strong>: We can reuse <MathBlock
       formula={"\\frac{\\partial \\mathcal{L}}{\\partial z}"}
-    /> (called the "gradient of the loss with respect to <MathBlock
+    /> (the "how much does the loss change when <MathBlock
       formula="z"
-    />") for all parameters that contribute to <MathBlock
+    /> changes?" term) for all parameters that contribute to <MathBlock
       formula="z"
-    />. This reuse makes backpropagation efficient - <MathBlock
-      formula="O(n)"
-    /> in the number of parameters, not <MathBlock
-      formula="O(n^2)"
-    />.
+    />. This reuse makes backpropagation efficient: linear in the number of parameters, not quadratic.
   </p>
 
   <RevealSection
@@ -285,7 +286,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     0 for all inputs, stopping gradient flow.
   </p>
 
-  <h3><GlossaryTooltip term="GELU" />: The Transformer Standard</h3>
+  <h3>GELU: The Transformer Standard</h3>
   <p>
     <strong>GELU (Gaussian Error Linear Unit)</strong> has become
     the default in transformers (<GlossaryTooltip
@@ -319,9 +320,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   </ul>
 
   <p>
-    The core idea is to scale each input by the probability
-    that it exceeds other values under a Gaussian
-    distribution. Mathematically:
+    The core idea: instead of a hard cutoff at zero (like ReLU), GELU asks "how likely is this value to be positive?" and scales accordingly. Large positive inputs pass through almost unchanged, large negative inputs get near-zeroed, and values near zero get partially dampened. Formally:
   </p>
   <MathBlock
     formula={"\\text{GELU}(x) = x \\cdot \\Phi(x)"}
@@ -329,19 +328,21 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
   <p>
     where <MathBlock formula={"\\Phi(x)"} /> is the cumulative
-    distribution function of the standard normal distribution.
+    distribution function of the standard normal distribution
+    (i.e., the probability that a random value is less than <em>x</em>).
     In practice, this is computed via a tanh approximation:
   </p>
   <MathBlock
     formula={"\\text{GELU}(x) \\approx 0.5x\\left(1 + \\tanh\\left[\\sqrt{2/\\pi}(x + 0.044715x^3)\\right]\\right)"}
     display={true}
   />
+  <p>
+    Don't worry about memorizing the approximation. The takeaway is that GELU acts like a soft, probabilistic gate rather than a hard on/off switch.
+  </p>
 
   <h3>SiLU/Swish</h3>
   <p>
-    SiLU (also called Swish) uses the sigmoid function as a
-    smooth gate on the input, similar in spirit to GELU but
-    simpler to compute. Mathematically:
+    SiLU (also called Swish) is another smooth activation in the same family as GELU. It multiplies the input by its own sigmoid (a smooth 0-to-1 curve), so large positives pass through, large negatives are suppressed, and values near zero are partially dampened:
   </p>
   <MathBlock
     formula={"\\text{SiLU}(x) = x \\cdot \\sigma(x) = \\frac{x}{1 + e^{-x}}"}
@@ -360,7 +361,9 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
 
   <h3>Cross-Entropy Loss</h3>
   <p>
-    For classification, <strong>cross-entropy</strong> is standard.
+    For classification, <strong>cross-entropy</strong> is the standard loss function. The intuition: it measures how surprised the model is by the correct answer. If the model assigns high probability to the right class, the loss is low. If it confidently picks the wrong class, the loss is very high.
+  </p>
+  <p>
     For a K-class problem with true distribution <MathBlock
       formula="y"
     /> and predicted distribution <MathBlock
@@ -373,9 +376,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    When combined with softmax output <MathBlock
-      formula={"\\hat{y}_i = \\frac{e^{z_i}}{\\sum_j e^{z_j}}"}
-    />, the gradient has a particularly clean form:
+    When combined with softmax (which converts raw scores into probabilities), the gradient simplifies beautifully to just "prediction minus truth":
   </p>
   <MathBlock
     formula={"\\frac{\\partial \\mathcal{L}}{\\partial z_i} = \\hat{y}_i - y_i"}
@@ -383,9 +384,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    This simplicity aids optimization. Cross-entropy
-    naturally penalizes confident wrong predictions more
-    than hesitant ones, a desirable property.
+    This clean form makes optimization stable and efficient. The model gets a strong signal when it's confidently wrong and a gentle nudge when it's close.
   </p>
 
   <h3>Contrastive Losses</h3>
@@ -393,30 +392,24 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     Modern representation learning (embeddings,
     self-supervised learning) relies on <strong
       >contrastive losses</strong
-    >. The idea: pull similar examples together in embedding
-    space, push dissimilar ones apart.
+    >. The idea is simple: given an anchor example, pull similar examples closer in embedding space and push dissimilar ones further away. Think of it like organizing photos: you want pictures of the same dog to end up near each other, and pictures of different dogs spread apart.
   </p>
   <p>
     <strong>InfoNCE loss</strong> (used in <GlossaryTooltip
       term="CLIP"
-    />, SimCLR):
+    />, SimCLR) formalizes this. It's structured like a multiple-choice question: given an anchor, pick the correct match out of N candidates. The loss is low when the model scores the correct match much higher than the distractors:
   </p>
   <MathBlock
     formula={"\\mathcal{L} = -\\log \\frac{\\exp(\\text{sim}(z_i, z_i^+) / \\tau)}{\\sum_{j=1}^N \\exp(\\text{sim}(z_i, z_j) / \\tau)}"}
     display={true}
   />
   <p>
-    where <MathBlock formula="z_i^+" /> is a positive example
-    (augmented version of <MathBlock formula="z_i" />), <MathBlock
-      formula={"\\{z_j\\}"}
-    /> are negatives, <MathBlock formula={"\\text{sim}"} /> is
-    cosine similarity, and <MathBlock formula={"\\tau"} /> is
-    temperature.
+    The numerator measures similarity between the anchor and its correct match, the denominator sums similarity across all candidates. The temperature <MathBlock formula={"\\tau"} /> controls how sharply the model distinguishes between close scores. You don't need to internalize every symbol here; the key idea is "maximize the score for the right pair relative to all other pairs."
   </p>
 </section>
 
 <section>
-  <h2>Optimization: From <GlossaryTooltip term="SGD" /> to AdamW</h2>
+  <h2>Optimization: From SGD to AdamW</h2>
 
   <h3>SGD with Momentum</h3>
   <p>
@@ -452,11 +445,15 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
     size. Parameters with consistently large gradients
     (e.g., bias terms) can tolerate bigger steps, while
     parameters with noisy or sparse gradients need smaller
-    ones. <strong>Adam</strong> (Adaptive Moment Estimation) combines
-    momentum with adaptive per-parameter learning rates: it tracks
-    both the direction (first moment) and the magnitude (second
-    moment) of each parameter's gradient history. Let's make this
-    precise:
+    ones.
+  </p>
+
+  <p>
+    <strong>Adam</strong> (Adaptive Moment Estimation) solves this by keeping two running averages for each parameter: (1) the average gradient direction (like momentum), and (2) the average gradient magnitude. It then divides the first by the second, so parameters with stable, consistent gradients get larger steps, while parameters with noisy, erratic gradients get smaller ones.
+  </p>
+
+  <p>
+    Here's the full update rule. If the formulas look dense, focus on the intuition above and the summary below:
   </p>
   <MathBlock
     formula={"m_t = \\beta_1 m_{t-1} + (1-\\beta_1) g_t"}
@@ -476,54 +473,12 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    where <MathBlock formula={"g_t"} /> is the gradient at step
-    t, <MathBlock formula={"m_t"} /> is the first moment estimate
-    (exponential moving average of gradients, i.e., momentum),
-    <MathBlock formula={"v_t"} /> is the second moment estimate
-    (exponential moving average of squared gradients, tracking
-    variance), <MathBlock formula={"\\hat{m}_t"} /> and <MathBlock
-      formula={"\\hat{v}_t"}
-    /> are bias-corrected versions that compensate for initialization
-    at zero, <MathBlock formula={"\\eta"} /> is the learning rate,
-    <MathBlock formula={"\\epsilon"} /> is a small constant for
-    numerical stability (typically 1e-8), and <MathBlock
-      formula={"\\beta_1, \\beta_2"}
-    /> are decay rates (defaults: 0.9 and 0.999).
-  </p>
-
-  <p>
-    Intuition: track a running average of gradients and
-    squared gradients, then scale each parameter's update by
-    how noisy its gradient has been. Parameters with stable
-    gradients get larger updates; parameters with volatile
-    gradients get dampened.
-  </p>
-
-  <p>
-    <strong>Concrete example</strong>: Suppose a parameter
-    has gradient <MathBlock formula={"g_t = 0.1"} /> at step 1,
-    with <MathBlock formula={"\\eta = 0.001"} />, <MathBlock
-      formula={"\\beta_1 = 0.9"}
-    />, <MathBlock formula={"\\beta_2 = 0.999"} />. Then <MathBlock
-      formula={"m_1 = 0.1 \\times 0.1 = 0.01"}
-    />, <MathBlock
-      formula={"v_1 = 0.001 \\times 0.01 = 0.00001"}
-    />. After bias correction: <MathBlock
-      formula={"\\hat{m}_1 = 0.01 / 0.1 = 0.1"}
-    />, <MathBlock
-      formula={"\\hat{v}_1 = 0.00001 / 0.001 = 0.01"}
-    />. The update is <MathBlock
-      formula={"0.001 \\times 0.1 / (\\sqrt{0.01} + 10^{-8}) = 0.001"}
-    />. The bias correction ensures the first few steps
-    aren't artificially small despite the zero-initialized
-    running averages.
+    Reading these line by line: the first line tracks average gradient direction, the second tracks average gradient magnitude, the third corrects for the fact that both start at zero (so early estimates would be too small), and the fourth is the actual update: step in the direction of the average gradient, scaled down by how noisy that gradient has been.
   </p>
 
   <h3>AdamW: Decoupled Weight Decay</h3>
   <p>
-    Standard Adam includes weight decay as L2 regularization
-    added to the gradient. <strong>AdamW</strong> decouples weight
-    decay from the gradient computation:
+    Weight decay is a regularization trick that gently shrinks weights toward zero each step, preventing the model from relying too heavily on any single parameter. Standard Adam bakes this shrinkage into the gradient, but that interacts badly with the adaptive learning rates. <strong>AdamW</strong> fixes this by applying weight decay separately:
   </p>
   <MathBlock
     formula={"\\theta_t = \\theta_{t-1} - \\eta \\left(\\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon} + \\lambda \\theta_{t-1}\\right)"}
@@ -531,11 +486,7 @@ import GlossaryTooltip from "../../components/GlossaryTooltip.astro";
   />
 
   <p>
-    <strong>Why this matters</strong>: In Adam, weight decay
-    interacts with adaptive learning rates in unintended
-    ways. AdamW fixes this, leading to better
-    generalization. It's now the default optimizer for
-    transformer training.
+    The first part inside the parentheses is the standard Adam update; the <MathBlock formula={"\\lambda \\theta_{t-1}"} /> term is the weight decay applied directly to the current weights. This separation leads to better generalization, and AdamW is now the default optimizer for transformer training.
   </p>
 
   <h3>Learning Rate Schedules</h3>
