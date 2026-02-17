@@ -69,14 +69,14 @@ const equations = [
         <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <!-- Left column: text + CTA -->
           <div>
-            <p class="font-mono text-sm text-[hsl(var(--muted-foreground))] mb-6">// free and open</p>
+            <p class="font-mono text-sm text-[hsl(var(--muted-foreground))] mb-6">// by <a href="https://github.com/Liad0205" target="_blank" rel="noopener" class="text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))] transition-colors">Liad Mazor</a> &middot; free and open-source</p>
 
             <h1 class="text-4xl lg:text-5xl font-bold tracking-tight text-[hsl(var(--foreground))] mb-6 leading-tight">
               Everything they forgot<br />to teach you about <span class="text-[hsl(var(--primary))]">AI</span>
             </h1>
 
             <p class="text-lg text-[hsl(var(--muted-foreground))] max-w-2xl mb-8 leading-relaxed">
-              {modules.length} modules. Transformers to production. Full math, no hand-waving. Built for software engineers who want to actually understand how this stuff works.
+              You're a software engineer. You've shipped real things. But somehow "how does a transformer actually work?" still feels like a gap in your knowledge. This is {modules.length} modules of the stuff you'd want a friend to explain over coffee, except it's free, open-source, and starts from scratch.
             </p>
 
             <Button variant="primary" size="lg" href={`${import.meta.env.BASE_URL}${modules[0].slug}/${modules[0].lessons[0].slug}`}>
@@ -132,9 +132,9 @@ const equations = [
         <div class="grid md:grid-cols-3 gap-12">
           <div>
             <p class="font-mono text-sm text-[hsl(var(--primary))] mb-3">01 / derivations</p>
-            <h3 class="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">First-principles mathematics</h3>
+            <h3 class="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">Math you can actually follow</h3>
             <p class="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">
-              No hand-waving. Every architecture derived step by step: the ELBO for diffusion models, PPO's clipped objective, backpropagation through attention. You'll know <em>why</em>, not just <em>what</em>.
+              No hand-waving. Every key equation is built up step by step, starting from intuition, then formalizing it. You'll understand <em>why</em> each formula works, not just memorize <em>what</em> it says.
             </p>
           </div>
 
@@ -235,6 +235,23 @@ const equations = [
         </Button>
       </div>
     </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-[hsl(var(--border))]">
+      <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <p class="text-sm text-[hsl(var(--muted-foreground))]">
+          Built by <span class="text-[hsl(var(--foreground))] font-medium">Liad Mazor</span>
+        </p>
+        <div class="flex items-center gap-4">
+          <a href="https://github.com/Liad0205" target="_blank" rel="noopener" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors">
+            <LucideIcon name="Github" size={18} />
+          </a>
+          <a href="https://www.linkedin.com/in/liad02/" target="_blank" rel="noopener" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors">
+            <LucideIcon name="Linkedin" size={18} />
+          </a>
+        </div>
+      </div>
+    </footer>
 
   </div>
 </BaseLayout>
